@@ -81,6 +81,13 @@ dependencies {
     //SaltUI
     implementation("com.github.Moriafly:SaltUI:0.1.0-dev37")
 
+    //JAudioTagger
+    implementation("org.bitbucket.ijabz:jaudiotagger:7b004a1")
+
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4")
+
+
     // Optional - Included automatically by material, only add when you need
     // the icons but not the material library (e.g. when using Material3 or a
     // custom design system based on Foundation)
