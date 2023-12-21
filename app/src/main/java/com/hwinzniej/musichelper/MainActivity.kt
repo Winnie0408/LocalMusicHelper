@@ -33,6 +33,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
@@ -43,10 +44,11 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.ContextCompat.startActivity
 import androidx.lifecycle.lifecycleScope
+import androidx.room.Room
+import com.hwinzniej.musichelper.data.database.MusicDatabase
 import com.moriafly.salt.ui.BottomBar
 import com.moriafly.salt.ui.BottomBarItem
 import com.moriafly.salt.ui.ItemContainer
-import com.moriafly.salt.ui.ItemSpacer
 import com.moriafly.salt.ui.ItemText
 import com.moriafly.salt.ui.ItemTitle
 import com.moriafly.salt.ui.ItemValue
@@ -71,9 +73,10 @@ import org.jaudiotagger.tag.TagException
 import java.io.File
 import java.io.FileWriter
 import java.io.IOException
+import java.io.RandomAccessFile
 
 class MainActivity : ComponentActivity() {
-    val scanResult = mutableStateOf("扫描结果将会显示在这里")
+    val scanResult = mutableStateOf("")
 
     val showLoadingProgressBar = mutableStateOf(false)
 
@@ -85,6 +88,9 @@ class MainActivity : ComponentActivity() {
 
     var progressPercent = mutableIntStateOf(0)
 
+    lateinit var db: MusicDatabase
+
+    var lastIndex = 0
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -94,6 +100,10 @@ class MainActivity : ComponentActivity() {
             } else {
                 lightSaltColors()
             }
+            scanResult.value = getString(R.string.scan_result_hint)
+            db = Room.databaseBuilder(
+                applicationContext, MusicDatabase::class.java, "music"
+            ).build()
             CompositionLocalProvider {
                 SaltTheme(
                     colors = colors
@@ -146,7 +156,7 @@ class MainActivity : ComponentActivity() {
 
     fun requestPermission(context: Context) {
         if (inScanning) {
-            Toast.makeText(this, "正在扫描中，请稍后再试", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, R.string.scanning_try_again_later, Toast.LENGTH_SHORT).show()
             return
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) { //Android 11+
@@ -160,17 +170,22 @@ class MainActivity : ComponentActivity() {
 
                         1 -> {
                             showConflictDialog.value = false
+                            lastIndex++
                             inScanning = true
                             openDirectoryLauncher.launch(null)
                         }
 
                         2 -> {
                             showConflictDialog.value = false
-                            val file = File(
-                                Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
-                                "MusicHelper.txt"
-                            )
-                            file.delete()
+                            lastIndex = 0
+                            lifecycleScope.launch(Dispatchers.IO) {
+                                val file = File(
+                                    Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
+                                    getString(R.string.result_file_name)
+                                )
+                                file.delete()
+                                db.musicDao().deleteAll()
+                            }
                             inScanning = true
                             openDirectoryLauncher.launch(null)
                         }
@@ -182,8 +197,7 @@ class MainActivity : ComponentActivity() {
                     }
                 }
             } else {
-                Toast.makeText(this, "Permissions are required to scan music", Toast.LENGTH_SHORT)
-                    .show()
+                Toast.makeText(this, R.string.request_permission_toast, Toast.LENGTH_SHORT).show()
                 val intent = Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION)
                 val uri = Uri.fromParts("package", context.packageName, null)
                 intent.data = uri
@@ -225,8 +239,6 @@ class MainActivity : ComponentActivity() {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == REQUEST_CODE_PERMISSIONS) {
             if (allPermissionsGranted(this)) {
-                // All permissions have been granted, you can proceed with the next operation
-                // For example, you can call a method here to start scanning music
                 checkFileExist {
                     when (conflictDialogResult.intValue) {
                         0 -> {
@@ -236,17 +248,22 @@ class MainActivity : ComponentActivity() {
 
                         1 -> {
                             showConflictDialog.value = false
+                            lastIndex++
                             inScanning = true
                             openDirectoryLauncher.launch(null)
                         }
 
                         2 -> {
                             showConflictDialog.value = false
-                            val file = File(
-                                Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
-                                "MusicHelper.txt"
-                            )
-                            file.delete()
+                            lastIndex = 0
+                            lifecycleScope.launch(Dispatchers.IO) {
+                                val file = File(
+                                    Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
+                                    getString(R.string.result_file_name)
+                                )
+                                file.delete()
+                                db.musicDao().deleteAll()
+                            }
                             inScanning = true
                             openDirectoryLauncher.launch(null)
                         }
@@ -260,8 +277,7 @@ class MainActivity : ComponentActivity() {
             } else {
                 // Permissions have been denied, you can inform the user about the need for these permissions
                 // You can use a Toast, Snackbar, or a dialog to inform the user
-                Toast.makeText(this, "Permissions are required to scan music", Toast.LENGTH_SHORT)
-                    .show()
+                Toast.makeText(this, R.string.request_permission_toast, Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -273,13 +289,23 @@ class MainActivity : ComponentActivity() {
      * 检查文件是否已存在
      */
     fun checkFileExist(onUserChoice: () -> Unit) {
-        val fileName = "MusicHelper.txt"
+        val fileName = getString(R.string.result_file_name)
+//        lifecycleScope.launch(Dispatchers.IO) {
         val file = File(
             Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), fileName
         )
         if (file.exists()) {
             showConflictDialog.value = true
+            val raf = RandomAccessFile(file, "r")
+            val length = raf.length()
+            raf.seek(length - 8)
+            val lastChars = raf.readLine()
+            lastIndex =
+                lastChars.substring(lastChars.lastIndexOf("#") + 1, lastChars.length).toInt()
+            println(lastChars)
+            raf.close()
         }
+//        }
 
         lifecycleScope.launch(Dispatchers.Default) {
             while (showConflictDialog.value && conflictDialogResult.intValue == 0) {
@@ -302,7 +328,9 @@ class MainActivity : ComponentActivity() {
             }
             val absolutePath: String
             val uriPath = uri.pathSegments?.get(uri.pathSegments!!.size - 1).toString()
-            Toast.makeText(this, "Selected Directory: $uri", Toast.LENGTH_SHORT).show()
+            Toast.makeText(
+                this, getString(R.string.selected_directory_path) + "$uri", Toast.LENGTH_SHORT
+            ).show()
             if (uriPath.contains("primary")) {  //内部存储
                 absolutePath = uriPath.replace("primary:", "/storage/emulated/0/")
             } else {  //SD卡
@@ -318,7 +346,9 @@ class MainActivity : ComponentActivity() {
                     if (scanResult.value.length == lastScanResult) {
                         showLoadingProgressBar.value = false
                         inScanning = false
-                        Toast.makeText(this@MainActivity, "扫描完成", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            this@MainActivity, R.string.scan_complete, Toast.LENGTH_SHORT
+                        ).show()
                         break
                     }
                 }
@@ -382,7 +412,7 @@ class MainActivity : ComponentActivity() {
     @Synchronized
     private fun writeToFile(tag: Tag, filePath: String) {
 //        val fileName = resources.getString(R.string.outputFileName)
-        val fileName = "MusicHelper.txt"
+        val fileName = getString(R.string.result_file_name)
         val file = File(
             Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), fileName
         )
@@ -391,9 +421,19 @@ class MainActivity : ComponentActivity() {
             fileWriter.write(
                 tag.getFirst(FieldKey.TITLE) + "#*#" + tag.getFirst(FieldKey.ARTIST) + "#*#" + tag.getFirst(
                     FieldKey.ALBUM
-                ) + "#*#" + filePath + "#*#" + progressPercent.intValue + "\n"
+                ) + "#*#" + filePath + "#*#" + lastIndex + "\n"
             )
             fileWriter.close()
+            val music = com.hwinzniej.musichelper.data.model.Music(
+                lastIndex,
+                tag.getFirst(FieldKey.TITLE),
+                tag.getFirst(FieldKey.ARTIST),
+                tag.getFirst(FieldKey.ALBUM),
+                filePath
+            )
+            lifecycleScope.launch(Dispatchers.IO) {
+                db.musicDao().insert(music)
+            }
         } catch (e: IOException) {
             e.printStackTrace()
             return
@@ -409,6 +449,14 @@ class MainActivity : ComponentActivity() {
     @Synchronized
     private fun increment() {
         ++progressPercent.intValue
+        ++lastIndex
+    }
+
+    fun getMusicList() {
+        lifecycleScope.launch(Dispatchers.IO) {
+            val musicList = db.musicDao().getAll()
+            println(musicList)
+        }
     }
 
 }
@@ -424,18 +472,18 @@ private fun MainUI(
     showLoadingProgressBar: MutableState<Boolean>,
     progressPercent: MutableState<Int>,
     showConflictDialog: MutableState<Boolean>,
-    conflictDialogResult: MutableIntState
+    conflictDialogResult: MutableIntState,
 ) {
-
+    val context = LocalContext.current
     if (showConflictDialog.value) {
         YesNoDialog(
             onNegative = { conflictDialogResult.intValue = 1 },
             onPositive = { conflictDialogResult.intValue = 2 },
             onDismiss = { conflictDialogResult.intValue = 3 },
-            title = "文件冲突",
-            content = "检测到输出文件已存在！\n请选择您的操作",
-            noText = "追加",
-            yesText = "覆盖"
+            title = context.getString(R.string.file_conflict_dialog_title),
+            content = context.getString(R.string.file_conflict_dialog_content),
+            noText = context.getString(R.string.file_conflict_dialog_no_text),
+            yesText = context.getString(R.string.file_conflict_dialog_yes_text)
         )
     }
 
@@ -445,9 +493,7 @@ private fun MainUI(
             .background(color = SaltTheme.colors.background)
     ) {
         TitleBar(
-            onBack = {
-
-            }, text = "扫描"
+            onBack = {}, text = context.getString(R.string.scan_function_name), showBackBtn = false
         )
 
         Column(
@@ -458,18 +504,20 @@ private fun MainUI(
 //                .verticalScroll(rememberScrollState())
         ) {
             RoundedColumn {
-                ItemTitle(text = "扫描控制")
-                ItemSpacer()
-                ItemText(text = "点击按钮以开始")
+                ItemTitle(text = context.getString((R.string.scan_control)))
+                ItemText(text = context.getString(R.string.touch_button_to_start_scanning))
                 ItemContainer {
                     TextButton(onClick = {
                         mainActivity.init()
-                    }, text = "开始")
+                    }, text = context.getString(R.string.start_text))
                 }
             }
             RoundedColumn {
-                ItemTitle(text = "扫描结果")
-                ItemValue(text = "总歌曲数", sub = progressPercent.value.toString())
+                ItemTitle(text = context.getString(R.string.scan_result))
+                ItemValue(
+                    text = context.getString(R.string.number_of_total_songs),
+                    sub = progressPercent.value.toString()
+                )
 
                 ItemContainer {
                     LazyColumn(
@@ -504,24 +552,36 @@ private fun MainUI(
         }
         BottomBar {
             BottomBarItem(
-                state = true, onClick = {
+                state = true,
+                onClick = {
 
-                }, painter = painterResource(id = R.drawable.ic_launcher_foreground), text = "扫描"
+                },
+                painter = painterResource(id = R.drawable.ic_launcher_foreground),
+                text = context.getString(R.string.scan_function_name)
             )
             BottomBarItem(
-                state = false, onClick = {
-
-                }, painter = painterResource(id = R.drawable.ic_launcher_foreground), text = "转换"
+                state = false,
+                onClick = {
+                    mainActivity.getMusicList()
+                },
+                painter = painterResource(id = R.drawable.ic_launcher_foreground),
+                text = context.getString(R.string.convert_function_name)
             )
             BottomBarItem(
-                state = false, onClick = {
+                state = false,
+                onClick = {
 
-                }, painter = painterResource(id = R.drawable.ic_launcher_foreground), text = "处理"
+                },
+                painter = painterResource(id = R.drawable.ic_launcher_foreground),
+                text = context.getString(R.string.process_function_name)
             )
             BottomBarItem(
-                state = false, onClick = {
+                state = false,
+                onClick = {
 
-                }, painter = painterResource(id = R.drawable.ic_launcher_foreground), text = "关于"
+                },
+                painter = painterResource(id = R.drawable.ic_launcher_foreground),
+                text = context.getString(R.string.about_function_name)
             )
         }
     }

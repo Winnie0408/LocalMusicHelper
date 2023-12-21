@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">MusicHelper</string>
+    <string name="scan_result_hint">扫描过程将会显示在这里。</string>
+    <string name="scanning_try_again_later">正在扫描中，请稍后再试。</string>
+    <string name="request_permission_toast">请授予必要的权限，以进行音乐扫描</string>
+    <string name="selected_directory_path">选择的目录：</string>
+    <string name="scan_complete">扫描完成</string>
+    <string name="file_conflict_dialog_content">检测到输出文件已存在！\\n请选择您的操作：</string>
+    <string name="file_conflict_dialog_title">文件冲突</string>
+    <string name="file_conflict_dialog_yes_text">覆盖</string>
+    <string name="file_conflict_dialog_no_text">追加</string>
+    <string name="scan_function_name">扫描</string>
+    <string name="scan_control">扫描控制</string>
+    <string name="touch_button_to_start_scanning">轻触按钮以开始</string>
+    <string name="start_text">开始</string>
+    <string name="scan_result">扫描结果</string>
+    <string name="number_of_total_songs">总歌曲数</string>
+    <string name="convert_function_name">转换</string>
+    <string name="process_function_name">处理</string>
+    <string name="about_function_name">关于</string>
+</resources>

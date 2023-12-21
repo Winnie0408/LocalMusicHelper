@@ -1,3 +1,22 @@
 <resources>
     <string name="app_name">MusicHelper</string>
+    <string name="scan_result_hint">The scanning process will be shown here.</string>
+    <string name="scanning_try_again_later">Scanning, please try again later.</string>
+    <string name="result_file_name" translatable="false">MusicHelper.txt</string>
+    <string name="request_permission_toast">Permissions are required to scan music.</string>
+    <string name="selected_directory_path">"Selected Directory: "</string>
+    <string name="scan_complete">Scanning complete.</string>
+    <string name="file_conflict_dialog_title">File conflict</string>
+    <string name="file_conflict_dialog_content">"The output file already exists! \\nPlease select your action: "</string>
+    <string name="file_conflict_dialog_yes_text">Overwrite</string>
+    <string name="file_conflict_dialog_no_text">Append</string>
+    <string name="scan_function_name">Scan</string>
+    <string name="scan_control">Scanning control</string>
+    <string name="touch_button_to_start_scanning">Touch the button to start scanning.</string>
+    <string name="start_text">Start</string>
+    <string name="scan_result">Scanning result</string>
+    <string name="number_of_total_songs">Total songs</string>
+    <string name="convert_function_name">Convert</string>
+    <string name="process_function_name">Process</string>
+    <string name="about_function_name">About</string>
 </resources>
