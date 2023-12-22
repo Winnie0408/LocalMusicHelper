@@ -5,7 +5,7 @@ import androidx.room.RoomDatabase
 import com.hwinzniej.musichelper.data.dao.MusicDao
 import com.hwinzniej.musichelper.data.model.Music
 
-@Database(entities = [Music::class], version = 1)
+@Database(entities = [Music::class], version = 1, exportSchema = false)
 abstract class MusicDatabase : RoomDatabase() {
     abstract fun musicDao(): MusicDao
 }

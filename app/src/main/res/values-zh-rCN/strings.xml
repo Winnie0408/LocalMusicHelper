@@ -6,7 +6,7 @@
     <string name="request_permission_toast">请授予必要的权限，以进行音乐扫描</string>
     <string name="selected_directory_path">选择的目录：</string>
     <string name="scan_complete">扫描完成</string>
-    <string name="file_conflict_dialog_content">检测到输出文件已存在！\\n请选择您的操作：</string>
+    <string name="file_conflict_dialog_content">检测到输出文件已存在！#n请选择您的操作：</string>
     <string name="file_conflict_dialog_title">文件冲突</string>
     <string name="file_conflict_dialog_yes_text">覆盖</string>
     <string name="file_conflict_dialog_no_text">追加</string>

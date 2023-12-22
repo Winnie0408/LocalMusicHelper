@@ -7,7 +7,7 @@
     <string name="selected_directory_path">"Selected Directory: "</string>
     <string name="scan_complete">Scanning complete.</string>
     <string name="file_conflict_dialog_title">File conflict</string>
-    <string name="file_conflict_dialog_content">"The output file already exists! \\nPlease select your action: "</string>
+    <string name="file_conflict_dialog_content">"The output file already exists! #nPlease select your action: "</string>
     <string name="file_conflict_dialog_yes_text">Overwrite</string>
     <string name="file_conflict_dialog_no_text">Append</string>
     <string name="scan_function_name">Scan</string>

@@ -14,6 +14,8 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
@@ -21,18 +23,28 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.MutableIntState
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
@@ -43,8 +55,10 @@ import androidx.compose.ui.zIndex
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.ContextCompat.startActivity
+import androidx.core.view.WindowCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.room.Room
+import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.hwinzniej.musichelper.data.database.MusicDatabase
 import com.moriafly.salt.ui.BottomBar
 import com.moriafly.salt.ui.BottomBarItem
@@ -91,6 +105,7 @@ class MainActivity : ComponentActivity() {
     lateinit var db: MusicDatabase
 
     var lastIndex = 0
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -100,6 +115,7 @@ class MainActivity : ComponentActivity() {
             } else {
                 lightSaltColors()
             }
+            WindowCompat.setDecorFitsSystemWindows(window, false)
             scanResult.value = getString(R.string.scan_result_hint)
             db = Room.databaseBuilder(
                 applicationContext, MusicDatabase::class.java, "music"
@@ -108,14 +124,16 @@ class MainActivity : ComponentActivity() {
                 SaltTheme(
                     colors = colors
                 ) {
-                    MainUI(
-                        this,
-                        scanResult,
-                        showLoadingProgressBar,
-                        progressPercent,
-                        showConflictDialog,
-                        conflictDialogResult
-                    )
+                    TransparentSystemBars()
+                    Pages(this)
+//                    MainUI(
+//                        this,
+//                        scanResult,
+//                        showLoadingProgressBar,
+//                        progressPercent,
+//                        showConflictDialog,
+//                        conflictDialogResult
+//                    )
                 }
             }
 //            MusicHelperTheme {
@@ -464,9 +482,93 @@ class MainActivity : ComponentActivity() {
 /**
  * UI
  */
+
+@OptIn(ExperimentalFoundationApi::class, UnstableSaltApi::class)
+@Composable
+private fun Pages(mainActivity: MainActivity) {
+    val context = LocalContext.current
+    val pages = listOf("扫描", "转换", "处理", "关于")
+    val pageState = rememberPagerState(pageCount = { pages.size })
+    val coroutineScope = rememberCoroutineScope()
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .systemBarsPadding()
+
+    ) {
+        HorizontalPager(
+            state = pageState, modifier = Modifier
+                .fillMaxSize()
+                .padding(bottom = 56.dp)
+        ) { page ->
+            when (page) {
+                0 -> {
+                    ScanPageUi(
+                        mainActivity,
+                        mainActivity.scanResult,
+                        mainActivity.showLoadingProgressBar,
+                        mainActivity.progressPercent,
+                        mainActivity.showConflictDialog,
+                        mainActivity.conflictDialogResult
+                    )
+                }
+
+                1 -> {
+                    ConvertPageUi()
+                }
+
+                2 -> {
+                    ProcessPageUi()
+                }
+
+                3 -> {
+                    AboutPageUi()
+                }
+            }
+
+        }
+
+        BottomBar(modifier = Modifier.align(Alignment.BottomCenter)) {
+            BottomBarItem(
+                state = pageState.currentPage == 0,
+                onClick = {
+                    coroutineScope.launch { pageState.animateScrollToPage(0) }
+                },
+                painter = painterResource(id = R.drawable.ic_launcher_foreground),
+                text = context.getString(R.string.scan_function_name)
+            )
+            BottomBarItem(
+                state = pageState.currentPage == 1,
+                onClick = {
+                    coroutineScope.launch { pageState.animateScrollToPage(1) }
+                },
+                painter = painterResource(id = R.drawable.ic_launcher_foreground),
+                text = context.getString(R.string.convert_function_name)
+            )
+            BottomBarItem(
+                state = pageState.currentPage == 2,
+                onClick = {
+                    coroutineScope.launch { pageState.animateScrollToPage(2) }
+                },
+                painter = painterResource(id = R.drawable.ic_launcher_foreground),
+                text = context.getString(R.string.process_function_name)
+            )
+            BottomBarItem(
+                state = pageState.currentPage == 3,
+                onClick = {
+                    coroutineScope.launch { pageState.animateScrollToPage(3) }
+                },
+                painter = painterResource(id = R.drawable.ic_launcher_foreground),
+                text = context.getString(R.string.about_function_name)
+            )
+        }
+    }
+}
+
 @OptIn(UnstableSaltApi::class)
 @Composable
-private fun MainUI(
+private fun ScanPageUi(
     mainActivity: MainActivity,
     scanResult: MutableState<String>,
     showLoadingProgressBar: MutableState<Boolean>,
@@ -481,9 +583,9 @@ private fun MainUI(
             onPositive = { conflictDialogResult.intValue = 2 },
             onDismiss = { conflictDialogResult.intValue = 3 },
             title = context.getString(R.string.file_conflict_dialog_title),
-            content = context.getString(R.string.file_conflict_dialog_content),
+            content = context.getString(R.string.file_conflict_dialog_content).replace("#n", "\n"),
             noText = context.getString(R.string.file_conflict_dialog_no_text),
-            yesText = context.getString(R.string.file_conflict_dialog_yes_text)
+            yesText = context.getString(R.string.file_conflict_dialog_yes_text),
         )
     }
 
@@ -501,7 +603,7 @@ private fun MainUI(
                 .weight(1f)
                 .fillMaxSize()
                 .background(color = SaltTheme.colors.background)
-//                .verticalScroll(rememberScrollState())
+                .verticalScroll(rememberScrollState())
         ) {
             RoundedColumn {
                 ItemTitle(text = context.getString((R.string.scan_control)))
@@ -523,6 +625,7 @@ private fun MainUI(
                     LazyColumn(
                         modifier = Modifier
                             .fillMaxSize()
+                            .size((LocalConfiguration.current.screenHeightDp / 2).dp)
                             .clip(RoundedCornerShape(10.dp))
                             .background(color = SaltTheme.colors.background)
                     ) {
@@ -533,11 +636,14 @@ private fun MainUI(
                                         modifier = Modifier
                                             .fillMaxWidth()
                                             .zIndex(1f),
-                                        color = SaltTheme.colors.highlight
+                                        color = SaltTheme.colors.highlight,
+                                        trackColor = SaltTheme.colors.background
                                     )
                                 }
                                 Text(
-                                    modifier = Modifier.padding(top = 3.dp),
+                                    modifier = Modifier.padding(
+                                        top = 3.dp, start = 7.dp, end = 7.dp
+                                    ),
                                     text = scanResult.value,
                                     fontSize = 16.sp,
                                     style = TextStyle(
@@ -550,40 +656,76 @@ private fun MainUI(
                 }
             }
         }
-        BottomBar {
-            BottomBarItem(
-                state = true,
-                onClick = {
+//        BottomBar {
+//            BottomBarItem(
+//                state = true,
+//                onClick = {
+//
+//                },
+//                painter = painterResource(id = R.drawable.ic_launcher_foreground),
+//                text = context.getString(R.string.scan_function_name)
+//            )
+//            BottomBarItem(
+//                state = false,
+//                onClick = {
+//                    mainActivity.getMusicList()
+//                },
+//                painter = painterResource(id = R.drawable.ic_launcher_foreground),
+//                text = context.getString(R.string.convert_function_name)
+//            )
+//            BottomBarItem(
+//                state = false,
+//                onClick = {
+//
+//                },
+//                painter = painterResource(id = R.drawable.ic_launcher_foreground),
+//                text = context.getString(R.string.process_function_name)
+//            )
+//            BottomBarItem(
+//                state = false,
+//                onClick = {
+//
+//                },
+//                painter = painterResource(id = R.drawable.ic_launcher_foreground),
+//                text = context.getString(R.string.about_function_name)
+//            )
+//        }
+    }
+}
 
-                },
-                painter = painterResource(id = R.drawable.ic_launcher_foreground),
-                text = context.getString(R.string.scan_function_name)
-            )
-            BottomBarItem(
-                state = false,
-                onClick = {
-                    mainActivity.getMusicList()
-                },
-                painter = painterResource(id = R.drawable.ic_launcher_foreground),
-                text = context.getString(R.string.convert_function_name)
-            )
-            BottomBarItem(
-                state = false,
-                onClick = {
 
-                },
-                painter = painterResource(id = R.drawable.ic_launcher_foreground),
-                text = context.getString(R.string.process_function_name)
-            )
-            BottomBarItem(
-                state = false,
-                onClick = {
+@Composable
+private fun ConvertPageUi() {
+    Text(text = "测试1")
+}
 
-                },
-                painter = painterResource(id = R.drawable.ic_launcher_foreground),
-                text = context.getString(R.string.about_function_name)
-            )
-        }
+@Composable
+private fun ProcessPageUi() {
+    Text(text = "测试2")
+}
+
+@Composable
+private fun AboutPageUi() {
+    Text(text = "测试3")
+}
+
+@Composable
+fun TransparentSystemBars() {
+    val systemUiController = rememberSystemUiController()
+    val useDarkIcons = !isSystemInDarkTheme()
+    val statusBarColor = SaltTheme.colors.background
+    val navigationBarColor = SaltTheme.colors.subBackground
+    SideEffect {
+        systemUiController.setStatusBarColor(
+            color = statusBarColor,
+            darkIcons = useDarkIcons,
+        )
+
+        systemUiController.setNavigationBarColor(
+            color = navigationBarColor,
+            darkIcons = useDarkIcons,
+            navigationBarContrastEnforced = false
+        )
     }
 }
 
