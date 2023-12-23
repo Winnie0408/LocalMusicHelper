@@ -8,8 +8,8 @@ import com.hwinzniej.musichelper.data.model.Music
 
 @Dao
 interface MusicDao {
-    @Query("SELECT id FROM music")
-    fun getAll(): List<Int>
+    @Query("SELECT * FROM music")
+    fun getAll(): List<Music>
 
     @Insert
     fun insertAll(vararg music: Music)

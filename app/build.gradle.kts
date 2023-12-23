@@ -88,6 +88,8 @@ dependencies {
     //Kotlin协程
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4")
+    implementation("androidx.activity:activity-ktx:1.8.2")
+    implementation("androidx.fragment:fragment-ktx:1.6.2")
 
     //Room数据库
     val roomVersion = "2.6.1"
