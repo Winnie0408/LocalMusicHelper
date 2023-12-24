@@ -56,7 +56,7 @@ class MainActivity : ComponentActivity() {
             applicationContext, MusicDatabase::class.java, "music"
         ).build()
 
-        scanPage = ScanPage(this, this, openDirectoryLauncher, db)
+        scanPage = ScanPage(this, this, openDirectoryLauncher, db, this)
 
 
         setContent {

@@ -10,7 +10,10 @@ import android.os.Build
 import android.os.Environment
 import android.provider.Settings
 import android.widget.Toast
+import androidx.activity.ComponentActivity
 import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -41,7 +44,6 @@ import androidx.compose.ui.zIndex
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.ContextCompat.getString
-import androidx.core.content.ContextCompat.startActivity
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import com.hwinzniej.musichelper.R
@@ -82,7 +84,8 @@ class ScanPage(
     val context: Context,
     val lifecycleOwner: LifecycleOwner,
     val openDirectoryLauncher: ActivityResultLauncher<Uri?>,
-    val db: MusicDatabase
+    val db: MusicDatabase,
+    componentActivity: ComponentActivity
 ) : PermissionResultHandler {
     val scanResult = mutableStateOf(getString(context, R.string.scan_result_hint))
 
@@ -103,7 +106,7 @@ class ScanPage(
      */
 
     fun init() {
-        scanResult.value = ""
+        lastIndex = 0
         progressPercent.intValue = 0
         conflictDialogResult.intValue = 0
         requestPermission()
@@ -116,6 +119,18 @@ class ScanPage(
 
 //==================== Android 11+ 使用====================
 
+    @RequiresApi(Build.VERSION_CODES.R)
+    private val requestPermissionLauncher = componentActivity.registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { _ ->
+        if (Environment.isExternalStorageManager()) {
+            afterPermissionGranted()
+        } else {
+            Toast.makeText(context, R.string.permission_not_granted_toast, Toast.LENGTH_SHORT)
+                .show()
+        }
+    }
+
     fun requestPermission() {
         if (inScanning) {
             Toast.makeText(context, R.string.scanning_try_again_later, Toast.LENGTH_SHORT).show()
@@ -123,51 +138,22 @@ class ScanPage(
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) { //Android 11+
             if (Environment.isExternalStorageManager()) {
-                checkFileExist {
-                    when (conflictDialogResult.intValue) {
-                        0 -> {
-                            inScanning = true
-                            openDirectoryLauncher.launch(null)
-                        }
-
-                        1 -> {
-                            showConflictDialog.value = false
-                            lastIndex++
-                            inScanning = true
-                            openDirectoryLauncher.launch(null)
-                        }
-
-                        2 -> {
-                            showConflictDialog.value = false
-                            lastIndex = 0
-                            lifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
-                                val file = File(
-                                    Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
-                                    getString(context, R.string.result_file_name)
-                                )
-                                file.delete()
-                                db.musicDao().deleteAll()
-                            }
-                            inScanning = true
-                            openDirectoryLauncher.launch(null)
-                        }
-
-                        3 -> {
-                            showConflictDialog.value = false
-                            return@checkFileExist
-                        }
-                    }
-                }
+                afterPermissionGranted()
             } else {
                 Toast.makeText(context, R.string.request_permission_toast, Toast.LENGTH_SHORT)
                     .show()
                 val intent = Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION)
                 val uri = Uri.fromParts("package", context.packageName, null)
                 intent.data = uri
-                startActivity(context, intent, null)
+                requestPermissionLauncher.launch(intent)
+//                startActivity(context, intent, null)
             }
         } else { //Android 10-
-            if (!allPermissionsGranted()) {
+            if (allPermissionsGranted()) {
+                afterPermissionGranted()
+            } else {
+                Toast.makeText(context, R.string.request_permission_toast, Toast.LENGTH_SHORT)
+                    .show()
                 ActivityCompat.requestPermissions(
                     context as Activity, REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS
                 )
@@ -201,50 +187,53 @@ class ScanPage(
     ) {
         if (requestCode == REQUEST_CODE_PERMISSIONS) {
             if (allPermissionsGranted()) {
-                checkFileExist {
-                    when (conflictDialogResult.intValue) {
-                        0 -> {
-                            inScanning = true
-                            openDirectoryLauncher.launch(null)
-                        }
-
-                        1 -> {
-                            showConflictDialog.value = false
-                            lastIndex++
-                            inScanning = true
-                            openDirectoryLauncher.launch(null)
-                        }
-
-                        2 -> {
-                            showConflictDialog.value = false
-                            lastIndex = 0
-                            lifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
-                                val file = File(
-                                    Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
-                                    getString(context, R.string.result_file_name)
-                                )
-                                file.delete()
-                                db.musicDao().deleteAll()
-                            }
-                            inScanning = true
-                            openDirectoryLauncher.launch(null)
-                        }
-
-                        3 -> {
-                            showConflictDialog.value = false
-                            return@checkFileExist
-                        }
-                    }
-                }
+                afterPermissionGranted()
             } else {
-                Toast.makeText(context, R.string.request_permission_toast, Toast.LENGTH_SHORT)
+                Toast.makeText(context, R.string.permission_not_granted_toast, Toast.LENGTH_SHORT)
                     .show()
             }
         }
     }
 
-
 //==================== Android 10- 使用====================
+
+    fun afterPermissionGranted() {
+        checkFileExist {
+            when (conflictDialogResult.intValue) {
+                0 -> {
+                    inScanning = true
+                    openDirectoryLauncher.launch(null)
+                }
+
+                1 -> {
+                    showConflictDialog.value = false
+                    lastIndex++
+                    inScanning = true
+                    openDirectoryLauncher.launch(null)
+                }
+
+                2 -> {
+                    showConflictDialog.value = false
+                    lastIndex = 0
+                    lifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+                        val file = File(
+                            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
+                            getString(context, R.string.result_file_name)
+                        )
+                        file.delete()
+                        db.musicDao().deleteAll()
+                    }
+                    inScanning = true
+                    openDirectoryLauncher.launch(null)
+                }
+
+                3 -> {
+                    showConflictDialog.value = false
+                    return@checkFileExist
+                }
+            }
+        }
+    }
 
     /**
      * 检查文件是否已存在
@@ -287,6 +276,7 @@ class ScanPage(
             inScanning = false
             return
         }
+        scanResult.value = ""
         val absolutePath: String
         val uriPath = uri.pathSegments?.get(uri.pathSegments!!.size - 1).toString()
         Toast.makeText(

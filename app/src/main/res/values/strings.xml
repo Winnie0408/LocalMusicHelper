@@ -19,4 +19,5 @@
     <string name="convert_function_name">Convert</string>
     <string name="process_function_name">Process</string>
     <string name="about_function_name">About</string>
+    <string name="permission_not_granted_toast">Required permissions not authorised, unable to continue.</string>
 </resources>

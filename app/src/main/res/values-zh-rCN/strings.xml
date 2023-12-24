@@ -19,4 +19,5 @@
     <string name="convert_function_name">转换</string>
     <string name="process_function_name">处理</string>
     <string name="about_function_name">关于</string>
+    <string name="permission_not_granted_toast">未授予需要的权限，无法继续</string>
 </resources>
