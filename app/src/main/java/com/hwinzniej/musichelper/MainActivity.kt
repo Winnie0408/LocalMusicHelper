@@ -28,6 +28,8 @@ import androidx.core.view.WindowCompat
 import androidx.room.Room
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.hwinzniej.musichelper.data.database.MusicDatabase
+import com.hwinzniej.musichelper.pages.ProcessPage
+import com.hwinzniej.musichelper.pages.ProcessPageUi
 import com.hwinzniej.musichelper.pages.ScanPage
 import com.hwinzniej.musichelper.pages.ScanPageUi
 import com.moriafly.salt.ui.BottomBar
@@ -42,6 +44,7 @@ class MainActivity : ComponentActivity() {
 
     private lateinit var openDirectoryLauncher: ActivityResultLauncher<Uri?>
     private lateinit var scanPage: ScanPage
+    private lateinit var processPage: ProcessPage
     lateinit var db: MusicDatabase
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -57,6 +60,7 @@ class MainActivity : ComponentActivity() {
         ).build()
 
         scanPage = ScanPage(this, this, openDirectoryLauncher, db, this)
+        processPage = ProcessPage()
 
 
         setContent {
@@ -67,13 +71,12 @@ class MainActivity : ComponentActivity() {
                 lightSaltColors()
             }
             WindowCompat.setDecorFitsSystemWindows(window, false)
-//            scanResult.value = getString(R.string.scan_result_hint)
             CompositionLocalProvider {
                 SaltTheme(
                     colors = colors
                 ) {
                     TransparentSystemBars()
-                    Pages(this, scanPage)
+                    Pages(scanPage, processPage)
                 }
             }
         }
@@ -93,7 +96,7 @@ class MainActivity : ComponentActivity() {
 
 @OptIn(ExperimentalFoundationApi::class, UnstableSaltApi::class)
 @Composable
-private fun Pages(mainActivity: MainActivity, scanPage: ScanPage) {
+private fun Pages(scanPage: ScanPage, processPage: ProcessPage) {
     val context = LocalContext.current
     val pages = listOf("0", "1", "2", "3")
     val pageState = rememberPagerState(pageCount = { pages.size })
@@ -103,7 +106,6 @@ private fun Pages(mainActivity: MainActivity, scanPage: ScanPage) {
         modifier = Modifier
             .fillMaxSize()
             .systemBarsPadding()
-
     ) {
         HorizontalPager(
             state = pageState, modifier = Modifier
@@ -149,7 +151,6 @@ private fun Pages(mainActivity: MainActivity, scanPage: ScanPage) {
             BottomBarItem(
                 state = pageState.currentPage == 1,
                 onClick = {
-//                    scanPage.getMusicList()
                     coroutineScope.launch { pageState.animateScrollToPage(1) }
                 },
                 painter = painterResource(id = R.drawable.ic_launcher_foreground),
@@ -179,11 +180,6 @@ private fun Pages(mainActivity: MainActivity, scanPage: ScanPage) {
 @Composable
 private fun ConvertPageUi() {
     Text(text = "测试1")
-}
-
-@Composable
-private fun ProcessPageUi() {
-    Text(text = "测试2")
 }
 
 @Composable

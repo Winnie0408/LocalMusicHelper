@@ -14,10 +14,25 @@
     <string name="scan_control">扫描控制</string>
     <string name="touch_button_to_start_scanning">轻触按钮以开始</string>
     <string name="start_text">开始</string>
-    <string name="scan_result">扫描结果</string>
+    <string name="processing_result">处理结果</string>
+    <string name="scanning_result">扫描结果</string>
     <string name="number_of_total_songs">总歌曲数</string>
     <string name="convert_function_name">转换</string>
     <string name="process_function_name">处理</string>
     <string name="about_function_name">关于</string>
     <string name="permission_not_granted_toast">未授予需要的权限，无法继续</string>
+    <string name="process_control">处理控制</string>
+    <string name="process_all_scanned_music_switch_title">处理所有歌曲</string>
+    <string name="process_all_scanned_music_switch_sub">处理在“扫描”功能中扫描到的所有歌曲</string>
+    <string name="select_needed_processing_music_directory_item_title">选择歌曲所在的目录</string>
+    <string name="overwrite_original_tag_switch_title">覆盖原标签内容</string>
+    <string name="overwrite_original_tag_switch_sub">若原标签不为空，使用搜索结果覆盖原内容</string>
+    <string name="select_needed_tag_type_item_title">选择需要补全的标签类型</string>
+    <string name="select_needed_tag_type_dialog_title">标签类型选择</string>
+    <string name="ok_button_text">确定</string>
+    <string name="cancel_button_text">取消</string>
+    <string name="album_artist_tag_name">专辑艺术家</string>
+    <string name="release_year_tag_name">发行年份</string>
+    <string name="track_number_tag_name">音轨号</string>
+    <string name="genre_tag_name">流派</string>
 </resources>

@@ -34,16 +34,23 @@ fun YesNoDialog(
     title: String,
     content: String,
     noText: String,
-    yesText: String
+    yesText: String,
+    customContent: @Composable () -> Unit = {},
+    onlyComposeView: Boolean = false
 ) {
     BasicDialog(
         onDismissRequest = onDismiss,
         properties = properties,
     ) {
         DialogTitle(text = title)
-        ItemSpacer()
-        ItemText(text = content)
-        Spacer(modifier = Modifier.height(8.dp * 2))
+        if (onlyComposeView) Spacer(modifier = Modifier.height(8.dp * 2))
+        if (!onlyComposeView) {
+            ItemSpacer()
+            ItemText(text = content)
+            Spacer(modifier = Modifier.height(8.dp * 2))
+        }
+        customContent()
+        if (onlyComposeView) Spacer(modifier = Modifier.height(8.dp * 2))
         Row(
             modifier = Modifier.padding(horizontal = SaltTheme.dimens.outerHorizontalPadding)
         ) {
@@ -51,8 +58,7 @@ fun YesNoDialog(
                 onClick = {
                     onNegative()
                 },
-                modifier = Modifier
-                    .weight(1f),
+                modifier = Modifier.weight(1f),
                 text = noText.uppercase(),
                 textColor = SaltTheme.colors.subText,
                 backgroundColor = SaltTheme.colors.subBackground
@@ -61,10 +67,7 @@ fun YesNoDialog(
             TextButton(
                 onClick = {
                     onPositive()
-                },
-                modifier = Modifier
-                    .weight(1f),
-                text = yesText.uppercase()
+                }, modifier = Modifier.weight(1f), text = yesText.uppercase()
             )
         }
     }
@@ -87,7 +90,6 @@ fun BasicDialog(
                 .clip(RoundedCornerShape(20.dp))
                 .background(color = SaltTheme.colors.background)
                 .padding(vertical = 8.dp * 2)
-
         ) {
             content()
         }

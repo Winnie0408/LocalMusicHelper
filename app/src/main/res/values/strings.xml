@@ -14,10 +14,25 @@
     <string name="scan_control">Scanning control</string>
     <string name="touch_button_to_start_scanning">Touch the button to start scanning.</string>
     <string name="start_text">Start</string>
-    <string name="scan_result">Scanning result</string>
+    <string name="scanning_result">Scanning result</string>
     <string name="number_of_total_songs">Total songs</string>
     <string name="convert_function_name">Convert</string>
     <string name="process_function_name">Process</string>
     <string name="about_function_name">About</string>
     <string name="permission_not_granted_toast">Required permissions not authorised, unable to continue.</string>
+    <string name="process_control">Processing control</string>
+    <string name="process_all_scanned_music_switch_title">Process all musics</string>
+    <string name="process_all_scanned_music_switch_sub">Processing all musics scanned in the \"Scan\" function</string>
+    <string name="select_needed_processing_music_directory_item_title">Select the directory for the songs</string>
+    <string name="overwrite_original_tag_switch_title">Overwrite original tag content</string>
+    <string name="overwrite_original_tag_switch_sub">If the original tag is not empty, use the search results to overwrite the original content</string>
+    <string name="select_needed_tag_type_item_title">Select the type of tag to be patched</string>
+    <string name="select_needed_tag_type_dialog_title">Tag type selection</string>
+    <string name="ok_button_text">OK</string>
+    <string name="cancel_button_text">Cancel</string>
+    <string name="album_artist_tag_name">Album artist</string>
+    <string name="release_year_tag_name">Release year</string>
+    <string name="track_number_tag_name">Track number</string>
+    <string name="genre_tag_name">Genre</string>
+    <string name="processing_result">Processing result</string>
 </resources>

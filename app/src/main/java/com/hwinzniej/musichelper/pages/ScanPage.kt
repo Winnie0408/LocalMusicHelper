@@ -419,7 +419,7 @@ class ScanPage(
 @OptIn(UnstableSaltApi::class)
 @Composable
 fun ScanPageUi(
-    mainActivity: ScanPage,
+    scanPage: ScanPage,
     scanResult: MutableState<String>,
     showLoadingProgressBar: MutableState<Boolean>,
     progressPercent: MutableState<Int>,
@@ -435,7 +435,7 @@ fun ScanPageUi(
             title = context.getString(R.string.file_conflict_dialog_title),
             content = context.getString(R.string.file_conflict_dialog_content).replace("#n", "\n"),
             noText = context.getString(R.string.file_conflict_dialog_no_text),
-            yesText = context.getString(R.string.file_conflict_dialog_yes_text),
+            yesText = context.getString(R.string.file_conflict_dialog_yes_text)
         )
     }
 
@@ -456,17 +456,17 @@ fun ScanPageUi(
                 .verticalScroll(rememberScrollState())
         ) {
             RoundedColumn {
-                ItemTitle(text = context.getString((R.string.scan_control)))
+                ItemTitle(text = context.getString(R.string.scan_control))
                 ItemText(text = context.getString(R.string.touch_button_to_start_scanning))
                 ItemContainer {
                     TextButton(onClick = {
 //                        mainActivity.init()
-                        mainActivity.init()
+                        scanPage.init()
                     }, text = context.getString(R.string.start_text))
                 }
             }
             RoundedColumn {
-                ItemTitle(text = context.getString(R.string.scan_result))
+                ItemTitle(text = context.getString(R.string.scanning_result))
                 ItemValue(
                     text = context.getString(R.string.number_of_total_songs),
                     sub = progressPercent.value.toString()
