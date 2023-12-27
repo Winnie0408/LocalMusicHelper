@@ -35,4 +35,8 @@
     <string name="release_year_tag_name">发行年份</string>
     <string name="track_number_tag_name">音轨号</string>
     <string name="genre_tag_name">流派</string>
+    <string name="select_source_item_title">选择标签信息来源</string>
+    <string name="select_source_dialog_title">来源选择</string>
+    <string name="source_of_tag_1">豆瓣音乐</string>
+    <string name="source_of_tag_3">百度百科</string>
 </resources>

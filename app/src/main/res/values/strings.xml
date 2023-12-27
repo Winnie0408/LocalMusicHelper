@@ -35,4 +35,9 @@
     <string name="track_number_tag_name">Track number</string>
     <string name="genre_tag_name">Genre</string>
     <string name="processing_result">Processing result</string>
+    <string name="select_source_item_title">Select the sources of tag info</string>
+    <string name="select_source_dialog_title">Sources selection</string>
+    <string name="source_of_tag_1">Douban Music</string>
+    <string name="source_of_tag_2" translatable="false">MusicBrainz</string>
+    <string name="source_of_tag_3">Baidu Baike</string>
 </resources>

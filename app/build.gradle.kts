@@ -7,10 +7,11 @@ plugins {
 android {
     namespace = "com.hwinzniej.musichelper"
     compileSdk = 34
+    useLibrary("org.apache.http.legacy")
 
     defaultConfig {
         applicationId = "com.hwinzniej.musichelper"
-        minSdk = 23
+        minSdk = 26
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
@@ -19,6 +20,9 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
+    }
+    packaging {
+        resources.excludes.add("META-INF/*")
     }
 
     buildTypes {
@@ -81,7 +85,7 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-test-manifest")
 
     //SaltUI
-    implementation("com.github.Moriafly:SaltUI:0.1.0-dev39")
+    implementation("com.github.Moriafly:SaltUI:0.1.0-dev40")
 
     //JAudioTagger
     implementation("org.bitbucket.ijabz:jaudiotagger:7b004a1")
@@ -103,6 +107,22 @@ dependencies {
 
     //SystemUi控制器
     implementation("com.google.accompanist:accompanist-systemuicontroller:0.32.0")
+
+    //拖拽排序
+    implementation("org.burnoutcrew.composereorderable:reorderable:0.9.6")
+
+    //OkHttp3
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+
+    //Jsoup
+    implementation("org.jsoup:jsoup:1.17.1")
+
+    //HtmlUnit
+    implementation("org.htmlunit:htmlunit3-android:3.7.0")
+
+    //XmlAPI
+    implementation("xml-apis:xml-apis:1.4.01")
+
 
     // Optional - Included automatically by material, only add when you need
     // the icons but not the material library (e.g. when using Material3 or a

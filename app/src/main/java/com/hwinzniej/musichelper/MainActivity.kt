@@ -60,7 +60,7 @@ class MainActivity : ComponentActivity() {
         ).build()
 
         scanPage = ScanPage(this, this, openDirectoryLauncher, db, this)
-        processPage = ProcessPage()
+        processPage = ProcessPage(this, this, db)
 
 
         setContent {
@@ -129,7 +129,21 @@ private fun Pages(scanPage: ScanPage, processPage: ProcessPage) {
                 }
 
                 2 -> {
-                    ProcessPageUi()
+                    ProcessPageUi(
+                        processPage,
+                        processPage.processAllScannedMusic,
+                        processPage.overwriteOriginalTag,
+                        processPage.showSelectTagTypeDialog,
+                        processPage.enableAlbumArtist,
+                        processPage.enableReleaseYear,
+                        processPage.enableGenre,
+                        processPage.enableTrackNumber,
+                        processPage.showProgressBar,
+                        processPage.showSelectSourceDialog,
+                        processPage.useDoubanMusicSource,
+                        processPage.useMusicBrainzSource,
+                        processPage.useBaiduBaikeSource,
+                    )
                 }
 
                 3 -> {

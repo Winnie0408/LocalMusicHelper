@@ -299,9 +299,9 @@ class ScanPage(
                 if (scanResult.value.length == lastScanResult) {
                     showLoadingProgressBar.value = false
                     inScanning = false
-//                        Toast.makeText(
-//                            this, R.string.scan_complete, Toast.LENGTH_SHORT
-//                        ).show()
+                    Toast.makeText(
+                        context, R.string.scan_complete, Toast.LENGTH_SHORT
+                    ).show()
                     break
                 }
             }
@@ -352,7 +352,7 @@ class ScanPage(
             return
         }
         lifecycleOwner.lifecycleScope.launch(Dispatchers.Main) {
-            scanResult.value = file.name + "\n" + scanResult.value
+            scanResult.value = "${file.name}\n${scanResult.value}"//TODO 换成StringBuilder或StringBuffer？
         }
         val tag = audioFile.tag
         writeToFile(tag, file.path)
@@ -460,7 +460,6 @@ fun ScanPageUi(
                 ItemText(text = context.getString(R.string.touch_button_to_start_scanning))
                 ItemContainer {
                     TextButton(onClick = {
-//                        mainActivity.init()
                         scanPage.init()
                     }, text = context.getString(R.string.start_text))
                 }
