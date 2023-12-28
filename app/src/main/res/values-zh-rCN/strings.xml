@@ -39,4 +39,16 @@
     <string name="select_source_dialog_title">来源选择</string>
     <string name="source_of_tag_1">豆瓣音乐</string>
     <string name="source_of_tag_3">百度百科</string>
+    <string name="source_of_songlist_app">歌单来源</string>
+    <string name="select_source_of_songlist">选择歌单来源App</string>
+    <string name="source_netease_cloud_music">网易云音乐</string>
+    <string name="source_qq_music">QQ音乐</string>
+    <string name="source_kugou_music">酷狗音乐</string>
+    <string name="source_kuwo_music">酷我音乐</string>
+    <string name="import_database">导入数据库</string>
+    <string name="select_database_file_match_to_source_1">选择</string>
+    <string name="select_database_file_match_to_source_2">的数据库文件</string>
+    <string name="source_default">与歌单来源对应</string>
+    <string name="you_have_selected">您已选择</string>
+    <string name="next_step_text">下一步</string>
 </resources>

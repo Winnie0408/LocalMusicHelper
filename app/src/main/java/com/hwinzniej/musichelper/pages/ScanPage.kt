@@ -352,7 +352,7 @@ class ScanPage(
             return
         }
         lifecycleOwner.lifecycleScope.launch(Dispatchers.Main) {
-            scanResult.value = "${file.name}\n${scanResult.value}"//TODO 换成StringBuilder或StringBuffer？
+            scanResult.value = "${file.name}\n${scanResult.value}"
         }
         val tag = audioFile.tag
         writeToFile(tag, file.path)

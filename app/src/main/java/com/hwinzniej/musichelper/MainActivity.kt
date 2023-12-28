@@ -28,6 +28,8 @@ import androidx.core.view.WindowCompat
 import androidx.room.Room
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.hwinzniej.musichelper.data.database.MusicDatabase
+import com.hwinzniej.musichelper.pages.ConvertPage
+import com.hwinzniej.musichelper.pages.ConvertPageUi
 import com.hwinzniej.musichelper.pages.ProcessPage
 import com.hwinzniej.musichelper.pages.ProcessPageUi
 import com.hwinzniej.musichelper.pages.ScanPage
@@ -43,8 +45,10 @@ import kotlinx.coroutines.launch
 class MainActivity : ComponentActivity() {
 
     private lateinit var openDirectoryLauncher: ActivityResultLauncher<Uri?>
+    private lateinit var openFileLauncher: ActivityResultLauncher<Array<String>>
     private lateinit var scanPage: ScanPage
     private lateinit var processPage: ProcessPage
+    private lateinit var convertPage: ConvertPage
     lateinit var db: MusicDatabase
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -54,6 +58,10 @@ class MainActivity : ComponentActivity() {
             registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
                 scanPage.handleUri(uri)
             }
+        openFileLauncher =
+            registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+                convertPage.handleUri(uri)
+            }
 
         db = Room.databaseBuilder(
             applicationContext, MusicDatabase::class.java, "music"
@@ -61,6 +69,7 @@ class MainActivity : ComponentActivity() {
 
         scanPage = ScanPage(this, this, openDirectoryLauncher, db, this)
         processPage = ProcessPage(this, this, db)
+        convertPage = ConvertPage(this, this, openFileLauncher)
 
 
         setContent {
@@ -76,7 +85,7 @@ class MainActivity : ComponentActivity() {
                     colors = colors
                 ) {
                     TransparentSystemBars()
-                    Pages(scanPage, processPage)
+                    Pages(scanPage, processPage, convertPage)
                 }
             }
         }
@@ -96,7 +105,7 @@ class MainActivity : ComponentActivity() {
 
 @OptIn(ExperimentalFoundationApi::class, UnstableSaltApi::class)
 @Composable
-private fun Pages(scanPage: ScanPage, processPage: ProcessPage) {
+private fun Pages(scanPage: ScanPage, processPage: ProcessPage, convertPage: ConvertPage) {
     val context = LocalContext.current
     val pages = listOf("0", "1", "2", "3")
     val pageState = rememberPagerState(pageCount = { pages.size })
@@ -125,7 +134,11 @@ private fun Pages(scanPage: ScanPage, processPage: ProcessPage) {
                 }
 
                 1 -> {
-                    ConvertPageUi()
+                    ConvertPageUi(
+                        convertPage,
+                        convertPage.selectedSourceApp,
+                        convertPage.databaseFileName,
+                    )
                 }
 
                 2 -> {
@@ -190,11 +203,6 @@ private fun Pages(scanPage: ScanPage, processPage: ProcessPage) {
     }
 }
 
-
-@Composable
-private fun ConvertPageUi() {
-    Text(text = "测试1")
-}
 
 @Composable
 private fun AboutPageUi() {

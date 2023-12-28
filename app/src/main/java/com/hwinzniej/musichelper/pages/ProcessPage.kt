@@ -150,8 +150,8 @@ class DoubanMusicApi {
                 options.isThrowExceptionOnFailingStatusCode = false
             }
 
-            val htmlPage: HtmlPage = webClient.getPage(url)
             webClient.waitForBackgroundJavaScript(500) // 等待JavaScript执行完成
+            val htmlPage: HtmlPage = webClient.getPage(url)
 
             val musicInfoPage =
                 "https://music.douban.com/subject/[0-9]*/".toRegex().find(htmlPage.asXml())?.value

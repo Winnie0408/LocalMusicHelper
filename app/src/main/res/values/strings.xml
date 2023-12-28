@@ -40,4 +40,16 @@
     <string name="source_of_tag_1">Douban Music</string>
     <string name="source_of_tag_2" translatable="false">MusicBrainz</string>
     <string name="source_of_tag_3">Baidu Baike</string>
+    <string name="source_of_songlist_app">Source of musiclist</string>
+    <string name="select_source_of_songlist">Select source song list App</string>
+    <string name="source_netease_cloud_music">Netease Cloud Music</string>
+    <string name="source_qq_music">QQ Music</string>
+    <string name="source_kugou_music">Kugou Music</string>
+    <string name="source_kuwo_music">Kuwo Music</string>
+    <string name="import_database">Import database</string>
+    <string name="select_database_file_match_to_source_1">"Select the database file of "</string>
+    <string name="select_database_file_match_to_source_2"></string>
+    <string name="source_default">the corresponding app</string>
+    <string name="you_have_selected">You have selected</string>
+    <string name="next_step_text">Next</string>
 </resources>
