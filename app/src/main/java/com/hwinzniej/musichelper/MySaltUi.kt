@@ -2,7 +2,10 @@ package com.hwinzniej.musichelper
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.indication
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -16,9 +19,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -26,10 +32,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.window.DialogWindowProvider
@@ -125,33 +134,35 @@ fun ItemPopup(
     iconColor: Color? = null,
     text: String,
     sub: String? = null,
+    selectedItem: String = "",
     content: @Composable ColumnScope.() -> Unit
 ) {
-    var popupLocation = 1
-    val halfScreenWidth = LocalConfiguration.current.screenHeightDp / 2
     Box {
+        val boxWidth = remember { mutableStateOf(0f) }
+        val clickOffsetX = remember { mutableStateOf(0f) }
+        val interactionSource = remember { MutableInteractionSource() }
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .heightIn(min = 56.dp)
                 .alpha(if (enabled) 1f else 0.5f)
-                .clickable(enabled = enabled) {
-                    state.expend()
+                .pointerInput(Unit) {
+                    detectTapGestures(onPress = { offset ->
+                        val press = PressInteraction.Press(offset)
+                        interactionSource.emit(press)
+                        clickOffsetX.value = offset.x
+                        tryAwaitRelease()
+                        state.expend()
+                        interactionSource.emit(PressInteraction.Release(press))
+                    })
                 }
-//                .pointerInput(Unit) {
-//                    detectTapGestures(onTap = { offset ->
-//                        state.expend()
-////                        if (offset.x > halfScreenWidth)
-////                            println("right")
-////                        else
-////                            println("left")
-//                        popupLocation = if (offset.x > halfScreenWidth)
-//                            300
-//                        else
-//                            0
-//
-//                    })
-//                }
+                .indication(
+                    interactionSource = interactionSource,
+                    indication = rememberRipple()
+                )
+                .onGloballyPositioned { layoutCoordinates ->
+                    boxWidth.value = layoutCoordinates.size.width.toFloat()
+                }
                 .padding(horizontal = SaltTheme.dimens.innerHorizontalPadding, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -185,6 +196,12 @@ fun ItemPopup(
                 }
             }
             Spacer(modifier = Modifier.width(12.dp))
+            Text(
+                text = selectedItem,
+                color = SaltTheme.colors.subText,
+                style = SaltTheme.textStyles.main,
+                fontSize = 14.sp
+            )
             Icon(
                 modifier = Modifier
                     .size(20.dp),
@@ -192,16 +209,19 @@ fun ItemPopup(
                 contentDescription = null,
                 tint = SaltTheme.colors.subText
             )
-
-
         }
         PopupMenu(
             expanded = state.expend,
             onDismissRequest = {
                 state.dismiss()
-            }
+            },
+            offset = if (boxWidth.value / 2 > clickOffsetX.value) DpOffset(
+                16.dp,
+                0.dp
+            ) else DpOffset((boxWidth.value / 6).dp, 0.dp)
         ) {
             content()
         }
     }
+
 }

@@ -52,4 +52,5 @@
     <string name="source_default">the corresponding app</string>
     <string name="you_have_selected">You have selected</string>
     <string name="next_step_text">Next</string>
+    <string name="please_select_source_app_first">Please select source App first</string>
 </resources>

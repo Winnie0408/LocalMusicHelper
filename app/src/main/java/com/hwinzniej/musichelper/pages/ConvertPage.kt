@@ -3,6 +3,7 @@ package com.hwinzniej.musichelper.pages
 import android.content.Context
 import android.net.Uri
 import androidx.activity.result.ActivityResultLauncher
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -10,11 +11,15 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.lifecycleScope
 import com.hwinzniej.musichelper.ItemPopup
 import com.hwinzniej.musichelper.R
 import com.moriafly.salt.ui.Item
@@ -28,6 +33,9 @@ import com.moriafly.salt.ui.TitleBar
 import com.moriafly.salt.ui.UnstableSaltApi
 import com.moriafly.salt.ui.popup.PopupMenuItem
 import com.moriafly.salt.ui.popup.rememberPopupState
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 class ConvertPage(
     val context: Context,
@@ -36,6 +44,7 @@ class ConvertPage(
 ) {
     var databaseFileName = mutableStateOf("")
     var selectedSourceApp = mutableIntStateOf(0)
+    var showYouHaveSelected = mutableStateOf(false)
 
     fun test() {
         openFileLauncher.launch(arrayOf("*/*"))
@@ -51,6 +60,10 @@ class ConvertPage(
         databaseFileName.value =
             databaseFileName.value.substring(databaseFileName.value.lastIndexOf("/") + 1)
 
+        lifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
+            delay(750L)
+            showYouHaveSelected.value = true
+        }
     }
 
 
@@ -61,10 +74,12 @@ class ConvertPage(
 fun ConvertPageUi(
     convertPage: ConvertPage,
     selectedSourceApp: MutableState<Int>,
-    databaseFileName: MutableState<String>
+    databaseFileName: MutableState<String>,
+    showYouHaveSelected: MutableState<Boolean>,
 ) {
     val context = LocalContext.current
     val popupMenuState = rememberPopupState()
+    var sourceApp by remember { mutableStateOf("") }
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -87,6 +102,7 @@ fun ConvertPageUi(
                 ItemPopup(
                     state = popupMenuState,
                     text = context.getString(R.string.select_source_of_songlist),
+                    selectedItem = sourceApp
                 ) {
                     PopupMenuItem(
                         onClick = {
@@ -126,26 +142,36 @@ fun ConvertPageUi(
                 }
             }
 
-            val sourceApp = when (selectedSourceApp.value) {
+            sourceApp = when (selectedSourceApp.value) {
                 1 -> context.getString(R.string.source_netease_cloud_music)
                 2 -> context.getString(R.string.source_qq_music)
                 3 -> context.getString(R.string.source_kugou_music)
                 4 -> context.getString(R.string.source_kuwo_music)
-                else -> context.getString(R.string.source_netease_cloud_music)
+                else -> ""
             }
 
             RoundedColumn {
                 ItemTitle(text = context.getString(R.string.import_database))
                 Item(
+                    enabled = selectedSourceApp.value != 0,
                     onClick = { convertPage.test() },
-                    text = context.getString(R.string.select_database_file_match_to_source_1) + sourceApp + context.getString(
-                        R.string.select_database_file_match_to_source_2
+                    text = if (selectedSourceApp.value == 0) {
+                        context.getString(R.string.please_select_source_app_first)
+                    } else {
+                        context.getString(R.string.select_database_file_match_to_source_1) + sourceApp + context.getString(
+                            R.string.select_database_file_match_to_source_2
+                        )
+                    },
+                )
+                AnimatedVisibility(
+                    visible = showYouHaveSelected.value
+                ) {
+                    ItemValue(
+                        text = context.getString(R.string.you_have_selected),
+                        sub = databaseFileName.value
                     )
-                )
-                ItemValue(
-                    text = context.getString(R.string.you_have_selected),
-                    sub = databaseFileName.value
-                )
+                }
+
             }
             ItemContainer {
                 TextButton(
