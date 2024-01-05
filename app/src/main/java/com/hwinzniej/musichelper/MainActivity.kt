@@ -138,7 +138,12 @@ private fun Pages(scanPage: ScanPage, processPage: ProcessPage, convertPage: Con
                         convertPage,
                         convertPage.selectedSourceApp,
                         convertPage.databaseFileName,
-                        convertPage.showYouHaveSelected,
+                        convertPage.useCustomResultFile,
+                        convertPage.customResultFileName,
+                        convertPage.showLoadingProgressBar,
+                        convertPage.showErrorDialog,
+                        convertPage.errorDialogTitle,
+                        convertPage.errorDialogContent,
                     )
                 }
 

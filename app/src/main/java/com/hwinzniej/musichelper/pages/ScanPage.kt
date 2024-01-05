@@ -14,6 +14,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -49,6 +50,7 @@ import androidx.lifecycle.lifecycleScope
 import com.hwinzniej.musichelper.R
 import com.hwinzniej.musichelper.YesNoDialog
 import com.hwinzniej.musichelper.data.database.MusicDatabase
+import com.hwinzniej.musichelper.utils.UsefulTools
 import com.moriafly.salt.ui.ItemContainer
 import com.moriafly.salt.ui.ItemText
 import com.moriafly.salt.ui.ItemTitle
@@ -72,7 +74,6 @@ import org.jaudiotagger.tag.TagException
 import java.io.File
 import java.io.FileWriter
 import java.io.IOException
-import java.io.RandomAccessFile
 
 interface PermissionResultHandler {
     fun onPermissionResult(
@@ -88,17 +89,11 @@ class ScanPage(
     componentActivity: ComponentActivity
 ) : PermissionResultHandler {
     val scanResult = mutableStateOf(getString(context, R.string.scan_result_hint))
-
     val showLoadingProgressBar = mutableStateOf(false)
-
     var inScanning: Boolean = false
-
     val showConflictDialog = mutableStateOf(false)
-
     var conflictDialogResult = mutableIntStateOf(0)
-
-    var progressPercent = mutableIntStateOf(0)
-
+    var progressPercent = mutableIntStateOf(-1)
     var lastIndex = 0
 
     /**
@@ -107,7 +102,6 @@ class ScanPage(
 
     fun init() {
         lastIndex = 0
-        progressPercent.intValue = 0
         conflictDialogResult.intValue = 0
         requestPermission()
     }
@@ -215,14 +209,6 @@ class ScanPage(
                 2 -> {
                     showConflictDialog.value = false
                     lastIndex = 0
-                    lifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
-                        val file = File(
-                            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
-                            getString(context, R.string.result_file_name)
-                        )
-                        file.delete()
-                        db.musicDao().deleteAll()
-                    }
                     inScanning = true
                     openDirectoryLauncher.launch(null)
                 }
@@ -246,14 +232,9 @@ class ScanPage(
         )
         if (file.exists()) {
             showConflictDialog.value = true
-            val raf = RandomAccessFile(file, "r")
-            val length = raf.length()
-            raf.seek(length - 8)
-            val lastChars = raf.readLine()
+            val lastChars = UsefulTools().readLastNChars(file, 8)
             lastIndex =
                 lastChars.substring(lastChars.lastIndexOf("#") + 1, lastChars.length).toInt()
-            println(lastChars)
-            raf.close()
         }
 //        }
 
@@ -276,23 +257,35 @@ class ScanPage(
             inScanning = false
             return
         }
+
+        if (conflictDialogResult.intValue == 2) {
+            lifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+                val file = File(
+                    Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
+                    getString(context, R.string.result_file_name)
+                )
+                file.delete()
+                db.musicDao().deleteAll()
+            }
+        }
+
         scanResult.value = ""
         val absolutePath: String
-        val uriPath = uri.pathSegments?.get(uri.pathSegments!!.size - 1).toString()
         Toast.makeText(
             context,
             getString(context, R.string.selected_directory_path) + "$uri",
             Toast.LENGTH_SHORT
         ).show()
-        if (uriPath.contains("primary")) {  //内部存储
-            absolutePath = uriPath.replace("primary:", "/storage/emulated/0/")
-        } else {  //SD卡
-            absolutePath = "/storage/${uriPath.split(":")[0]}/${uriPath.split(":")[1]}"
-        }
+        absolutePath = UsefulTools().uriToAbsolutePath(uri)
         val directory = File(absolutePath)
         showLoadingProgressBar.value = true
-        lifecycleOwner.lifecycleScope.launch(Dispatchers.IO) { scanDirectory(directory) }
+        progressPercent.intValue = 0
+        lifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+            delay(300L)
+            scanDirectory(directory)
+        }
         lifecycleOwner.lifecycleScope.launch(Dispatchers.Main) {
+            delay(300L)
             while (true) {
                 val lastScanResult = scanResult.value.length
                 delay(250L)
@@ -447,63 +440,69 @@ fun ScanPageUi(
         TitleBar(
             onBack = {}, text = context.getString(R.string.scan_function_name), showBackBtn = false
         )
-
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxSize()
-                .background(color = SaltTheme.colors.background)
-                .verticalScroll(rememberScrollState())
-        ) {
-            RoundedColumn {
-                ItemTitle(text = context.getString(R.string.scan_control))
-                ItemText(text = context.getString(R.string.touch_button_to_start_scanning))
-                ItemContainer {
-                    TextButton(onClick = {
-                        scanPage.init()
-                    }, text = context.getString(R.string.start_text))
-                }
-            }
-            RoundedColumn {
-                ItemTitle(text = context.getString(R.string.scanning_result))
-                ItemValue(
-                    text = context.getString(R.string.number_of_total_songs),
-                    sub = progressPercent.value.toString()
+        Box {
+            if (showLoadingProgressBar.value) {
+                LinearProgressIndicator(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .zIndex(1f),
+                    color = SaltTheme.colors.highlight,
+                    trackColor = SaltTheme.colors.background
                 )
+            }
 
-                ItemContainer {
-                    LazyColumn(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .size((LocalConfiguration.current.screenHeightDp / 2).dp)
-                            .clip(RoundedCornerShape(10.dp))
-                            .background(color = SaltTheme.colors.background)
-                    ) {
-                        item {
-                            Box {
-                                if (showLoadingProgressBar.value) {
-                                    LinearProgressIndicator(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .zIndex(1f),
-                                        color = SaltTheme.colors.highlight,
-                                        trackColor = SaltTheme.colors.background
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(top = 4.dp)
+                    .background(color = SaltTheme.colors.background)
+                    .verticalScroll(rememberScrollState())
+            ) {
+                RoundedColumn {
+                    ItemTitle(text = context.getString(R.string.scan_control))
+                    ItemText(text = context.getString(R.string.touch_button_to_start_scanning))
+                    ItemContainer {
+                        TextButton(onClick = {
+                            scanPage.init()
+                        }, text = context.getString(R.string.start_text))
+                    }
+                }
+                AnimatedVisibility(
+                    visible = progressPercent.value != -1,
+                ) {
+                    RoundedColumn {
+                        ItemTitle(text = context.getString(R.string.scanning_result))
+                        ItemValue(
+                            text = context.getString(R.string.number_of_total_songs),
+                            sub = progressPercent.value.toString()
+                        )
+
+                        ItemContainer {
+                            LazyColumn(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .size((LocalConfiguration.current.screenHeightDp / 2).dp)
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .background(color = SaltTheme.colors.background)
+                            ) {
+                                item {
+                                    Text(
+                                        modifier = Modifier.padding(
+                                            top = 3.dp, start = 7.dp, end = 7.dp
+                                        ),
+                                        text = scanResult.value,
+                                        fontSize = 16.sp,
+                                        style = TextStyle(
+                                            lineHeight = 1.5.em, color = SaltTheme.colors.subText
+                                        ),
                                     )
+
                                 }
-                                Text(
-                                    modifier = Modifier.padding(
-                                        top = 3.dp, start = 7.dp, end = 7.dp
-                                    ),
-                                    text = scanResult.value,
-                                    fontSize = 16.sp,
-                                    style = TextStyle(
-                                        lineHeight = 1.5.em, color = SaltTheme.colors.subText
-                                    ),
-                                )
                             }
                         }
                     }
                 }
+
             }
         }
     }

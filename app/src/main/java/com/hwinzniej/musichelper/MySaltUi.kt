@@ -36,6 +36,8 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -43,7 +45,6 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.window.DialogWindowProvider
 import com.moriafly.salt.ui.ItemSpacer
-import com.moriafly.salt.ui.ItemText
 import com.moriafly.salt.ui.SaltTheme
 import com.moriafly.salt.ui.TextButton
 import com.moriafly.salt.ui.UnstableSaltApi
@@ -223,5 +224,47 @@ fun ItemPopup(
             content()
         }
     }
+}
 
+@UnstableSaltApi
+@Composable
+fun YesDialog(
+    onDismissRequest: () -> Unit,
+    properties: DialogProperties = DialogProperties(),
+    title: String,
+    content: String
+) {
+    com.moriafly.salt.ui.dialog.BasicDialog(
+        onDismissRequest = onDismissRequest,
+        properties = properties
+    ) {
+        DialogTitle(text = title)
+        ItemSpacer()
+        ItemText(text = content)
+        Spacer(modifier = Modifier.height(16.dp))
+        TextButton(
+            onClick = {
+                onDismissRequest()
+            },
+            modifier = Modifier
+                .padding(horizontal = SaltTheme.dimens.outerHorizontalPadding),
+            text = stringResource(id = R.string.ok_button_text).uppercase()
+        )
+    }
+}
+
+@Composable
+fun ItemText(
+    text: String
+) {
+    Text(
+        text = text,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = SaltTheme.dimens.innerHorizontalPadding),
+        style = TextStyle(
+            fontSize = 14.sp,
+            color = SaltTheme.colors.subText
+        )
+    )
 }
