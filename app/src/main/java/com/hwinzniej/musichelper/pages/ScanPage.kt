@@ -50,7 +50,7 @@ import androidx.lifecycle.lifecycleScope
 import com.hwinzniej.musichelper.R
 import com.hwinzniej.musichelper.YesNoDialog
 import com.hwinzniej.musichelper.data.database.MusicDatabase
-import com.hwinzniej.musichelper.utils.UsefulTools
+import com.hwinzniej.musichelper.utils.Tools
 import com.moriafly.salt.ui.ItemContainer
 import com.moriafly.salt.ui.ItemText
 import com.moriafly.salt.ui.ItemTitle
@@ -232,7 +232,7 @@ class ScanPage(
         )
         if (file.exists()) {
             showConflictDialog.value = true
-            val lastChars = UsefulTools().readLastNChars(file, 8)
+            val lastChars = Tools().readLastNChars(file, 8)
             lastIndex =
                 lastChars.substring(lastChars.lastIndexOf("#") + 1, lastChars.length).toInt()
         }
@@ -276,7 +276,7 @@ class ScanPage(
             getString(context, R.string.selected_directory_path) + "$uri",
             Toast.LENGTH_SHORT
         ).show()
-        absolutePath = UsefulTools().uriToAbsolutePath(uri)
+        absolutePath = Tools().uriToAbsolutePath(uri)
         val directory = File(absolutePath)
         showLoadingProgressBar.value = true
         progressPercent.intValue = 0

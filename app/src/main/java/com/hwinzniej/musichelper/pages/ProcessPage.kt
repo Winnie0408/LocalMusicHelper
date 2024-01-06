@@ -301,7 +301,6 @@ fun ProcessPageUi(
             })
     }
 
-
     Column(
         modifier = Modifier
             .fillMaxSize()

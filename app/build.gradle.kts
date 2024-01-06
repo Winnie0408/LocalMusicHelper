@@ -108,19 +108,19 @@ dependencies {
     //SystemUi控制器
     implementation("com.google.accompanist:accompanist-systemuicontroller:0.32.0")
 
-    //拖拽排序
+    //拖拽排序-可注释
     implementation("org.burnoutcrew.composereorderable:reorderable:0.9.6")
 
-    //OkHttp3
+    //OkHttp3-可注释
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
 
-    //Jsoup
+    //Jsoup-可注释
     implementation("org.jsoup:jsoup:1.17.1")
 
-    //HtmlUnit
+    //HtmlUnit-可注释
     implementation("org.htmlunit:htmlunit3-android:3.7.0")
 
-    //XmlAPI
+    //XmlAPI-可注释
     implementation("xml-apis:xml-apis:1.4.01")
 
 

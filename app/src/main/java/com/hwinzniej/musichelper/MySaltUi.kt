@@ -2,6 +2,7 @@ package com.hwinzniej.musichelper
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.indication
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -267,4 +268,70 @@ fun ItemText(
             color = SaltTheme.colors.subText
         )
     )
+}
+
+@UnstableSaltApi
+@Composable
+fun ItemCheck(
+    state: Boolean,
+    onChange: (Boolean) -> Unit,
+    enabled: Boolean = true,
+    text: String,
+    iconAtRight: Boolean = false,
+    sub: String? = null
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(min = 50.dp)
+            .alpha(if (enabled) 1f else 0.5f)
+            .clickable(enabled = enabled) {
+                onChange(!state)
+            }
+            .padding(horizontal = SaltTheme.dimens.innerHorizontalPadding, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        if (iconAtRight) {
+            Icon(
+                modifier = Modifier
+                    .size(24.dp),
+                painter = if (state) painterResource(id = R.drawable.ic_check) else painterResource(
+                    id = R.drawable.ic_uncheck
+                ),
+                contentDescription = null,
+                tint = SaltTheme.colors.highlight
+            )
+            Spacer(modifier = Modifier.width(12.dp))
+        }
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth()
+        ) {
+            Text(
+                text = text,
+                color = if (enabled && state) SaltTheme.colors.text else SaltTheme.colors.subText,
+                style = SaltTheme.textStyles.main
+            )
+            sub?.let {
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = sub,
+                    style = SaltTheme.textStyles.sub
+                )
+            }
+        }
+        if (!iconAtRight) {
+            Spacer(modifier = Modifier.width(12.dp))
+            Icon(
+                modifier = Modifier
+                    .size(24.dp),
+                painter = if (state) painterResource(id = R.drawable.ic_check) else painterResource(
+                    id = R.drawable.ic_uncheck
+                ),
+                contentDescription = null,
+                tint = SaltTheme.colors.highlight
+            )
+        }
+    }
 }

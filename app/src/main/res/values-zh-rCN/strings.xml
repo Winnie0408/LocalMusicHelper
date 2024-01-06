@@ -49,9 +49,9 @@
     <string name="select_database_file_match_to_source_1">选择</string>
     <string name="select_database_file_match_to_source_2">的数据库文件</string>
     <string name="source_default">与歌单来源对应</string>
-    <string name="you_have_selected">您已选择</string>
+    <string name="you_have_selected">已选择</string>
     <string name="next_step_text">下一步</string>
-    <string name="please_select_source_app_first">请先选择歌单来源APP</string>
+    <string name="please_select_source_app">请选择歌单来源APP</string>
     <string name="use_custom_result_file">使用自定义的歌单导出文件</string>
     <string name="import_result_file">导入结果文件</string>
     <string name="use_other_result_file">使用来自其他设备的“MusicHelper.txt”结果文件</string>
@@ -60,4 +60,7 @@
     <string name="error_while_getting_data_dialog_content">读取以下文件时发生错误，请检查文件选择是否正确</string>
     <string name="database_file">数据库文件</string>
     <string name="result_file">转换结果文件</string>
+    <string name="select_needed_musiclist">选择要转换的歌单</string>
+    <string name="total">包含</string>
+    <string name="songs">首歌曲</string>
 </resources>

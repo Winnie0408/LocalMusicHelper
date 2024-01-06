@@ -4,7 +4,7 @@ import android.net.Uri
 import java.io.File
 import java.io.RandomAccessFile
 
-class UsefulTools {
+class Tools {
     fun uriToAbsolutePath(uri: Uri): String {
         val uriPath = uri.pathSegments?.get(uri.pathSegments!!.size - 1).toString()
         val absolutePath = if (uriPath.contains("primary")) {  //内部存储

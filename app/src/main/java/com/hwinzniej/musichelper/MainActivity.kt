@@ -117,9 +117,11 @@ private fun Pages(scanPage: ScanPage, processPage: ProcessPage, convertPage: Con
             .systemBarsPadding()
     ) {
         HorizontalPager(
-            state = pageState, modifier = Modifier
+            state = pageState,
+            modifier = Modifier
                 .fillMaxSize()
-                .padding(bottom = 56.dp)
+                .padding(bottom = 56.dp),
+            beyondBoundsPageCount = 1
         ) { page ->
             when (page) {
                 0 -> {
@@ -144,6 +146,10 @@ private fun Pages(scanPage: ScanPage, processPage: ProcessPage, convertPage: Con
                         convertPage.showErrorDialog,
                         convertPage.errorDialogTitle,
                         convertPage.errorDialogContent,
+                        convertPage.playlistName,
+                        convertPage.playlistEnabled,
+                        convertPage.playlistSum,
+                        convertPage.currentPage
                     )
                 }
 
