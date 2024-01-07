@@ -64,4 +64,22 @@
     <string name="select_needed_musiclist">Select the song lists to convert</string>
     <string name="total"></string>
     <string name="songs">" songs"</string>
+    <string name="error">Error</string>
+    <string name="please_select_at_least_one_playlist">Please select at least one song list</string>
+    <string name="read_failed">read failed</string>
+    <string name="use_scan_fun_first">Please run a music scan on the scan page first</string>
+    <string name="error_details">Error details:</string>
+    <string name="in_total">"Total: "</string>
+    <string name="selected">Selected:</string>
+    <string name="select_all">Select All</string>
+    <string name="convert_options">Convert options</string>
+    <string name="set_similarity_item">Similarity Threshold</string>
+    <string name="enable_bracket_removal">Bracket Removal</string>
+    <string name="enable_artist_name_match">Artist Name Matching</string>
+    <string name="enable_album_name_match">Album Name Matching</string>
+    <string name="matching_mode">Matching Mode</string>
+    <string name="split_matching">Split Matching</string>
+    <string name="overall_matching">Overall Matching</string>
+    <string name="preview_convert_result">Preview Convert Result</string>
+    <string name="set_similarity_dialog_title">Set Similarity Threshold</string>
 </resources>

@@ -69,7 +69,7 @@ class MainActivity : ComponentActivity() {
 
         scanPage = ScanPage(this, this, openDirectoryLauncher, db, this)
         processPage = ProcessPage(this, this, db)
-        convertPage = ConvertPage(this, this, openFileLauncher)
+        convertPage = ConvertPage(this, this, openFileLauncher, db)
 
 
         setContent {
@@ -149,7 +149,12 @@ private fun Pages(scanPage: ScanPage, processPage: ProcessPage, convertPage: Con
                         convertPage.playlistName,
                         convertPage.playlistEnabled,
                         convertPage.playlistSum,
-                        convertPage.currentPage
+                        convertPage.currentPage,
+                        convertPage.selectedMatchingMode,
+                        convertPage.enableBracketRemoval,
+                        convertPage.enableArtistNameMatch,
+                        convertPage.enableAlbumNameMatch,
+                        convertPage.similarity,
                     )
                 }
 

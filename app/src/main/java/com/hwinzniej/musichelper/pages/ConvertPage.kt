@@ -3,16 +3,21 @@ package com.hwinzniej.musichelper.pages
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.net.Uri
+import androidx.activity.compose.BackHandler
 import androidx.activity.result.ActivityResultLauncher
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -20,31 +25,40 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableFloatState
 import androidx.compose.runtime.MutableIntState
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
+import com.hwinzniej.musichelper.Item
 import com.hwinzniej.musichelper.ItemCheck
 import com.hwinzniej.musichelper.ItemPopup
 import com.hwinzniej.musichelper.R
 import com.hwinzniej.musichelper.YesDialog
+import com.hwinzniej.musichelper.YesNoDialog
 import com.hwinzniej.musichelper.data.SourceApp
+import com.hwinzniej.musichelper.data.database.MusicDatabase
 import com.hwinzniej.musichelper.utils.Tools
-import com.moriafly.salt.ui.Item
 import com.moriafly.salt.ui.ItemContainer
 import com.moriafly.salt.ui.ItemSwitcher
 import com.moriafly.salt.ui.ItemTitle
@@ -61,11 +75,13 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Semaphore
 import java.io.File
+import kotlin.math.roundToInt
 
 class ConvertPage(
     val context: Context,
     val lifecycleOwner: LifecycleOwner,
     val openFileLauncher: ActivityResultLauncher<Array<String>>,
+    val db: MusicDatabase,
 ) {
     var databaseFileName = mutableStateOf("")
     var selectedSourceApp = mutableIntStateOf(0)
@@ -75,13 +91,17 @@ class ConvertPage(
     var showLoadingProgressBar = mutableStateOf(false)
     var showErrorDialog = mutableStateOf(false)
     var errorDialogTitle = mutableStateOf("")
-    var errorDialogContent =
-        mutableStateOf(context.getString(R.string.error_while_getting_data_dialog_content))
+    var errorDialogContent = mutableStateOf("")
     var databaseFilePath = ""
     var resultFilePath = ""
     var sourceApp = SourceApp()
     val loadingProgressSema = Semaphore(2)
     var currentPage = mutableIntStateOf(0)
+    var selectedMatchingMode = mutableIntStateOf(1)
+    var enableBracketRemoval = mutableStateOf(false)
+    var enableArtistNameMatch = mutableStateOf(true)
+    var enableAlbumNameMatch = mutableStateOf(true)
+    var similarity = mutableFloatStateOf(85f)
 
     fun selectDatabaseFile() {
         openFileLauncher.launch(arrayOf("*/*"))
@@ -119,11 +139,9 @@ class ConvertPage(
     fun checkSelectedFiles() {
         haveError = false
         showLoadingProgressBar.value = true
-        errorDialogContent.value =
-            context.getString(R.string.error_while_getting_data_dialog_content)
+        errorDialogContent.value = context.getString(R.string.error_details)
         checkDatabaseFile()
-        if (useCustomResultFile.value)
-            checkResultFile()
+        checkResultFile()
         lifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
             delay(100L)
             loadingProgressSema.acquire()
@@ -143,32 +161,67 @@ class ConvertPage(
     fun checkResultFile() {
         lifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
             loadingProgressSema.acquire()
-            try {
-                val file = File(resultFilePath)
-                val localMusicFile =
-                    file.readText().split("\n").dropLast(1)
-                val localMusic = Array(localMusicFile.size) {
-                    arrayOfNulls<String>(
-                        5
-                    )
+            if (useCustomResultFile.value) {
+                try {
+                    val file = File(resultFilePath)
+                    val localMusicFile =
+                        file.readText().split("\n").dropLast(1)
+                    val localMusic = Array(localMusicFile.size) {
+                        arrayOfNulls<String>(
+                            5
+                        )
+                    }
+                    for ((a, i) in localMusicFile.withIndex()) {
+                        val parts = i.split("#\\*#".toRegex())
+                        localMusic[a][0] = parts[0]
+                        localMusic[a][1] = parts[1]
+                        localMusic[a][2] = parts[2]
+                        localMusic[a][3] = parts[3]
+                        localMusic[a][4] = parts[4]
+                    }
+                } catch (e: Exception) {
+                    showErrorDialog.value = true
+                    errorDialogTitle.value =
+                        context.getString(R.string.error_while_getting_data_dialog_title)
+                    errorDialogContent.value =
+                        "${errorDialogContent.value}\n- ${context.getString(R.string.result_file)} ${
+                            context.getString(
+                                R.string.read_failed
+                            )
+                        }: ${e.message}"
+                    haveError = true
+                } finally {
+                    loadingProgressSema.release()
                 }
-                for ((a, i) in localMusicFile.withIndex()) {
-                    val parts = i.split("#\\*#".toRegex())
-                    localMusic[a][0] = parts[0]
-                    localMusic[a][1] = parts[1]
-                    localMusic[a][2] = parts[2]
-                    localMusic[a][3] = parts[3]
-                    localMusic[a][4] = parts[4]
+            } else {
+                try {
+                    val musicCount = db.musicDao().getMusicCount()
+                    if (musicCount == 0) {
+                        showErrorDialog.value = true
+                        errorDialogTitle.value =
+                            context.getString(R.string.error_while_getting_data_dialog_title)
+                        errorDialogContent.value =
+                            "${errorDialogContent.value}\n- ${context.getString(R.string.result_file)} ${
+                                context.getString(
+                                    R.string.read_failed
+                                )
+                            }: ${context.getString(R.string.use_scan_fun_first)}"
+                        haveError = true
+                    }
+                } catch (e: Exception) {
+                    showErrorDialog.value = true
+                    errorDialogTitle.value =
+                        context.getString(R.string.error_while_getting_data_dialog_title)
+                    errorDialogContent.value =
+                        "${errorDialogContent.value}\n- ${context.getString(R.string.result_file)} ${
+                            context.getString(
+                                R.string.read_failed
+                            )
+                        }: ${context.getString(R.string.use_scan_fun_first)}"
+                    haveError = true
+                } finally {
+                    loadingProgressSema.release()
                 }
-            } catch (e: Exception) {
-                showErrorDialog.value = true
-                errorDialogTitle.value =
-                    context.getString(R.string.error_while_getting_data_dialog_title)
-                errorDialogContent.value =
-                    "${errorDialogContent.value} \n${context.getString(R.string.result_file)}"
-                haveError = true
-            } finally {
-                loadingProgressSema.release()
             }
         }
     }
@@ -182,7 +235,15 @@ class ConvertPage(
                     errorDialogTitle.value =
                         context.getString(R.string.error_while_getting_data_dialog_title)
                     errorDialogContent.value =
-                        "${errorDialogContent.value}\n${context.getString(R.string.database_file)}"
+                        "${errorDialogContent.value}\n- ${context.getString(R.string.database_file)} ${
+                            context.getString(
+                                R.string.read_failed
+                            )
+                        }: ${
+                            context.getString(
+                                R.string.please_select_source_app
+                            )
+                        }"
                     loadingProgressSema.release()
                     haveError = true
                     return@launch
@@ -207,7 +268,11 @@ class ConvertPage(
                     errorDialogTitle.value =
                         context.getString(R.string.error_while_getting_data_dialog_title)
                     errorDialogContent.value =
-                        "${errorDialogContent.value}\n${context.getString(R.string.database_file)}"
+                        "${errorDialogContent.value}\n- ${context.getString(R.string.database_file)} ${
+                            context.getString(
+                                R.string.read_failed
+                            )
+                        }: ${e.message}"
                     haveError = true
                     loadingProgressSema.release()
                 }
@@ -216,7 +281,15 @@ class ConvertPage(
                 errorDialogTitle.value =
                     context.getString(R.string.error_while_getting_data_dialog_title)
                 errorDialogContent.value =
-                    "${errorDialogContent.value}\n${context.getString(R.string.database_file)}"
+                    "${errorDialogContent.value}\n- ${context.getString(R.string.database_file)} ${
+                        context.getString(
+                            R.string.read_failed
+                        )
+                    }: ${
+                        context.getString(
+                            R.string.please_select_source_app
+                        )
+                    }"
                 haveError = true
                 loadingProgressSema.release()
             }
@@ -234,6 +307,11 @@ class ConvertPage(
             playlistName.clear()
             playlistEnabled.clear()
             playlistSum.clear()
+            val innerPlaylistId = MutableList(0) { "" }
+            val innerPlaylistName = MutableList(0) { "" }
+            val innerPlaylistEnabled = MutableList(0) { false }
+            val innerPlaylistSum = MutableList(0) { 0 }
+
             val file = File(databaseFilePath)
             val db = SQLiteDatabase.openOrCreateDatabase(file, null)
 
@@ -248,9 +326,10 @@ class ConvertPage(
                     null
                 )
             while (cursor.moveToNext()) {
-                val songListId = cursor.getString(cursor.getColumnIndex(sourceApp.songListId))
+                val songListId =
+                    cursor.getString(cursor.getColumnIndexOrThrow(sourceApp.songListId))
                 val songListName =
-                    cursor.getString(cursor.getColumnIndex(sourceApp.songListName))
+                    cursor.getString(cursor.getColumnIndexOrThrow(sourceApp.songListName))
 
                 val currentSonglistSumCursor = db.rawQuery(
                     "SELECT COUNT(*) FROM ${sourceApp.songListSongInfoTableName} WHERE ${sourceApp.songListSongInfoPlaylistId} = ?",
@@ -261,17 +340,37 @@ class ConvertPage(
                     currentSonglistSumCursor.close()
                     continue
                 } else {
-                    playlistSum.add(currentSonglistSumCursor.getInt(0))
+                    innerPlaylistSum.add(currentSonglistSumCursor.getInt(0))
                     currentSonglistSumCursor.close()
                 }
-                playlistId.add(songListId)
-                playlistName.add(songListName)
-                playlistEnabled.add(false)
+                innerPlaylistId.add(songListId)
+                innerPlaylistName.add(songListName)
+                innerPlaylistEnabled.add(false)
             }
             cursor.close()
             db.close()
+            playlistId.addAll(innerPlaylistId)
+            playlistName.addAll(innerPlaylistName)
+            playlistEnabled.addAll(innerPlaylistEnabled)
+            playlistSum.addAll(innerPlaylistSum)
             showLoadingProgressBar.value = false
         }
+    }
+
+    fun attemptConvert() {
+        if (playlistEnabled.all { !it }) {
+            showErrorDialog.value = true
+            errorDialogTitle.value =
+                context.getString(R.string.error)
+            errorDialogContent.value =
+                context.getString(R.string.please_select_at_least_one_playlist)
+            return
+        }
+//        showLoadingProgressBar.value = true
+        currentPage.intValue = 2
+//        lifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+//            val music3InfoList = db.musicDao().getMusic3Info()
+//        }
     }
 }
 
@@ -290,19 +389,89 @@ fun ConvertPageUi(
     playlistName: MutableList<String>,
     playlistEnabled: MutableList<Boolean>,
     playlistSum: MutableList<Int>,
-    currentPage: MutableIntState
+    currentPage: MutableIntState,
+    selectedMatchingMode: MutableIntState,
+    enableBracketRemoval: MutableState<Boolean>,
+    enableArtistNameMatch: MutableState<Boolean>,
+    enableAlbumNameMatch: MutableState<Boolean>,
+    similarity: MutableFloatState
 ) {
     val context = LocalContext.current
-    val popupMenuState = rememberPopupState()
+    val sourceAppPopupMenuState = rememberPopupState()
+    val matchingModePopupMenuState = rememberPopupState()
     var sourceApp by remember { mutableStateOf("") }
+    var matchingMode by remember { mutableStateOf("") }
     val pages = listOf("0", "1", "2", "3")
     val pageState = rememberPagerState(pageCount = { pages.size })
+    var allEnabled by remember { mutableStateOf(false) }
+    var showSetSimilarityDialog by remember { mutableStateOf(false) }
+
+    BackHandler(enabled = currentPage.intValue != 0) { currentPage.intValue-- }
 
     if (showErrorDialog.value) {
         YesDialog(
             onDismissRequest = { showErrorDialog.value = false },
             title = errorDialogTitle.value,
             content = errorDialogContent.value
+        )
+    }
+
+    if (showSetSimilarityDialog) {
+        var slideSimilarity by remember { mutableStateOf(similarity.floatValue) }
+        YesNoDialog(
+            onDismiss = { showSetSimilarityDialog = false },
+            onNegative = { showSetSimilarityDialog = false },
+            onPositive = {
+                similarity.floatValue = slideSimilarity
+                showSetSimilarityDialog = false
+            },
+            title = context.getString(R.string.set_similarity_dialog_title),
+            content = "",
+            noText = context.getString(R.string.cancel_button_text),
+            yesText = context.getString(R.string.ok_button_text),
+            onlyComposeView = true,
+            customContent = {
+                Column {
+                    Row(
+                        modifier = Modifier.align(Alignment.CenterHorizontally),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        androidx.compose.material3.TextButton(
+                            onClick = { slideSimilarity-- },
+                            colors = androidx.compose.material3.ButtonDefaults.textButtonColors(
+                                contentColor = SaltTheme.colors.text
+                            ),
+                        ) {
+                            Text("-", fontSize = 22.sp)
+                        }
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(text = "${slideSimilarity.roundToInt()}%", fontSize = 18.sp)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        androidx.compose.material3.TextButton(
+                            onClick = { slideSimilarity++ },
+                            colors = androidx.compose.material3.ButtonDefaults.textButtonColors(
+                                contentColor = SaltTheme.colors.text
+                            ),
+                        ) {
+                            Text(text = "+", fontSize = 22.sp)
+                        }
+                    }
+
+                    Slider(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp),
+                        value = slideSimilarity,
+                        onValueChange = { slideSimilarity = it.roundToInt().toFloat() },
+                        valueRange = 0f..100f,
+                        colors = SliderDefaults.colors(
+                            thumbColor = SaltTheme.colors.highlight,
+                            activeTrackColor = SaltTheme.colors.highlight,
+                            inactiveTrackColor = SaltTheme.colors.subBackground
+                        )
+                    )
+                }
+            }
         )
     }
     LaunchedEffect(key1 = currentPage.intValue) {
@@ -349,14 +518,14 @@ fun ConvertPageUi(
                             RoundedColumn {
                                 ItemTitle(text = context.getString(R.string.source_of_songlist_app))
                                 ItemPopup(
-                                    state = popupMenuState,
+                                    state = sourceAppPopupMenuState,
                                     text = context.getString(R.string.select_source_of_songlist),
                                     selectedItem = sourceApp
                                 ) {
                                     PopupMenuItem(
                                         onClick = {
                                             selectedSourceApp.intValue = 1
-                                            popupMenuState.dismiss()
+                                            sourceAppPopupMenuState.dismiss()
                                             databaseFileName.value = ""
                                         },
                                         selected = selectedSourceApp.intValue == 1,
@@ -365,7 +534,7 @@ fun ConvertPageUi(
                                     PopupMenuItem(
                                         onClick = {
                                             selectedSourceApp.intValue = 2
-                                            popupMenuState.dismiss()
+                                            sourceAppPopupMenuState.dismiss()
                                             databaseFileName.value = ""
                                         },
                                         selected = selectedSourceApp.intValue == 2,
@@ -375,7 +544,7 @@ fun ConvertPageUi(
                                     PopupMenuItem(
                                         onClick = {
                                             selectedSourceApp.intValue = 3
-                                            popupMenuState.dismiss()
+                                            sourceAppPopupMenuState.dismiss()
                                             databaseFileName.value = ""
                                         },
                                         selected = selectedSourceApp.intValue == 3,
@@ -386,7 +555,7 @@ fun ConvertPageUi(
                                     PopupMenuItem(
                                         onClick = {
                                             selectedSourceApp.intValue = 4
-                                            popupMenuState.dismiss()
+                                            sourceAppPopupMenuState.dismiss()
                                             databaseFileName.value = ""
                                         },
                                         selected = selectedSourceApp.intValue == 4,
@@ -476,7 +645,6 @@ fun ConvertPageUi(
                     }
 
                     1 -> {
-
                         Column(
                             modifier = Modifier
                                 .padding(top = 4.dp)
@@ -490,12 +658,155 @@ fun ConvertPageUi(
                                     visible = playlistEnabled.isNotEmpty()
                                 ) {
                                     ItemContainer {
-                                        LazyColumn(
+                                        Column(
                                             modifier = Modifier
-                                                .fillMaxSize()
-                                                .heightIn(max = (LocalConfiguration.current.screenHeightDp / 1.75).dp)
                                                 .clip(RoundedCornerShape(10.dp))
+                                                .heightIn(max = (LocalConfiguration.current.screenHeightDp / 1.6).dp)
                                                 .background(color = SaltTheme.colors.subBackground)
+                                        ) {
+                                            ItemCheck(
+                                                state = allEnabled,
+                                                onChange = {
+                                                    if (allEnabled) {
+                                                        allEnabled = false
+                                                        playlistEnabled.replaceAll { false }
+                                                    } else {
+                                                        allEnabled = true
+                                                        playlistEnabled.replaceAll { true }
+                                                    }
+                                                },
+                                                text = context.getString(R.string.select_all),
+                                            )
+                                            LazyColumn(
+                                                modifier = Modifier.weight(1f)
+                                            ) {
+                                                items(playlistEnabled.size) { index ->
+                                                    ItemCheck(
+                                                        state = playlistEnabled[index],
+                                                        onChange = {
+                                                            playlistEnabled[index] =
+                                                                !playlistEnabled[index]
+                                                        },
+                                                        text = playlistName[index],
+                                                        sub = "${context.getString(R.string.total)}${playlistSum[index]}${
+                                                            context.getString(R.string.songs)
+                                                        }"
+                                                    )
+                                                }
+                                            }
+
+                                            Spacer(modifier = Modifier.height(6.dp))
+                                            ItemValue(
+                                                text = "${context.getString(R.string.in_total)}${playlistEnabled.size}",
+                                                sub = "${context.getString(R.string.selected)}${playlistEnabled.count { it }}"
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+//                RoundedColumn {
+                            ItemContainer {
+                                TextButton(
+                                    onClick = { convertPage.attemptConvert() },
+                                    text = context.getString(R.string.next_step_text)
+                                )
+                            }
+//                }
+                        }
+                    }
+
+                    2 -> {
+                        Column(
+                            modifier = Modifier
+                                .padding(top = 4.dp)
+                                .fillMaxSize()
+                                .background(color = SaltTheme.colors.background)
+                                .verticalScroll(rememberScrollState())
+                        ) {
+                            RoundedColumn {
+                                ItemTitle(text = context.getString(R.string.convert_options))
+                                Item(
+                                    onClick = { showSetSimilarityDialog = true },
+                                    text = context.getString(R.string.set_similarity_item),
+                                    rightSub = "${similarity.floatValue.roundToInt()}%"
+                                )
+                                ItemPopup(
+                                    state = matchingModePopupMenuState,
+                                    text = context.getString(R.string.matching_mode),
+                                    selectedItem = matchingMode
+                                ) {
+                                    PopupMenuItem(
+                                        onClick = {
+                                            selectedMatchingMode.intValue = 1
+                                            matchingModePopupMenuState.dismiss()
+                                        },
+                                        selected = selectedMatchingMode.intValue == 1,
+                                        text = context.getString(R.string.split_matching)
+                                    )
+                                    PopupMenuItem(
+                                        onClick = {
+                                            selectedMatchingMode.intValue = 2
+                                            matchingModePopupMenuState.dismiss()
+                                        },
+                                        selected = selectedMatchingMode.intValue == 2,
+                                        text = context.getString(R.string.overall_matching)
+                                    )
+                                }
+
+                                matchingMode = when (selectedMatchingMode.intValue) {
+                                    1 -> context.getString(R.string.split_matching)
+                                    2 -> context.getString(R.string.overall_matching)
+                                    else -> ""
+                                }
+
+                                ItemSwitcher(
+                                    state = enableBracketRemoval.value,
+                                    onChange = { enableBracketRemoval.value = it },
+                                    text = context.getString(R.string.enable_bracket_removal)
+                                )
+                                ItemSwitcher(
+                                    state = enableArtistNameMatch.value,
+                                    onChange = { enableArtistNameMatch.value = it },
+                                    text = context.getString(R.string.enable_artist_name_match)
+                                )
+                                ItemSwitcher(
+                                    state = enableAlbumNameMatch.value,
+                                    onChange = { enableAlbumNameMatch.value = it },
+                                    text = context.getString(R.string.enable_album_name_match)
+                                )
+                            }
+                            ItemContainer {
+                                TextButton(
+                                    onClick = { /*TODO*/ },
+                                    text = context.getString(R.string.preview_convert_result)
+                                )
+                            }
+
+                            AnimatedVisibility(
+                                visible = playlistEnabled.isNotEmpty()
+                            ) {
+                                ItemContainer {
+                                    Column(
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(10.dp))
+                                            .heightIn(max = (LocalConfiguration.current.screenHeightDp / 1.6).dp)
+                                            .background(color = SaltTheme.colors.subBackground)
+                                    ) {
+                                        ItemCheck(
+                                            state = allEnabled,
+                                            onChange = {
+                                                if (allEnabled) {
+                                                    allEnabled = false
+                                                    playlistEnabled.replaceAll { false }
+                                                } else {
+                                                    allEnabled = true
+                                                    playlistEnabled.replaceAll { true }
+                                                }
+                                            },
+                                            text = context.getString(R.string.select_all),
+                                        )
+                                        LazyColumn(
+                                            modifier = Modifier.weight(1f)
                                         ) {
                                             item {
                                                 playlistEnabled.forEachIndexed { index, state ->
@@ -512,21 +823,25 @@ fun ConvertPageUi(
                                                 }
                                             }
                                         }
+                                        Spacer(modifier = Modifier.height(5.dp))
+                                        ItemValue(
+                                            text = "${context.getString(R.string.in_total)}${playlistEnabled.size}",
+                                            sub = "${context.getString(R.string.selected)}${playlistEnabled.count { it }}"
+                                        )
                                     }
                                 }
                             }
 
+
 //                RoundedColumn {
                             ItemContainer {
                                 TextButton(
-                                    onClick = { convertPage.databaseSummary() },
+                                    onClick = { convertPage.attemptConvert() },
                                     text = context.getString(R.string.next_step_text)
                                 )
                             }
 //                }
                         }
-
-
                     }
                 }
             }

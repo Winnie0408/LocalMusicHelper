@@ -1,7 +1,6 @@
 package com.hwinzniej.musichelper.data.dao
 
 import androidx.room.Dao
-import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.Query
 import com.hwinzniej.musichelper.data.model.Music
@@ -23,6 +22,12 @@ interface MusicDao {
 
     @Query("SELECT song, artist, album, releaseYear, trackNumber, albumArtist, genre FROM music")
     fun getMusicInfo(): List<MusicInfo>
+
+    @Query("SELECT song, artist, album FROM music")
+    fun getMusic3Info(): List<MusicInfo>
+
+    @Query("SELECT COUNT(*) FROM music")
+    fun getMusicCount(): Int
 
 //    @Insert
 //    fun updateMusicInfo(musicInfo: MusicInfo)
