@@ -8,6 +8,7 @@ import androidx.compose.foundation.indication
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
@@ -38,7 +39,12 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
@@ -48,7 +54,6 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.window.DialogWindowProvider
 import com.moriafly.salt.ui.ItemSpacer
 import com.moriafly.salt.ui.SaltTheme
-import com.moriafly.salt.ui.TextButton
 import com.moriafly.salt.ui.UnstableSaltApi
 import com.moriafly.salt.ui.dialog.DialogTitle
 import com.moriafly.salt.ui.popup.PopupMenu
@@ -348,6 +353,7 @@ fun Item(
     sub: String? = null,
     subColor: Color = SaltTheme.colors.subText,
     rightSub: String? = null,
+    rightSubColor: Color? = null
 ) {
     Row(
         modifier = Modifier
@@ -394,8 +400,8 @@ fun Item(
         rightSub?.let {
             Text(
                 text = it,
-                color = SaltTheme.colors.subText,
                 style = SaltTheme.textStyles.main,
+                color = rightSubColor ?: SaltTheme.colors.subText,
                 fontSize = 14.sp
             )
         }
@@ -409,8 +415,62 @@ fun Item(
     }
 }
 
+@Composable
+fun TextButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    text: String,
+    textColor: Color = Color.White,
+    backgroundColor: Color = SaltTheme.colors.highlight,
+    enabled: Boolean = true
+) {
+    BasicButton(
+        enabled = enabled,
+        onClick = onClick,
+        modifier = modifier,
+        backgroundColor = if (enabled) backgroundColor else Color(0xFF8C8C8C)
+    ) {
+        Text(
+            text = text,
+            modifier = Modifier
+                .fillMaxWidth(),
+            color = textColor,
+            textAlign = TextAlign.Center,
+            overflow = TextOverflow.Ellipsis,
+            maxLines = 1,
+            style = SaltTheme.textStyles.main
+        )
+    }
+}
+
+/**
+ * Basic button.
+ */
+@Composable
+fun BasicButton(
+    enabled: Boolean = true,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    backgroundColor: Color = SaltTheme.colors.highlight,
+    content: @Composable BoxScope.() -> Unit,
+) {
+    Box(
+        modifier = modifier
+            .semantics {
+                role = Role.Button
+            }
+            .clip(RoundedCornerShape(SaltTheme.dimens.corner))
+            .background(color = backgroundColor)
+            .clickable(enabled = enabled) {
+                onClick()
+            }
+            .padding(12.dp)
+    ) {
+        content()
+    }
+}
+
 @Preview
 @Composable
 fun Preview() {
-    Item(onClick = { /*TODO*/ }, text = "1111", rightSub = "")
 }

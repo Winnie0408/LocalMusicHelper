@@ -37,6 +37,7 @@ import androidx.compose.ui.zIndex
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import com.hwinzniej.musichelper.R
+import com.hwinzniej.musichelper.TextButton
 import com.hwinzniej.musichelper.YesNoDialog
 import com.hwinzniej.musichelper.data.database.MusicDatabase
 import com.hwinzniej.musichelper.data.model.MusicInfo
@@ -46,7 +47,6 @@ import com.moriafly.salt.ui.ItemSwitcher
 import com.moriafly.salt.ui.ItemTitle
 import com.moriafly.salt.ui.RoundedColumn
 import com.moriafly.salt.ui.SaltTheme
-import com.moriafly.salt.ui.TextButton
 import com.moriafly.salt.ui.TitleBar
 import com.moriafly.salt.ui.UnstableSaltApi
 import kotlinx.coroutines.Dispatchers
@@ -358,12 +358,24 @@ fun ProcessPageUi(
                     text = context.getString(R.string.select_source_item_title),
                 )
 
+//                AnimatedContent(
+//                    targetState = showLoadingProgressBar.value,
+//                    label = "",
+//                    transitionSpec = {
+//                        if (targetState != initialState) {
+//                            fadeIn() togetherWith fadeOut()
+//                        } else {
+//                            fadeIn() togetherWith fadeOut()
+//                        }
+//                    }) {
                 ItemContainer {
                     TextButton(
                         onClick = { processPage.getMusicList() },
-                        text = context.getString(R.string.start_text)
+                        text = context.getString(R.string.start_text),
+//                        enabled = !it
                     )
                 }
+//                }
             }
 
             RoundedColumn {

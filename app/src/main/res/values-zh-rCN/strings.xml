@@ -68,7 +68,7 @@
     <string name="read_failed">读取失败</string>
     <string name="use_scan_fun_first">请先在扫描页进行一次音乐扫描</string>
     <string name="error_details">错误详情：</string>
-    <string name="in_total">共：</string>
+    <string name="in_total">"共 "</string>
     <string name="selected">已选：</string>
     <string name="select_all">全选</string>
     <string name="convert_options">转换选项</string>
@@ -81,4 +81,13 @@
     <string name="overall_matching">总体匹配</string>
     <string name="preview_convert_result">预览转换结果</string>
     <string name="set_similarity_dialog_title">设置相似度阈值</string>
+    <string name="convert_result">转换结果</string>
+    <string name="singer">艺术家：</string>
+    <string name="album">专辑：</string>
+    <string name="current_songlist_info">当前歌单信息</string>
+    <string name="songlist_name">歌单名</string>
+    <string name="songlist_sum">包含歌曲数量</string>
+    <string name="current_no">"第 "</string>
+    <string name="ge">" 个"</string>
+    <string name="songlist_sequence">序列</string>
 </resources>

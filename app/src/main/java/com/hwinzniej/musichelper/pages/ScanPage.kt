@@ -14,7 +14,11 @@ import androidx.activity.ComponentActivity
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -48,6 +52,7 @@ import androidx.core.content.ContextCompat.getString
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import com.hwinzniej.musichelper.R
+import com.hwinzniej.musichelper.TextButton
 import com.hwinzniej.musichelper.YesNoDialog
 import com.hwinzniej.musichelper.data.database.MusicDatabase
 import com.hwinzniej.musichelper.utils.Tools
@@ -57,7 +62,6 @@ import com.moriafly.salt.ui.ItemTitle
 import com.moriafly.salt.ui.ItemValue
 import com.moriafly.salt.ui.RoundedColumn
 import com.moriafly.salt.ui.SaltTheme
-import com.moriafly.salt.ui.TextButton
 import com.moriafly.salt.ui.TitleBar
 import com.moriafly.salt.ui.UnstableSaltApi
 import kotlinx.coroutines.Dispatchers
@@ -239,6 +243,7 @@ class ScanPage(
 //        }
 
         lifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
+            //TODO: 优化冲突对话框的判断 Semaphore？
             while (showConflictDialog.value && conflictDialogResult.intValue == 0) {
                 delay(250L)
             }
@@ -285,7 +290,8 @@ class ScanPage(
             scanDirectory(directory)
         }
         lifecycleOwner.lifecycleScope.launch(Dispatchers.Main) {
-            delay(300L)
+            //TODO: 优化扫描完成的判断 Semaphore？
+            delay(500L)
             while (true) {
                 val lastScanResult = scanResult.value.length
                 delay(250L)
@@ -419,6 +425,8 @@ fun ScanPageUi(
     showConflictDialog: MutableState<Boolean>,
     conflictDialogResult: MutableIntState,
 ) {
+    //TODO 新增开关：是否输出扫描结果到外部存储空间
+    //TODO 尝试优化扫描大量歌曲时UI掉帧的问题
     val context = LocalContext.current
     if (showConflictDialog.value) {
         YesNoDialog(
@@ -461,10 +469,24 @@ fun ScanPageUi(
                 RoundedColumn {
                     ItemTitle(text = context.getString(R.string.scan_control))
                     ItemText(text = context.getString(R.string.touch_button_to_start_scanning))
+                }
+                AnimatedContent(
+                    targetState = showLoadingProgressBar.value,
+                    label = "",
+                    transitionSpec = {
+                        if (targetState != initialState) {
+                            fadeIn() togetherWith fadeOut()
+                        } else {
+                            fadeIn() togetherWith fadeOut()
+                        }
+                    }) {
                     ItemContainer {
-                        TextButton(onClick = {
-                            scanPage.init()
-                        }, text = context.getString(R.string.start_text))
+                        TextButton(
+                            onClick = {
+                                scanPage.init()
+                            }, text = context.getString(R.string.start_text),
+                            enabled = !it
+                        )
                     }
                 }
                 AnimatedVisibility(

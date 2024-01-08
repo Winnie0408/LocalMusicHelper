@@ -108,6 +108,9 @@ dependencies {
     //SystemUi控制器
     implementation("com.google.accompanist:accompanist-systemuicontroller:0.32.0")
 
+    //FastJson
+    implementation("com.alibaba.fastjson2:fastjson2-kotlin:2.0.44")
+
     //拖拽排序-可注释
     implementation("org.burnoutcrew.composereorderable:reorderable:0.9.6")
 

@@ -82,4 +82,13 @@
     <string name="overall_matching">Overall Matching</string>
     <string name="preview_convert_result">Preview Convert Result</string>
     <string name="set_similarity_dialog_title">Set Similarity Threshold</string>
+    <string name="convert_result">Convert result</string>
+    <string name="singer">"Artist: "</string>
+    <string name="album">"Album: "</string>
+    <string name="current_songlist_info">Current songlist info</string>
+    <string name="songlist_name">Songlist name</string>
+    <string name="songlist_sum">Song count</string>
+    <string name="current_no">"No. "</string>
+    <string name="ge"></string>
+    <string name="songlist_sequence">Sequence</string>
 </resources>

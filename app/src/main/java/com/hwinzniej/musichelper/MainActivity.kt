@@ -155,6 +155,7 @@ private fun Pages(scanPage: ScanPage, processPage: ProcessPage, convertPage: Con
                         convertPage.enableArtistNameMatch,
                         convertPage.enableAlbumNameMatch,
                         convertPage.similarity,
+                        convertPage.convertResult,
                     )
                 }
 
