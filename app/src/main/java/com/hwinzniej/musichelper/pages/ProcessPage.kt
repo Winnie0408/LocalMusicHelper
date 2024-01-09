@@ -208,13 +208,13 @@ fun ProcessPageUi(
 
     if (showSelectTagTypeDialog.value) {
         YesNoDialog(
-            onNegative = { },
-            onPositive = { },
+            onCancel = { },
+            onConfirm = { },
             onDismiss = { },
             title = context.getString(R.string.select_needed_tag_type_dialog_title),
             content = "",
-            noText = context.getString(R.string.cancel_button_text),
-            yesText = context.getString(R.string.ok_button_text),
+            cancelText = context.getString(R.string.cancel_button_text),
+            confirmText = context.getString(R.string.ok_button_text),
             onlyComposeView = true,
             customContent = {
                 ItemSwitcher(
@@ -259,17 +259,17 @@ fun ProcessPageUi(
             }
         })
         YesNoDialog(
-            onNegative = {
+            onCancel = {
                 initState()
             },
-            onPositive = { },
+            onConfirm = { },
             onDismiss = {
                 initState()
             },
             title = context.getString(R.string.select_source_dialog_title),
             content = "",
-            noText = context.getString(R.string.cancel_button_text),
-            yesText = context.getString(R.string.ok_button_text),
+            cancelText = context.getString(R.string.cancel_button_text),
+            confirmText = context.getString(R.string.ok_button_text),
             onlyComposeView = true,
             customContent = {
                 LazyColumn(

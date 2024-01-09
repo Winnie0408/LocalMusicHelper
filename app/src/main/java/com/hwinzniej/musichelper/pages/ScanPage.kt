@@ -430,13 +430,13 @@ fun ScanPageUi(
     val context = LocalContext.current
     if (showConflictDialog.value) {
         YesNoDialog(
-            onNegative = { conflictDialogResult.intValue = 1 },
-            onPositive = { conflictDialogResult.intValue = 2 },
+            onCancel = { conflictDialogResult.intValue = 1 },
+            onConfirm = { conflictDialogResult.intValue = 2 },
             onDismiss = { conflictDialogResult.intValue = 3 },
             title = context.getString(R.string.file_conflict_dialog_title),
             content = context.getString(R.string.file_conflict_dialog_content).replace("#n", "\n"),
-            noText = context.getString(R.string.file_conflict_dialog_no_text),
-            yesText = context.getString(R.string.file_conflict_dialog_yes_text)
+            cancelText = context.getString(R.string.file_conflict_dialog_no_text),
+            confirmText = context.getString(R.string.file_conflict_dialog_yes_text)
         )
     }
 

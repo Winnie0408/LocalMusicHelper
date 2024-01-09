@@ -597,15 +597,15 @@ fun ConvertPageUi(
         var slideSimilarity by remember { mutableFloatStateOf(similarity.floatValue) }
         YesNoDialog(
             onDismiss = { showSetSimilarityDialog = false },
-            onNegative = { showSetSimilarityDialog = false },
-            onPositive = {
+            onCancel = { showSetSimilarityDialog = false },
+            onConfirm = {
                 similarity.floatValue = slideSimilarity
                 showSetSimilarityDialog = false
             },
             title = context.getString(R.string.set_similarity_dialog_title),
             content = "",
-            noText = context.getString(R.string.cancel_button_text),
-            yesText = context.getString(R.string.ok_button_text),
+            cancelText = context.getString(R.string.cancel_button_text),
+            confirmText = context.getString(R.string.ok_button_text),
             onlyComposeView = true,
             customContent = {
                 Column {

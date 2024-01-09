@@ -63,13 +63,13 @@ import com.moriafly.salt.ui.popup.PopupState
 @Composable
 fun YesNoDialog(
     onDismiss: () -> Unit,
-    onNegative: () -> Unit,
-    onPositive: () -> Unit,
+    onCancel: () -> Unit,
+    onConfirm: () -> Unit,
     properties: DialogProperties = DialogProperties(),
     title: String,
     content: String,
-    noText: String,
-    yesText: String,
+    cancelText: String = stringResource(id = R.string.cancel_button_text).uppercase(),
+    confirmText: String = stringResource(id = R.string.ok_button_text).uppercase(),
     customContent: @Composable () -> Unit = {},
     onlyComposeView: Boolean = false
 ) {
@@ -91,18 +91,19 @@ fun YesNoDialog(
         ) {
             TextButton(
                 onClick = {
-                    onNegative()
+                    onCancel()
                 },
                 modifier = Modifier.weight(1f),
-                text = noText.uppercase(),
+                text = cancelText,
                 textColor = SaltTheme.colors.subText,
-                backgroundColor = SaltTheme.colors.subBackground
+                backgroundColor = SaltTheme.colors.subBackground,
+//                backgroundColor = Color.Transparent
             )
             Spacer(modifier = Modifier.width(12.dp))
             TextButton(
                 onClick = {
-                    onPositive()
-                }, modifier = Modifier.weight(1f), text = yesText.uppercase()
+                    onConfirm()
+                }, modifier = Modifier.weight(1f), text = confirmText
             )
         }
     }
@@ -239,23 +240,24 @@ fun YesDialog(
     onDismissRequest: () -> Unit,
     properties: DialogProperties = DialogProperties(),
     title: String,
-    content: String
+    content: String,
+    confirmText: String = stringResource(id = R.string.ok_button_text).uppercase()
 ) {
-    com.moriafly.salt.ui.dialog.BasicDialog(
+    BasicDialog(
         onDismissRequest = onDismissRequest,
         properties = properties
     ) {
         DialogTitle(text = title)
         ItemSpacer()
         ItemText(text = content)
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(8.dp * 2))
         TextButton(
             onClick = {
                 onDismissRequest()
             },
             modifier = Modifier
                 .padding(horizontal = SaltTheme.dimens.outerHorizontalPadding),
-            text = stringResource(id = R.string.ok_button_text).uppercase()
+            text = confirmText
         )
     }
 }
@@ -470,7 +472,15 @@ fun BasicButton(
     }
 }
 
+@OptIn(UnstableSaltApi::class)
 @Preview
 @Composable
 fun Preview() {
+    YesNoDialog(
+        onDismiss = {},
+        onCancel = {},
+        onConfirm = {},
+        title = "Title",
+        content = "Content"
+    )
 }
