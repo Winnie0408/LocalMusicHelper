@@ -91,7 +91,8 @@
     <string name="ge">" 个"</string>
     <string name="songlist_sequence">序列</string>
     <string name="modify_conversion_results">修改转换结果</string>
-    <string name="search_song_library">搜索您的曲库</string>
+    <string name="search_song_library">搜索您的曲库...</string>
     <string name="songlist_song_info">歌单歌曲</string>
     <string name="song_name">歌名</string>
+    <string name="no_search_result">搜索无结果</string>
 </resources>

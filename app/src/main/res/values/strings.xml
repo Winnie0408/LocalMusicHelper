@@ -92,7 +92,8 @@
     <string name="ge"></string>
     <string name="songlist_sequence">Sequence</string>
     <string name="modify_conversion_results">Modify conversion result</string>
-    <string name="search_song_library">Search song library</string>
+    <string name="search_song_library">Search song library...</string>
     <string name="songlist_song_info">Songlist songs</string>
     <string name="song_name">Song name</string>
+    <string name="no_search_result">No results for the search</string>
 </resources>

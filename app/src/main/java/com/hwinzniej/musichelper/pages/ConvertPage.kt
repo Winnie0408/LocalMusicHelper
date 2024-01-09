@@ -45,6 +45,7 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -80,6 +81,7 @@ import com.moriafly.salt.ui.UnstableSaltApi
 import com.moriafly.salt.ui.popup.PopupMenuItem
 import com.moriafly.salt.ui.popup.rememberPopupState
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Semaphore
@@ -530,7 +532,52 @@ class ConvertPage(
                         )
 
                 } else if (selectedMatchingMode.intValue == 2) {
+                    val similarityArray = mutableMapOf<String, Double>()
+                    var songInfo = songName
+                    if (enableArtistNameMatch.value)
+                        songInfo = "$songInfo$songArtist"
+                    if (enableAlbumNameMatch.value)
+                        songInfo = "$songInfo$songAlbum"
 
+                    if (enableBracketRemoval.value)
+                        for (k in music3InfoList.indices) {
+                            similarityArray[k.toString()] = Tools().similarityRatio(
+                                songInfo.replace(
+                                    "(?i) ?\\((?!inst|[^()]* ver)[^)]*\\) ?".toRegex(),
+                                    ""
+                                ).lowercase(),
+                                "${music3InfoList[k].song}${music3InfoList[k].artist}${music3InfoList[k].album}"
+                                    .replace(
+                                        "(?i) ?\\((?!inst|[^()]* ver)[^)]*\\) ?".toRegex(),
+                                        ""
+                                    ).lowercase()
+                            )
+                        }
+                    else
+                        for (k in music3InfoList.indices) {
+                            similarityArray[k.toString()] = Tools().similarityRatio(
+                                songInfo.lowercase(),
+                                "${music3InfoList[k].song}${music3InfoList[k].artist}${music3InfoList[k].album}".lowercase()
+                            )
+                        }
+                    val maxSimilarity = Tools().getMaxValue(similarityArray)
+                    val songMaxSimilarity = maxSimilarity?.value!!
+                    val songMaxKey = maxSimilarity.key
+
+                    val autoSuccess = songMaxSimilarity >= similarity.floatValue / 100
+
+                    val SongConvertResult = music3InfoList[songMaxKey.toInt()]
+
+                    convertResultMap[num++] =
+                        arrayOf(
+                            autoSuccess.toString(),  //是否自动匹配成功
+                            SongConvertResult.song,  //本地音乐歌曲名
+                            songName,  //云音乐歌曲名
+                            SongConvertResult.artist,  //本地音乐歌手名
+                            songArtist,  //云音乐歌手名
+                            SongConvertResult.album,  //本地音乐专辑名
+                            songAlbum,  //云音乐专辑名
+                        )
                 }
                 songInfoCursor.close()
             }
@@ -538,6 +585,33 @@ class ConvertPage(
             playlistEnabled[firstIndex1] = 2
             convertResult.putAll(convertResultMap)
             showLoadingProgressBar.value = false
+        }
+    }
+
+    var inputSearchWords = mutableStateOf("")
+    var searchResult = mutableStateListOf<String>()
+    var showSearchingProgressBar = mutableStateOf(false)
+    fun searchSong() {
+        lifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+            showSearchingProgressBar.value = true
+            searchResult.clear()
+            if (inputSearchWords.value == "") {
+                showSearchingProgressBar.value = false
+                return@launch
+            }
+            val searchResultList = db.musicDao().searchMusic("%${inputSearchWords.value}%")
+            val searchResultMap = mutableListOf<String>()
+            for (i in searchResultList.indices) {
+                searchResultMap.add(
+                    "${searchResultList[i].song} - ${searchResultList[i].artist} - ${searchResultList[i].album}"
+                )
+            }
+            if (searchResultMap.isEmpty()) {
+                searchResult.add(context.getString(R.string.no_search_result))
+            } else {
+                searchResult.addAll(searchResultMap)
+            }
+            showSearchingProgressBar.value = false
         }
     }
 }
@@ -564,6 +638,9 @@ fun ConvertPageUi(
     enableAlbumNameMatch: MutableState<Boolean>,
     similarity: MutableFloatState,
     convertResult: MutableMap<Int, Array<String>>,
+    inputSearchWords: MutableState<String>,
+    searchResult: MutableList<String>,
+    showSearchingProgressBar: MutableState<Boolean>,
 ) {
     val sourceAppPopupMenuState = rememberPopupState()
     val matchingModePopupMenuState = rememberPopupState()
@@ -576,8 +653,9 @@ fun ConvertPageUi(
     val resultPages = listOf("0", "1")
     val resultPageState = rememberPagerState(pageCount = { resultPages.size })
     var showSelectedSongInfoDialog by remember { mutableStateOf(false) }
-    var inputSearchWords by remember { mutableStateOf("") }
     var selectedSongIndex by remember { mutableIntStateOf(-1) }
+    val coroutine = rememberCoroutineScope()
+    var job by remember { mutableStateOf<Job?>(null) }
 
     BackHandler(enabled = currentPage.intValue != 0) {
         if (convertResult.isEmpty()) {
@@ -658,11 +736,11 @@ fun ConvertPageUi(
         YesNoDialog(
             onDismiss = {
                 showSelectedSongInfoDialog = false
-                inputSearchWords = ""
+                inputSearchWords.value = ""
             },
             onCancel = {
                 showSelectedSongInfoDialog = false
-                inputSearchWords = ""
+                inputSearchWords.value = ""
             },
             onConfirm = { /*TODO*/ },
             title = stringResource(id = R.string.modify_conversion_results),
@@ -671,53 +749,79 @@ fun ConvertPageUi(
             confirmText = stringResource(R.string.ok_button_text),
             onlyComposeView = true,
             customContent = {
-                Column {
-                    ItemTitle(text = stringResource(R.string.songlist_song_info))
-                    ItemValue(
-                        text = stringResource(id = R.string.song_name),
-                        sub = convertResult[selectedSongIndex]!![2],
-                        clickable = true,
-                        onClick = {
-                            inputSearchWords =
-                                "${inputSearchWords}${convertResult[selectedSongIndex]!![2]}"
+                Box {
+                    if (showSearchingProgressBar.value) {
+                        LinearProgressIndicator(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .zIndex(1f),
+                            color = SaltTheme.colors.highlight,
+                            trackColor = SaltTheme.colors.background
+                        )
+                    }
+
+                    Column {
+                        ItemEdit(
+                            text = inputSearchWords.value,
+                            hint = stringResource(R.string.search_song_library),
+                            onChange = {
+                                inputSearchWords.value = it
+                            }
+                        )
+                        AnimatedVisibility(visible = searchResult.isNotEmpty()) {
+                            LazyColumn(
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                items(searchResult.size) { index ->
+                                    ItemValue(
+                                        text = searchResult[index],
+                                        clickable = true,
+                                    )
+                                }
+                            }
                         }
-                    )
-                    ItemValue(
-                        text = stringResource(id = R.string.singer).replace(
-                            "(：)|(: )".toRegex(),
-                            ""
-                        ),
-                        sub = convertResult[selectedSongIndex]!![4],
-                        clickable = true,
-                        onClick = {
-                            inputSearchWords =
-                                "${inputSearchWords}${convertResult[selectedSongIndex]!![4]}"
-                        }
-                    )
-                    ItemValue(
-                        text = stringResource(id = R.string.album).replace(
-                            "(：)|(: )".toRegex(),
-                            ""
-                        ),
-                        sub = convertResult[selectedSongIndex]!![6],
-                        clickable = true,
-                        onClick = {
-                            inputSearchWords =
-                                "${inputSearchWords}${convertResult[selectedSongIndex]!![6]}"
-                        }
-                    )
-                    Spacer(modifier = Modifier.height(6.dp))
-                    ItemTitle(text = stringResource(R.string.convert_result))
-                    ItemValue(
-                        text = convertResult[selectedSongIndex]!![1],
-                        sub = "${convertResult[selectedSongIndex]!![3]} - ${convertResult[selectedSongIndex]!![5]}"
-                    )
-                    ItemEdit(
-                        text = inputSearchWords,
-                        hint = stringResource(R.string.search_song_library),
-                        onChange = {
-                            inputSearchWords = it
-                        })
+                        Spacer(modifier = Modifier.height(8.dp))
+                        ItemTitle(text = stringResource(R.string.songlist_song_info))
+                        ItemValue(
+                            text = stringResource(id = R.string.song_name),
+                            sub = convertResult[selectedSongIndex]!![2],
+                            clickable = true,
+                            onClick = {
+                                inputSearchWords.value =
+                                    "${inputSearchWords.value}${convertResult[selectedSongIndex]!![2]}"
+                            }
+                        )
+                        ItemValue(
+                            text = stringResource(id = R.string.singer).replace(
+                                "(：)|(: )".toRegex(),
+                                ""
+                            ),
+                            sub = convertResult[selectedSongIndex]!![4],
+                            clickable = true,
+                            onClick = {
+                                inputSearchWords.value =
+                                    "${inputSearchWords.value}${convertResult[selectedSongIndex]!![4]}"
+                            }
+                        )
+                        ItemValue(
+                            text = stringResource(id = R.string.album).replace(
+                                "(：)|(: )".toRegex(),
+                                ""
+                            ),
+                            sub = convertResult[selectedSongIndex]!![6],
+                            clickable = true,
+                            onClick = {
+                                inputSearchWords.value =
+                                    "${inputSearchWords.value}${convertResult[selectedSongIndex]!![6]}"
+                            }
+                        )
+//                        Spacer(modifier = Modifier.height(6.dp))
+//                        ItemTitle(text = stringResource(R.string.convert_result))
+//                        ItemValue(
+//                            text = convertResult[selectedSongIndex]!![1],
+//                            sub = "${convertResult[selectedSongIndex]!![3]} - ${convertResult[selectedSongIndex]!![5]}"
+//                        )
+                    }
                 }
             }
         )
@@ -731,6 +835,15 @@ fun ConvertPageUi(
             resultPageState.animateScrollToPage(0)
         } else {
             resultPageState.animateScrollToPage(1)
+        }
+    }
+    LaunchedEffect(key1 = inputSearchWords.value) {
+        job?.cancel()
+        job = coroutine.launch {
+            delay(500)
+            showSearchingProgressBar.value = true
+            delay(500)
+            convertPage.searchSong()
         }
     }
 

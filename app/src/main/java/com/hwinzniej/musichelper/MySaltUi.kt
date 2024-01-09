@@ -477,7 +477,7 @@ fun BasicButton(
 @Composable
 fun ItemValue(
     text: String,
-    sub: String,
+    sub: String? = null,
     clickable: Boolean = false,
     onClick: () -> Unit = {}
 ) {
@@ -495,18 +495,20 @@ fun ItemValue(
                 text = text,
                 style = SaltTheme.textStyles.main
             )
-            Spacer(modifier = Modifier.width(12.dp))
-            SelectionContainer(
-                modifier = Modifier
-                    .weight(1f),
-            ) {
-                Text(
-                    text = sub,
-                    color = SaltTheme.colors.subText,
-                    fontSize = 15.sp,
-                    textAlign = TextAlign.End,
-                    style = SaltTheme.textStyles.main
-                )
+            sub?.let {
+                Spacer(modifier = Modifier.width(12.dp))
+                SelectionContainer(
+                    modifier = Modifier
+                        .weight(1f),
+                ) {
+                    Text(
+                        text = sub,
+                        color = SaltTheme.colors.subText,
+                        fontSize = 15.sp,
+                        textAlign = TextAlign.End,
+                        style = SaltTheme.textStyles.main
+                    )
+                }
             }
         }
     }

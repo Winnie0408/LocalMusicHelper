@@ -155,6 +155,9 @@ private fun Pages(scanPage: ScanPage, processPage: ProcessPage, convertPage: Con
                         convertPage.enableAlbumNameMatch,
                         convertPage.similarity,
                         convertPage.convertResult,
+                        convertPage.inputSearchWords,
+                        convertPage.searchResult,
+                        convertPage.showSearchingProgressBar
                     )
                 }
 
