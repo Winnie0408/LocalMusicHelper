@@ -49,19 +49,19 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import com.alibaba.fastjson2.JSON
 import com.hwinzniej.musichelper.Item
 import com.hwinzniej.musichelper.ItemCheck
 import com.hwinzniej.musichelper.ItemPopup
+import com.hwinzniej.musichelper.ItemValue
 import com.hwinzniej.musichelper.R
 import com.hwinzniej.musichelper.TextButton
 import com.hwinzniej.musichelper.YesDialog
@@ -70,9 +70,9 @@ import com.hwinzniej.musichelper.data.SourceApp
 import com.hwinzniej.musichelper.data.database.MusicDatabase
 import com.hwinzniej.musichelper.utils.Tools
 import com.moriafly.salt.ui.ItemContainer
+import com.moriafly.salt.ui.ItemEdit
 import com.moriafly.salt.ui.ItemSwitcher
 import com.moriafly.salt.ui.ItemTitle
-import com.moriafly.salt.ui.ItemValue
 import com.moriafly.salt.ui.RoundedColumn
 import com.moriafly.salt.ui.SaltTheme
 import com.moriafly.salt.ui.TitleBar
@@ -102,7 +102,7 @@ class ConvertPage(
     var errorDialogTitle = mutableStateOf("")
     var errorDialogContent = mutableStateOf("")
     var databaseFilePath = ""
-    var resultFilePath = ""
+    var resultFilePath = ""  //TODO 直接换用SQL文件？
     var sourceApp = SourceApp()
     val loadingProgressSema = Semaphore(2)
     var currentPage = mutableIntStateOf(0)
@@ -526,7 +526,7 @@ class ConvertPage(
                             SongConvertResult.artist,  //本地音乐歌手名
                             songArtist,  //云音乐歌手名
                             SongConvertResult.album,  //本地音乐专辑名
-                            songArtist,  //云音乐专辑名
+                            songAlbum,  //云音乐专辑名
                         )
 
                 } else if (selectedMatchingMode.intValue == 2) {
@@ -565,7 +565,6 @@ fun ConvertPageUi(
     similarity: MutableFloatState,
     convertResult: MutableMap<Int, Array<String>>,
 ) {
-    val context = LocalContext.current
     val sourceAppPopupMenuState = rememberPopupState()
     val matchingModePopupMenuState = rememberPopupState()
     var sourceApp by remember { mutableStateOf("") }
@@ -576,6 +575,9 @@ fun ConvertPageUi(
     var showSetSimilarityDialog by remember { mutableStateOf(false) }
     val resultPages = listOf("0", "1")
     val resultPageState = rememberPagerState(pageCount = { resultPages.size })
+    var showSelectedSongInfoDialog by remember { mutableStateOf(false) }
+    var inputSearchWords by remember { mutableStateOf("") }
+    var selectedSongIndex by remember { mutableIntStateOf(-1) }
 
     BackHandler(enabled = currentPage.intValue != 0) {
         if (convertResult.isEmpty()) {
@@ -602,10 +604,10 @@ fun ConvertPageUi(
                 similarity.floatValue = slideSimilarity
                 showSetSimilarityDialog = false
             },
-            title = context.getString(R.string.set_similarity_dialog_title),
+            title = stringResource(R.string.set_similarity_dialog_title),
             content = "",
-            cancelText = context.getString(R.string.cancel_button_text),
-            confirmText = context.getString(R.string.ok_button_text),
+            cancelText = stringResource(R.string.cancel_button_text),
+            confirmText = stringResource(R.string.ok_button_text),
             onlyComposeView = true,
             customContent = {
                 Column {
@@ -651,6 +653,76 @@ fun ConvertPageUi(
             }
         )
     }
+
+    if (showSelectedSongInfoDialog) {
+        YesNoDialog(
+            onDismiss = {
+                showSelectedSongInfoDialog = false
+                inputSearchWords = ""
+            },
+            onCancel = {
+                showSelectedSongInfoDialog = false
+                inputSearchWords = ""
+            },
+            onConfirm = { /*TODO*/ },
+            title = stringResource(id = R.string.modify_conversion_results),
+            content = "",
+            cancelText = stringResource(R.string.cancel_button_text),
+            confirmText = stringResource(R.string.ok_button_text),
+            onlyComposeView = true,
+            customContent = {
+                Column {
+                    ItemTitle(text = stringResource(R.string.songlist_song_info))
+                    ItemValue(
+                        text = stringResource(id = R.string.song_name),
+                        sub = convertResult[selectedSongIndex]!![2],
+                        clickable = true,
+                        onClick = {
+                            inputSearchWords =
+                                "${inputSearchWords}${convertResult[selectedSongIndex]!![2]}"
+                        }
+                    )
+                    ItemValue(
+                        text = stringResource(id = R.string.singer).replace(
+                            "(：)|(: )".toRegex(),
+                            ""
+                        ),
+                        sub = convertResult[selectedSongIndex]!![4],
+                        clickable = true,
+                        onClick = {
+                            inputSearchWords =
+                                "${inputSearchWords}${convertResult[selectedSongIndex]!![4]}"
+                        }
+                    )
+                    ItemValue(
+                        text = stringResource(id = R.string.album).replace(
+                            "(：)|(: )".toRegex(),
+                            ""
+                        ),
+                        sub = convertResult[selectedSongIndex]!![6],
+                        clickable = true,
+                        onClick = {
+                            inputSearchWords =
+                                "${inputSearchWords}${convertResult[selectedSongIndex]!![6]}"
+                        }
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+                    ItemTitle(text = stringResource(R.string.convert_result))
+                    ItemValue(
+                        text = convertResult[selectedSongIndex]!![1],
+                        sub = "${convertResult[selectedSongIndex]!![3]} - ${convertResult[selectedSongIndex]!![5]}"
+                    )
+                    ItemEdit(
+                        text = inputSearchWords,
+                        hint = stringResource(R.string.search_song_library),
+                        onChange = {
+                            inputSearchWords = it
+                        })
+                }
+            }
+        )
+    }
+
     LaunchedEffect(key1 = currentPage.intValue) {
         pageState.animateScrollToPage(currentPage.intValue)
     }
@@ -675,7 +747,7 @@ fun ConvertPageUi(
                     convertResult.clear()
                 }
             },
-            text = context.getString(R.string.convert_function_name),
+            text = stringResource(R.string.convert_function_name),
             showBackBtn = pageState.currentPage != 0
         )
         Box {
@@ -706,10 +778,10 @@ fun ConvertPageUi(
                                 .verticalScroll(rememberScrollState())
                         ) {
                             RoundedColumn {
-                                ItemTitle(text = context.getString(R.string.source_of_songlist_app))
+                                ItemTitle(text = stringResource(R.string.source_of_songlist_app))
                                 ItemPopup(
                                     state = sourceAppPopupMenuState,
-                                    text = context.getString(R.string.select_source_of_songlist),
+                                    text = stringResource(R.string.select_source_of_songlist),
                                     selectedItem = sourceApp
                                 ) {
                                     PopupMenuItem(
@@ -719,7 +791,7 @@ fun ConvertPageUi(
                                             databaseFileName.value = ""
                                         },
                                         selected = selectedSourceApp.intValue == 1,
-                                        text = context.getString(R.string.source_netease_cloud_music)
+                                        text = stringResource(R.string.source_netease_cloud_music)
                                     )
                                     PopupMenuItem(
                                         onClick = {
@@ -728,7 +800,7 @@ fun ConvertPageUi(
                                             databaseFileName.value = ""
                                         },
                                         selected = selectedSourceApp.intValue == 2,
-                                        text = context.getString(R.string.source_qq_music)
+                                        text = stringResource(R.string.source_qq_music)
                                     )
 
                                     PopupMenuItem(
@@ -738,7 +810,7 @@ fun ConvertPageUi(
                                             databaseFileName.value = ""
                                         },
                                         selected = selectedSourceApp.intValue == 3,
-                                        text = context.getString(R.string.source_kugou_music),
+                                        text = stringResource(R.string.source_kugou_music),
 //                        iconPainter = painterResource(id = R.drawable.ic_qr_code),
 //                        iconColor = SaltTheme.colors.text
                                     )
@@ -749,28 +821,28 @@ fun ConvertPageUi(
                                             databaseFileName.value = ""
                                         },
                                         selected = selectedSourceApp.intValue == 4,
-                                        text = context.getString(R.string.source_kuwo_music)
+                                        text = stringResource(R.string.source_kuwo_music)
                                     )
                                 }
                             }
 
                             sourceApp = when (selectedSourceApp.intValue) {
-                                1 -> context.getString(R.string.source_netease_cloud_music)
-                                2 -> context.getString(R.string.source_qq_music)
-                                3 -> context.getString(R.string.source_kugou_music)
-                                4 -> context.getString(R.string.source_kuwo_music)
+                                1 -> stringResource(R.string.source_netease_cloud_music)
+                                2 -> stringResource(R.string.source_qq_music)
+                                3 -> stringResource(R.string.source_kugou_music)
+                                4 -> stringResource(R.string.source_kuwo_music)
                                 else -> ""
                             }
 
                             RoundedColumn {
-                                ItemTitle(text = context.getString(R.string.import_database))
+                                ItemTitle(text = stringResource(R.string.import_database))
                                 Item(
                                     enabled = selectedSourceApp.intValue != 0,
                                     onClick = { convertPage.selectDatabaseFile() },
                                     text = if (selectedSourceApp.intValue == 0) {
-                                        context.getString(R.string.please_select_source_app)
+                                        stringResource(R.string.please_select_source_app)
                                     } else {
-                                        context.getString(R.string.select_database_file_match_to_source_1) + sourceApp + context.getString(
+                                        stringResource(R.string.select_database_file_match_to_source_1) + sourceApp + stringResource(
                                             R.string.select_database_file_match_to_source_2
                                         )
                                     },
@@ -779,7 +851,7 @@ fun ConvertPageUi(
                                     visible = databaseFileName.value != ""
                                 ) {
                                     ItemValue(
-                                        text = context.getString(R.string.you_have_selected),
+                                        text = stringResource(R.string.you_have_selected),
                                         sub = databaseFileName.value
                                     )
                                 }
@@ -787,14 +859,14 @@ fun ConvertPageUi(
                             }
 
                             RoundedColumn {
-                                ItemTitle(text = context.getString(R.string.import_result_file))
+                                ItemTitle(text = stringResource(R.string.import_result_file))
                                 ItemSwitcher(
                                     state = useCustomResultFile.value,
                                     onChange = {
                                         useCustomResultFile.value = it
                                     },
-                                    text = context.getString(R.string.use_custom_result_file),
-                                    sub = context.getString(R.string.use_other_result_file)
+                                    text = stringResource(R.string.use_custom_result_file),
+                                    sub = stringResource(R.string.use_other_result_file)
                                 )
                                 AnimatedVisibility(
                                     visible = useCustomResultFile.value
@@ -807,13 +879,13 @@ fun ConvertPageUi(
                                     ) {
                                         Item(
                                             onClick = { convertPage.selectResultFile() },
-                                            text = context.getString(R.string.select_result_file_item_title),
+                                            text = stringResource(R.string.select_result_file_item_title),
                                         )
                                         AnimatedVisibility(
                                             visible = customResultFileName.value != ""
                                         ) {
                                             ItemValue(
-                                                text = context.getString(R.string.you_have_selected),
+                                                text = stringResource(R.string.you_have_selected),
                                                 sub = customResultFileName.value
                                             )
                                         }
@@ -835,7 +907,7 @@ fun ConvertPageUi(
                                 ItemContainer {
                                     TextButton(
                                         onClick = { convertPage.checkSelectedFiles() },
-                                        text = context.getString(R.string.next_step_text),
+                                        text = stringResource(R.string.next_step_text),
                                         enabled = !it
                                     )
                                 }
@@ -855,7 +927,7 @@ fun ConvertPageUi(
                                 .verticalScroll(rememberScrollState())
                         ) {
                             RoundedColumn {
-                                ItemTitle(text = context.getString(R.string.select_needed_musiclist))
+                                ItemTitle(text = stringResource(R.string.select_needed_musiclist))
                                 AnimatedVisibility(
                                     visible = playlistEnabled.isNotEmpty()
                                 ) {
@@ -877,7 +949,7 @@ fun ConvertPageUi(
                                                         playlistEnabled.replaceAll { 1 }
                                                     }
                                                 },
-                                                text = context.getString(R.string.select_all),
+                                                text = stringResource(R.string.select_all),
                                             )
                                             LazyColumn(
                                                 modifier = Modifier.weight(1f)
@@ -892,8 +964,8 @@ fun ConvertPageUi(
                                                                 playlistEnabled[index] = 0
                                                         },
                                                         text = playlistName[index],
-                                                        sub = "${context.getString(R.string.total)}${playlistSum[index]}${
-                                                            context.getString(R.string.songs)
+                                                        sub = "${stringResource(R.string.total)}${playlistSum[index]}${
+                                                            stringResource(R.string.songs)
                                                         }"
                                                     )
                                                 }
@@ -901,13 +973,13 @@ fun ConvertPageUi(
 
                                             Spacer(modifier = Modifier.height(6.dp))
                                             ItemValue(
-                                                text = "${context.getString(R.string.selected)}${playlistEnabled.count { it != 0 }}${
-                                                    context.getString(
+                                                text = "${stringResource(R.string.selected)}${playlistEnabled.count { it != 0 }}${
+                                                    stringResource(
                                                         R.string.ge
                                                     )
                                                 }",
-                                                sub = "${context.getString(R.string.in_total)}${playlistEnabled.size}${
-                                                    context.getString(
+                                                sub = "${stringResource(R.string.in_total)}${playlistEnabled.size}${
+                                                    stringResource(
                                                         R.string.ge
                                                     )
                                                 }"
@@ -920,7 +992,7 @@ fun ConvertPageUi(
                             ItemContainer {
                                 TextButton(
                                     onClick = { convertPage.checkSongListSelection() },
-                                    text = context.getString(R.string.next_step_text)
+                                    text = stringResource(R.string.next_step_text)
                                 )
                             }
 //                }
@@ -945,38 +1017,38 @@ fun ConvertPageUi(
                                             .verticalScroll(rememberScrollState())
                                     ) {
                                         RoundedColumn {
-                                            ItemTitle(text = context.getString(R.string.current_songlist_info))
+                                            ItemTitle(text = stringResource(R.string.current_songlist_info))
                                             ItemValue(
-                                                text = context.getString(R.string.songlist_sequence),
-                                                sub = "${context.getString(R.string.current_no)}${
+                                                text = stringResource(R.string.songlist_sequence),
+                                                sub = "${stringResource(R.string.current_no)}${
                                                     if (playlistEnabled.count { it == 2 } == -1) 0 else {
                                                         playlistEnabled.count { it == 2 } + 1
                                                     }
-                                                }${context.getString(R.string.ge)} - ${
-                                                    context.getString(R.string.in_total)
+                                                }${stringResource(R.string.ge)} - ${
+                                                    stringResource(R.string.in_total)
                                                 }${playlistEnabled.count { it != 0 }}${
-                                                    context.getString(R.string.ge)
+                                                    stringResource(R.string.ge)
                                                 }"
                                             )
                                             ItemValue(
-                                                text = context.getString(R.string.songlist_name),
+                                                text = stringResource(R.string.songlist_name),
                                                 sub = if (playlistEnabled.indexOfFirst { it == 1 } == -1) "" else playlistName[playlistEnabled.indexOfFirst { it == 1 }]
                                             )
                                             ItemValue(
-                                                text = context.getString(R.string.songlist_sum),
+                                                text = stringResource(R.string.songlist_sum),
                                                 sub = "${if (playlistEnabled.indexOfFirst { it == 1 } == -1) "" else playlistSum[playlistEnabled.indexOfFirst { it == 1 }]}"
                                             )
                                         }
                                         RoundedColumn {
-                                            ItemTitle(text = context.getString(R.string.convert_options))
+                                            ItemTitle(text = stringResource(R.string.convert_options))
                                             Item(
                                                 onClick = { showSetSimilarityDialog = true },
-                                                text = context.getString(R.string.set_similarity_item),
+                                                text = stringResource(R.string.set_similarity_item),
                                                 rightSub = "${similarity.floatValue.roundToInt()}%"
                                             )
                                             ItemPopup(
                                                 state = matchingModePopupMenuState,
-                                                text = context.getString(R.string.matching_mode),
+                                                text = stringResource(R.string.matching_mode),
                                                 selectedItem = matchingMode
                                             ) {
                                                 PopupMenuItem(
@@ -985,7 +1057,7 @@ fun ConvertPageUi(
                                                         matchingModePopupMenuState.dismiss()
                                                     },
                                                     selected = selectedMatchingMode.intValue == 1,
-                                                    text = context.getString(R.string.split_matching)
+                                                    text = stringResource(R.string.split_matching)
                                                 )
                                                 PopupMenuItem(
                                                     onClick = {
@@ -993,30 +1065,30 @@ fun ConvertPageUi(
                                                         matchingModePopupMenuState.dismiss()
                                                     },
                                                     selected = selectedMatchingMode.intValue == 2,
-                                                    text = context.getString(R.string.overall_matching)
+                                                    text = stringResource(R.string.overall_matching)
                                                 )
                                             }
 
                                             matchingMode = when (selectedMatchingMode.intValue) {
-                                                1 -> context.getString(R.string.split_matching)
-                                                2 -> context.getString(R.string.overall_matching)
+                                                1 -> stringResource(R.string.split_matching)
+                                                2 -> stringResource(R.string.overall_matching)
                                                 else -> ""
                                             }
 
                                             ItemSwitcher(
                                                 state = enableBracketRemoval.value,
                                                 onChange = { enableBracketRemoval.value = it },
-                                                text = context.getString(R.string.enable_bracket_removal)
+                                                text = stringResource(R.string.enable_bracket_removal)
                                             )
                                             ItemSwitcher(
                                                 state = enableArtistNameMatch.value,
                                                 onChange = { enableArtistNameMatch.value = it },
-                                                text = context.getString(R.string.enable_artist_name_match)
+                                                text = stringResource(R.string.enable_artist_name_match)
                                             )
                                             ItemSwitcher(
                                                 state = enableAlbumNameMatch.value,
                                                 onChange = { enableAlbumNameMatch.value = it },
-                                                text = context.getString(R.string.enable_album_name_match)
+                                                text = stringResource(R.string.enable_album_name_match)
                                             )
                                         }
                                         AnimatedContent(
@@ -1032,7 +1104,7 @@ fun ConvertPageUi(
                                             ItemContainer {
                                                 TextButton(
                                                     onClick = { convertPage.previewResult() },
-                                                    text = context.getString(R.string.preview_convert_result),
+                                                    text = stringResource(R.string.preview_convert_result),
                                                     enabled = !it
                                                 )
                                             }
@@ -1043,7 +1115,7 @@ fun ConvertPageUi(
                                         ItemContainer {
                                             TextButton(
                                                 onClick = { convertPage.checkSongListSelection() },
-                                                text = context.getString(R.string.next_step_text)
+                                                text = stringResource(R.string.next_step_text)
                                             )
                                         }
 //                }
@@ -1061,7 +1133,7 @@ fun ConvertPageUi(
 //                                            visible = convertResult.isNotEmpty()
 //                                        ) {
                                         RoundedColumn {
-                                            ItemTitle(text = context.getString(R.string.convert_result))
+                                            ItemTitle(text = stringResource(R.string.convert_result))
                                             ItemContainer {
                                                 Column(
                                                     modifier = Modifier
@@ -1074,32 +1146,28 @@ fun ConvertPageUi(
                                                     ) {
                                                         items(convertResult.size) { index ->
                                                             Item(
-                                                                onClick = { /*TODO*/ },
+                                                                onClick = {
+                                                                    selectedSongIndex = index
+                                                                    showSelectedSongInfoDialog =
+                                                                        true
+                                                                },
                                                                 text = convertResult[index]!![1],
-                                                                sub = "${context.getString(R.string.singer)}${convertResult[index]!![3]}\n${
-                                                                    context.getString(
+                                                                sub = "${stringResource(R.string.singer)}${convertResult[index]!![3]}\n${
+                                                                    stringResource(
                                                                         R.string.album
                                                                     )
                                                                 }${convertResult[index]!![5]}",
                                                                 rightSub = convertResult[index]!![0],
-                                                                rightSubColor = if (convertResult[index]!![0] == "true") Color(
-                                                                    ContextCompat.getColor(
-                                                                        context,
-                                                                        R.color.matched
-                                                                    )
-                                                                ) else Color(
-                                                                    ContextCompat.getColor(
-                                                                        context,
-                                                                        R.color.unmatched
-                                                                    )
-                                                                ),
+                                                                rightSubColor = if (convertResult[index]!![0] == "true")
+                                                                    colorResource(id = R.color.matched)
+                                                                else colorResource(id = R.color.unmatched),
                                                             )
                                                         }
                                                     }
 //                                        Spacer(modifier = Modifier.height(5.dp))
 //                                        ItemValue(
-//                                            text = "${context.getString(R.string.in_total)}${playlistEnabled.size}",
-//                                            sub = "${context.getString(R.string.selected)}${playlistEnabled.count { it }}"
+//                                            text = "${stringResource(R.string.in_total)}${playlistEnabled.size}",
+//                                            sub = "${stringResource(R.string.selected)}${playlistEnabled.count { it }}"
 //                                        )
                                                 }
                                             }

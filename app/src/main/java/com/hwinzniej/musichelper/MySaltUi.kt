@@ -19,8 +19,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -472,15 +474,46 @@ fun BasicButton(
     }
 }
 
+@Composable
+fun ItemValue(
+    text: String,
+    sub: String,
+    clickable: Boolean = false,
+    onClick: () -> Unit = {}
+) {
+    Column(modifier = Modifier.clickable(enabled = clickable) { onClick() }) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .sizeIn(minHeight = 48.dp)
+                .padding(horizontal = SaltTheme.dimens.innerHorizontalPadding, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                modifier = Modifier
+                    .weight(1f),
+                text = text,
+                style = SaltTheme.textStyles.main
+            )
+            Spacer(modifier = Modifier.width(12.dp))
+            SelectionContainer(
+                modifier = Modifier
+                    .weight(1f),
+            ) {
+                Text(
+                    text = sub,
+                    color = SaltTheme.colors.subText,
+                    fontSize = 15.sp,
+                    textAlign = TextAlign.End,
+                    style = SaltTheme.textStyles.main
+                )
+            }
+        }
+    }
+}
+
 @OptIn(UnstableSaltApi::class)
 @Preview
 @Composable
 fun Preview() {
-    YesNoDialog(
-        onDismiss = {},
-        onCancel = {},
-        onConfirm = {},
-        title = "Title",
-        content = "Content"
-    )
 }

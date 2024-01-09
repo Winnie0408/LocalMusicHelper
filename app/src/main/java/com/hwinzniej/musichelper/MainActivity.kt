@@ -21,8 +21,8 @@ import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
 import androidx.room.Room
@@ -106,7 +106,6 @@ class MainActivity : ComponentActivity() {
 @OptIn(ExperimentalFoundationApi::class, UnstableSaltApi::class)
 @Composable
 private fun Pages(scanPage: ScanPage, processPage: ProcessPage, convertPage: ConvertPage) {
-    val context = LocalContext.current
     val pages = listOf("0", "1", "2", "3")
     val pageState = rememberPagerState(pageCount = { pages.size })
     val coroutineScope = rememberCoroutineScope()
@@ -191,7 +190,7 @@ private fun Pages(scanPage: ScanPage, processPage: ProcessPage, convertPage: Con
                     coroutineScope.launch { pageState.animateScrollToPage(0) }
                 },
                 painter = painterResource(id = R.drawable.ic_launcher_foreground),
-                text = context.getString(R.string.scan_function_name)
+                text = stringResource(R.string.scan_function_name)
             )
             BottomBarItem(
                 state = pageState.currentPage == 1,
@@ -199,7 +198,7 @@ private fun Pages(scanPage: ScanPage, processPage: ProcessPage, convertPage: Con
                     coroutineScope.launch { pageState.animateScrollToPage(1) }
                 },
                 painter = painterResource(id = R.drawable.ic_launcher_foreground),
-                text = context.getString(R.string.convert_function_name)
+                text = stringResource(R.string.convert_function_name)
             )
             BottomBarItem(
                 state = pageState.currentPage == 2,
@@ -207,7 +206,7 @@ private fun Pages(scanPage: ScanPage, processPage: ProcessPage, convertPage: Con
                     coroutineScope.launch { pageState.animateScrollToPage(2) }
                 },
                 painter = painterResource(id = R.drawable.ic_launcher_foreground),
-                text = context.getString(R.string.process_function_name)
+                text = stringResource(R.string.process_function_name)
             )
             BottomBarItem(
                 state = pageState.currentPage == 3,
@@ -215,7 +214,7 @@ private fun Pages(scanPage: ScanPage, processPage: ProcessPage, convertPage: Con
                     coroutineScope.launch { pageState.animateScrollToPage(3) }
                 },
                 painter = painterResource(id = R.drawable.ic_launcher_foreground),
-                text = context.getString(R.string.about_function_name)
+                text = stringResource(R.string.about_function_name)
             )
         }
     }

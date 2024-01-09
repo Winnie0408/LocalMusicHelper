@@ -82,7 +82,7 @@
     <string name="preview_convert_result">预览转换结果</string>
     <string name="set_similarity_dialog_title">设置相似度阈值</string>
     <string name="convert_result">转换结果</string>
-    <string name="singer">艺术家：</string>
+    <string name="singer">歌手：</string>
     <string name="album">专辑：</string>
     <string name="current_songlist_info">当前歌单信息</string>
     <string name="songlist_name">歌单名</string>
@@ -90,4 +90,8 @@
     <string name="current_no">"第 "</string>
     <string name="ge">" 个"</string>
     <string name="songlist_sequence">序列</string>
+    <string name="modify_conversion_results">修改转换结果</string>
+    <string name="search_song_library">搜索您的曲库</string>
+    <string name="songlist_song_info">歌单歌曲</string>
+    <string name="song_name">歌名</string>
 </resources>

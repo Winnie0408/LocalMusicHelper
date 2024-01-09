@@ -40,7 +40,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
@@ -51,6 +51,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.ContextCompat.getString
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
+import com.hwinzniej.musichelper.ItemValue
 import com.hwinzniej.musichelper.R
 import com.hwinzniej.musichelper.TextButton
 import com.hwinzniej.musichelper.YesNoDialog
@@ -59,7 +60,6 @@ import com.hwinzniej.musichelper.utils.Tools
 import com.moriafly.salt.ui.ItemContainer
 import com.moriafly.salt.ui.ItemText
 import com.moriafly.salt.ui.ItemTitle
-import com.moriafly.salt.ui.ItemValue
 import com.moriafly.salt.ui.RoundedColumn
 import com.moriafly.salt.ui.SaltTheme
 import com.moriafly.salt.ui.TitleBar
@@ -427,16 +427,16 @@ fun ScanPageUi(
 ) {
     //TODO 新增开关：是否输出扫描结果到外部存储空间
     //TODO 尝试优化扫描大量歌曲时UI掉帧的问题
-    val context = LocalContext.current
+    //TODO 将扫描结果改为使用数据库文件导出？
     if (showConflictDialog.value) {
         YesNoDialog(
             onCancel = { conflictDialogResult.intValue = 1 },
             onConfirm = { conflictDialogResult.intValue = 2 },
             onDismiss = { conflictDialogResult.intValue = 3 },
-            title = context.getString(R.string.file_conflict_dialog_title),
-            content = context.getString(R.string.file_conflict_dialog_content).replace("#n", "\n"),
-            cancelText = context.getString(R.string.file_conflict_dialog_no_text),
-            confirmText = context.getString(R.string.file_conflict_dialog_yes_text)
+            title = stringResource(R.string.file_conflict_dialog_title),
+            content = stringResource(R.string.file_conflict_dialog_content).replace("#n", "\n"),
+            cancelText = stringResource(R.string.file_conflict_dialog_no_text),
+            confirmText = stringResource(R.string.file_conflict_dialog_yes_text)
         )
     }
 
@@ -446,7 +446,7 @@ fun ScanPageUi(
             .background(color = SaltTheme.colors.background)
     ) {
         TitleBar(
-            onBack = {}, text = context.getString(R.string.scan_function_name), showBackBtn = false
+            onBack = {}, text = stringResource(R.string.scan_function_name), showBackBtn = false
         )
         Box {
             if (showLoadingProgressBar.value) {
@@ -467,8 +467,8 @@ fun ScanPageUi(
                     .verticalScroll(rememberScrollState())
             ) {
                 RoundedColumn {
-                    ItemTitle(text = context.getString(R.string.scan_control))
-                    ItemText(text = context.getString(R.string.touch_button_to_start_scanning))
+                    ItemTitle(text = stringResource(R.string.scan_control))
+                    ItemText(text = stringResource(R.string.touch_button_to_start_scanning))
                 }
                 AnimatedContent(
                     targetState = showLoadingProgressBar.value,
@@ -484,7 +484,7 @@ fun ScanPageUi(
                         TextButton(
                             onClick = {
                                 scanPage.init()
-                            }, text = context.getString(R.string.start_text),
+                            }, text = stringResource(R.string.start_text),
                             enabled = !it
                         )
                     }
@@ -493,9 +493,9 @@ fun ScanPageUi(
                     visible = progressPercent.value != -1,
                 ) {
                     RoundedColumn {
-                        ItemTitle(text = context.getString(R.string.scanning_result))
+                        ItemTitle(text = stringResource(R.string.scanning_result))
                         ItemValue(
-                            text = context.getString(R.string.number_of_total_songs),
+                            text = stringResource(R.string.number_of_total_songs),
                             sub = progressPercent.value.toString()
                         )
 

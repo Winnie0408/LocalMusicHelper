@@ -29,6 +29,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
@@ -211,31 +212,31 @@ fun ProcessPageUi(
             onCancel = { },
             onConfirm = { },
             onDismiss = { },
-            title = context.getString(R.string.select_needed_tag_type_dialog_title),
+            title = stringResource(R.string.select_needed_tag_type_dialog_title),
             content = "",
-            cancelText = context.getString(R.string.cancel_button_text),
-            confirmText = context.getString(R.string.ok_button_text),
+            cancelText = stringResource(R.string.cancel_button_text),
+            confirmText = stringResource(R.string.ok_button_text),
             onlyComposeView = true,
             customContent = {
                 ItemSwitcher(
                     state = enableAlbumArtist.value, onChange = {
                         enableAlbumArtist.value = it
-                    }, text = context.getString(R.string.album_artist_tag_name)
+                    }, text = stringResource(R.string.album_artist_tag_name)
                 )
                 ItemSwitcher(
                     state = enableReleaseYear.value, onChange = {
                         enableReleaseYear.value = it
-                    }, text = context.getString(R.string.release_year_tag_name)
+                    }, text = stringResource(R.string.release_year_tag_name)
                 )
                 ItemSwitcher(
                     state = enableGenre.value, onChange = {
                         enableGenre.value = it
-                    }, text = context.getString(R.string.genre_tag_name)
+                    }, text = stringResource(R.string.genre_tag_name)
                 )
                 ItemSwitcher(
                     state = enableTrackNumber.value, onChange = {
                         enableTrackNumber.value = it
-                    }, text = context.getString(R.string.track_number_tag_name)
+                    }, text = stringResource(R.string.track_number_tag_name)
                 )
             })
     }
@@ -266,10 +267,10 @@ fun ProcessPageUi(
             onDismiss = {
                 initState()
             },
-            title = context.getString(R.string.select_source_dialog_title),
+            title = stringResource(R.string.select_source_dialog_title),
             content = "",
-            cancelText = context.getString(R.string.cancel_button_text),
-            confirmText = context.getString(R.string.ok_button_text),
+            cancelText = stringResource(R.string.cancel_button_text),
+            confirmText = stringResource(R.string.ok_button_text),
             onlyComposeView = true,
             customContent = {
                 LazyColumn(
@@ -308,7 +309,7 @@ fun ProcessPageUi(
     ) {
         TitleBar(
             onBack = {},
-            text = context.getString(R.string.process_function_name),
+            text = stringResource(R.string.process_function_name),
             showBackBtn = false
         )
         Column(
@@ -319,21 +320,21 @@ fun ProcessPageUi(
                 .verticalScroll(rememberScrollState())
         ) {
             RoundedColumn {
-                ItemTitle(text = context.getString(R.string.process_control))
+                ItemTitle(text = stringResource(R.string.process_control))
                 ItemSwitcher(
                     state = processAllScannedMusic.value,
                     onChange = {
                         processAllScannedMusic.value = it
                     },
-                    text = context.getString(R.string.process_all_scanned_music_switch_title),
-                    sub = context.getString(R.string.process_all_scanned_music_switch_sub)
+                    text = stringResource(R.string.process_all_scanned_music_switch_title),
+                    sub = stringResource(R.string.process_all_scanned_music_switch_sub)
                 )
                 Item(
                     onClick = {
 
                     },
                     enabled = !processAllScannedMusic.value,
-                    text = context.getString(R.string.select_needed_processing_music_directory_item_title),
+                    text = stringResource(R.string.select_needed_processing_music_directory_item_title),
                 )
 //                ItemSpacer()
                 ItemSwitcher(
@@ -341,21 +342,21 @@ fun ProcessPageUi(
                     onChange = {
                         overwriteOriginalTag.value = it
                     },
-                    text = context.getString(R.string.overwrite_original_tag_switch_title),
-                    sub = context.getString(R.string.overwrite_original_tag_switch_sub)
+                    text = stringResource(R.string.overwrite_original_tag_switch_title),
+                    sub = stringResource(R.string.overwrite_original_tag_switch_sub)
                 )
                 Item(
                     onClick = {
                         showSelectTagTypeDialog.value = true
                     },
-                    text = context.getString(R.string.select_needed_tag_type_item_title),
+                    text = stringResource(R.string.select_needed_tag_type_item_title),
                 )
 
                 Item(
                     onClick = {
                         showSelectSourceDialog.value = true
                     },
-                    text = context.getString(R.string.select_source_item_title),
+                    text = stringResource(R.string.select_source_item_title),
                 )
 
 //                AnimatedContent(
@@ -371,7 +372,7 @@ fun ProcessPageUi(
                 ItemContainer {
                     TextButton(
                         onClick = { processPage.getMusicList() },
-                        text = context.getString(R.string.start_text),
+                        text = stringResource(R.string.start_text),
 //                        enabled = !it
                     )
                 }
@@ -379,9 +380,9 @@ fun ProcessPageUi(
             }
 
             RoundedColumn {
-                ItemTitle(text = context.getString(R.string.processing_result))
+                ItemTitle(text = stringResource(R.string.processing_result))
 //                ItemValue(
-//                    text = context.getString(R.string.number_of_total_songs),
+//                    text = stringResource(R.string.number_of_total_songs),
 //                    sub = progressPercent.value.toString()
 //                )
 
