@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">MusicHelper</string>
     <string name="scan_result_hint">扫描过程将会显示在这里。</string>
     <string name="scanning_try_again_later">正在扫描中，请稍后再试。</string>
     <string name="request_permission_toast">请授予必要的权限，以进行音乐扫描</string>
@@ -11,7 +10,7 @@
     <string name="file_conflict_dialog_yes_text">覆盖</string>
     <string name="file_conflict_dialog_no_text">追加</string>
     <string name="scan_function_name">扫描</string>
-    <string name="scan_control">扫描控制</string>
+    <string name="scan_control">扫描选项</string>
     <string name="touch_button_to_start_scanning">轻触按钮以开始</string>
     <string name="start_text">开始</string>
     <string name="processing_result">处理结果</string>
@@ -21,7 +20,7 @@
     <string name="process_function_name">处理</string>
     <string name="about_function_name">关于</string>
     <string name="permission_not_granted_toast">未授予需要的权限，无法继续</string>
-    <string name="process_control">处理控制</string>
+    <string name="process_control">处理选项</string>
     <string name="process_all_scanned_music_switch_title">处理所有歌曲</string>
     <string name="process_all_scanned_music_switch_sub">处理在“扫描”功能中扫描到的所有歌曲</string>
     <string name="select_needed_processing_music_directory_item_title">选择歌曲所在的目录</string>
@@ -92,7 +91,22 @@
     <string name="songlist_sequence">序列</string>
     <string name="modify_conversion_results">修改转换结果</string>
     <string name="search_song_library">搜索您的曲库...</string>
-    <string name="songlist_song_info">歌单歌曲</string>
+    <string name="songlist_song_info">歌单歌曲信息</string>
     <string name="song_name">歌名</string>
     <string name="no_search_result">搜索无结果</string>
+    <string name="modification_result">修改结果</string>
+    <string name="match_success">成功</string>
+    <string name="match_caution">注意</string>
+    <string name="match_manual">手动</string>
+    <string name="modification_success">修改成功</string>
+    <string name="convert_status">转换状态</string>
+    <string name="all">全部</string>
+    <string name="filter">筛选</string>
+    <string name="re_modify_params">重新修改参数</string>
+    <string name="save_conversion_results">保存转换结果</string>
+    <string name="save_options">保存选项</string>
+    <string name="state_of_the_song_to_be_saved">选择要保存的歌曲的状态</string>
+    <string name="result_file_save_location">结果文件保存位置：</string>
+    <string name="save_success">保存成功</string>
+    <string name="no_song_to_save">请至少启用一个状态来保存</string>
 </resources>

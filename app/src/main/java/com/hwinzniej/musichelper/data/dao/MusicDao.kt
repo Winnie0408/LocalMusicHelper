@@ -20,17 +20,20 @@ interface MusicDao {
     @Query("DELETE FROM music")
     fun deleteAll()
 
-    @Query("SELECT song, artist, album, releaseYear, trackNumber, albumArtist, genre FROM music")
-    fun getMusicInfo(): List<MusicInfo>
+//    @Query("SELECT song, artist, album, releaseYear, trackNumber, albumArtist, genre FROM music")
+//    fun getMusicInfo(): List<MusicInfo>
 
-    @Query("SELECT song, artist, album, absolutePath FROM music")
+    @Query("SELECT song, artist, album, absolutePath, id FROM music")
     fun getMusic3Info(): List<MusicInfo>
 
     @Query("SELECT COUNT(*) FROM music")
     fun getMusicCount(): Int
 
-    @Query("SELECT song, artist, album, absolutePath FROM music WHERE song LIKE :keyword OR artist LIKE :keyword OR album LIKE :keyword LIMIT 3")
+    @Query("SELECT song, artist, album, absolutePath, id FROM music WHERE song LIKE :keyword OR artist LIKE :keyword OR album LIKE :keyword LIMIT 3")
     fun searchMusic(keyword: String): List<MusicInfo>
+
+    @Query("SELECT song, artist, album, absolutePath, id FROM music WHERE id = :id")
+    fun getMusicById(id: Int): MusicInfo
 
 //    @Insert
 //    fun updateMusicInfo(musicInfo: MusicInfo)

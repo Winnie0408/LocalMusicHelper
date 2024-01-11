@@ -87,7 +87,7 @@ class ProcessPage(
 //        showProgressBar.value = true
         lifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
             if (processAllScannedMusic.value) {
-                musicInfoList = db.musicDao().getMusicInfo()
+                musicInfoList = db.musicDao().getMusic3Info()  //应为getMusicInfo
                 startProcess()
             } else {
 //            db.musicDao().getMusicByPath("")

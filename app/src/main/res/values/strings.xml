@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">MusicHelper</string>
+    <string name="app_name" translatable="false">MusicHelper</string>
     <string name="scan_result_hint">The scanning process will be shown here.</string>
     <string name="scanning_try_again_later">Scanning, please try again later.</string>
     <string name="result_file_name" translatable="false">MusicHelper.txt</string>
@@ -11,7 +11,7 @@
     <string name="file_conflict_dialog_yes_text">Overwrite</string>
     <string name="file_conflict_dialog_no_text">Append</string>
     <string name="scan_function_name">Scan</string>
-    <string name="scan_control">Scanning control</string>
+    <string name="scan_control">Scanning options</string>
     <string name="touch_button_to_start_scanning">Touch the button to start scanning.</string>
     <string name="start_text">Start</string>
     <string name="scanning_result">Scanning result</string>
@@ -20,7 +20,7 @@
     <string name="process_function_name">Process</string>
     <string name="about_function_name">About</string>
     <string name="permission_not_granted_toast">Required permissions not authorised, unable to continue.</string>
-    <string name="process_control">Processing control</string>
+    <string name="process_control">Processing options</string>
     <string name="process_all_scanned_music_switch_title">Process all musics</string>
     <string name="process_all_scanned_music_switch_sub">Processing all musics scanned in the \"Scan\" function</string>
     <string name="select_needed_processing_music_directory_item_title">Select the directory for the songs</string>
@@ -93,7 +93,22 @@
     <string name="songlist_sequence">Sequence</string>
     <string name="modify_conversion_results">Modify conversion result</string>
     <string name="search_song_library">Search song library...</string>
-    <string name="songlist_song_info">Songlist songs</string>
+    <string name="songlist_song_info">Songlist song info</string>
     <string name="song_name">Song name</string>
     <string name="no_search_result">No results for the search</string>
+    <string name="modification_result">Modification result</string>
+    <string name="match_success">Success</string>
+    <string name="match_caution">Caution</string>
+    <string name="match_manual">Manual</string>
+    <string name="modification_success">Modification Successful</string>
+    <string name="convert_status">Convert Status</string>
+    <string name="all">All</string>
+    <string name="filter">Filter</string>
+    <string name="re_modify_params">Re-modify params</string>
+    <string name="save_conversion_results">Save results</string>
+    <string name="save_options">Save options</string>
+    <string name="state_of_the_song_to_be_saved">Select the state of the song to be saved</string>
+    <string name="result_file_save_location">Location of the result file:</string>
+    <string name="save_success">Save successfully</string>
+    <string name="no_song_to_save">Please enable at least one status</string>
 </resources>

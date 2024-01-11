@@ -137,7 +137,7 @@ fun BasicDialog(
 
 @UnstableSaltApi
 @Composable
-fun ItemPopup(
+fun ItemPopup(  //TODO 根据文字长度自动调整宽度
     state: PopupState,
     enabled: Boolean = true,
     iconPainter: Painter? = null,
@@ -274,7 +274,7 @@ fun ItemText(
             .fillMaxWidth()
             .padding(horizontal = SaltTheme.dimens.innerHorizontalPadding),
         style = TextStyle(
-            fontSize = 14.sp,
+            fontSize = 12.sp,
             color = SaltTheme.colors.subText
         )
     )
@@ -287,8 +287,9 @@ fun ItemCheck(
     onChange: (Boolean) -> Unit,
     enabled: Boolean = true,
     text: String,
-    iconAtRight: Boolean = false,
-    sub: String? = null
+    iconAtLeft: Boolean = false,
+    sub: String? = null,
+    hideIcon: Boolean = false
 ) {
     Row(
         modifier = Modifier
@@ -301,17 +302,19 @@ fun ItemCheck(
             .padding(horizontal = SaltTheme.dimens.innerHorizontalPadding, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        if (iconAtRight) {
-            Icon(
-                modifier = Modifier
-                    .size(24.dp),
-                painter = if (state) painterResource(id = R.drawable.ic_check) else painterResource(
-                    id = R.drawable.ic_uncheck
-                ),
-                contentDescription = null,
-                tint = SaltTheme.colors.highlight
-            )
-            Spacer(modifier = Modifier.width(12.dp))
+        if (!hideIcon) {
+            if (iconAtLeft) {
+                Icon(
+                    modifier = Modifier
+                        .size(24.dp),
+                    painter = if (state) painterResource(id = R.drawable.ic_check) else painterResource(
+                        id = R.drawable.ic_uncheck
+                    ),
+                    contentDescription = null,
+                    tint = SaltTheme.colors.highlight
+                )
+                Spacer(modifier = Modifier.width(12.dp))
+            }
         }
         Column(
             modifier = Modifier
@@ -331,17 +334,19 @@ fun ItemCheck(
                 )
             }
         }
-        if (!iconAtRight) {
-            Spacer(modifier = Modifier.width(12.dp))
-            Icon(
-                modifier = Modifier
-                    .size(24.dp),
-                painter = if (state) painterResource(id = R.drawable.ic_check) else painterResource(
-                    id = R.drawable.ic_uncheck
-                ),
-                contentDescription = null,
-                tint = SaltTheme.colors.highlight
-            )
+        if (!hideIcon) {
+            if (!iconAtLeft) {
+                Spacer(modifier = Modifier.width(12.dp))
+                Icon(
+                    modifier = Modifier
+                        .size(24.dp),
+                    painter = if (state) painterResource(id = R.drawable.ic_check) else painterResource(
+                        id = R.drawable.ic_uncheck
+                    ),
+                    contentDescription = null,
+                    tint = SaltTheme.colors.highlight
+                )
+            }
         }
     }
 }

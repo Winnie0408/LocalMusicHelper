@@ -157,7 +157,8 @@ private fun Pages(scanPage: ScanPage, processPage: ProcessPage, convertPage: Con
                         convertPage.convertResult,
                         convertPage.inputSearchWords,
                         convertPage.searchResult,
-                        convertPage.showSearchingProgressBar
+                        convertPage.showDialogProgressBar,
+                        convertPage.showSaveDialog,
                     )
                 }
 

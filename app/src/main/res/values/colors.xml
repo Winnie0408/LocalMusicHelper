@@ -9,4 +9,5 @@
     <color name="white">#FFFFFFFF</color>
     <color name="matched">#599E5E</color>
     <color name="unmatched">#C94F4F</color>
+    <color name="manual">#3D76A7</color>
 </resources>

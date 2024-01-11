@@ -3,12 +3,16 @@ package com.hwinzniej.musichelper.pages
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.net.Uri
+import android.os.Environment
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.activity.result.ActivityResultLauncher
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -48,9 +52,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -62,6 +68,7 @@ import com.alibaba.fastjson2.JSON
 import com.hwinzniej.musichelper.Item
 import com.hwinzniej.musichelper.ItemCheck
 import com.hwinzniej.musichelper.ItemPopup
+import com.hwinzniej.musichelper.ItemText
 import com.hwinzniej.musichelper.ItemValue
 import com.hwinzniej.musichelper.R
 import com.hwinzniej.musichelper.TextButton
@@ -85,7 +92,9 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.withContext
 import java.io.File
+import java.io.FileWriter
 import kotlin.math.roundToInt
 
 class ConvertPage(
@@ -519,16 +528,18 @@ class ConvertPage(
                                 && songArtistMaxSimilarity >= similarity.floatValue / 100
                                 && songAlbumMaxSimilarity >= similarity.floatValue / 100)
 
-                    val SongConvertResult = music3InfoList[songNameMaxKey.toInt()]
+                    val songConvertResult = music3InfoList[songNameMaxKey.toInt()]
                     convertResultMap[num++] =
                         arrayOf(
-                            autoSuccess.toString(),  //是否自动匹配成功
-                            SongConvertResult.song,  //本地音乐歌曲名
+                            if (autoSuccess) context.getString(R.string.match_success)
+                            else context.getString(R.string.match_caution),  //是否自动匹配成功
+                            songConvertResult.song,  //本地音乐歌曲名
                             songName,  //云音乐歌曲名
-                            SongConvertResult.artist,  //本地音乐歌手名
+                            songConvertResult.artist,  //本地音乐歌手名
                             songArtist,  //云音乐歌手名
-                            SongConvertResult.album,  //本地音乐专辑名
+                            songConvertResult.album,  //本地音乐专辑名
                             songAlbum,  //云音乐专辑名
+                            songConvertResult.absolutePath,  //本地音乐绝对路径
                         )
 
                 } else if (selectedMatchingMode.intValue == 2) {
@@ -566,57 +577,137 @@ class ConvertPage(
 
                     val autoSuccess = songMaxSimilarity >= similarity.floatValue / 100
 
-                    val SongConvertResult = music3InfoList[songMaxKey.toInt()]
+                    val songConvertResult = music3InfoList[songMaxKey.toInt()]
 
                     convertResultMap[num++] =
                         arrayOf(
-                            autoSuccess.toString(),  //是否自动匹配成功
-                            SongConvertResult.song,  //本地音乐歌曲名
+                            if (autoSuccess) context.getString(R.string.match_success)
+                            else context.getString(R.string.match_caution),  //是否自动匹配成功
+                            songConvertResult.song,  //本地音乐歌曲名
                             songName,  //云音乐歌曲名
-                            SongConvertResult.artist,  //本地音乐歌手名
+                            songConvertResult.artist,  //本地音乐歌手名
                             songArtist,  //云音乐歌手名
-                            SongConvertResult.album,  //本地音乐专辑名
+                            songConvertResult.album,  //本地音乐专辑名
                             songAlbum,  //云音乐专辑名
+                            songConvertResult.absolutePath,  //本地音乐绝对路径
                         )
                 }
                 songInfoCursor.close()
             }
             cursor.close()
-            playlistEnabled[firstIndex1] = 2
             convertResult.putAll(convertResultMap)
             showLoadingProgressBar.value = false
         }
     }
 
     var inputSearchWords = mutableStateOf("")
-    var searchResult = mutableStateListOf<String>()
-    var showSearchingProgressBar = mutableStateOf(false)
+    var searchResult = mutableStateListOf<Array<String>>()
+    var showDialogProgressBar = mutableStateOf(false)
     fun searchSong() {
         lifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
-            showSearchingProgressBar.value = true
+            showDialogProgressBar.value = true
             searchResult.clear()
             if (inputSearchWords.value == "") {
-                showSearchingProgressBar.value = false
+                showDialogProgressBar.value = false
                 return@launch
             }
             val searchResultList = db.musicDao().searchMusic("%${inputSearchWords.value}%")
-            val searchResultMap = mutableListOf<String>()
+            val searchResultMap = mutableListOf<Array<String>>()
             for (i in searchResultList.indices) {
                 searchResultMap.add(
-                    "${searchResultList[i].song} - ${searchResultList[i].artist} - ${searchResultList[i].album}"
+                    arrayOf(
+                        searchResultList[i].song,
+                        searchResultList[i].artist,
+                        searchResultList[i].album,
+                        searchResultList[i].id.toString()
+                    )
                 )
             }
             if (searchResultMap.isEmpty()) {
-                searchResult.add(context.getString(R.string.no_search_result))
+                searchResult.add(arrayOf(context.getString(R.string.no_search_result)))
             } else {
                 searchResult.addAll(searchResultMap)
             }
-            showSearchingProgressBar.value = false
+            showDialogProgressBar.value = false
+        }
+    }
+
+    fun saveModificationSong(songPosition: Int, songId: Int) {
+        lifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+            val songInfo = db.musicDao().getMusicById(songId)
+            convertResult[songPosition]?.set(0, context.getString(R.string.match_manual))
+            convertResult[songPosition]?.set(1, songInfo.song)
+            convertResult[songPosition]?.set(3, songInfo.artist)
+            convertResult[songPosition]?.set(5, songInfo.album)
+            convertResult[songPosition]?.set(7, songInfo.absolutePath)
+            withContext(Dispatchers.Main) {
+                Toast.makeText(
+                    context,
+                    context.getString(R.string.modification_success),
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
+    }
+
+    var showSaveDialog = mutableStateOf(false)
+    fun saveCurrentConvertResult(
+        saveSuccessSongs: Boolean,
+        saveCautionSongs: Boolean,
+        saveManualSongs: Boolean,
+        fileName: String
+    ) {
+        lifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+            if (!saveSuccessSongs && !saveCautionSongs && !saveManualSongs) {
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(
+                        context,
+                        context.getString(R.string.no_song_to_save),
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+                return@launch
+            }
+            showDialogProgressBar.value = true
+            val firstIndex1 = playlistEnabled.indexOfFirst { it == 1 }
+            val file = File(
+                "${Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)}/MusicHelper",
+                fileName
+            )
+            if (file.exists())
+                file.delete()
+            if (file.parentFile?.exists() == false)
+                file.parentFile?.mkdirs()
+            val fileWriter = FileWriter(file, true)
+
+            for (it in 0 until convertResult.size) {
+                if (convertResult[it]!![0] == context.getString(R.string.match_success) && saveSuccessSongs) {
+                    fileWriter.write("${convertResult[it]!![7]}\n")
+                }
+                if (convertResult[it]!![0] == context.getString(R.string.match_caution) && saveCautionSongs) {
+                    fileWriter.write("${convertResult[it]!![7]}\n")
+                }
+                if (convertResult[it]!![0] == context.getString(R.string.match_manual) && saveManualSongs) {
+                    fileWriter.write("${convertResult[it]!![7]}\n")
+                }
+            }
+            fileWriter.close()
+            withContext(Dispatchers.Main) {
+                Toast.makeText(
+                    context,
+                    context.getString(R.string.save_success),
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+            showDialogProgressBar.value = false
+            showSaveDialog.value = false
+            convertResult.clear()
+            playlistEnabled[firstIndex1] = 2
         }
     }
 }
 
-@OptIn(UnstableSaltApi::class, ExperimentalFoundationApi::class)
+@OptIn(UnstableSaltApi::class, ExperimentalFoundationApi::class, ExperimentalComposeUiApi::class)
 @Composable
 fun ConvertPageUi(
     convertPage: ConvertPage,
@@ -639,8 +730,9 @@ fun ConvertPageUi(
     similarity: MutableFloatState,
     convertResult: MutableMap<Int, Array<String>>,
     inputSearchWords: MutableState<String>,
-    searchResult: MutableList<String>,
-    showSearchingProgressBar: MutableState<Boolean>,
+    searchResult: MutableList<Array<String>>,
+    showDialogProgressBar: MutableState<Boolean>,
+    showSaveDialog: MutableState<Boolean>,
 ) {
     val sourceAppPopupMenuState = rememberPopupState()
     val matchingModePopupMenuState = rememberPopupState()
@@ -656,8 +748,10 @@ fun ConvertPageUi(
     var selectedSongIndex by remember { mutableIntStateOf(-1) }
     val coroutine = rememberCoroutineScope()
     var job by remember { mutableStateOf<Job?>(null) }
+    var selectedSearchResult by remember { mutableIntStateOf(-1) }
+    val filterPopupMenuState = rememberPopupState()
 
-    BackHandler(enabled = currentPage.intValue != 0) {
+    BackHandler(enabled = currentPage.intValue != 0) { // TODO 在其他页也会被拦截；当在处理转换结果时尝试返回，弹出确认对话框
         if (convertResult.isEmpty()) {
             currentPage.intValue--
         } else {
@@ -702,7 +796,11 @@ fun ConvertPageUi(
                             Text("-", fontSize = 22.sp)
                         }
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(text = "${slideSimilarity.roundToInt()}%", fontSize = 18.sp)
+                        Text(
+                            text = "${slideSimilarity.roundToInt()}%",
+                            fontSize = 18.sp,
+                            color = SaltTheme.colors.text
+                        )
                         Spacer(modifier = Modifier.width(8.dp))
                         androidx.compose.material3.TextButton(
                             onClick = { slideSimilarity++ },
@@ -733,6 +831,7 @@ fun ConvertPageUi(
     }
 
     if (showSelectedSongInfoDialog) {
+        var selectedAllIndex by remember { mutableIntStateOf(-1) }
         YesNoDialog(
             onDismiss = {
                 showSelectedSongInfoDialog = false
@@ -742,15 +841,20 @@ fun ConvertPageUi(
                 showSelectedSongInfoDialog = false
                 inputSearchWords.value = ""
             },
-            onConfirm = { /*TODO*/ },
+            onConfirm = {
+                convertPage.saveModificationSong(selectedSongIndex, selectedAllIndex)
+                inputSearchWords.value = ""
+                showSelectedSongInfoDialog = false
+            },
             title = stringResource(id = R.string.modify_conversion_results),
             content = "",
             cancelText = stringResource(R.string.cancel_button_text),
             confirmText = stringResource(R.string.ok_button_text),
             onlyComposeView = true,
             customContent = {
+                val focus = LocalFocusManager.current
                 Box {
-                    if (showSearchingProgressBar.value) {
+                    if (showDialogProgressBar.value) {
                         LinearProgressIndicator(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -768,14 +872,26 @@ fun ConvertPageUi(
                                 inputSearchWords.value = it
                             }
                         )
-                        AnimatedVisibility(visible = searchResult.isNotEmpty()) {
+                        AnimatedVisibility(visible = searchResult.isNotEmpty()) {  //TODO 仅第一次新增搜索结果时有动画，变化与删除时无动画
                             LazyColumn(
                                 modifier = Modifier.weight(1f)
                             ) {
                                 items(searchResult.size) { index ->
-                                    ItemValue(
-                                        text = searchResult[index],
-                                        clickable = true,
+                                    ItemCheck(
+                                        state = selectedSearchResult == index,
+                                        onChange = {
+                                            focus.clearFocus()
+                                            if (!it) selectedSearchResult = -1
+                                            else {
+                                                selectedSearchResult = index
+                                                selectedAllIndex = searchResult[index][3].toInt()
+                                            }
+                                        },
+                                        text = searchResult[index][0],
+                                        sub = if (searchResult[index].size == 1) null else "${searchResult[index][1]} - ${searchResult[index][2]}",
+                                        iconAtLeft = false,
+                                        hideIcon = searchResult[index].size == 1,
+                                        enabled = searchResult[index].size != 1
                                     )
                                 }
                             }
@@ -815,12 +931,62 @@ fun ConvertPageUi(
                                     "${inputSearchWords.value}${convertResult[selectedSongIndex]!![6]}"
                             }
                         )
-//                        Spacer(modifier = Modifier.height(6.dp))
-//                        ItemTitle(text = stringResource(R.string.convert_result))
-//                        ItemValue(
-//                            text = convertResult[selectedSongIndex]!![1],
-//                            sub = "${convertResult[selectedSongIndex]!![3]} - ${convertResult[selectedSongIndex]!![5]}"
-//                        )
+                    }
+                }
+            }
+        )
+    }
+
+    if (showSaveDialog.value) {
+        var saveSuccessSongs by remember { mutableStateOf(true) }
+        var saveCautionSongs by remember { mutableStateOf(true) }
+        var saveManualSongs by remember { mutableStateOf(true) }
+        YesNoDialog(
+            onDismiss = { showSaveDialog.value = false },
+            onCancel = { showSaveDialog.value = false },
+            onConfirm = {
+                convertPage.saveCurrentConvertResult(
+                    saveSuccessSongs,
+                    saveCautionSongs,
+                    saveManualSongs,
+                    "${playlistName[playlistEnabled.indexOfFirst { it == 1 }]}.txt"
+                )
+            },
+            title = stringResource(id = R.string.save_conversion_results),
+            content = "",
+            cancelText = stringResource(R.string.cancel_button_text),
+            confirmText = stringResource(R.string.ok_button_text),
+            onlyComposeView = true,
+            customContent = {
+                Box {
+                    if (showDialogProgressBar.value) {
+                        LinearProgressIndicator(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .zIndex(1f),
+                            color = SaltTheme.colors.highlight,
+                            trackColor = SaltTheme.colors.background
+                        )
+                    }
+                    Column {
+                        ItemTitle(text = stringResource(R.string.save_options))
+                        ItemText(text = stringResource(R.string.state_of_the_song_to_be_saved))
+                        ItemSwitcher(
+                            state = saveSuccessSongs,
+                            onChange = { saveSuccessSongs = it },
+                            text = stringResource(R.string.match_success)
+                        )
+                        ItemSwitcher(
+                            state = saveCautionSongs,
+                            onChange = { saveCautionSongs = it },
+                            text = stringResource(R.string.match_caution)
+                        )
+                        ItemSwitcher(
+                            state = saveManualSongs,
+                            onChange = { saveManualSongs = it },
+                            text = stringResource(R.string.match_manual)
+                        )
+                        ItemText(text = "${stringResource(R.string.result_file_save_location)}\n/Download/MusicHelper/${playlistName[playlistEnabled.indexOfFirst { it == 1 }]}.txt")
                     }
                 }
             }
@@ -837,13 +1003,15 @@ fun ConvertPageUi(
             resultPageState.animateScrollToPage(1)
         }
     }
+
     LaunchedEffect(key1 = inputSearchWords.value) {
         job?.cancel()
         job = coroutine.launch {
             delay(500)
-            showSearchingProgressBar.value = true
+            showDialogProgressBar.value = true
             delay(500)
             convertPage.searchSong()
+            selectedSearchResult = -1
         }
     }
 
@@ -1120,6 +1288,8 @@ fun ConvertPageUi(
                             userScrollEnabled = false,
                             beyondBoundsPageCount = 1
                         ) { resultPage ->
+                            var selectedFilterIndex by remember { mutableIntStateOf(0) }
+                            var selectedFilter by remember { mutableStateOf("") }
                             when (resultPage) {
                                 0 -> {
                                     Column(
@@ -1132,7 +1302,7 @@ fun ConvertPageUi(
                                         RoundedColumn {
                                             ItemTitle(text = stringResource(R.string.current_songlist_info))
                                             ItemValue(
-                                                text = stringResource(R.string.songlist_sequence),
+                                                text = stringResource(R.string.songlist_sequence),  //TODO 判断是否是最后一个歌单
                                                 sub = "${stringResource(R.string.current_no)}${
                                                     if (playlistEnabled.count { it == 2 } == -1) 0 else {
                                                         playlistEnabled.count { it == 2 } + 1
@@ -1216,7 +1386,11 @@ fun ConvertPageUi(
                                             }) {
                                             ItemContainer {
                                                 TextButton(
-                                                    onClick = { convertPage.previewResult() },
+                                                    onClick = {
+                                                        convertPage.previewResult()
+                                                        selectedFilterIndex = 0
+                                                        selectedFilter = ""
+                                                    },
                                                     text = stringResource(R.string.preview_convert_result),
                                                     enabled = !it
                                                 )
@@ -1246,35 +1420,255 @@ fun ConvertPageUi(
 //                                            visible = convertResult.isNotEmpty()
 //                                        ) {
                                         RoundedColumn {
+                                            ItemTitle(text = stringResource(R.string.filter))
+                                            ItemPopup(
+                                                state = filterPopupMenuState,
+                                                text = stringResource(id = R.string.convert_status),
+                                                selectedItem = selectedFilter
+                                            ) {
+                                                PopupMenuItem(
+                                                    onClick = {
+                                                        selectedFilterIndex = 0
+                                                        filterPopupMenuState.dismiss()
+                                                    },
+                                                    text = "${stringResource(id = R.string.all)} - ${convertResult.size}",
+                                                    selected = selectedFilterIndex == 0
+                                                )
+                                                PopupMenuItem(
+                                                    onClick = {
+                                                        selectedFilterIndex = 1
+                                                        filterPopupMenuState.dismiss()
+                                                    },
+                                                    text = "${stringResource(id = R.string.match_success)} - ${
+                                                        convertResult.count {
+                                                            it.value[0] == stringResource(
+                                                                R.string.match_success
+                                                            )
+                                                        }
+                                                    }",
+                                                    selected = selectedFilterIndex == 1
+                                                )
+                                                PopupMenuItem(
+                                                    onClick = {
+                                                        selectedFilterIndex = 2
+                                                        filterPopupMenuState.dismiss()
+                                                    },
+                                                    text = "${stringResource(id = R.string.match_caution)} - ${
+                                                        convertResult.count {
+                                                            it.value[0] == stringResource(
+                                                                R.string.match_caution
+                                                            )
+                                                        }
+                                                    }",
+                                                    selected = selectedFilterIndex == 2
+                                                )
+                                                PopupMenuItem(
+                                                    onClick = {
+                                                        selectedFilterIndex = 3
+                                                        filterPopupMenuState.dismiss()
+                                                    },
+                                                    text = "${stringResource(id = R.string.match_manual)} - ${
+                                                        convertResult.count {
+                                                            it.value[0] == stringResource(
+                                                                R.string.match_manual
+                                                            )
+                                                        }
+                                                    }",
+                                                    selected = selectedFilterIndex == 3
+                                                )
+                                            }
+                                        }
+
+                                        selectedFilter = when (selectedFilterIndex) {
+                                            0 -> "${stringResource(id = R.string.all)} - ${convertResult.size}"
+                                            1 -> "${stringResource(id = R.string.match_success)} - ${
+                                                convertResult.count {
+                                                    it.value[0] == stringResource(
+                                                        R.string.match_success
+                                                    )
+                                                }
+                                            }"
+
+                                            2 -> "${stringResource(id = R.string.match_caution)} - ${
+                                                convertResult.count {
+                                                    it.value[0] == stringResource(
+                                                        R.string.match_caution
+                                                    )
+                                                }
+                                            }"
+
+                                            3 -> "${stringResource(id = R.string.match_manual)} - ${
+                                                convertResult.count {
+                                                    it.value[0] == stringResource(
+                                                        R.string.match_manual
+                                                    )
+                                                }
+                                            }"
+
+                                            else -> ""
+                                        }
+
+                                        RoundedColumn {
                                             ItemTitle(text = stringResource(R.string.convert_result))
                                             ItemContainer {
                                                 Column(
                                                     modifier = Modifier
                                                         .clip(RoundedCornerShape(10.dp))
-                                                        .heightIn(max = (LocalConfiguration.current.screenHeightDp / 1.4).dp)
+                                                        .heightIn(max = (LocalConfiguration.current.screenHeightDp / 1.8).dp)
                                                         .background(color = SaltTheme.colors.subBackground)
                                                 ) {
-                                                    LazyColumn(
-                                                        modifier = Modifier.weight(1f)
-                                                    ) {
-                                                        items(convertResult.size) { index ->
-                                                            Item(
-                                                                onClick = {
-                                                                    selectedSongIndex = index
-                                                                    showSelectedSongInfoDialog =
-                                                                        true
-                                                                },
-                                                                text = convertResult[index]!![1],
-                                                                sub = "${stringResource(R.string.singer)}${convertResult[index]!![3]}\n${
-                                                                    stringResource(
-                                                                        R.string.album
+                                                    AnimatedContent(
+                                                        targetState = selectedFilterIndex,
+                                                        label = "",
+                                                        transitionSpec = {
+                                                            if (targetState != initialState) {
+                                                                fadeIn() + slideInVertically() togetherWith fadeOut() + slideOutVertically()
+                                                            } else {
+                                                                fadeIn() + slideInVertically() togetherWith fadeOut() + slideOutVertically()
+                                                            }
+                                                        }) {
+                                                        LazyColumn(
+                                                            modifier = Modifier.weight(1f)
+                                                        ) {
+                                                            when (it) {
+                                                                0 -> items(convertResult.size) { index ->
+                                                                    Item(
+                                                                        onClick = {
+                                                                            selectedSongIndex =
+                                                                                index
+                                                                            showSelectedSongInfoDialog =
+                                                                                true
+                                                                        },
+                                                                        text = convertResult[index]!![1],
+                                                                        sub = "${stringResource(R.string.singer)}${convertResult[index]!![3]}\n${
+                                                                            stringResource(R.string.album)
+                                                                        }${convertResult[index]!![5]}",
+                                                                        rightSub = convertResult[index]!![0],
+                                                                        rightSubColor = when (convertResult[index]!![0]) {
+                                                                            stringResource(R.string.match_success) -> colorResource(
+                                                                                id = R.color.matched
+                                                                            )
+
+                                                                            stringResource(R.string.match_caution) -> colorResource(
+                                                                                id = R.color.unmatched
+                                                                            )
+
+                                                                            else -> colorResource(R.color.manual)
+                                                                        },
                                                                     )
-                                                                }${convertResult[index]!![5]}",
-                                                                rightSub = convertResult[index]!![0],
-                                                                rightSubColor = if (convertResult[index]!![0] == "true")
-                                                                    colorResource(id = R.color.matched)
-                                                                else colorResource(id = R.color.unmatched),
-                                                            )
+                                                                }
+
+                                                                1 -> items(convertResult.size) { index ->
+                                                                    if (convertResult[index]!![0] == stringResource(
+                                                                            R.string.match_success
+                                                                        )
+                                                                    )
+                                                                        Item(
+                                                                            onClick = {
+                                                                                selectedSongIndex =
+                                                                                    index
+                                                                                showSelectedSongInfoDialog =
+                                                                                    true
+                                                                            },
+                                                                            text = convertResult[index]!![1],
+                                                                            sub = "${
+                                                                                stringResource(
+                                                                                    R.string.singer
+                                                                                )
+                                                                            }${convertResult[index]!![3]}\n${
+                                                                                stringResource(R.string.album)
+                                                                            }${convertResult[index]!![5]}",
+                                                                            rightSub = convertResult[index]!![0],
+                                                                            rightSubColor = when (convertResult[index]!![0]) {
+                                                                                stringResource(R.string.match_success) -> colorResource(
+                                                                                    id = R.color.matched
+                                                                                )
+
+                                                                                stringResource(R.string.match_caution) -> colorResource(
+                                                                                    id = R.color.unmatched
+                                                                                )
+
+                                                                                else -> colorResource(
+                                                                                    R.color.manual
+                                                                                )
+                                                                            },
+                                                                        )
+                                                                }
+
+                                                                2 -> items(convertResult.size) { index ->
+                                                                    if (convertResult[index]!![0] == stringResource(
+                                                                            R.string.match_caution
+                                                                        )
+                                                                    )
+                                                                        Item(
+                                                                            onClick = {
+                                                                                selectedSongIndex =
+                                                                                    index
+                                                                                showSelectedSongInfoDialog =
+                                                                                    true
+                                                                            },
+                                                                            text = convertResult[index]!![1],
+                                                                            sub = "${
+                                                                                stringResource(
+                                                                                    R.string.singer
+                                                                                )
+                                                                            }${convertResult[index]!![3]}\n${
+                                                                                stringResource(R.string.album)
+                                                                            }${convertResult[index]!![5]}",
+                                                                            rightSub = convertResult[index]!![0],
+                                                                            rightSubColor = when (convertResult[index]!![0]) {
+                                                                                stringResource(R.string.match_success) -> colorResource(
+                                                                                    id = R.color.matched
+                                                                                )
+
+                                                                                stringResource(R.string.match_caution) -> colorResource(
+                                                                                    id = R.color.unmatched
+                                                                                )
+
+                                                                                else -> colorResource(
+                                                                                    R.color.manual
+                                                                                )
+                                                                            },
+                                                                        )
+                                                                }
+
+                                                                3 -> items(convertResult.size) { index ->
+                                                                    if (convertResult[index]!![0] == stringResource(
+                                                                            R.string.match_manual
+                                                                        )
+                                                                    )
+                                                                        Item(
+                                                                            onClick = {
+                                                                                selectedSongIndex =
+                                                                                    index
+                                                                                showSelectedSongInfoDialog =
+                                                                                    true
+                                                                            },
+                                                                            text = convertResult[index]!![1],
+                                                                            sub = "${
+                                                                                stringResource(
+                                                                                    R.string.singer
+                                                                                )
+                                                                            }${convertResult[index]!![3]}\n${
+                                                                                stringResource(R.string.album)
+                                                                            }${convertResult[index]!![5]}",
+                                                                            rightSub = convertResult[index]!![0],
+                                                                            rightSubColor = when (convertResult[index]!![0]) {
+                                                                                stringResource(R.string.match_success) -> colorResource(
+                                                                                    id = R.color.matched
+                                                                                )
+
+                                                                                stringResource(R.string.match_caution) -> colorResource(
+                                                                                    id = R.color.unmatched
+                                                                                )
+
+                                                                                else -> colorResource(
+                                                                                    R.color.manual
+                                                                                )
+                                                                            },
+                                                                        )
+                                                                }
+                                                            }
                                                         }
                                                     }
 //                                        Spacer(modifier = Modifier.height(5.dp))
@@ -1284,6 +1678,27 @@ fun ConvertPageUi(
 //                                        )
                                                 }
                                             }
+                                        }
+                                        Row(
+                                            modifier = Modifier.padding(horizontal = SaltTheme.dimens.outerHorizontalPadding)
+                                        ) {
+                                            TextButton(
+                                                onClick = {
+                                                    convertResult.clear()
+                                                },
+                                                modifier = Modifier.weight(1f),
+                                                text = stringResource(id = R.string.re_modify_params),
+                                                textColor = SaltTheme.colors.subText,
+                                                backgroundColor = SaltTheme.colors.subBackground,
+                                            )
+                                            Spacer(modifier = Modifier.width(12.dp))
+                                            TextButton(
+                                                onClick = {
+                                                    showSaveDialog.value = true
+                                                },
+                                                modifier = Modifier.weight(1f),
+                                                text = stringResource(id = R.string.save_conversion_results)
+                                            )
                                         }
 //                                        }
                                     }
