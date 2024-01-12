@@ -275,13 +275,12 @@ class ScanPage(
         }
 
         scanResult.value = ""
-        val absolutePath: String
         Toast.makeText(
             context,
             getString(context, R.string.selected_directory_path) + "$uri",
             Toast.LENGTH_SHORT
         ).show()
-        absolutePath = Tools().uriToAbsolutePath(uri)
+        val absolutePath: String = Tools().uriToAbsolutePath(uri)
         val directory = File(absolutePath)
         showLoadingProgressBar.value = true
         progressPercent.intValue = 0

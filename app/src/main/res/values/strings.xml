@@ -107,8 +107,19 @@
     <string name="re_modify_params">Re-modify params</string>
     <string name="save_conversion_results">Save results</string>
     <string name="save_options">Save options</string>
-    <string name="state_of_the_song_to_be_saved">Select the state of the song to be saved</string>
+    <string name="state_of_the_song_to_be_saved">Status of the song to be saved</string>
     <string name="result_file_save_location">Location of the result file:</string>
     <string name="save_success">Save successfully</string>
     <string name="no_song_to_save">Please enable at least one status</string>
+    <string name="go_back_confirm_dialog_title">Go Back?</string>
+    <string name="go_back_confirm_dialog_content">Your changes on this page will be lost!</string>
+    <string name="all_done">All done!</string>
+    <string name="details_of_results">Output file path</string>
+    <string name="open_salt_player">Open Salt Player</string>
+    <string name="copy_folder_path">Copy folder path</string>
+    <string name="salt_player_not_installed">Salt Player not installed</string>
+    <string name="copy_success">Copied</string>
+    <string name="delete_dialog_title">Delete the current song?</string>
+    <string name="delete_dialog_content">Will be deleted from the results:</string>
+    <string name="delete_success">Delete success</string>
 </resources>

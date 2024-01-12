@@ -7,6 +7,7 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.indication
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
@@ -22,6 +23,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.Icon
@@ -35,10 +39,12 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -49,6 +55,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.DpOffset
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -70,8 +77,8 @@ fun YesNoDialog(
     properties: DialogProperties = DialogProperties(),
     title: String,
     content: String,
-    cancelText: String = stringResource(id = R.string.cancel_button_text).uppercase(),
-    confirmText: String = stringResource(id = R.string.ok_button_text).uppercase(),
+    cancelText: String = stringResource(id = R.string.cancel_button_text),
+    confirmText: String = stringResource(id = R.string.ok_button_text),
     customContent: @Composable () -> Unit = {},
     onlyComposeView: Boolean = false
 ) {
@@ -83,7 +90,7 @@ fun YesNoDialog(
         if (onlyComposeView) Spacer(modifier = Modifier.height(8.dp * 2))
         if (!onlyComposeView) {
             ItemSpacer()
-            ItemText(text = content)
+            ItemText(text = content, fontSize = 13.sp)
             Spacer(modifier = Modifier.height(8.dp * 2))
         }
         customContent()
@@ -243,7 +250,7 @@ fun YesDialog(
     properties: DialogProperties = DialogProperties(),
     title: String,
     content: String,
-    confirmText: String = stringResource(id = R.string.ok_button_text).uppercase()
+    confirmText: String = stringResource(id = R.string.ok_button_text)
 ) {
     BasicDialog(
         onDismissRequest = onDismissRequest,
@@ -251,7 +258,7 @@ fun YesDialog(
     ) {
         DialogTitle(text = title)
         ItemSpacer()
-        ItemText(text = content)
+        ItemText(text = content, fontSize = 13.sp)
         Spacer(modifier = Modifier.height(8.dp * 2))
         TextButton(
             onClick = {
@@ -266,7 +273,8 @@ fun YesDialog(
 
 @Composable
 fun ItemText(
-    text: String
+    text: String,
+    fontSize: TextUnit = 12.sp,
 ) {
     Text(
         text = text,
@@ -274,7 +282,7 @@ fun ItemText(
             .fillMaxWidth()
             .padding(horizontal = SaltTheme.dimens.innerHorizontalPadding),
         style = TextStyle(
-            fontSize = 12.sp,
+            fontSize = fontSize,
             color = SaltTheme.colors.subText
         )
     )
@@ -517,6 +525,78 @@ fun ItemValue(
             }
         }
     }
+}
+
+@Composable
+fun ItemEdit(
+    text: String,
+    onChange: (String) -> Unit,
+    backgroundColor: Color = SaltTheme.colors.subText.copy(alpha = 0.1f),
+    hint: String? = null,
+    readOnly: Boolean = false,
+    contentPaddingValues: PaddingValues = PaddingValues(
+        horizontal = SaltTheme.dimens.innerHorizontalPadding,
+        vertical = 12.dp
+    ),
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
+    keyboardActions: KeyboardActions = KeyboardActions.Default,
+    showClearButton: Boolean = false,
+    onClear: () -> Unit = {}
+) {
+    BasicTextField(
+        value = text,
+        onValueChange = onChange,
+        modifier = Modifier
+            .padding(contentPaddingValues),
+        readOnly = readOnly,
+        keyboardOptions = keyboardOptions,
+        keyboardActions = keyboardActions,
+        textStyle = SaltTheme.textStyles.main,
+        cursorBrush = SolidColor(SaltTheme.colors.highlight),
+        decorationBox = { innerTextField ->
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(SaltTheme.dimens.corner))
+                    .background(color = backgroundColor)
+                    .padding(12.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier.weight(1f),
+                        contentAlignment = Alignment.CenterStart
+                    ) {
+                        innerTextField()
+                        if (hint != null && text.isEmpty()) {
+                            Text(
+                                text = hint,
+                                color = SaltTheme.colors.subText.copy(alpha = 0.5f),
+                                style = SaltTheme.textStyles.main
+                            )
+                        }
+                    }
+                    if (showClearButton) {
+                        Icon(
+                            modifier = Modifier
+                                .size(20.dp)
+                                .clickable {
+                                    onClear()
+                                }
+                                .alpha(0.7f),
+                            painter = painterResource(id = R.drawable.ic_clear),
+                            contentDescription = null,
+                            tint = SaltTheme.colors.subText
+                        )
+                    }
+                }
+            }
+
+        }
+    )
 }
 
 @OptIn(UnstableSaltApi::class)

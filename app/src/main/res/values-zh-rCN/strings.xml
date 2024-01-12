@@ -105,8 +105,19 @@
     <string name="re_modify_params">重新修改参数</string>
     <string name="save_conversion_results">保存转换结果</string>
     <string name="save_options">保存选项</string>
-    <string name="state_of_the_song_to_be_saved">选择要保存的歌曲的状态</string>
+    <string name="state_of_the_song_to_be_saved">要保存的歌曲状态</string>
     <string name="result_file_save_location">结果文件保存位置：</string>
     <string name="save_success">保存成功</string>
     <string name="no_song_to_save">请至少启用一个状态来保存</string>
+    <string name="go_back_confirm_dialog_title">返回吗？</string>
+    <string name="go_back_confirm_dialog_content">您在该页面的修改将会丢失！</string>
+    <string name="all_done">全部完成！</string>
+    <string name="details_of_results">输出文件保存路径</string>
+    <string name="open_salt_player">打开Salt Player</string>
+    <string name="copy_folder_path">复制目录路径</string>
+    <string name="salt_player_not_installed">未安装Salt Player</string>
+    <string name="copy_success">已复制</string>
+    <string name="delete_dialog_title">删除当前歌曲？</string>
+    <string name="delete_dialog_content">将从结果中删除：</string>
+    <string name="delete_success">删除成功</string>
 </resources>

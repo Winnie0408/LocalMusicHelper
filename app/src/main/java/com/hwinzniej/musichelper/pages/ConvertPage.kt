@@ -1,6 +1,10 @@
 package com.hwinzniej.musichelper.pages
 
+import android.content.ActivityNotFoundException
+import android.content.ClipData.newPlainText
+import android.content.ClipboardManager
 import android.content.Context
+import android.content.Intent
 import android.database.sqlite.SQLiteDatabase
 import android.net.Uri
 import android.os.Environment
@@ -25,14 +29,18 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.VerticalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
@@ -52,21 +60,26 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import com.alibaba.fastjson2.JSON
+import com.hwinzniej.musichelper.BasicButton
 import com.hwinzniej.musichelper.Item
 import com.hwinzniej.musichelper.ItemCheck
+import com.hwinzniej.musichelper.ItemEdit
 import com.hwinzniej.musichelper.ItemPopup
 import com.hwinzniej.musichelper.ItemText
 import com.hwinzniej.musichelper.ItemValue
@@ -78,7 +91,6 @@ import com.hwinzniej.musichelper.data.SourceApp
 import com.hwinzniej.musichelper.data.database.MusicDatabase
 import com.hwinzniej.musichelper.utils.Tools
 import com.moriafly.salt.ui.ItemContainer
-import com.moriafly.salt.ui.ItemEdit
 import com.moriafly.salt.ui.ItemSwitcher
 import com.moriafly.salt.ui.ItemTitle
 import com.moriafly.salt.ui.RoundedColumn
@@ -89,6 +101,7 @@ import com.moriafly.salt.ui.popup.PopupMenuItem
 import com.moriafly.salt.ui.popup.rememberPopupState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Semaphore
@@ -279,7 +292,7 @@ class ConvertPage(
                 val db = SQLiteDatabase.openOrCreateDatabase(file, null)
                 try {
                     val cursor =
-                        db.rawQuery("SELECT * FROM  ${sourceApp.songListTableName} LIMIT 1", null)
+                        db.rawQuery("SELECT * FROM ${sourceApp.songListTableName} LIMIT 1", null)
                     cursor.close()
                     loadingProgressSema.release()
                 } catch (e: Exception) {
@@ -437,98 +450,107 @@ class ConvertPage(
                     val artistSimilarityArray = mutableMapOf<String, Double>()
                     val albumSimilarityArray = mutableMapOf<String, Double>()
 
-                    //歌曲名相似度列表
-                    if (enableBracketRemoval.value) for (k in music3InfoList.indices) {
-                        songSimilarityArray[k.toString()] = Tools().similarityRatio(
-                            songName.replace(
-                                "(?i) ?\\((?!inst|[^()]* ver)[^)]*\\) ?".toRegex(),
-                                ""
-                            ).lowercase(),
-                            music3InfoList[k].song
-                                .replace(
+                    var songArtistMaxSimilarity = 0.0
+                    var songAlbumMaxSimilarity = 0.0
+
+                    val songThread = async {
+                        //歌曲名相似度列表
+                        if (enableBracketRemoval.value) for (k in music3InfoList.indices) {
+                            songSimilarityArray[k.toString()] = Tools().similarityRatio(
+                                songName.replace(
                                     "(?i) ?\\((?!inst|[^()]* ver)[^)]*\\) ?".toRegex(),
                                     ""
-                                ).lowercase()
-                        )
-                    } else for (k in music3InfoList.indices) {
-                        songSimilarityArray[k.toString()] = Tools().similarityRatio(
-                            songName.lowercase(), music3InfoList[k].song.lowercase()
-                        )
-                    }
-
-                    var maxSimilarity = Tools().getMaxValue(songSimilarityArray)
-                    val songNameMaxSimilarity = maxSimilarity?.value!!
-                    val songNameMaxKey = maxSimilarity.key
-
-                    //歌手名相似度列表
-                    var songArtistMaxSimilarity: Double
-                    if (enableArtistNameMatch.value) {
-                        if (enableBracketRemoval.value) for (k in music3InfoList.indices) {
-                            artistSimilarityArray[k.toString()] =
-                                Tools().similarityRatio(
-                                    songArtist.replace(
+                                ).lowercase(),
+                                music3InfoList[k].song
+                                    .replace(
                                         "(?i) ?\\((?!inst|[^()]* ver)[^)]*\\) ?".toRegex(),
                                         ""
-                                    ).lowercase(),
-                                    music3InfoList[k].artist
-                                        .replace(
-                                            "(?i) ?\\((?!inst|[^()]* ver)[^)]*\\) ?".toRegex(),
-                                            ""
-                                        ).lowercase()
-                                )
+                                    ).lowercase()
+                            )
                         } else for (k in music3InfoList.indices) {
-                            artistSimilarityArray[k.toString()] =
-                                Tools().similarityRatio(
-                                    songArtist.lowercase(),
-                                    music3InfoList[k].artist.lowercase()
-                                )
+                            songSimilarityArray[k.toString()] = Tools().similarityRatio(
+                                songName.lowercase(), music3InfoList[k].song.lowercase()
+                            )
                         }
-                        maxSimilarity =
-                            Tools().getMaxValue(artistSimilarityArray) //获取键值对表中相似度的最大值所在的键值对
-                        songArtistMaxSimilarity = maxSimilarity?.value!! //获取相似度的最大值
-                        val songArtistMaxKey = maxSimilarity?.key //获取相似度的最大值对应的歌手名
-                    } else {
-                        songArtistMaxSimilarity = 1.0
                     }
 
-                    //专辑名相似度列表
-                    var songAlbumMaxSimilarity: Double
-                    if (enableAlbumNameMatch.value) {
-                        if (enableBracketRemoval.value) for (k in music3InfoList.indices) {
-                            albumSimilarityArray[k.toString()] =
-                                Tools().similarityRatio(
-                                    songAlbum.replace(
-                                        "(?i) ?\\((?!inst|[^()]* ver)[^)]*\\) ?".toRegex(),
-                                        ""
-                                    ).lowercase(),
-                                    music3InfoList[k].album
-                                        .replace(
+                    val artistThread = async {
+                        //歌手名相似度列表
+                        if (enableArtistNameMatch.value) {
+                            if (enableBracketRemoval.value) for (k in music3InfoList.indices) {
+                                artistSimilarityArray[k.toString()] =
+                                    Tools().similarityRatio(
+                                        songArtist.replace(
                                             "(?i) ?\\((?!inst|[^()]* ver)[^)]*\\) ?".toRegex(),
                                             ""
-                                        )
-                                        .lowercase()
-                                )
-                        } else for (k in music3InfoList.indices) {
-                            albumSimilarityArray[k.toString()] =
-                                Tools().similarityRatio(
-                                    songAlbum.lowercase(),
-                                    music3InfoList[k].album.lowercase()
-                                )
+                                        ).lowercase(),
+                                        music3InfoList[k].artist
+                                            .replace(
+                                                "(?i) ?\\((?!inst|[^()]* ver)[^)]*\\) ?".toRegex(),
+                                                ""
+                                            ).lowercase()
+                                    )
+                            } else for (k in music3InfoList.indices) {
+                                artistSimilarityArray[k.toString()] =
+                                    Tools().similarityRatio(
+                                        songArtist.lowercase(),
+                                        music3InfoList[k].artist.lowercase()
+                                    )
+                            }
+                            songArtistMaxSimilarity =
+                                Tools().getMaxValue(artistSimilarityArray)?.value!! //获取相似度的最大值
+                            val songArtistMaxKey =
+                                Tools().getMaxValue(artistSimilarityArray)?.key //获取相似度的最大值对应的歌手名
+                        } else {
+                            songArtistMaxSimilarity = 1.0
                         }
-                        maxSimilarity =
-                            Tools().getMaxValue(albumSimilarityArray) //获取键值对表中相似度的最大值所在的键值对
-                        songAlbumMaxSimilarity = maxSimilarity?.value!! //获取相似度的最大值
-                        val songAlbumMaxKey = maxSimilarity?.key //获取相似度的最大值对应的专辑名
-                    } else {
-                        songAlbumMaxSimilarity = 1.0
                     }
+
+                    val albumThread = async {
+                        //专辑名相似度列表
+                        if (enableAlbumNameMatch.value) {
+                            if (enableBracketRemoval.value) for (k in music3InfoList.indices) {
+                                albumSimilarityArray[k.toString()] =
+                                    Tools().similarityRatio(
+                                        songAlbum.replace(
+                                            "(?i) ?\\((?!inst|[^()]* ver)[^)]*\\) ?".toRegex(),
+                                            ""
+                                        ).lowercase(),
+                                        music3InfoList[k].album
+                                            .replace(
+                                                "(?i) ?\\((?!inst|[^()]* ver)[^)]*\\) ?".toRegex(),
+                                                ""
+                                            )
+                                            .lowercase()
+                                    )
+                            } else for (k in music3InfoList.indices) {
+                                albumSimilarityArray[k.toString()] =
+                                    Tools().similarityRatio(
+                                        songAlbum.lowercase(),
+                                        music3InfoList[k].album.lowercase()
+                                    )
+                            }
+                            songAlbumMaxSimilarity =
+                                Tools().getMaxValue(albumSimilarityArray)?.value!! //获取相似度的最大值
+                            val songAlbumMaxKey =
+                                Tools().getMaxValue(albumSimilarityArray)?.key //获取相似度的最大值对应的专辑名
+                        } else {
+                            songAlbumMaxSimilarity = 1.0
+                        }
+                    }
+                    songThread.await()
+                    artistThread.await()
+                    albumThread.await()
+
+                    val songNameMaxSimilarity = Tools().getMaxValue(songSimilarityArray)?.value!!
+                    val songNameMaxKey = Tools().getMaxValue(songSimilarityArray)?.key
 
                     val autoSuccess =
                         (songNameMaxSimilarity >= similarity.floatValue / 100
                                 && songArtistMaxSimilarity >= similarity.floatValue / 100
                                 && songAlbumMaxSimilarity >= similarity.floatValue / 100)
 
-                    val songConvertResult = music3InfoList[songNameMaxKey.toInt()]
+                    val songConvertResult = music3InfoList[songNameMaxKey?.toInt()!!]
                     convertResultMap[num++] =
                         arrayOf(
                             if (autoSuccess) context.getString(R.string.match_success)
@@ -680,15 +702,17 @@ class ConvertPage(
                 file.parentFile?.mkdirs()
             val fileWriter = FileWriter(file, true)
 
-            for (it in 0 until convertResult.size) {
-                if (convertResult[it]!![0] == context.getString(R.string.match_success) && saveSuccessSongs) {
-                    fileWriter.write("${convertResult[it]!![7]}\n")
+            for (i in 0 until convertResult.size) {
+                if (convertResult[i] == null)
+                    continue
+                if (convertResult[i]!![0] == context.getString(R.string.match_success) && saveSuccessSongs) {
+                    fileWriter.write("${convertResult[i]!![7]}\n")
                 }
-                if (convertResult[it]!![0] == context.getString(R.string.match_caution) && saveCautionSongs) {
-                    fileWriter.write("${convertResult[it]!![7]}\n")
+                if (convertResult[i]!![0] == context.getString(R.string.match_caution) && saveCautionSongs) {
+                    fileWriter.write("${convertResult[i]!![7]}\n")
                 }
-                if (convertResult[it]!![0] == context.getString(R.string.match_manual) && saveManualSongs) {
-                    fileWriter.write("${convertResult[it]!![7]}\n")
+                if (convertResult[i]!![0] == context.getString(R.string.match_manual) && saveManualSongs) {
+                    fileWriter.write("${convertResult[i]!![7]}\n")
                 }
             }
             fileWriter.close()
@@ -703,11 +727,40 @@ class ConvertPage(
             showSaveDialog.value = false
             convertResult.clear()
             playlistEnabled[firstIndex1] = 2
+            if (playlistEnabled.count { it == 1 } == 0) {
+                currentPage.intValue = 3
+            }
         }
+    }
+
+    fun launchSaltPlayer() {
+        val intent = Intent(Intent.ACTION_MAIN).apply {
+            setClassName("com.salt.music", "com.salt.music.ui.MainActivity")
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+        try {
+            context.startActivity(intent)
+        } catch (e: ActivityNotFoundException) {
+            Toast.makeText(
+                context,
+                context.getString(R.string.salt_player_not_installed),
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+    }
+
+    fun copyFolderPathToClipboard() {
+        val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        val clip = newPlainText(
+            "SaltPlayerFolder",
+            "${Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).absolutePath}/MusicHelper"
+        )
+        clipboard.setPrimaryClip(clip)
+        Toast.makeText(context, context.getString(R.string.copy_success), Toast.LENGTH_SHORT).show()
     }
 }
 
-@OptIn(UnstableSaltApi::class, ExperimentalFoundationApi::class, ExperimentalComposeUiApi::class)
+@OptIn(UnstableSaltApi::class, ExperimentalFoundationApi::class)
 @Composable
 fun ConvertPageUi(
     convertPage: ConvertPage,
@@ -733,6 +786,7 @@ fun ConvertPageUi(
     searchResult: MutableList<Array<String>>,
     showDialogProgressBar: MutableState<Boolean>,
     showSaveDialog: MutableState<Boolean>,
+    mainActivityPageState: PagerState
 ) {
     val sourceAppPopupMenuState = rememberPopupState()
     val matchingModePopupMenuState = rememberPopupState()
@@ -750,13 +804,50 @@ fun ConvertPageUi(
     var job by remember { mutableStateOf<Job?>(null) }
     var selectedSearchResult by remember { mutableIntStateOf(-1) }
     val filterPopupMenuState = rememberPopupState()
+    var showConfirmGoBackDialog by remember { mutableStateOf(false) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
+    val context = LocalContext.current
 
-    BackHandler(enabled = currentPage.intValue != 0) { // TODO 在其他页也会被拦截；当在处理转换结果时尝试返回，弹出确认对话框
+    BackHandler(enabled = (currentPage.intValue != 0 && mainActivityPageState.currentPage == 1)) {
         if (convertResult.isEmpty()) {
-            currentPage.intValue--
+            if (currentPage.intValue == 3) {
+                currentPage.intValue = 0
+                selectedSourceApp.intValue = 0
+                databaseFileName.value = ""
+                useCustomResultFile.value = false
+                customResultFileName.value = ""
+                playlistName.clear()
+                playlistEnabled.clear()
+                playlistSum.clear()
+                selectedMatchingMode.intValue = 1
+                enableBracketRemoval.value = false
+                enableArtistNameMatch.value = true
+                enableAlbumNameMatch.value = true
+                similarity.floatValue = 85f
+                convertResult.clear()
+                inputSearchWords.value = ""
+                searchResult.clear()
+                allEnabled = false
+                selectedSongIndex = -1
+                selectedSearchResult = -1
+            } else
+                currentPage.intValue--
         } else {
-            convertResult.clear()
+            showConfirmGoBackDialog = true
         }
+    }
+
+    if (showConfirmGoBackDialog) {
+        YesNoDialog(
+            onDismiss = { showConfirmGoBackDialog = false },
+            onCancel = { showConfirmGoBackDialog = false },
+            onConfirm = {
+                showConfirmGoBackDialog = false
+                convertResult.clear()
+            },
+            title = stringResource(id = R.string.go_back_confirm_dialog_title),
+            content = stringResource(id = R.string.go_back_confirm_dialog_content)
+        )
     }
 
     if (showErrorDialog.value) {
@@ -842,9 +933,9 @@ fun ConvertPageUi(
                 inputSearchWords.value = ""
             },
             onConfirm = {
-                convertPage.saveModificationSong(selectedSongIndex, selectedAllIndex)
-                inputSearchWords.value = ""
                 showSelectedSongInfoDialog = false
+                inputSearchWords.value = ""
+                convertPage.saveModificationSong(selectedSongIndex, selectedAllIndex)
             },
             title = stringResource(id = R.string.modify_conversion_results),
             content = "",
@@ -863,15 +954,37 @@ fun ConvertPageUi(
                             trackColor = SaltTheme.colors.background
                         )
                     }
-
                     Column {
-                        ItemEdit(
-                            text = inputSearchWords.value,
-                            hint = stringResource(R.string.search_song_library),
-                            onChange = {
-                                inputSearchWords.value = it
+                        Row {
+                            Column(modifier = Modifier.weight(1f)) {
+                                ItemEdit(
+                                    text = inputSearchWords.value,
+                                    hint = stringResource(R.string.search_song_library),
+                                    onChange = {
+                                        inputSearchWords.value = it
+                                    },
+                                    showClearButton = inputSearchWords.value != "",
+                                    onClear = {
+                                        inputSearchWords.value = ""
+                                    }
+                                )
                             }
-                        )
+                            BasicButton(
+                                modifier = Modifier
+                                    .padding(top = 12.dp, bottom = 12.dp, end = 16.dp),
+                                enabled = true,
+                                onClick = { showDeleteDialog = true },
+                                backgroundColor = colorResource(id = R.color.unmatched)
+                            ) {
+                                Icon(
+                                    modifier = Modifier
+                                        .size(20.dp),
+                                    painter = painterResource(id = R.drawable.ic_delete),
+                                    contentDescription = null,
+                                    tint = Color.White
+                                )
+                            }
+                        }
                         AnimatedVisibility(visible = searchResult.isNotEmpty()) {  //TODO 仅第一次新增搜索结果时有动画，变化与删除时无动画
                             LazyColumn(
                                 modifier = Modifier.weight(1f)
@@ -969,8 +1082,8 @@ fun ConvertPageUi(
                         )
                     }
                     Column {
-                        ItemTitle(text = stringResource(R.string.save_options))
-                        ItemText(text = stringResource(R.string.state_of_the_song_to_be_saved))
+                        ItemTitle(text = stringResource(R.string.state_of_the_song_to_be_saved))
+//                        ItemText(text = stringResource(R.string.state_of_the_song_to_be_saved))
                         ItemSwitcher(
                             state = saveSuccessSongs,
                             onChange = { saveSuccessSongs = it },
@@ -986,10 +1099,35 @@ fun ConvertPageUi(
                             onChange = { saveManualSongs = it },
                             text = stringResource(R.string.match_manual)
                         )
-                        ItemText(text = "${stringResource(R.string.result_file_save_location)}\n/Download/MusicHelper/${playlistName[playlistEnabled.indexOfFirst { it == 1 }]}.txt")
+//                        ItemText(
+//                            text = "${stringResource(R.string.result_file_save_location)}\n${
+//                                Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+//                            }/MusicHelper/${playlistName[playlistEnabled.indexOfFirst { it == 1 }]}.txt"
+//                        )
                     }
                 }
             }
+        )
+    }
+
+    if (showDeleteDialog) {
+        YesNoDialog(
+            onDismiss = { showDeleteDialog = false },
+            onCancel = { showDeleteDialog = false },
+            onConfirm = {
+                showDeleteDialog = false
+                showSelectedSongInfoDialog = false
+                convertResult.remove(selectedSongIndex) //TODO 删除时会抛异常：java.lang.NullPointerException 1694行
+                Toast.makeText(
+                    context,
+                    context.getString(R.string.delete_success),
+                    Toast.LENGTH_SHORT
+                ).show()
+            },
+            title = stringResource(id = R.string.delete_dialog_title),
+            content = "${stringResource(id = R.string.delete_dialog_content)}\n${
+                convertResult[selectedSongIndex]!![2]
+            } - ${convertResult[selectedSongIndex]!![4]} - ${convertResult[selectedSongIndex]!![6]}"
         )
     }
 
@@ -1023,9 +1161,30 @@ fun ConvertPageUi(
         TitleBar(
             onBack = {
                 if (convertResult.isEmpty()) {
-                    currentPage.intValue--
+                    if (currentPage.intValue == 3) {
+                        currentPage.intValue = 0
+                        selectedSourceApp.intValue = 0
+                        databaseFileName.value = ""
+                        useCustomResultFile.value = false
+                        customResultFileName.value = ""
+                        playlistName.clear()
+                        playlistEnabled.clear()
+                        playlistSum.clear()
+                        selectedMatchingMode.intValue = 1
+                        enableBracketRemoval.value = false
+                        enableArtistNameMatch.value = true
+                        enableAlbumNameMatch.value = true
+                        similarity.floatValue = 85f
+                        convertResult.clear()
+                        inputSearchWords.value = ""
+                        searchResult.clear()
+                        allEnabled = false
+                        selectedSongIndex = -1
+                        selectedSearchResult = -1
+                    } else
+                        currentPage.intValue--
                 } else {
-                    convertResult.clear()
+                    showConfirmGoBackDialog = true
                 }
             },
             text = stringResource(R.string.convert_function_name),
@@ -1048,7 +1207,7 @@ fun ConvertPageUi(
                     .fillMaxSize(),
                 userScrollEnabled = false,
                 beyondBoundsPageCount = 1
-            ) { page ->
+            ) { page ->  //TODO 减慢所有页面所有Pager的页面切换动画速度
                 when (page) {
                     0 -> {
                         Column(
@@ -1216,7 +1375,10 @@ fun ConvertPageUi(
                                         Column(
                                             modifier = Modifier
                                                 .clip(RoundedCornerShape(10.dp))
-                                                .heightIn(max = (LocalConfiguration.current.screenHeightDp / 1.6).dp)
+                                                .heightIn(
+                                                    min = 20.dp,
+                                                    max = (LocalConfiguration.current.screenHeightDp / 1.6).dp
+                                                )
                                                 .background(color = SaltTheme.colors.subBackground)
                                         ) {
                                             ItemCheck(
@@ -1239,7 +1401,7 @@ fun ConvertPageUi(
                                                     ItemCheck(
                                                         state = playlistEnabled[index] != 0,
                                                         onChange = {
-                                                            if (playlistEnabled[index] == 0)
+                                                            if (it)
                                                                 playlistEnabled[index] = 1
                                                             else
                                                                 playlistEnabled[index] = 0
@@ -1304,7 +1466,9 @@ fun ConvertPageUi(
                                             ItemValue(
                                                 text = stringResource(R.string.songlist_sequence),  //TODO 判断是否是最后一个歌单
                                                 sub = "${stringResource(R.string.current_no)}${
-                                                    if (playlistEnabled.count { it == 2 } == -1) 0 else {
+                                                    if (playlistEnabled.count { it == 2 } == -1)
+                                                        0
+                                                    else {
                                                         playlistEnabled.count { it == 2 } + 1
                                                     }
                                                 }${stringResource(R.string.ge)} - ${
@@ -1387,25 +1551,15 @@ fun ConvertPageUi(
                                             ItemContainer {
                                                 TextButton(
                                                     onClick = {
-                                                        convertPage.previewResult()
                                                         selectedFilterIndex = 0
                                                         selectedFilter = ""
+                                                        convertPage.previewResult()
                                                     },
                                                     text = stringResource(R.string.preview_convert_result),
                                                     enabled = !it
                                                 )
                                             }
                                         }
-
-
-//                RoundedColumn {
-                                        ItemContainer {
-                                            TextButton(
-                                                onClick = { convertPage.checkSongListSelection() },
-                                                text = stringResource(R.string.next_step_text)
-                                            )
-                                        }
-//                }
                                     }
                                 }
 
@@ -1416,9 +1570,6 @@ fun ConvertPageUi(
                                             .fillMaxSize()
                                             .background(color = SaltTheme.colors.background)
                                     ) {
-//                                        AnimatedVisibility(
-//                                            visible = convertResult.isNotEmpty()
-//                                        ) {
                                         RoundedColumn {
                                             ItemTitle(text = stringResource(R.string.filter))
                                             ItemPopup(
@@ -1700,31 +1851,101 @@ fun ConvertPageUi(
                                                 text = stringResource(id = R.string.save_conversion_results)
                                             )
                                         }
-//                                        }
                                     }
                                 }
                             }
                         }
+                    }
 
+                    3 -> {
+                        Column(
+                            modifier = Modifier
+                                .padding(top = 4.dp)
+                                .fillMaxSize()
+                                .background(color = SaltTheme.colors.background)
+                                .verticalScroll(rememberScrollState()),
+                        ) {
+                            RoundedColumn {
+                                Spacer(modifier = Modifier.height(12.dp))
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Spacer(modifier = Modifier.width(16.dp))
+                                    Icon(
+                                        modifier = Modifier.size(50.dp),
+                                        painter = painterResource(id = R.drawable.ic_check),
+                                        contentDescription = null,
+                                        tint = colorResource(id = R.color.matched)
+                                    )
+                                    Column(
+                                        modifier = Modifier.fillMaxSize(),
+                                        horizontalAlignment = Alignment.Start,
+                                    ) {
+//                    Text(text = stringResource(id = R.string.all_done))
+                                        ItemText(
+                                            text = stringResource(id = R.string.all_done),
+                                            fontSize = 24.sp
+                                        )
+                                    }
+                                }
+                                Spacer(modifier = Modifier.height(12.dp))
+                            }
+                            RoundedColumn {
+                                ItemTitle(text = stringResource(id = R.string.details_of_results))
+                                val condition: (Int) -> Boolean = { it1 -> it1 == 2 }
+                                val indices =
+                                    playlistEnabled.withIndex().filter { condition(it.value) }
+                                        .map { it.index }
+                                LazyColumn(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .heightIn(max = (LocalConfiguration.current.screenHeightDp / 2).dp)
+                                        .clip(RoundedCornerShape(10.dp))
+                                ) {
+                                    items(indices) { index ->
+                                        ItemText(
+                                            text = "${
+                                                Environment.getExternalStoragePublicDirectory(
+                                                    Environment.DIRECTORY_DOWNLOADS
+                                                )
+                                            }/MusicHelper/${playlistName[index]}.txt",
+                                            fontSize = 15.sp
+                                        )
+                                    }
+                                }
+                                Spacer(modifier = Modifier.height(12.dp))
+
+                            }
+                            ItemContainer {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = SaltTheme.dimens.outerHorizontalPadding)
+                                ) {
+                                    TextButton(
+                                        onClick = { convertPage.copyFolderPathToClipboard() },
+                                        modifier = Modifier.weight(1f),
+                                        text = stringResource(id = R.string.copy_folder_path),
+                                        textColor = SaltTheme.colors.subText,
+                                        backgroundColor = SaltTheme.colors.subBackground,
+                                    )
+                                    Spacer(modifier = Modifier.width(12.dp))
+                                    TextButton(
+                                        onClick = { convertPage.launchSaltPlayer() },
+                                        modifier = Modifier.weight(1f),
+                                        text = stringResource(id = R.string.open_salt_player)
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
             }
         }
     }
-
 }
 
-//@Preview(showBackground = true)
-//@Composable
-//fun Preview() {
-//    val convertPage = ConvertPage()
-//    SaltTheme(
-//        colors = lightSaltColors()
-//    ) {
-//        ConvertPageUi(
-//            convertPage = convertPage,
-//            selectedSourceApp = mutableIntStateOf(0),
-//            databaseFileName = mutableStateOf("111.db")
-//        )
-//    }
-//}
+
+@Preview(showBackground = true)
+@Composable
+fun Preview() {
+
+}
