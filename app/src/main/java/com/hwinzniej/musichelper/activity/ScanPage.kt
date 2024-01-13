@@ -5,6 +5,7 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.database.sqlite.SQLiteDatabase
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
@@ -15,6 +16,7 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -23,21 +25,16 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import com.hwinzniej.musichelper.R
 import com.hwinzniej.musichelper.data.database.MusicDatabase
+import com.hwinzniej.musichelper.data.model.Music
 import com.hwinzniej.musichelper.utils.Tools
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.jaudiotagger.audio.AudioFile
 import org.jaudiotagger.audio.AudioFileIO
-import org.jaudiotagger.audio.exceptions.CannotReadException
-import org.jaudiotagger.audio.exceptions.InvalidAudioFrameException
-import org.jaudiotagger.audio.exceptions.ReadOnlyFileException
 import org.jaudiotagger.tag.FieldKey
 import org.jaudiotagger.tag.Tag
-import org.jaudiotagger.tag.TagException
 import java.io.File
-import java.io.FileWriter
-import java.io.IOException
 
 interface PermissionResultHandler {
     fun onPermissionResult(
@@ -45,28 +42,28 @@ interface PermissionResultHandler {
     )
 }
 
-class ScanPage(
+class ScanPage(  //TODO 还是需要做txt的导出，否则SaltConverter网站无法使用
     val context: Context,
     val lifecycleOwner: LifecycleOwner,
     val openDirectoryLauncher: ActivityResultLauncher<Uri?>,
     val db: MusicDatabase,
     componentActivity: ComponentActivity
 ) : PermissionResultHandler {
-    val scanResult = mutableStateOf(getString(context, R.string.scan_result_hint))
+    val scanResult = mutableStateListOf<String>()
     val showLoadingProgressBar = mutableStateOf(false)
-    var inScanning: Boolean = false
     val showConflictDialog = mutableStateOf(false)
-    var conflictDialogResult = mutableIntStateOf(0)
     var progressPercent = mutableIntStateOf(-1)
     var lastIndex = 0
+    var exportResultFile = mutableStateOf(false)
+    val musicAllList: ArrayList<Music> = ArrayList()
 
     /**
      * 功能入口，初始化变量
      */
 
     fun init() {
+        musicAllList.clear()
         lastIndex = 0
-        conflictDialogResult.intValue = 0
         requestPermission()
     }
 
@@ -82,7 +79,7 @@ class ScanPage(
         ActivityResultContracts.StartActivityForResult()
     ) { _ ->
         if (Environment.isExternalStorageManager()) {
-            afterPermissionGranted()
+            checkFileExist(250L)
         } else {
             Toast.makeText(context, R.string.permission_not_granted_toast, Toast.LENGTH_SHORT)
                 .show()
@@ -90,13 +87,9 @@ class ScanPage(
     }
 
     fun requestPermission() {
-        if (inScanning) {
-            Toast.makeText(context, R.string.scanning_try_again_later, Toast.LENGTH_SHORT).show()
-            return
-        }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) { //Android 11+
             if (Environment.isExternalStorageManager()) {
-                afterPermissionGranted()
+                checkFileExist()
             } else {
                 Toast.makeText(context, R.string.request_permission_toast, Toast.LENGTH_SHORT)
                     .show()
@@ -108,7 +101,7 @@ class ScanPage(
             }
         } else { //Android 10-
             if (allPermissionsGranted()) {
-                afterPermissionGranted()
+                checkFileExist()
             } else {
                 Toast.makeText(context, R.string.request_permission_toast, Toast.LENGTH_SHORT)
                     .show()
@@ -145,7 +138,7 @@ class ScanPage(
     ) {
         if (requestCode == REQUEST_CODE_PERMISSIONS) {
             if (allPermissionsGranted()) {
-                afterPermissionGranted()
+                checkFileExist(250L)
             } else {
                 Toast.makeText(context, R.string.permission_not_granted_toast, Toast.LENGTH_SHORT)
                     .show()
@@ -155,59 +148,63 @@ class ScanPage(
 
 //==================== Android 10- 使用====================
 
-    fun afterPermissionGranted() {
-        checkFileExist {
-            when (conflictDialogResult.intValue) {
-                0 -> {
-                    inScanning = true
-                    openDirectoryLauncher.launch(null)
+    /**
+     * 检查文件是否已存在
+     */
+    fun checkFileExist(delay: Long = 0L) {
+        lifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
+            delay(delay)
+            if (exportResultFile.value) {
+                val fileName = getString(context, R.string.result_file_name)
+                lifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+                    val file = File(
+                        Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
+                        fileName
+                    )
+                    if (file.exists()) {
+                        showConflictDialog.value = true
+                        val fileDb = SQLiteDatabase.openOrCreateDatabase(file, null)
+                        val lastChars = fileDb.rawQuery("SELECT COUNT(id) FROM music", null)
+                        lastChars.moveToFirst()
+                        lastIndex = lastChars.getInt(0)
+                        lastChars.close()
+//                    fileDb.endTransaction()
+                        fileDb.close()
+                    } else {
+                        db.musicDao().deleteAll()
+                        openDirectoryLauncher.launch(null)
+                    }
                 }
-
-                1 -> {
-                    showConflictDialog.value = false
-                    lastIndex++
-                    inScanning = true
-                    openDirectoryLauncher.launch(null)
+            } else {
+                lifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+                    db.musicDao().deleteAll()
                 }
-
-                2 -> {
-                    showConflictDialog.value = false
-                    lastIndex = 0
-                    inScanning = true
-                    openDirectoryLauncher.launch(null)
-                }
-
-                3 -> {
-                    showConflictDialog.value = false
-                    return@checkFileExist
-                }
+                openDirectoryLauncher.launch(null)
             }
         }
     }
 
-    /**
-     * 检查文件是否已存在
-     */
-    fun checkFileExist(onUserChoice: () -> Unit) {
-        val fileName = getString(context, R.string.result_file_name)
-//        lifecycleScope.launch(Dispatchers.IO) {
-        val file = File(
-            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), fileName
-        )
-        if (file.exists()) {
-            showConflictDialog.value = true
-            val lastChars = Tools().readLastNChars(file, 8)
-            lastIndex =
-                lastChars.substring(lastChars.lastIndexOf("#") + 1, lastChars.length).toInt()
-        }
-//        }
-
-        lifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
-            //TODO: 优化冲突对话框的判断 Semaphore？
-            while (showConflictDialog.value && conflictDialogResult.intValue == 0) {
-                delay(250L)
+    fun userChoice(choice: Int) {
+        when (choice) {
+            1 -> {  //文件冲突，追加
+                showConflictDialog.value = false
+                lastIndex++
+                openDirectoryLauncher.launch(null)
             }
-            onUserChoice()
+
+            2 -> {  //文件冲突，覆盖
+                showConflictDialog.value = false
+                lifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+                    val file = File(
+                        Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
+                        getString(context, R.string.result_file_name)
+                    )
+                    file.delete()
+                    db.musicDao().deleteAll()
+                }
+                lastIndex = 0
+                openDirectoryLauncher.launch(null)
+            }
         }
     }
 
@@ -219,27 +216,10 @@ class ScanPage(
         // 这是用户选择的目录的Uri
         // 你可以在这里处理用户选择的目录
         if (uri == null) {
-            inScanning = false
             return
         }
 
-        if (conflictDialogResult.intValue == 2) {
-            lifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
-                val file = File(
-                    Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
-                    getString(context, R.string.result_file_name)
-                )
-                file.delete()
-                db.musicDao().deleteAll()
-            }
-        }
-
-        scanResult.value = ""
-        Toast.makeText(
-            context,
-            getString(context, R.string.selected_directory_path) + "$uri",
-            Toast.LENGTH_SHORT
-        ).show()
+        scanResult.clear()
         val absolutePath: String = Tools().uriToAbsolutePath(uri)
         val directory = File(absolutePath)
         showLoadingProgressBar.value = true
@@ -248,55 +228,41 @@ class ScanPage(
             delay(300L)
             scanDirectory(directory)
         }
-        lifecycleOwner.lifecycleScope.launch(Dispatchers.Main) {
-            //TODO: 优化扫描完成的判断 Semaphore？
-            delay(500L)
-            while (true) {
-                val lastScanResult = scanResult.value.length
-                delay(250L)
-                if (scanResult.value.length == lastScanResult) {
-                    showLoadingProgressBar.value = false
-                    inScanning = false
-                    Toast.makeText(
-                        context, R.string.scan_complete, Toast.LENGTH_SHORT
-                    ).show()
-                    break
-                }
-            }
-        }
     }
 
     /**
      * 递归扫描所选目录及其子目录
      */
-    fun scanDirectory(directory: File) {
+    fun scanDirectory(directory: File, isRootCall: Boolean = true) {
         val files = directory.listFiles()
         if (files != null) {
             for (file in files) {
                 if (file.isDirectory) {
                     // 如果是目录，递归地遍历
-                    scanDirectory(file)
+                    scanDirectory(file, false)
                 } else {
                     // 如果是文件，进行处理
                     val curFile = File(file.path)
                     try {
                         AudioFileIO.read(curFile)
-                    } catch (e: CannotReadException) {
-                        continue
-                    } catch (e: IOException) {
-                        continue
-                    } catch (e: TagException) {
-                        continue
-                    } catch (e: ReadOnlyFileException) {
-                        continue
-                    } catch (e: InvalidAudioFrameException) {
+                    } catch (e: Exception) {
                         continue
                     }
                     handleFile(curFile)
                 }
             }
         }
+        if (isRootCall) {
+            saveAndExport()
+            lifecycleOwner.lifecycleScope.launch(Dispatchers.Main) {
+                showLoadingProgressBar.value = false
+                Toast.makeText(
+                    context, R.string.scan_complete, Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
     }
+
 
     /**
      * 处理扫描到的音乐文件
@@ -310,10 +276,11 @@ class ScanPage(
             return
         }
         lifecycleOwner.lifecycleScope.launch(Dispatchers.Main) {
-            scanResult.value = "${file.name}\n${scanResult.value}"
+            scanResult.add(0, file.name)
+//            scanResult.value = "${file.name}\n${scanResult.value}"
         }
         val tag = audioFile.tag
-        writeToFile(tag, file.path)
+        getTag(tag, file.path)
 
     }
 
@@ -321,27 +288,17 @@ class ScanPage(
      * 将扫描到音乐的标签信息写入到文件中
      */
     @Synchronized
-    private fun writeToFile(tag: Tag, filePath: String) {
-//        val fileName = resources.getString(R.string.outputFileName)
-        val fileName = getString(context, R.string.result_file_name)
-        val file = File(
-            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), fileName
-        )
-        try {
-            val songName = tag.getFirst(FieldKey.TITLE)
-            val artistName = tag.getFirst(FieldKey.ARTIST)
-            val albumName = tag.getFirst(FieldKey.ALBUM)
-            val releaseYear = tag.getFirst(FieldKey.YEAR)
-            val trackNumber = tag.getFirst(FieldKey.TRACK)
-            val albumArtist = tag.getFirst(FieldKey.ALBUM_ARTIST)
-            val genre = tag.getFirst(FieldKey.GENRE)
+    private fun getTag(tag: Tag, filePath: String) {
+        val songName = tag.getFirst(FieldKey.TITLE)
+        val artistName = tag.getFirst(FieldKey.ARTIST)
+        val albumName = tag.getFirst(FieldKey.ALBUM)
+        val releaseYear = tag.getFirst(FieldKey.YEAR)
+        val trackNumber = tag.getFirst(FieldKey.TRACK)
+        val albumArtist = tag.getFirst(FieldKey.ALBUM_ARTIST)
+        val genre = tag.getFirst(FieldKey.GENRE)
 
-            val fileWriter = FileWriter(file, true)
-            fileWriter.write(
-                "$songName#*#$artistName#*#$albumName#*#$filePath#*#$lastIndex\n"
-            )
-            fileWriter.close()
-            val music = com.hwinzniej.musichelper.data.model.Music(
+        musicAllList.add(
+            Music(
                 lastIndex,
                 songName,
                 artistName,
@@ -352,16 +309,46 @@ class ScanPage(
                 albumArtist,
                 genre
             )
-            lifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
-                db.musicDao().insert(music)
-            }
-        } catch (e: IOException) {
-            e.printStackTrace()
-            return
-        } catch (e: Exception) {
-            return
-        }
+        )
         increment()
+    }
+
+    fun saveAndExport() {
+        lifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+            db.musicDao().insertAll(*musicAllList.toTypedArray())
+            if (exportResultFile.value) {
+                val exportFileName = getString(context, R.string.result_file_name)
+                val file = File(
+                    Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
+                    exportFileName
+                )
+                val outputDb = SQLiteDatabase.openOrCreateDatabase(file, null)
+                outputDb.execSQL("CREATE TABLE IF NOT EXISTS music (id INTEGER PRIMARY KEY, song TEXT, artist TEXT, album TEXT, absolutePath TEXT, releaseYear TEXT, trackNumber TEXT, albumArtist TEXT, genre TEXT)")
+                for (music in musicAllList) {
+                    outputDb.execSQL(
+                        "INSERT INTO music VALUES (${music.id}, '${
+                            music.song.replace("'", "''")
+                        }', '${
+                            music.artist.replace("'", "''")
+                        }', '${
+                            music.album.replace("'", "''")
+                        }', '${
+                            music.absolutePath.replace("'", "''")
+                        }', '${
+                            music.releaseYear.replace("'", "''")
+                        }', '${
+                            music.trackNumber.replace("'", "''")
+                        }', '${
+                            music.albumArtist.replace("'", "''")
+                        }', '${
+                            music.genre.replace("'", "''")
+                        }')"
+                    )
+                }
+//                outputDb.endTransaction()
+                outputDb.close()
+            }
+        }
     }
 
     /**

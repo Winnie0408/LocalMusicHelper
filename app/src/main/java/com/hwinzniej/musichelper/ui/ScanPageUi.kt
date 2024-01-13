@@ -19,7 +19,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableIntState
 import androidx.compose.runtime.MutableState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -33,7 +32,7 @@ import androidx.compose.ui.zIndex
 import com.hwinzniej.musichelper.R
 import com.hwinzniej.musichelper.activity.ScanPage
 import com.moriafly.salt.ui.ItemContainer
-import com.moriafly.salt.ui.ItemText
+import com.moriafly.salt.ui.ItemSwitcher
 import com.moriafly.salt.ui.ItemTitle
 import com.moriafly.salt.ui.RoundedColumn
 import com.moriafly.salt.ui.SaltTheme
@@ -44,20 +43,17 @@ import com.moriafly.salt.ui.UnstableSaltApi
 @Composable
 fun ScanPageUi(
     scanPage: ScanPage,
-    scanResult: MutableState<String>,
+    scanResult: MutableList<String>,
     showLoadingProgressBar: MutableState<Boolean>,
     progressPercent: MutableState<Int>,
     showConflictDialog: MutableState<Boolean>,
-    conflictDialogResult: MutableIntState,
+    exportResultFile: MutableState<Boolean>
 ) {
-    //TODO 新增开关：是否输出扫描结果到外部存储空间
-    //TODO 尝试优化扫描大量歌曲时UI掉帧的问题
-    //TODO 将扫描结果改为使用数据库文件导出？
     if (showConflictDialog.value) {
         YesNoDialog(
-            onCancel = { conflictDialogResult.intValue = 1 },
-            onConfirm = { conflictDialogResult.intValue = 2 },
-            onDismiss = { conflictDialogResult.intValue = 3 },
+            onCancel = { scanPage.userChoice(1) },
+            onConfirm = { scanPage.userChoice(2) },
+            onDismiss = { showConflictDialog.value = false },
             title = stringResource(R.string.file_conflict_dialog_title),
             content = stringResource(R.string.file_conflict_dialog_content).replace("#n", "\n"),
             cancelText = stringResource(R.string.file_conflict_dialog_no_text),
@@ -93,7 +89,15 @@ fun ScanPageUi(
             ) {
                 RoundedColumn {
                     ItemTitle(text = stringResource(R.string.scan_control))
-                    ItemText(text = stringResource(R.string.touch_button_to_start_scanning))
+//                    ItemText(text = stringResource(R.string.touch_button_to_start_scanning))
+                    ItemSwitcher(
+                        state = exportResultFile.value,
+                        onChange = {
+                            exportResultFile.value = it
+                        },
+                        text = stringResource(id = R.string.export_result_file_switcher_text),
+                        sub = stringResource(id = R.string.export_result_file_switcher_sub_text)
+                    )
                 }
                 AnimatedContent(
                     targetState = showLoadingProgressBar.value,
@@ -128,22 +132,21 @@ fun ScanPageUi(
                             LazyColumn(
                                 modifier = Modifier
                                     .fillMaxSize()
-                                    .size((LocalConfiguration.current.screenHeightDp / 2).dp)
+                                    .size((LocalConfiguration.current.screenHeightDp / 2.2).dp)
                                     .clip(RoundedCornerShape(10.dp))
                                     .background(color = SaltTheme.colors.background)
                             ) {
-                                item {
+                                items(scanResult.size) { index ->
                                     Text(
                                         modifier = Modifier.padding(
                                             top = 3.dp, start = 7.dp, end = 7.dp
                                         ),
-                                        text = scanResult.value,
+                                        text = scanResult[index],
                                         fontSize = 16.sp,
                                         style = TextStyle(
                                             lineHeight = 1.5.em, color = SaltTheme.colors.subText
                                         ),
                                     )
-
                                 }
                             }
                         }

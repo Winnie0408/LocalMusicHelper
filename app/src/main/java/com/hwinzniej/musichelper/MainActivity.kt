@@ -6,6 +6,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
@@ -27,10 +28,10 @@ import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
 import androidx.room.Room
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
-import com.hwinzniej.musichelper.data.database.MusicDatabase
 import com.hwinzniej.musichelper.activity.ConvertPage
 import com.hwinzniej.musichelper.activity.ProcessPage
 import com.hwinzniej.musichelper.activity.ScanPage
+import com.hwinzniej.musichelper.data.database.MusicDatabase
 import com.hwinzniej.musichelper.ui.ConvertPageUi
 import com.hwinzniej.musichelper.ui.ProcessPageUi
 import com.hwinzniej.musichelper.ui.ScanPageUi
@@ -45,7 +46,8 @@ import kotlinx.coroutines.launch
 class MainActivity : ComponentActivity() {
 
     private lateinit var openDirectoryLauncher: ActivityResultLauncher<Uri?>
-    private lateinit var openFileLauncher: ActivityResultLauncher<Array<String>>
+    private lateinit var openMusicPlatformSqlFileLauncher: ActivityResultLauncher<Array<String>>
+    private lateinit var openResultSqlFileLauncher: ActivityResultLauncher<Array<String>>
     private lateinit var scanPage: ScanPage
     private lateinit var processPage: ProcessPage
     private lateinit var convertPage: ConvertPage
@@ -58,9 +60,13 @@ class MainActivity : ComponentActivity() {
             registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
                 scanPage.handleUri(uri)
             }
-        openFileLauncher =
+        openMusicPlatformSqlFileLauncher =
             registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
-                convertPage.handleUri(uri)
+                convertPage.handleUri(uri, 0)
+            }
+        openResultSqlFileLauncher =
+            registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+                convertPage.handleUri(uri, 1)
             }
 
         db = Room.databaseBuilder(
@@ -69,7 +75,15 @@ class MainActivity : ComponentActivity() {
 
         scanPage = ScanPage(this, this, openDirectoryLauncher, db, this)
         processPage = ProcessPage(this, this, db)
-        convertPage = ConvertPage(this, this, openFileLauncher, db)
+        convertPage =
+            ConvertPage(
+                this,
+                this,
+                openMusicPlatformSqlFileLauncher,
+                openResultSqlFileLauncher,
+                db,
+                this
+            )
 
 
         setContent {
@@ -96,6 +110,7 @@ class MainActivity : ComponentActivity() {
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         scanPage.onPermissionResult(requestCode, permissions, grantResults)
+        convertPage.onPermissionResult(requestCode, permissions, grantResults)
     }
 }
 
@@ -130,7 +145,7 @@ private fun Pages(scanPage: ScanPage, processPage: ProcessPage, convertPage: Con
                         scanPage.showLoadingProgressBar,
                         scanPage.progressPercent,
                         scanPage.showConflictDialog,
-                        scanPage.conflictDialogResult
+                        scanPage.exportResultFile
                     )
                 }
 
@@ -192,7 +207,12 @@ private fun Pages(scanPage: ScanPage, processPage: ProcessPage, convertPage: Con
             BottomBarItem(
                 state = pageState.currentPage == 0,
                 onClick = {
-                    coroutineScope.launch { pageState.animateScrollToPage(0) }
+                    coroutineScope.launch {
+                        pageState.animateScrollToPage(
+                            0,
+                            animationSpec = spring(2f)
+                        )
+                    }
                 },
                 painter = painterResource(id = R.drawable.ic_launcher_foreground),
                 text = stringResource(R.string.scan_function_name)
@@ -200,7 +220,12 @@ private fun Pages(scanPage: ScanPage, processPage: ProcessPage, convertPage: Con
             BottomBarItem(
                 state = pageState.currentPage == 1,
                 onClick = {
-                    coroutineScope.launch { pageState.animateScrollToPage(1) }
+                    coroutineScope.launch {
+                        pageState.animateScrollToPage(
+                            1,
+                            animationSpec = spring(2f)
+                        )
+                    }
                 },
                 painter = painterResource(id = R.drawable.ic_launcher_foreground),
                 text = stringResource(R.string.convert_function_name)
@@ -208,7 +233,12 @@ private fun Pages(scanPage: ScanPage, processPage: ProcessPage, convertPage: Con
             BottomBarItem(
                 state = pageState.currentPage == 2,
                 onClick = {
-                    coroutineScope.launch { pageState.animateScrollToPage(2) }
+                    coroutineScope.launch {
+                        pageState.animateScrollToPage(
+                            2,
+                            animationSpec = spring(2f)
+                        )
+                    }
                 },
                 painter = painterResource(id = R.drawable.ic_launcher_foreground),
                 text = stringResource(R.string.process_function_name)
@@ -216,7 +246,12 @@ private fun Pages(scanPage: ScanPage, processPage: ProcessPage, convertPage: Con
             BottomBarItem(
                 state = pageState.currentPage == 3,
                 onClick = {
-                    coroutineScope.launch { pageState.animateScrollToPage(3) }
+                    coroutineScope.launch {
+                        pageState.animateScrollToPage(
+                            3,
+                            animationSpec = spring(2f)
+                        )
+                    }
                 },
                 painter = painterResource(id = R.drawable.ic_launcher_foreground),
                 text = stringResource(R.string.about_function_name)

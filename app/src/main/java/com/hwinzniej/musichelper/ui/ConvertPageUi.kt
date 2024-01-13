@@ -5,6 +5,7 @@ import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
@@ -61,7 +62,6 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
@@ -128,6 +128,7 @@ fun ConvertPageUi(
     var showConfirmGoBackDialog by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
     val context = LocalContext.current
+    var selectedFilterIndex by remember { mutableIntStateOf(0) }
 
     BackHandler(enabled = (currentPage.intValue != 0 && mainActivityPageState.currentPage == 1)) {
         if (convertResult.isEmpty()) {
@@ -438,7 +439,7 @@ fun ConvertPageUi(
             onConfirm = {
                 showDeleteDialog = false
                 showSelectedSongInfoDialog = false
-                convertResult.remove(selectedSongIndex) //TODO 删除时会抛异常：java.lang.NullPointerException 1694行
+                convertResult.remove(selectedSongIndex)
                 Toast.makeText(
                     context,
                     context.getString(R.string.delete_success),
@@ -448,18 +449,19 @@ fun ConvertPageUi(
             title = stringResource(id = R.string.delete_dialog_title),
             content = "${stringResource(id = R.string.delete_dialog_content)}\n${
                 convertResult[selectedSongIndex]!![2]
-            } - ${convertResult[selectedSongIndex]!![4]} - ${convertResult[selectedSongIndex]!![6]}"
+            } - ${convertResult[selectedSongIndex]!![4]} - ${convertResult[selectedSongIndex]!![6]}",
+            confirmButtonColor = colorResource(id = R.color.unmatched),
         )
     }
 
     LaunchedEffect(key1 = currentPage.intValue) {
-        pageState.animateScrollToPage(currentPage.intValue)
+        pageState.animateScrollToPage(currentPage.intValue, animationSpec = spring(2f))
     }
     LaunchedEffect(key1 = convertResult.isEmpty()) {
         if (convertResult.isEmpty()) {
-            resultPageState.animateScrollToPage(0)
+            resultPageState.animateScrollToPage(0, animationSpec = spring(2f))
         } else {
-            resultPageState.animateScrollToPage(1)
+            resultPageState.animateScrollToPage(1, animationSpec = spring(2f))
         }
     }
 
@@ -528,7 +530,7 @@ fun ConvertPageUi(
                     .fillMaxSize(),
                 userScrollEnabled = false,
                 beyondBoundsPageCount = 1
-            ) { page ->  //TODO 减慢所有页面所有Pager的页面切换动画速度
+            ) { page ->
                 when (page) {
                     0 -> {
                         Column(
@@ -667,7 +669,7 @@ fun ConvertPageUi(
                                 }) {
                                 ItemContainer {
                                     TextButton(
-                                        onClick = { convertPage.checkSelectedFiles() },
+                                        onClick = { convertPage.requestPermission() },
                                         text = stringResource(R.string.next_step_text),
                                         enabled = !it
                                     )
@@ -771,7 +773,6 @@ fun ConvertPageUi(
                             userScrollEnabled = false,
                             beyondBoundsPageCount = 1
                         ) { resultPage ->
-                            var selectedFilterIndex by remember { mutableIntStateOf(0) }
                             var selectedFilter by remember { mutableStateOf("") }
                             when (resultPage) {
                                 0 -> {
@@ -785,7 +786,7 @@ fun ConvertPageUi(
                                         RoundedColumn {
                                             ItemTitle(text = stringResource(R.string.current_songlist_info))
                                             ItemValue(
-                                                text = stringResource(R.string.songlist_sequence),  //TODO 判断是否是最后一个歌单
+                                                text = stringResource(R.string.songlist_sequence),
                                                 sub = "${stringResource(R.string.current_no)}${
                                                     if (playlistEnabled.count { it == 2 } == -1)
                                                         0
@@ -1004,36 +1005,43 @@ fun ConvertPageUi(
                                                         ) {
                                                             when (it) {
                                                                 0 -> items(convertResult.size) { index ->
-                                                                    Item(
-                                                                        onClick = {
-                                                                            selectedSongIndex =
-                                                                                index
-                                                                            showSelectedSongInfoDialog =
-                                                                                true
-                                                                        },
-                                                                        text = convertResult[index]!![1],
-                                                                        sub = "${stringResource(R.string.singer)}${convertResult[index]!![3]}\n${
-                                                                            stringResource(R.string.album)
-                                                                        }${convertResult[index]!![5]}",
-                                                                        rightSub = convertResult[index]!![0],
-                                                                        rightSubColor = when (convertResult[index]!![0]) {
-                                                                            stringResource(R.string.match_success) -> colorResource(
-                                                                                id = R.color.matched
-                                                                            )
+                                                                    if (convertResult[index] != null)
+                                                                        Item(
+                                                                            onClick = {
+                                                                                selectedSongIndex =
+                                                                                    index
+                                                                                showSelectedSongInfoDialog =
+                                                                                    true
+                                                                            },
+                                                                            text = convertResult[index]!![1],
+                                                                            sub = "${
+                                                                                stringResource(
+                                                                                    R.string.singer
+                                                                                )
+                                                                            }${convertResult[index]!![3]}\n${
+                                                                                stringResource(R.string.album)
+                                                                            }${convertResult[index]!![5]}",
+                                                                            rightSub = convertResult[index]!![0],
+                                                                            rightSubColor = when (convertResult[index]!![0]) {
+                                                                                stringResource(R.string.match_success) -> colorResource(
+                                                                                    id = R.color.matched
+                                                                                )
 
-                                                                            stringResource(R.string.match_caution) -> colorResource(
-                                                                                id = R.color.unmatched
-                                                                            )
+                                                                                stringResource(R.string.match_caution) -> colorResource(
+                                                                                    id = R.color.unmatched
+                                                                                )
 
-                                                                            else -> colorResource(R.color.manual)
-                                                                        },
-                                                                    )
+                                                                                else -> colorResource(
+                                                                                    R.color.manual
+                                                                                )
+                                                                            },
+                                                                        )
                                                                 }
 
                                                                 1 -> items(convertResult.size) { index ->
                                                                     if (convertResult[index]!![0] == stringResource(
                                                                             R.string.match_success
-                                                                        )
+                                                                        ) && convertResult[index] != null
                                                                     )
                                                                         Item(
                                                                             onClick = {
@@ -1070,7 +1078,7 @@ fun ConvertPageUi(
                                                                 2 -> items(convertResult.size) { index ->
                                                                     if (convertResult[index]!![0] == stringResource(
                                                                             R.string.match_caution
-                                                                        )
+                                                                        ) && convertResult[index] != null
                                                                     )
                                                                         Item(
                                                                             onClick = {
@@ -1107,7 +1115,7 @@ fun ConvertPageUi(
                                                                 3 -> items(convertResult.size) { index ->
                                                                     if (convertResult[index]!![0] == stringResource(
                                                                             R.string.match_manual
-                                                                        )
+                                                                        ) && convertResult[index] != null
                                                                     )
                                                                         Item(
                                                                             onClick = {

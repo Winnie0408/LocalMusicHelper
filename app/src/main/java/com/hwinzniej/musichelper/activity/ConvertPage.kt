@@ -1,26 +1,37 @@
 package com.hwinzniej.musichelper.activity
 
+import android.Manifest
+import android.app.Activity
 import android.content.ActivityNotFoundException
 import android.content.ClipData.newPlainText
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.database.sqlite.SQLiteDatabase
 import android.net.Uri
+import android.os.Build
 import android.os.Environment
+import android.provider.Settings
 import android.widget.Toast
+import androidx.activity.ComponentActivity
 import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import com.alibaba.fastjson2.JSON
 import com.hwinzniej.musichelper.R
 import com.hwinzniej.musichelper.data.SourceApp
 import com.hwinzniej.musichelper.data.database.MusicDatabase
+import com.hwinzniej.musichelper.data.model.MusicInfo
 import com.hwinzniej.musichelper.utils.Tools
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -31,12 +42,14 @@ import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileWriter
 
-class ConvertPage(
+class ConvertPage(  //TODO 自动删除外部存储空间结果文数据库的-journal文件
     val context: Context,
     val lifecycleOwner: LifecycleOwner,
-    val openFileLauncher: ActivityResultLauncher<Array<String>>,
+    val openMusicPlatformSqlFileLauncher: ActivityResultLauncher<Array<String>>,
+    val openResultSqlFileLauncher: ActivityResultLauncher<Array<String>>,
     val db: MusicDatabase,
-) {
+    componentActivity: ComponentActivity
+) : PermissionResultHandler {
     var databaseFileName = mutableStateOf("")
     var selectedSourceApp = mutableIntStateOf(0)
     var useCustomResultFile = mutableStateOf(false)
@@ -47,7 +60,7 @@ class ConvertPage(
     var errorDialogTitle = mutableStateOf("")
     var errorDialogContent = mutableStateOf("")
     var databaseFilePath = ""
-    var resultFilePath = ""  //TODO 直接换用SQL文件？
+    var resultFilePath = ""
     var sourceApp = SourceApp()
     val loadingProgressSema = Semaphore(2)
     var currentPage = mutableIntStateOf(0)
@@ -57,47 +70,125 @@ class ConvertPage(
     var enableAlbumNameMatch = mutableStateOf(true)
     var similarity = mutableFloatStateOf(85f)
 
+    /**
+     * 请求存储权限
+     */
+
+//==================== Android 11+ 使用====================
+
+    @RequiresApi(Build.VERSION_CODES.R)
+    private val requestPermissionLauncher = componentActivity.registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { _ ->
+        if (Environment.isExternalStorageManager()) {
+            checkSelectedFiles(250L)
+        } else {
+            Toast.makeText(context, R.string.permission_not_granted_toast, Toast.LENGTH_SHORT)
+                .show()
+        }
+    }
+
+    fun requestPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) { //Android 11+
+            if (Environment.isExternalStorageManager()) {
+                checkSelectedFiles()
+            } else {
+                Toast.makeText(context, R.string.request_permission_toast, Toast.LENGTH_SHORT)
+                    .show()
+                val intent = Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION)
+                val uri = Uri.fromParts("package", context.packageName, null)
+                intent.data = uri
+                requestPermissionLauncher.launch(intent)
+//                startActivity(context, intent, null)
+            }
+        } else { //Android 10-
+            if (allPermissionsGranted()) {
+                checkSelectedFiles()
+            } else {
+                Toast.makeText(context, R.string.request_permission_toast, Toast.LENGTH_SHORT)
+                    .show()
+                ActivityCompat.requestPermissions(
+                    context as Activity, REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS
+                )
+            }
+        }
+    }
+
+//==================== Android 11+ 使用====================
+
+//==================== Android 10- 使用====================
+
+    private val REQUEST_CODE_PERMISSIONS = 1002
+    private val REQUIRED_PERMISSIONS = arrayOf(
+        Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE
+    )
+
+    fun allPermissionsGranted(): Boolean {
+        for (permission in REQUIRED_PERMISSIONS) {
+            if (ContextCompat.checkSelfPermission(
+                    context, permission
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                return false
+            }
+        }
+        return true
+    }
+
+    override fun onPermissionResult(
+        requestCode: Int, permissions: Array<String>, grantResults: IntArray
+    ) {
+        if (requestCode == REQUEST_CODE_PERMISSIONS) {
+            if (allPermissionsGranted()) {
+                checkSelectedFiles(250L)
+            } else {
+                Toast.makeText(context, R.string.permission_not_granted_toast, Toast.LENGTH_SHORT)
+                    .show()
+            }
+        }
+    }
+
+//==================== Android 10- 使用====================
+
     fun selectDatabaseFile() {
-        openFileLauncher.launch(arrayOf("*/*"))
+        openMusicPlatformSqlFileLauncher.launch(arrayOf("*/*"))
     }
 
     fun selectResultFile() {
-        openFileLauncher.launch(arrayOf("text/plain"))
+        openResultSqlFileLauncher.launch(arrayOf("*/*"))
     }
 
-    fun handleUri(uri: Uri?) {
-        // 这是用户选择的目录的Uri
-        // 你可以在这里处理用户选择的目录
+    fun handleUri(uri: Uri?, code: Int) {
         if (uri == null) {
             return
         }
         selectedFileName.value = uri.pathSegments[uri.pathSegments.size - 1]
         selectedFileName.value =
             selectedFileName.value.substring(selectedFileName.value.lastIndexOf("/") + 1)
-        if (selectedFileName.value.endsWith(".txt")) {
-            resultFilePath = Tools().uriToAbsolutePath(uri)
-            lifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
-                delay(300L)
-                customResultFileName.value = selectedFileName.value
-            }
-        } else {
+        if (code == 0) {
             databaseFilePath = Tools().uriToAbsolutePath(uri)
             lifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
-                delay(300L)
+                delay(200L) //播放动画
                 databaseFileName.value = selectedFileName.value
+            }
+        } else if (code == 1) {
+            resultFilePath = Tools().uriToAbsolutePath(uri)
+            lifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
+                delay(200L)  //播放动画
+                customResultFileName.value = selectedFileName.value
             }
         }
     }
 
     var haveError = false
-    fun checkSelectedFiles() {
-        haveError = false
-        showLoadingProgressBar.value = true
-        errorDialogContent.value = context.getString(R.string.error_details)
-        checkDatabaseFile()
-        checkResultFile()
+    fun checkSelectedFiles(delay: Long = 0L) {
         lifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
-            delay(100L)
+            haveError = false
+            showLoadingProgressBar.value = true
+            errorDialogContent.value = context.getString(R.string.error_details)
+            checkDatabaseFile()
+            checkResultFile()
+            delay(delay)
             loadingProgressSema.acquire()
             loadingProgressSema.acquire()
             showLoadingProgressBar.value = false
@@ -116,23 +207,14 @@ class ConvertPage(
         lifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
             loadingProgressSema.acquire()
             if (useCustomResultFile.value) {
+                var db: SQLiteDatabase? = null
                 try {
-                    val file = File(resultFilePath)
-                    val localMusicFile =
-                        file.readText().split("\n").dropLast(1)
-                    val localMusic = Array(localMusicFile.size) {
-                        arrayOfNulls<String>(
-                            5
-                        )
-                    }
-                    for ((a, i) in localMusicFile.withIndex()) {
-                        val parts = i.split("#\\*#".toRegex())
-                        localMusic[a][0] = parts[0]
-                        localMusic[a][1] = parts[1]
-                        localMusic[a][2] = parts[2]
-                        localMusic[a][3] = parts[3]
-                        localMusic[a][4] = parts[4]
-                    }
+                    db = SQLiteDatabase.openOrCreateDatabase(File(resultFilePath), null)
+                    val cursor = db.rawQuery(
+                        "SELECT id, song, artist, album, absolutePath FROM music LIMIT 1",
+                        null
+                    )
+                    cursor.close()
                 } catch (e: Exception) {
                     showErrorDialog.value = true
                     errorDialogTitle.value =
@@ -146,6 +228,8 @@ class ConvertPage(
                     haveError = true
                 } finally {
                     loadingProgressSema.release()
+//                    db?.endTransaction()
+                    db?.close()
                 }
             } else {
                 try {
@@ -209,13 +293,15 @@ class ConvertPage(
                 4 -> sourceApp.init("KuwoMusic")
             }
             if (sourceApp.sourceEng != "") {
-                val file = File(databaseFilePath)
-                val db = SQLiteDatabase.openOrCreateDatabase(file, null)
+                var db: SQLiteDatabase? = null
                 try {
+                    db = SQLiteDatabase.openOrCreateDatabase(File(databaseFilePath), null)
                     val cursor =
-                        db.rawQuery("SELECT * FROM ${sourceApp.songListTableName} LIMIT 1", null)
+                        db.rawQuery(
+                            "SELECT ${sourceApp.songListId}, ${sourceApp.songListName} FROM ${sourceApp.songListTableName} LIMIT 1",
+                            null
+                        )
                     cursor.close()
-                    loadingProgressSema.release()
                 } catch (e: Exception) {
                     showErrorDialog.value = true
                     errorDialogTitle.value =
@@ -227,7 +313,9 @@ class ConvertPage(
                             )
                         }: ${e.message}"
                     haveError = true
+                } finally {
                     loadingProgressSema.release()
+                    db?.close()
                 }
             } else {
                 showErrorDialog.value = true
@@ -265,8 +353,7 @@ class ConvertPage(
             val innerPlaylistEnabled = MutableList(0) { 0 }
             val innerPlaylistSum = MutableList(0) { 0 }
 
-            val file = File(databaseFilePath)
-            val db = SQLiteDatabase.openOrCreateDatabase(file, null)
+            val db = SQLiteDatabase.openOrCreateDatabase(File(databaseFilePath), null)
 
             val cursor = if (sourceApp.sourceEng == "KuWoMusic")
                 db.rawQuery(
@@ -301,6 +388,8 @@ class ConvertPage(
                 innerPlaylistEnabled.add(0)
             }
             cursor.close()
+//            db.endTransaction()
+            db.close()
             playlistId.addAll(innerPlaylistId)
             playlistName.addAll(innerPlaylistName)
             playlistEnabled.addAll(innerPlaylistEnabled)
@@ -334,14 +423,45 @@ class ConvertPage(
             val firstIndex1 = playlistEnabled.indexOfFirst { it == 1 }
 
             showLoadingProgressBar.value = true
-            val music3InfoList = db.musicDao().getMusic3Info()
+            val music3InfoList = if (useCustomResultFile.value) {
+                val db = SQLiteDatabase.openOrCreateDatabase(File(resultFilePath), null)
+                val musicInfoList = mutableListOf<MusicInfo>()
+                db.rawQuery("SELECT song, artist, album, absolutePath, id FROM music", null)
+                    .use { cursor ->
+                        while (cursor.moveToNext()) {
+                            val id = cursor.getInt(cursor.getColumnIndexOrThrow("id"))
+                            val song = cursor.getString(cursor.getColumnIndexOrThrow("song"))
+                            val artist = cursor.getString(cursor.getColumnIndexOrThrow("artist"))
+                            val album = cursor.getString(cursor.getColumnIndexOrThrow("album"))
+                            val absolutePath =
+                                cursor.getString(cursor.getColumnIndexOrThrow("absolutePath"))
+                            val musicInfo = MusicInfo(
+                                id,
+                                song,
+                                artist,
+                                album,
+                                null,
+                                null,
+                                null,
+                                null,
+                                absolutePath
+                            )
+                            musicInfoList.add(musicInfo)
+                        }
+                    }
+//                db.endTransaction()
+                db.close()
+                musicInfoList
+            } else {
+                db.musicDao().getMusic3Info()
+            }
+
             var songName: String
             var songArtist: String
             var songAlbum: String
             var num = 0
 
-            val file = File(databaseFilePath)
-            val db = SQLiteDatabase.openOrCreateDatabase(file, null)
+            val db = SQLiteDatabase.openOrCreateDatabase(File(databaseFilePath), null)
             val cursor = db.rawQuery(
                 "SELECT ${sourceApp.songListSongInfoSongId} FROM ${sourceApp.songListSongInfoTableName} WHERE ${sourceApp.songListSongInfoPlaylistId} = '${playlistId[firstIndex1]}' ORDER BY ${sourceApp.sortField}",
                 null
@@ -538,6 +658,8 @@ class ConvertPage(
                 songInfoCursor.close()
             }
             cursor.close()
+//            db.endTransaction()
+            db.close()
             convertResult.putAll(convertResultMap)
             showLoadingProgressBar.value = false
         }
@@ -554,7 +676,38 @@ class ConvertPage(
                 showDialogProgressBar.value = false
                 return@launch
             }
-            val searchResultList = db.musicDao().searchMusic("%${inputSearchWords.value}%")
+            val searchResultList = if (useCustomResultFile.value) {
+                val db = SQLiteDatabase.openOrCreateDatabase(File(resultFilePath), null)
+                val musicInfoList = mutableListOf<MusicInfo>()
+                db.rawQuery(
+                    "SELECT song, artist, album, absolutePath, id FROM music WHERE song LIKE ? OR artist LIKE ? OR album LIKE ? LIMIT 3",
+                    arrayOf(inputSearchWords.value, inputSearchWords.value, inputSearchWords.value)
+                ).use { cursor ->
+                    while (cursor.moveToNext()) {
+                        val id = cursor.getInt(cursor.getColumnIndexOrThrow("id"))
+                        val song = cursor.getString(cursor.getColumnIndexOrThrow("song"))
+                        val artist = cursor.getString(cursor.getColumnIndexOrThrow("artist"))
+                        val album = cursor.getString(cursor.getColumnIndexOrThrow("album"))
+                        val absolutePath =
+                            cursor.getString(cursor.getColumnIndexOrThrow("absolutePath"))
+                        val musicInfo = MusicInfo(
+                            id,
+                            song,
+                            artist,
+                            album,
+                            null,
+                            null,
+                            null,
+                            null,
+                            absolutePath
+                        )
+                        musicInfoList.add(musicInfo)
+                    }
+                }
+                db.close()
+                musicInfoList
+            } else
+                db.musicDao().searchMusic("%${inputSearchWords.value}%")
             val searchResultMap = mutableListOf<Array<String>>()
             for (i in searchResultList.indices) {
                 searchResultMap.add(
@@ -577,7 +730,23 @@ class ConvertPage(
 
     fun saveModificationSong(songPosition: Int, songId: Int) {
         lifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
-            val songInfo = db.musicDao().getMusicById(songId)
+            val songInfo = if (useCustomResultFile.value) {
+                val db = SQLiteDatabase.openOrCreateDatabase(File(resultFilePath), null)
+                val cursor = db.rawQuery(
+                    "SELECT song, artist, album, absolutePath FROM music WHERE id = ?",
+                    arrayOf(songId.toString())
+                )
+                cursor.moveToFirst()
+                val song = cursor.getString(cursor.getColumnIndexOrThrow("song"))
+                val artist = cursor.getString(cursor.getColumnIndexOrThrow("artist"))
+                val album = cursor.getString(cursor.getColumnIndexOrThrow("album"))
+                val absolutePath =
+                    cursor.getString(cursor.getColumnIndexOrThrow("absolutePath"))
+                cursor.close()
+                db.close()
+                MusicInfo(songId, song, artist, album, null, null, null, null, absolutePath)
+            } else
+                db.musicDao().getMusicById(songId)
             convertResult[songPosition]?.set(0, context.getString(R.string.match_manual))
             convertResult[songPosition]?.set(1, songInfo.song)
             convertResult[songPosition]?.set(3, songInfo.artist)

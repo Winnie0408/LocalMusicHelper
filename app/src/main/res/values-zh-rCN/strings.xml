@@ -2,7 +2,7 @@
 <resources>
     <string name="scan_result_hint">扫描过程将会显示在这里。</string>
     <string name="scanning_try_again_later">正在扫描中，请稍后再试。</string>
-    <string name="request_permission_toast">请授予必要的权限，以进行音乐扫描</string>
+    <string name="request_permission_toast">需要权限才能继续操作</string>
     <string name="selected_directory_path">选择的目录：</string>
     <string name="scan_complete">扫描完成</string>
     <string name="file_conflict_dialog_content">检测到输出文件已存在！#n请选择您的操作：</string>
@@ -50,11 +50,11 @@
     <string name="source_default">与歌单来源对应</string>
     <string name="you_have_selected">已选择</string>
     <string name="next_step_text">下一步</string>
-    <string name="please_select_source_app">请选择歌单来源APP</string>
+    <string name="please_select_source_app">请选择歌单来源App</string>
     <string name="use_custom_result_file">使用自定义的歌单导出文件</string>
     <string name="import_result_file">导入结果文件</string>
-    <string name="use_other_result_file">使用来自其他设备的“MusicHelper.txt”结果文件</string>
-    <string name="select_result_file_item_title">选择MusicHelper.txt文件</string>
+    <string name="use_other_result_file">使用来自其他设备的“MusicHelper.db”结果文件</string>
+    <string name="select_result_file_item_title">选择MusicHelper.db文件</string>
     <string name="error_while_getting_data_dialog_title">获取数据时发生错误</string>
     <string name="error_while_getting_data_dialog_content">读取以下文件时发生错误，请检查文件选择是否正确</string>
     <string name="database_file">数据库文件</string>
@@ -120,4 +120,6 @@
     <string name="delete_dialog_title">删除当前歌曲？</string>
     <string name="delete_dialog_content">将从结果中删除：</string>
     <string name="delete_success">删除成功</string>
+    <string name="export_result_file_switcher_text">导出结果</string>
+    <string name="export_result_file_switcher_sub_text">导出结果文件到Download目录</string>
 </resources>

@@ -43,6 +43,7 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -80,7 +81,8 @@ fun YesNoDialog(
     cancelText: String = stringResource(id = R.string.cancel_button_text),
     confirmText: String = stringResource(id = R.string.ok_button_text),
     customContent: @Composable () -> Unit = {},
-    onlyComposeView: Boolean = false
+    onlyComposeView: Boolean = false,
+    confirmButtonColor: Color = SaltTheme.colors.highlight
 ) {
     BasicDialog(
         onDismissRequest = onDismiss,
@@ -112,7 +114,8 @@ fun YesNoDialog(
             TextButton(
                 onClick = {
                     onConfirm()
-                }, modifier = Modifier.weight(1f), text = confirmText
+                }, modifier = Modifier.weight(1f), text = confirmText,
+                backgroundColor = confirmButtonColor
             )
         }
     }
@@ -144,7 +147,7 @@ fun BasicDialog(
 
 @UnstableSaltApi
 @Composable
-fun ItemPopup(  //TODO 根据文字长度自动调整宽度
+fun ItemPopup(  //TODO 添加图标、根据文字长度自动调整宽度、优化左右点击时弹出的位置（Tools.measureTextWidthInDp）
     state: PopupState,
     enabled: Boolean = true,
     iconPainter: Painter? = null,
@@ -153,6 +156,7 @@ fun ItemPopup(  //TODO 根据文字长度自动调整宽度
     text: String,
     sub: String? = null,
     selectedItem: String = "",
+    popupWidth: Int = 180,
     content: @Composable ColumnScope.() -> Unit
 ) {
     Box {
@@ -229,14 +233,13 @@ fun ItemPopup(  //TODO 根据文字长度自动调整宽度
             )
         }
         PopupMenu(
+            modifier = Modifier.width(popupWidth.dp),  //TODO 宽度
             expanded = state.expend,
             onDismissRequest = {
                 state.dismiss()
             },
-            offset = if (boxWidth.value / 2 > clickOffsetX.value) DpOffset(
-                16.dp,
-                0.dp
-            ) else DpOffset((boxWidth.value / 6).dp, 0.dp)
+            offset = if (boxWidth.value / 2 > clickOffsetX.value) DpOffset(16.dp, 0.dp)
+            else DpOffset((LocalConfiguration.current.screenWidthDp - (popupWidth + 50)).dp, 0.dp),
         ) {
             content()
         }

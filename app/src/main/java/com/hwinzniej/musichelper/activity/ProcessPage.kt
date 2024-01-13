@@ -15,7 +15,6 @@ import org.htmlunit.WebClient
 import org.htmlunit.html.HtmlPage
 import org.jsoup.Jsoup
 
-
 class ProcessPage(
     val context: Context,
     val lifecycleOwner: LifecycleOwner,
