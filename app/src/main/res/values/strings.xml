@@ -2,7 +2,7 @@
     <string name="app_name" translatable="false">MusicHelper</string>
     <string name="scan_result_hint">The scanning process will be shown here.</string>
     <string name="scanning_try_again_later">Scanning, please try again later.</string>
-    <string name="result_file_name">MH_Export</string>
+    <string name="result_file_name">MusicHelper_Export</string>
     <string name="request_permission_toast">Permissions are required to continue.</string>
     <string name="selected_directory_path">"Selected Directory: "</string>
     <string name="scan_complete">Done.</string>
@@ -55,8 +55,8 @@
     <string name="please_select_source_app">Please select source App</string>
     <string name="use_custom_result_file">Use custom music output file</string>
     <string name="import_result_file">Import result file</string>
-    <string name="use_other_result_file">Using the \"MH_Export.db\" result file from another device</string>
-    <string name="select_result_file_item_title">Select MH_Export.db file</string>
+    <string name="use_other_result_file">Using the \"MusicHelper_Export.db\" result file from another device</string>
+    <string name="select_result_file_item_title">Select MusicHelper_Export.db file</string>
     <string name="error_while_getting_data_dialog_title">Error while getting data</string>
     <string name="error_while_getting_data_dialog_content">Error occurred while reading the following file, please check the file selection.</string>
     <string name="database_file">Database file</string>
@@ -92,7 +92,7 @@
     <string name="ge"></string>
     <string name="songlist_sequence">Sequence</string>
     <string name="modify_conversion_results">Modify conversion result</string>
-    <string name="search_song_library">Search song library...</string>
+    <string name="search_song_library">Search song library…</string>
     <string name="songlist_song_info">Songlist song info</string>
     <string name="song_name">Song name</string>
     <string name="no_search_result">No results for the search</string>

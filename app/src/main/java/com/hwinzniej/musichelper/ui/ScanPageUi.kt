@@ -104,7 +104,7 @@ fun ScanPageUi(
                         sub = stringResource(id = R.string.export_result_file_switcher_sub_text)
                     )
                     AnimatedVisibility(visible = exportResultFile.value) {
-                        ItemPopup(
+                        ItemPopup( //TODO 为每个子项添加图标
                             state = exportTypePopupState,
                             text = stringResource(id = R.string.format_of_exported_files),
                             selectedItem = when (selectedExportFormat.intValue) {

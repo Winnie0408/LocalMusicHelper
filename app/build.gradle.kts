@@ -99,14 +99,14 @@ dependencies {
     annotationProcessor("androidx.room:room-compiler:$roomVersion")
     ksp("androidx.room:room-compiler:$roomVersion")
 
-    //UI分页插件
-    implementation("com.google.accompanist:accompanist-pager:0.32.0")
-
     //SystemUi控制器
     implementation("com.google.accompanist:accompanist-systemuicontroller:0.32.0")
 
     //FastJson
     implementation("com.alibaba.fastjson2:fastjson2-kotlin:2.0.45")
+
+    //Navigation
+    implementation("androidx.navigation:navigation-compose:2.7.6")
 
     //拖拽排序-可注释
     implementation("org.burnoutcrew.composereorderable:reorderable:0.9.6")
