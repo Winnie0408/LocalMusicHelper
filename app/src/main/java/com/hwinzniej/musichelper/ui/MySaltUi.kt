@@ -69,6 +69,7 @@ import com.moriafly.salt.ui.dialog.DialogTitle
 import com.moriafly.salt.ui.popup.PopupMenu
 import com.moriafly.salt.ui.popup.PopupState
 
+//TODO 某些控件添加震动反馈
 @UnstableSaltApi
 @Composable
 fun YesNoDialog(
@@ -169,14 +170,17 @@ fun ItemPopup(  //TODO 添加图标、根据文字长度自动调整宽度、优
                 .heightIn(min = 56.dp)
                 .alpha(if (enabled) 1f else 0.5f)
                 .pointerInput(Unit) {
-                    detectTapGestures(onPress = { offset ->
-                        val press = PressInteraction.Press(offset)
-                        interactionSource.emit(press)
-                        clickOffsetX.value = offset.x
-                        tryAwaitRelease()
-                        state.expend()
-                        interactionSource.emit(PressInteraction.Release(press))
-                    })
+                    detectTapGestures(
+                        onTap = { offset ->
+                            clickOffsetX.value = offset.x
+                            state.expend()
+                        },
+                        onPress = { offset ->
+                            val press = PressInteraction.Press(offset)
+                            interactionSource.emit(press)
+                            tryAwaitRelease()
+                            interactionSource.emit(PressInteraction.Release(press))
+                        })
                 }
                 .indication(
                     interactionSource = interactionSource,
@@ -187,7 +191,8 @@ fun ItemPopup(  //TODO 添加图标、根据文字长度自动调整宽度、优
                 }
                 .padding(horizontal = SaltTheme.dimens.innerHorizontalPadding, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically
-        ) {
+        )
+        {
             iconPainter?.let {
                 Image(
                     modifier = Modifier

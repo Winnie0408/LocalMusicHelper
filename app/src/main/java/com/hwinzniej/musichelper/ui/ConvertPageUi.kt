@@ -463,7 +463,6 @@ fun ConvertPageUi(
             resultPageState.animateScrollToPage(1, animationSpec = spring(2f))
         }
     }
-
     LaunchedEffect(key1 = inputSearchWords.value) {
         job?.cancel()
         job = coroutine.launch {

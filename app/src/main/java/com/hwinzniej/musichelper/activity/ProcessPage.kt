@@ -7,6 +7,7 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import com.hwinzniej.musichelper.data.database.MusicDatabase
 import com.hwinzniej.musichelper.data.model.MusicInfo
+import com.hwinzniej.musichelper.utils.DoubanMusicApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 

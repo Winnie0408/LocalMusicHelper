@@ -69,6 +69,7 @@ class ConvertPage(
     var enableArtistNameMatch = mutableStateOf(true)
     var enableAlbumNameMatch = mutableStateOf(true)
     var similarity = mutableFloatStateOf(85f)
+    var useRootAccess = mutableStateOf(false)
 
     /**
      * 请求存储权限

@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.SideEffect
@@ -31,10 +30,13 @@ import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.hwinzniej.musichelper.activity.ConvertPage
 import com.hwinzniej.musichelper.activity.ProcessPage
 import com.hwinzniej.musichelper.activity.ScanPage
+import com.hwinzniej.musichelper.activity.SettingsPage
 import com.hwinzniej.musichelper.data.database.MusicDatabase
+import com.hwinzniej.musichelper.ui.AboutPageUi
 import com.hwinzniej.musichelper.ui.ConvertPageUi
 import com.hwinzniej.musichelper.ui.ProcessPageUi
 import com.hwinzniej.musichelper.ui.ScanPageUi
+import com.hwinzniej.musichelper.ui.SettingsPageUi
 import com.moriafly.salt.ui.BottomBar
 import com.moriafly.salt.ui.BottomBarItem
 import com.moriafly.salt.ui.SaltTheme
@@ -51,6 +53,7 @@ class MainActivity : ComponentActivity() {
     private lateinit var scanPage: ScanPage
     private lateinit var processPage: ProcessPage
     private lateinit var convertPage: ConvertPage
+    private lateinit var settingsPage: SettingsPage
     lateinit var db: MusicDatabase
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -84,6 +87,7 @@ class MainActivity : ComponentActivity() {
                 db,
                 this
             )
+        settingsPage = SettingsPage(this, this)
 
 
         setContent {
@@ -95,11 +99,11 @@ class MainActivity : ComponentActivity() {
             }
             WindowCompat.setDecorFitsSystemWindows(window, false)
             CompositionLocalProvider {
-                SaltTheme(
+                SaltTheme(  //TODO 适配椒盐莫奈取色
                     colors = colors
                 ) {
                     TransparentSystemBars()
-                    Pages(scanPage, processPage, convertPage)
+                    Pages(scanPage, processPage, convertPage, settingsPage)
                 }
             }
         }
@@ -120,10 +124,17 @@ class MainActivity : ComponentActivity() {
 
 @OptIn(ExperimentalFoundationApi::class, UnstableSaltApi::class)
 @Composable
-private fun Pages(scanPage: ScanPage, processPage: ProcessPage, convertPage: ConvertPage) {
+private fun Pages(
+    scanPage: ScanPage,
+    processPage: ProcessPage,
+    convertPage: ConvertPage,
+    settingsPage: SettingsPage
+) {
     val pages = listOf("0", "1", "2", "3")
     val pageState = rememberPagerState(pageCount = { pages.size })
     val coroutineScope = rememberCoroutineScope()
+    val settingsPages = listOf("0", "1")
+    val settingsPageState = rememberPagerState(pageCount = { settingsPages.size })
 
     Box(
         modifier = Modifier
@@ -140,65 +151,130 @@ private fun Pages(scanPage: ScanPage, processPage: ProcessPage, convertPage: Con
             when (page) {
                 0 -> {
                     ScanPageUi(
-                        scanPage,
-                        scanPage.scanResult,
-                        scanPage.showLoadingProgressBar,
-                        scanPage.progressPercent,
-                        scanPage.showConflictDialog,
-                        scanPage.exportResultFile,
-                        scanPage.selectedExportFormat,
+                        scanPage = scanPage,
+                        scanResult = scanPage.scanResult,
+                        showLoadingProgressBar = scanPage.showLoadingProgressBar,
+                        progressPercent = scanPage.progressPercent,
+                        showConflictDialog = scanPage.showConflictDialog,
+                        exportResultFile = scanPage.exportResultFile,
+                        selectedExportFormat = scanPage.selectedExportFormat,
                     )
                 }
 
                 1 -> {
                     ConvertPageUi(
-                        convertPage,
-                        convertPage.selectedSourceApp,
-                        convertPage.databaseFileName,
-                        convertPage.useCustomResultFile,
-                        convertPage.customResultFileName,
-                        convertPage.showLoadingProgressBar,
-                        convertPage.showErrorDialog,
-                        convertPage.errorDialogTitle,
-                        convertPage.errorDialogContent,
-                        convertPage.playlistName,
-                        convertPage.playlistEnabled,
-                        convertPage.playlistSum,
-                        convertPage.currentPage,
-                        convertPage.selectedMatchingMode,
-                        convertPage.enableBracketRemoval,
-                        convertPage.enableArtistNameMatch,
-                        convertPage.enableAlbumNameMatch,
-                        convertPage.similarity,
-                        convertPage.convertResult,
-                        convertPage.inputSearchWords,
-                        convertPage.searchResult,
-                        convertPage.showDialogProgressBar,
-                        convertPage.showSaveDialog,
-                        pageState,
+                        convertPage = convertPage,
+                        selectedSourceApp = convertPage.selectedSourceApp,
+                        databaseFileName = convertPage.databaseFileName,
+                        useCustomResultFile = convertPage.useCustomResultFile,
+                        customResultFileName = convertPage.customResultFileName,
+                        showLoadingProgressBar = convertPage.showLoadingProgressBar,
+                        showErrorDialog = convertPage.showErrorDialog,
+                        errorDialogTitle = convertPage.errorDialogTitle,
+                        errorDialogContent = convertPage.errorDialogContent,
+                        playlistName = convertPage.playlistName,
+                        playlistEnabled = convertPage.playlistEnabled,
+                        playlistSum = convertPage.playlistSum,
+                        currentPage = convertPage.currentPage,
+                        selectedMatchingMode = convertPage.selectedMatchingMode,
+                        enableBracketRemoval = convertPage.enableBracketRemoval,
+                        enableArtistNameMatch = convertPage.enableArtistNameMatch,
+                        enableAlbumNameMatch = convertPage.enableAlbumNameMatch,
+                        similarity = convertPage.similarity,
+                        convertResult = convertPage.convertResult,
+                        inputSearchWords = convertPage.inputSearchWords,
+                        searchResult = convertPage.searchResult,
+                        showDialogProgressBar = convertPage.showDialogProgressBar,
+                        showSaveDialog = convertPage.showSaveDialog,
+                        mainActivityPageState = pageState,
                     )
                 }
 
                 2 -> {
                     ProcessPageUi(
-                        processPage,
-                        processPage.processAllScannedMusic,
-                        processPage.overwriteOriginalTag,
-                        processPage.showSelectTagTypeDialog,
-                        processPage.enableAlbumArtist,
-                        processPage.enableReleaseYear,
-                        processPage.enableGenre,
-                        processPage.enableTrackNumber,
-                        processPage.showProgressBar,
-                        processPage.showSelectSourceDialog,
-                        processPage.useDoubanMusicSource,
-                        processPage.useMusicBrainzSource,
-                        processPage.useBaiduBaikeSource,
+                        processPage = processPage,
+                        processAllScannedMusic = processPage.processAllScannedMusic,
+                        overwriteOriginalTag = processPage.overwriteOriginalTag,
+                        showSelectTagTypeDialog = processPage.showSelectTagTypeDialog,
+                        enableAlbumArtist = processPage.enableAlbumArtist,
+                        enableReleaseYear = processPage.enableReleaseYear,
+                        enableGenre = processPage.enableGenre,
+                        enableTrackNumber = processPage.enableTrackNumber,
+                        showProgressBar = processPage.showProgressBar,
+                        showSelectSourceDialog = processPage.showSelectSourceDialog,
+                        useDoubanMusicSource = processPage.useDoubanMusicSource,
+                        useMusicBrainzSource = processPage.useMusicBrainzSource,
+                        useBaiduBaikeSource = processPage.useBaiduBaikeSource,
                     )
                 }
 
                 3 -> {
-                    AboutPageUi()
+                    HorizontalPager(
+                        state = settingsPageState,
+                        modifier = Modifier
+                            .fillMaxSize(),
+                        userScrollEnabled = false,
+                        beyondBoundsPageCount = 1
+                    ) { page ->
+                        when (page) {
+                            0 -> {
+                                SettingsPageUi(
+                                    settingsPage = settingsPage,
+                                    enableDynamicColor = settingsPage.enableDynamicColor,
+                                    selectedThemeMode = settingsPage.selectedThemeMode,
+                                    selectedLanguage = settingsPage.selectedLanguage,
+                                    useRootAccess = convertPage.useRootAccess,
+                                    enableAutoCheckUpdate = settingsPage.enableAutoCheckUpdate,
+                                    settingsPageState = settingsPageState,
+                                )
+                            }
+
+                            1 -> {
+                                AboutPageUi(
+                                    settingsPageState = settingsPageState
+                                )
+                            }
+                        }
+                    }
+//                    NavHost(
+//                        navController = navController,
+//                        startDestination = "SettingsPageUi",
+//                        enterTransition = {
+//                            slideInHorizontally(
+//                                animationSpec = spring(2f),
+//                                initialOffsetX = { 1080 })
+//                        },
+//                        exitTransition = {
+//                            slideOutHorizontally(
+//                                animationSpec = spring(2f),
+//                                targetOffsetX = { -1080 })
+//                        },
+//                        popEnterTransition = {
+//                            slideInHorizontally(
+//                                animationSpec = spring(2f),
+//                                initialOffsetX = { -1080 })
+//                        },
+//                        popExitTransition = {
+//                            slideOutHorizontally(
+//                                animationSpec = spring(2f),
+//                                targetOffsetX = { 1080 })
+//                        },
+//                    ) {
+//                        composable("SettingsPageUi") {
+//                            SettingsPageUi(
+//                                settingsPage = settingsPage,
+//                                enableDynamicColor = settingsPage.enableDynamicColor,
+//                                selectedThemeMode = settingsPage.selectedThemeMode,
+//                                selectedLanguage = settingsPage.selectedLanguage,
+//                                useRootAccess = convertPage.useRootAccess,
+//                                enableAutoCheckUpdate = settingsPage.enableAutoCheckUpdate,
+//                                navController = navController,
+//                            )
+//                        }
+//                        composable("AboutPageUi") {
+//                            AboutPageUi(navController = navController)
+//                        }
+//                    }
                 }
             }
 
@@ -255,16 +331,10 @@ private fun Pages(scanPage: ScanPage, processPage: ProcessPage, convertPage: Con
                     }
                 },
                 painter = painterResource(id = R.drawable.ic_launcher_foreground),
-                text = stringResource(R.string.about_function_name)
+                text = stringResource(R.string.settings_function_name)
             )
         }
     }
-}
-
-
-@Composable
-private fun AboutPageUi() {
-    Text(text = "测试3")
 }
 
 @Composable

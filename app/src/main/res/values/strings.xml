@@ -55,7 +55,7 @@
     <string name="please_select_source_app">Please select source App</string>
     <string name="use_custom_result_file">Use custom music output file</string>
     <string name="import_result_file">Import result file</string>
-    <string name="use_other_result_file">Using the \"MusicHelper_Export.db\" result file from another device</string>
+    <string name="use_other_result_file">Use the \"MusicHelper_Export.db\" file from external sources</string>
     <string name="select_result_file_item_title">Select MusicHelper_Export.db file</string>
     <string name="error_while_getting_data_dialog_title">Error while getting data</string>
     <string name="error_while_getting_data_dialog_content">Error occurred while reading the following file, please check the file selection.</string>
@@ -127,4 +127,36 @@
     <string name="format_of_exported_files">Format of exported files</string>
     <string name="database_file_popup">Database file (.db)</string>
     <string name="text_file_popup">Text file (.txt)</string>
+    <string name="settings_function_name">Settings</string>
+    <string name="user_interface">User interface</string>
+    <string name="dynamic_color_switcher_text">Dynamic color</string>
+    <string name="dynamic_color_switcher_sub">Use monet dynamic color in Android 12+</string>
+    <string name="theme_mode_switcher_text">Theme mode</string>
+    <string name="light_mode">Light</string>
+    <string name="dark_mode">Dark</string>
+    <string name="follow_system">System</string>
+    <string name="language">Language</string>
+    <string name="app_language">App language</string>
+    <string name="chinese_s">Chinese (Simplified)</string>
+    <string name="english">English</string>
+    <string name="system_language">System language</string>
+    <string name="file_access">File access</string>
+    <string name="use_root_access_switcher_title">Using Root access</string>
+    <string name="use_root_access_switcher_sub">Automatically get the database file of the song list source App</string>
+    <string name="version">Version</string>
+    <string name="check_updates_at_start">Check for updates at startup</string>
+    <string name="check_for_updates">Check for updates</string>
+    <string name="about">About</string>
+    <string name="other">Other</string>
+    <string name="app_version" translatable="false">0.9.9</string>
+    <string name="update">Update</string>
+    <string name="developers">Developers</string>
+    <string name="pc_salt_converter">Salt Converter for PC</string>
+    <string name="buy_me_a_coffee">Buy me a coffee</string>
+    <string name="join_qq_group">Join QQ Group</string>
+    <string name="follow_on_bilibili">Follow on BiliBili</string>
+    <string name="open_source_github">View this project on GitHub</string>
+    <string name="open_source_sub">A Star ⭐ would be nicer~</string>
+    <string name="open_source_gitee">View this project on Gitee</string>
+    <string name="open_source_licence">Open source license</string>
 </resources>

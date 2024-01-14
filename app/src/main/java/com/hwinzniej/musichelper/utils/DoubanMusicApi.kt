@@ -1,4 +1,4 @@
-package com.hwinzniej.musichelper.activity
+package com.hwinzniej.musichelper.utils
 
 import com.hwinzniej.musichelper.data.model.MusicInfo
 import okhttp3.OkHttpClient
