@@ -145,7 +145,8 @@ private fun Pages(scanPage: ScanPage, processPage: ProcessPage, convertPage: Con
                         scanPage.showLoadingProgressBar,
                         scanPage.progressPercent,
                         scanPage.showConflictDialog,
-                        scanPage.exportResultFile
+                        scanPage.exportResultFile,
+                        scanPage.selectedExportFormat,
                     )
                 }
 

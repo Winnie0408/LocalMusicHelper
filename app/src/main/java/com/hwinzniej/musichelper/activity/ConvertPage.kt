@@ -42,7 +42,7 @@ import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileWriter
 
-class ConvertPage(  //TODO 自动删除外部存储空间结果文数据库的-journal文件
+class ConvertPage(
     val context: Context,
     val lifecycleOwner: LifecycleOwner,
     val openMusicPlatformSqlFileLauncher: ActivityResultLauncher<Array<String>>,
@@ -207,9 +207,8 @@ class ConvertPage(  //TODO 自动删除外部存储空间结果文数据库的-j
         lifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
             loadingProgressSema.acquire()
             if (useCustomResultFile.value) {
-                var db: SQLiteDatabase? = null
+                val db = SQLiteDatabase.openOrCreateDatabase(File(resultFilePath), null)
                 try {
-                    db = SQLiteDatabase.openOrCreateDatabase(File(resultFilePath), null)
                     val cursor = db.rawQuery(
                         "SELECT id, song, artist, album, absolutePath FROM music LIMIT 1",
                         null
@@ -228,8 +227,7 @@ class ConvertPage(  //TODO 自动删除外部存储空间结果文数据库的-j
                     haveError = true
                 } finally {
                     loadingProgressSema.release()
-//                    db?.endTransaction()
-                    db?.close()
+                    db.close()
                 }
             } else {
                 try {
@@ -293,9 +291,8 @@ class ConvertPage(  //TODO 自动删除外部存储空间结果文数据库的-j
                 4 -> sourceApp.init("KuwoMusic")
             }
             if (sourceApp.sourceEng != "") {
-                var db: SQLiteDatabase? = null
+                val db = SQLiteDatabase.openOrCreateDatabase(File(databaseFilePath), null)
                 try {
-                    db = SQLiteDatabase.openOrCreateDatabase(File(databaseFilePath), null)
                     val cursor =
                         db.rawQuery(
                             "SELECT ${sourceApp.songListId}, ${sourceApp.songListName} FROM ${sourceApp.songListTableName} LIMIT 1",
@@ -315,7 +312,7 @@ class ConvertPage(  //TODO 自动删除外部存储空间结果文数据库的-j
                     haveError = true
                 } finally {
                     loadingProgressSema.release()
-                    db?.close()
+                    db.close()
                 }
             } else {
                 showErrorDialog.value = true
@@ -819,6 +816,7 @@ class ConvertPage(  //TODO 自动删除外部存储空间结果文数据库的-j
             playlistEnabled[firstIndex1] = 2
             if (playlistEnabled.count { it == 1 } == 0) {
                 currentPage.intValue = 3
+                File("${resultFilePath}-journal").delete()
             }
         }
     }

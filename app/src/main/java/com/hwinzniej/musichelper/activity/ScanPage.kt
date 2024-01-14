@@ -35,14 +35,9 @@ import org.jaudiotagger.audio.AudioFileIO
 import org.jaudiotagger.tag.FieldKey
 import org.jaudiotagger.tag.Tag
 import java.io.File
+import java.io.FileWriter
 
-interface PermissionResultHandler {
-    fun onPermissionResult(
-        requestCode: Int, permissions: Array<String>, grantResults: IntArray
-    )
-}
-
-class ScanPage(  //TODO 还是需要做txt的导出，否则SaltConverter网站无法使用
+class ScanPage(
     val context: Context,
     val lifecycleOwner: LifecycleOwner,
     val openDirectoryLauncher: ActivityResultLauncher<Uri?>,
@@ -56,6 +51,7 @@ class ScanPage(  //TODO 还是需要做txt的导出，否则SaltConverter网站�
     var lastIndex = 0
     var exportResultFile = mutableStateOf(false)
     val musicAllList: ArrayList<Music> = ArrayList()
+    var selectedExportFormat = mutableIntStateOf(0)
 
     /**
      * 功能入口，初始化变量
@@ -155,31 +151,53 @@ class ScanPage(  //TODO 还是需要做txt的导出，否则SaltConverter网站�
         lifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
             delay(delay)
             if (exportResultFile.value) {
-                val fileName = getString(context, R.string.result_file_name)
-                lifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
-                    val file = File(
-                        Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
-                        fileName
-                    )
-                    if (file.exists()) {
-                        showConflictDialog.value = true
-                        val fileDb = SQLiteDatabase.openOrCreateDatabase(file, null)
-                        val lastChars = fileDb.rawQuery("SELECT COUNT(id) FROM music", null)
-                        lastChars.moveToFirst()
-                        lastIndex = lastChars.getInt(0)
-                        lastChars.close()
-//                    fileDb.endTransaction()
-                        fileDb.close()
-                    } else {
-                        db.musicDao().deleteAll()
-                        openDirectoryLauncher.launch(null)
+                if (selectedExportFormat.intValue == 0) {
+                    lifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+                        val file = File(
+                            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
+                            "${getString(context, R.string.result_file_name)}.db"
+                        )
+                        if (file.exists()) {
+                            showConflictDialog.value = true
+                            val fileDb = SQLiteDatabase.openOrCreateDatabase(file, null)
+                            val lastChars = fileDb.rawQuery("SELECT COUNT(id) FROM music", null)
+                            lastChars.moveToFirst()
+                            lastIndex = lastChars.getInt(0)
+                            lastChars.close()
+                            fileDb.close()
+                        } else {
+                            db.musicDao().deleteAll()
+                            openDirectoryLauncher.launch(null)
+                        }
+                    }
+                } else {
+                    lifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+                        val file = File(
+                            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
+                            "${getString(context, R.string.result_file_name)}.txt"
+                        )
+                        if (file.exists()) {
+                            showConflictDialog.value = true
+                            val lastChars = Tools().readLastNChars(file, 8)
+                            lastIndex =
+                                lastChars.substring(
+                                    lastChars.lastIndexOf("#") + 1,
+                                    lastChars.length
+                                ).toInt()
+                        } else {
+                            db.musicDao().deleteAll()
+                            openDirectoryLauncher.launch(null)
+                        }
                     }
                 }
             } else {
                 lifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
-                    db.musicDao().deleteAll()
+                    val musicCount = db.musicDao().getMusicCount()
+                    if (musicCount != 0) {
+                        showConflictDialog.value = true
+                        lastIndex = musicCount - 1
+                    }
                 }
-                openDirectoryLauncher.launch(null)
             }
         }
     }
@@ -195,11 +213,20 @@ class ScanPage(  //TODO 还是需要做txt的导出，否则SaltConverter网站�
             2 -> {  //文件冲突，覆盖
                 showConflictDialog.value = false
                 lifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
-                    val file = File(
-                        Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
-                        getString(context, R.string.result_file_name)
-                    )
-                    file.delete()
+                    db.musicDao().deleteAll()
+                    if (selectedExportFormat.intValue == 0) {
+                        val file = File(
+                            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
+                            "${getString(context, R.string.result_file_name)}.db"
+                        )
+                        file.delete()
+                    } else {
+                        val file = File(
+                            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
+                            "${getString(context, R.string.result_file_name)}.txt"
+                        )
+                        file.delete()
+                    }
                     db.musicDao().deleteAll()
                 }
                 lastIndex = 0
@@ -213,8 +240,6 @@ class ScanPage(  //TODO 还是需要做txt的导出，否则SaltConverter网站�
      */
 
     fun handleUri(uri: Uri?) {
-        // 这是用户选择的目录的Uri
-        // 你可以在这里处理用户选择的目录
         if (uri == null) {
             return
         }
@@ -275,9 +300,8 @@ class ScanPage(  //TODO 还是需要做txt的导出，否则SaltConverter网站�
         } catch (e: Exception) {
             return
         }
-        lifecycleOwner.lifecycleScope.launch(Dispatchers.Main) {
+        lifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
             scanResult.add(0, file.name)
-//            scanResult.value = "${file.name}\n${scanResult.value}"
         }
         val tag = audioFile.tag
         getTag(tag, file.path)
@@ -317,38 +341,62 @@ class ScanPage(  //TODO 还是需要做txt的导出，否则SaltConverter网站�
         lifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
             db.musicDao().insertAll(*musicAllList.toTypedArray())
             if (exportResultFile.value) {
-                val exportFileName = getString(context, R.string.result_file_name)
-                val file = File(
-                    Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
-                    exportFileName
-                )
-                val outputDb = SQLiteDatabase.openOrCreateDatabase(file, null)
-                outputDb.execSQL("CREATE TABLE IF NOT EXISTS music (id INTEGER PRIMARY KEY, song TEXT, artist TEXT, album TEXT, absolutePath TEXT, releaseYear TEXT, trackNumber TEXT, albumArtist TEXT, genre TEXT)")
-                for (music in musicAllList) {
-                    outputDb.execSQL(
-                        "INSERT INTO music VALUES (${music.id}, '${
-                            music.song.replace("'", "''")
-                        }', '${
-                            music.artist.replace("'", "''")
-                        }', '${
-                            music.album.replace("'", "''")
-                        }', '${
-                            music.absolutePath.replace("'", "''")
-                        }', '${
-                            music.releaseYear.replace("'", "''")
-                        }', '${
-                            music.trackNumber.replace("'", "''")
-                        }', '${
-                            music.albumArtist.replace("'", "''")
-                        }', '${
-                            music.genre.replace("'", "''")
-                        }')"
-                    )
+                if (selectedExportFormat.intValue == 0) {
+                    exportToDb()
+                } else {
+                    exportToTxt()
                 }
-//                outputDb.endTransaction()
-                outputDb.close()
             }
         }
+    }
+
+    fun exportToDb() {
+        val file = File(
+            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
+            "${getString(context, R.string.result_file_name)}.db"
+        )
+        val outputDb = SQLiteDatabase.openOrCreateDatabase(file, null)
+        outputDb.execSQL("CREATE TABLE IF NOT EXISTS music (id INTEGER PRIMARY KEY, song TEXT, artist TEXT, album TEXT, absolutePath TEXT, releaseYear TEXT, trackNumber TEXT, albumArtist TEXT, genre TEXT)")
+        for (music in musicAllList) {
+            outputDb.execSQL(
+                "INSERT INTO music VALUES (${music.id}, '${
+                    music.song.replace("'", "''")
+                }', '${
+                    music.artist.replace("'", "''")
+                }', '${
+                    music.album.replace("'", "''")
+                }', '${
+                    music.absolutePath.replace("'", "''")
+                }', '${
+                    music.releaseYear.replace("'", "''")
+                }', '${
+                    music.trackNumber.replace("'", "''")
+                }', '${
+                    music.albumArtist.replace("'", "''")
+                }', '${
+                    music.genre.replace("'", "''")
+                }')"
+            )
+        }
+        outputDb.close()
+        File(
+            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
+            "${getString(context, R.string.result_file_name)}.db-journal"
+        ).delete()
+    }
+
+    fun exportToTxt() {
+        val file = File(
+            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
+            "${getString(context, R.string.result_file_name)}.txt"
+        )
+        val fileWriter = FileWriter(file, true)
+        for (music in musicAllList) {
+            fileWriter.write(
+                "${music.song}#*#${music.artist}#*#${music.album}#*#${music.absolutePath}#*#${music.id}\n"
+            )
+        }
+        fileWriter.close()
     }
 
     /**

@@ -112,7 +112,6 @@ fun ConvertPageUi(
     val sourceAppPopupMenuState = rememberPopupState()
     val matchingModePopupMenuState = rememberPopupState()
     var sourceApp by remember { mutableStateOf("") }
-    var matchingMode by remember { mutableStateOf("") }
     val pages = listOf("0", "1", "2", "3")
     val pageState = rememberPagerState(pageCount = { pages.size })
     var allEnabled by remember { mutableStateOf(false) }
@@ -773,7 +772,6 @@ fun ConvertPageUi(
                             userScrollEnabled = false,
                             beyondBoundsPageCount = 1
                         ) { resultPage ->
-                            var selectedFilter by remember { mutableStateOf("") }
                             when (resultPage) {
                                 0 -> {
                                     Column(
@@ -818,7 +816,11 @@ fun ConvertPageUi(
                                             ItemPopup(
                                                 state = matchingModePopupMenuState,
                                                 text = stringResource(R.string.matching_mode),
-                                                selectedItem = matchingMode
+                                                selectedItem = when (selectedMatchingMode.intValue) {
+                                                    1 -> stringResource(R.string.split_matching)
+                                                    2 -> stringResource(R.string.overall_matching)
+                                                    else -> ""
+                                                }
                                             ) {
                                                 PopupMenuItem(
                                                     onClick = {
@@ -836,12 +838,6 @@ fun ConvertPageUi(
                                                     selected = selectedMatchingMode.intValue == 2,
                                                     text = stringResource(R.string.overall_matching)
                                                 )
-                                            }
-
-                                            matchingMode = when (selectedMatchingMode.intValue) {
-                                                1 -> stringResource(R.string.split_matching)
-                                                2 -> stringResource(R.string.overall_matching)
-                                                else -> ""
                                             }
 
                                             ItemSwitcher(
@@ -874,7 +870,6 @@ fun ConvertPageUi(
                                                 TextButton(
                                                     onClick = {
                                                         selectedFilterIndex = 0
-                                                        selectedFilter = ""
                                                         convertPage.previewResult()
                                                     },
                                                     text = stringResource(R.string.preview_convert_result),
@@ -897,7 +892,34 @@ fun ConvertPageUi(
                                             ItemPopup(
                                                 state = filterPopupMenuState,
                                                 text = stringResource(id = R.string.convert_status),
-                                                selectedItem = selectedFilter
+                                                selectedItem = when (selectedFilterIndex) {
+                                                    0 -> "${stringResource(id = R.string.all)} - ${convertResult.size}"
+                                                    1 -> "${stringResource(id = R.string.match_success)} - ${
+                                                        convertResult.count {
+                                                            it.value[0] == stringResource(
+                                                                R.string.match_success
+                                                            )
+                                                        }
+                                                    }"
+
+                                                    2 -> "${stringResource(id = R.string.match_caution)} - ${
+                                                        convertResult.count {
+                                                            it.value[0] == stringResource(
+                                                                R.string.match_caution
+                                                            )
+                                                        }
+                                                    }"
+
+                                                    3 -> "${stringResource(id = R.string.match_manual)} - ${
+                                                        convertResult.count {
+                                                            it.value[0] == stringResource(
+                                                                R.string.match_manual
+                                                            )
+                                                        }
+                                                    }"
+
+                                                    else -> ""
+                                                }
                                             ) {
                                                 PopupMenuItem(
                                                     onClick = {
@@ -950,35 +972,6 @@ fun ConvertPageUi(
                                                     selected = selectedFilterIndex == 3
                                                 )
                                             }
-                                        }
-
-                                        selectedFilter = when (selectedFilterIndex) {
-                                            0 -> "${stringResource(id = R.string.all)} - ${convertResult.size}"
-                                            1 -> "${stringResource(id = R.string.match_success)} - ${
-                                                convertResult.count {
-                                                    it.value[0] == stringResource(
-                                                        R.string.match_success
-                                                    )
-                                                }
-                                            }"
-
-                                            2 -> "${stringResource(id = R.string.match_caution)} - ${
-                                                convertResult.count {
-                                                    it.value[0] == stringResource(
-                                                        R.string.match_caution
-                                                    )
-                                                }
-                                            }"
-
-                                            3 -> "${stringResource(id = R.string.match_manual)} - ${
-                                                convertResult.count {
-                                                    it.value[0] == stringResource(
-                                                        R.string.match_manual
-                                                    )
-                                                }
-                                            }"
-
-                                            else -> ""
                                         }
 
                                         RoundedColumn {
@@ -1246,9 +1239,7 @@ fun ConvertPageUi(
 
                             }
                             ItemContainer {
-                                Row(
-                                    modifier = Modifier.padding(horizontal = SaltTheme.dimens.outerHorizontalPadding)
-                                ) {
+                                Row {
                                     TextButton(
                                         onClick = { convertPage.copyFolderPathToClipboard() },
                                         modifier = Modifier.weight(1f),

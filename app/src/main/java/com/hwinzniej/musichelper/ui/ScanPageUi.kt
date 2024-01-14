@@ -19,6 +19,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableIntState
 import androidx.compose.runtime.MutableState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -38,6 +39,8 @@ import com.moriafly.salt.ui.RoundedColumn
 import com.moriafly.salt.ui.SaltTheme
 import com.moriafly.salt.ui.TitleBar
 import com.moriafly.salt.ui.UnstableSaltApi
+import com.moriafly.salt.ui.popup.PopupMenuItem
+import com.moriafly.salt.ui.popup.rememberPopupState
 
 @OptIn(UnstableSaltApi::class)
 @Composable
@@ -47,7 +50,8 @@ fun ScanPageUi(
     showLoadingProgressBar: MutableState<Boolean>,
     progressPercent: MutableState<Int>,
     showConflictDialog: MutableState<Boolean>,
-    exportResultFile: MutableState<Boolean>
+    exportResultFile: MutableState<Boolean>,
+    selectedExportFormat: MutableIntState
 ) {
     if (showConflictDialog.value) {
         YesNoDialog(
@@ -60,6 +64,7 @@ fun ScanPageUi(
             confirmText = stringResource(R.string.file_conflict_dialog_yes_text)
         )
     }
+    val exportTypePopupState = rememberPopupState()
 
     Column(
         modifier = Modifier
@@ -98,6 +103,34 @@ fun ScanPageUi(
                         text = stringResource(id = R.string.export_result_file_switcher_text),
                         sub = stringResource(id = R.string.export_result_file_switcher_sub_text)
                     )
+                    AnimatedVisibility(visible = exportResultFile.value) {
+                        ItemPopup(
+                            state = exportTypePopupState,
+                            text = stringResource(id = R.string.format_of_exported_files),
+                            selectedItem = when (selectedExportFormat.intValue) {
+                                0 -> stringResource(id = R.string.database_file_popup)
+                                1 -> stringResource(id = R.string.text_file_popup)
+                                else -> ""
+                            }
+                        ) {
+                            PopupMenuItem(
+                                onClick = {
+                                    selectedExportFormat.intValue = 0
+                                    exportTypePopupState.dismiss()
+                                },
+                                text = stringResource(id = R.string.database_file_popup),
+                                selected = selectedExportFormat.intValue == 0
+                            )
+                            PopupMenuItem(
+                                onClick = {
+                                    selectedExportFormat.intValue = 1
+                                    exportTypePopupState.dismiss()
+                                },
+                                text = stringResource(id = R.string.text_file_popup),
+                                selected = selectedExportFormat.intValue == 1
+                            )
+                        }
+                    }
                 }
                 AnimatedContent(
                     targetState = showLoadingProgressBar.value,
@@ -127,12 +160,32 @@ fun ScanPageUi(
                             text = stringResource(R.string.number_of_total_songs),
                             sub = progressPercent.value.toString()
                         )
+                        AnimatedVisibility(
+                            visible = exportResultFile.value,
+                        ) {
+                            ItemText(
+                                text = when (selectedExportFormat.intValue) {
+                                    0 -> "${stringResource(id = R.string.details_of_results)}: Download/${
+                                        stringResource(
+                                            id = R.string.result_file_name
+                                        )
+                                    }.db"
 
+                                    1 -> "${stringResource(id = R.string.details_of_results)}: Download/${
+                                        stringResource(
+                                            id = R.string.result_file_name
+                                        )
+                                    }.txt"
+
+                                    else -> ""
+                                }
+                            )
+                        }
                         ItemContainer {
                             LazyColumn(
                                 modifier = Modifier
                                     .fillMaxSize()
-                                    .size((LocalConfiguration.current.screenHeightDp / 2.2).dp)
+                                    .size((LocalConfiguration.current.screenHeightDp / 2.55).dp)
                                     .clip(RoundedCornerShape(10.dp))
                                     .background(color = SaltTheme.colors.background)
                             ) {

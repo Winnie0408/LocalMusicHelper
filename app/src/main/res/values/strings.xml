@@ -2,12 +2,12 @@
     <string name="app_name" translatable="false">MusicHelper</string>
     <string name="scan_result_hint">The scanning process will be shown here.</string>
     <string name="scanning_try_again_later">Scanning, please try again later.</string>
-    <string name="result_file_name" translatable="false">MusicHelper.db</string>
+    <string name="result_file_name">MH_Export</string>
     <string name="request_permission_toast">Permissions are required to continue.</string>
     <string name="selected_directory_path">"Selected Directory: "</string>
-    <string name="scan_complete">Scanning complete.</string>
-    <string name="file_conflict_dialog_title">File conflict</string>
-    <string name="file_conflict_dialog_content">"The output file already exists! #nPlease select your action: "</string>
+    <string name="scan_complete">Done.</string>
+    <string name="file_conflict_dialog_title">Conflict detected</string>
+    <string name="file_conflict_dialog_content">"Existence of results from last scan! #nPlease select your action: "</string>
     <string name="file_conflict_dialog_yes_text">Overwrite</string>
     <string name="file_conflict_dialog_no_text">Append</string>
     <string name="scan_function_name">Scan</string>
@@ -55,8 +55,8 @@
     <string name="please_select_source_app">Please select source App</string>
     <string name="use_custom_result_file">Use custom music output file</string>
     <string name="import_result_file">Import result file</string>
-    <string name="use_other_result_file">Using the \"MusicHelper.db\" result file from another device</string>
-    <string name="select_result_file_item_title">Select MusicHelper.db file</string>
+    <string name="use_other_result_file">Using the \"MH_Export.db\" result file from another device</string>
+    <string name="select_result_file_item_title">Select MH_Export.db file</string>
     <string name="error_while_getting_data_dialog_title">Error while getting data</string>
     <string name="error_while_getting_data_dialog_content">Error occurred while reading the following file, please check the file selection.</string>
     <string name="database_file">Database file</string>
@@ -114,7 +114,7 @@
     <string name="go_back_confirm_dialog_title">Go Back?</string>
     <string name="go_back_confirm_dialog_content">Your changes on this page will be lost!</string>
     <string name="all_done">All done!</string>
-    <string name="details_of_results">Output file path</string>
+    <string name="details_of_results">Export file path</string>
     <string name="open_salt_player">Open Salt Player</string>
     <string name="copy_folder_path">Copy folder path</string>
     <string name="salt_player_not_installed">Salt Player not installed</string>
@@ -124,4 +124,7 @@
     <string name="delete_success">Delete success</string>
     <string name="export_result_file_switcher_text">Export result</string>
     <string name="export_result_file_switcher_sub_text">Export the result file to the Download directory</string>
+    <string name="format_of_exported_files">Format of exported files</string>
+    <string name="database_file_popup">Database file (.db)</string>
+    <string name="text_file_popup">Text file (.txt)</string>
 </resources>
