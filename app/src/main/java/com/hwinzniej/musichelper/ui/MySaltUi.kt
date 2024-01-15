@@ -258,7 +258,8 @@ fun YesDialog(
     properties: DialogProperties = DialogProperties(),
     title: String,
     content: String,
-    confirmText: String = stringResource(id = R.string.ok_button_text)
+    confirmText: String = stringResource(id = R.string.ok_button_text),
+    fontSize: TextUnit = 13.sp
 ) {
     BasicDialog(
         onDismissRequest = onDismissRequest,
@@ -266,7 +267,7 @@ fun YesDialog(
     ) {
         DialogTitle(text = title)
         ItemSpacer()
-        ItemText(text = content, fontSize = 13.sp)
+        ItemText(text = content, fontSize = fontSize)
         Spacer(modifier = Modifier.height(8.dp * 2))
         TextButton(
             onClick = {
@@ -499,6 +500,7 @@ fun BasicButton(
 fun ItemValue(
     text: String,
     sub: String? = null,
+    rightSub: String? = null,
     clickable: Boolean = false,
     onClick: () -> Unit = {}
 ) {
@@ -510,20 +512,28 @@ fun ItemValue(
                 .padding(horizontal = SaltTheme.dimens.innerHorizontalPadding, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                modifier = Modifier
-                    .weight(1f),
-                text = text,
-                style = SaltTheme.textStyles.main
-            )
-            sub?.let {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = text,
+                    style = SaltTheme.textStyles.main
+                )
+                sub?.let {
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = sub,
+                        color = SaltTheme.colors.subText,
+                        style = SaltTheme.textStyles.sub
+                    )
+                }
+            }
+            rightSub?.let {
                 Spacer(modifier = Modifier.width(12.dp))
                 SelectionContainer(
                     modifier = Modifier
                         .weight(1f),
                 ) {
                     Text(
-                        text = sub,
+                        text = rightSub,
                         color = SaltTheme.colors.subText,
                         fontSize = 15.sp,
                         textAlign = TextAlign.End,

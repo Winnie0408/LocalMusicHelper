@@ -93,7 +93,6 @@ class ScanPage(
                 val uri = Uri.fromParts("package", context.packageName, null)
                 intent.data = uri
                 requestPermissionLauncher.launch(intent)
-//                startActivity(context, intent, null)
             }
         } else { //Android 10-
             if (allPermissionsGranted()) {
@@ -198,6 +197,7 @@ class ScanPage(
                         lastIndex = musicCount - 1
                     }
                 }
+                openDirectoryLauncher.launch(null)
             }
         }
     }

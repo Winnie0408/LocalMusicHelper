@@ -1,7 +1,13 @@
 package com.hwinzniej.musichelper
 
+import android.annotation.SuppressLint
+import android.app.DownloadManager
+import android.content.Context
+import android.content.res.Resources
 import android.net.Uri
 import android.os.Bundle
+import android.os.Environment
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.ActivityResultLauncher
@@ -10,40 +16,76 @@ import androidx.compose.animation.core.spring
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Text
+import androidx.compose.material3.dynamicDarkColorScheme
+import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.preferencesDataStore
+import androidx.lifecycle.lifecycleScope
 import androidx.room.Room
+import com.alibaba.fastjson2.JSON
+import com.alibaba.fastjson2.JSONObject
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.hwinzniej.musichelper.activity.ConvertPage
 import com.hwinzniej.musichelper.activity.ProcessPage
 import com.hwinzniej.musichelper.activity.ScanPage
 import com.hwinzniej.musichelper.activity.SettingsPage
+import com.hwinzniej.musichelper.data.DataStoreConstants
 import com.hwinzniej.musichelper.data.database.MusicDatabase
 import com.hwinzniej.musichelper.ui.AboutPageUi
 import com.hwinzniej.musichelper.ui.ConvertPageUi
+import com.hwinzniej.musichelper.ui.ItemValue
 import com.hwinzniej.musichelper.ui.ProcessPageUi
 import com.hwinzniej.musichelper.ui.ScanPageUi
 import com.hwinzniej.musichelper.ui.SettingsPageUi
+import com.hwinzniej.musichelper.ui.YesNoDialog
 import com.moriafly.salt.ui.BottomBar
 import com.moriafly.salt.ui.BottomBarItem
+import com.moriafly.salt.ui.ItemTitle
 import com.moriafly.salt.ui.SaltTheme
 import com.moriafly.salt.ui.UnstableSaltApi
 import com.moriafly.salt.ui.darkSaltColors
 import com.moriafly.salt.ui.lightSaltColors
+import com.moriafly.salt.ui.saltColorsByColorScheme
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import java.io.File
+import java.util.Locale
 
 class MainActivity : ComponentActivity() {
 
@@ -55,9 +97,24 @@ class MainActivity : ComponentActivity() {
     private lateinit var convertPage: ConvertPage
     private lateinit var settingsPage: SettingsPage
     lateinit var db: MusicDatabase
+    var enableDynamicColor = mutableStateOf(false)
+    var selectedThemeMode = mutableIntStateOf(2)
+    var enableHaptic = mutableStateOf(true)
+    var language = mutableStateOf("system")
+    val dataStore: DataStore<Preferences> by preferencesDataStore(name = DataStoreConstants.SETTINGS_PREFERENCES)
+    val checkUpdate = mutableStateOf(false)
 
+    @SuppressLint("NewApi")
+    @OptIn(UnstableSaltApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        when (Locale.getDefault().language) {
+            Locale.CHINESE.toString() -> language.value = "zh"
+            Locale.ENGLISH.toString() -> language.value = "en"
+            Locale.KOREAN.toString() -> language.value = "ko"
+            else -> language.value = "system"
+        }
 
         openDirectoryLauncher =
             registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
@@ -89,22 +146,44 @@ class MainActivity : ComponentActivity() {
             )
         settingsPage = SettingsPage(this, this)
 
-
         setContent {
-            val isSystemInDarkTheme = isSystemInDarkTheme()
-            val colors = if (isSystemInDarkTheme) {
-                darkSaltColors()
-            } else {
-                lightSaltColors()
+            val colors = when (selectedThemeMode.intValue) {
+                0 -> if (enableDynamicColor.value) saltColorsByColorScheme(
+                    dynamicLightColorScheme(this)
+                ) else lightSaltColors()
+
+                1 -> if (enableDynamicColor.value) saltColorsByColorScheme(
+                    dynamicDarkColorScheme(this)
+                ) else darkSaltColors()
+
+                2 ->
+                    if (isSystemInDarkTheme())
+                        if (enableDynamicColor.value) saltColorsByColorScheme(
+                            dynamicDarkColorScheme(this)
+                        ) else darkSaltColors()
+                    else
+                        if (enableDynamicColor.value) saltColorsByColorScheme(
+                            dynamicLightColorScheme(this)
+                        ) else lightSaltColors()
+
+                else -> if (enableDynamicColor.value) saltColorsByColorScheme(
+                    dynamicLightColorScheme(this)
+                ) else lightSaltColors()
             }
             WindowCompat.setDecorFitsSystemWindows(window, false)
             CompositionLocalProvider {
-                SaltTheme(  //TODO 适配椒盐莫奈取色
+                SaltTheme(
                     colors = colors
                 ) {
-                    TransparentSystemBars()
-                    Pages(scanPage, processPage, convertPage, settingsPage)
+                    TransparentSystemBars(useDarkIcons = !(isSystemInDarkTheme() || (selectedThemeMode.intValue == 1)))
+                    Pages(this, scanPage, processPage, convertPage, settingsPage, checkUpdate)
                 }
+            }
+        }
+        lifecycleScope.launch {
+            delay(1000L)
+            if (settingsPage.enableAutoCheckUpdate.value) {
+                checkUpdate.value = true
             }
         }
     }
@@ -125,16 +204,171 @@ class MainActivity : ComponentActivity() {
 @OptIn(ExperimentalFoundationApi::class, UnstableSaltApi::class)
 @Composable
 private fun Pages(
+    mainPage: MainActivity,
     scanPage: ScanPage,
     processPage: ProcessPage,
     convertPage: ConvertPage,
-    settingsPage: SettingsPage
+    settingsPage: SettingsPage,
+    checkUpdate: MutableState<Boolean>
 ) {
     val pages = listOf("0", "1", "2", "3")
     val pageState = rememberPagerState(pageCount = { pages.size })
     val coroutineScope = rememberCoroutineScope()
     val settingsPages = listOf("0", "1")
     val settingsPageState = rememberPagerState(pageCount = { settingsPages.size })
+    val context = LocalContext.current
+
+    val showNewVersionAvailableDialog = remember { mutableStateOf(false) }
+    val latestVersion = remember { mutableStateOf("") }
+    val latestDescription = remember { mutableStateOf("") }
+    val latestDownloadLink = remember { mutableStateOf("") }
+
+
+    mainPage.dataStore.data.collectAsState(initial = null).value?.let { preferences ->
+        mainPage.enableDynamicColor.value =
+            preferences[DataStoreConstants.KEY_ENABLE_DYNAMIC_COLOR] ?: false
+        mainPage.selectedThemeMode.value = preferences[DataStoreConstants.KEY_THEME_MODE] ?: 2
+        mainPage.enableHaptic.value = preferences[DataStoreConstants.KEY_ENABLE_HAPTIC] ?: true
+        mainPage.language.value = preferences[DataStoreConstants.KEY_LANGUAGE] ?: "system"
+        settingsPage.enableAutoCheckUpdate.value =
+            preferences[DataStoreConstants.KEY_ENABLE_AUTO_CHECK_UPDATE] ?: true
+    }
+
+    LaunchedEffect(key1 = mainPage.language.value) {
+        var locale = Locale(mainPage.language.value)
+        if (mainPage.language.value == "system") {
+            locale = Resources.getSystem().configuration.locales[0]
+        }
+        val resources = context.resources
+        val configuration = resources.configuration
+        Locale.setDefault(locale)
+        configuration.setLocale(locale)
+        resources.updateConfiguration(
+            configuration,
+            resources.displayMetrics
+        ) //TODO 更改语言后，使用Pager的页面不会自动刷新？
+    }
+
+
+    if (showNewVersionAvailableDialog.value) {
+        YesNoDialog(
+            onDismiss = { showNewVersionAvailableDialog.value = false },
+            onCancel = { showNewVersionAvailableDialog.value = false },
+            onConfirm = {
+                showNewVersionAvailableDialog.value = false
+                Toast.makeText(
+                    context,
+                    context.getString(R.string.start_download),
+                    Toast.LENGTH_SHORT
+                ).show()
+                coroutineScope.launch {
+                    val downloadManager =
+                        context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
+
+                    val uri = Uri.fromFile(
+                        File(
+                            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
+                            "MusicHelper_Update.apk"
+                        )
+                    )
+
+                    val request = DownloadManager.Request(Uri.parse(latestDownloadLink.value))
+                        .setTitle("${context.getString(R.string.app_name)} ${context.getString(R.string.update)}")
+                        .setDescription("${context.getString(R.string.latest_version)}: ${latestVersion.value}")
+                        .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+                        .setMimeType("application/vnd.android.package-archive")
+                        .setDestinationUri(uri)
+                    downloadManager.enqueue(request)
+                }
+            },
+            title = stringResource(id = R.string.new_version_available),
+            content = "",
+            onlyComposeView = true,
+            customContent = {
+                Column {
+                    Text(
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                        text = stringResource(id = R.string.download_lateset_ver),
+                        color = SaltTheme.colors.text,
+                        fontSize = 15.sp
+                    )
+                    ItemValue(
+                        text = "${stringResource(id = R.string.latest_version)}: ${latestVersion.value}",
+                        sub = "${stringResource(id = R.string.current_version)}: ${
+                            stringResource(
+                                id = R.string.app_version
+                            )
+                        }"
+                    )
+                    ItemTitle(text = stringResource(id = R.string.change_log))
+                    LazyColumn(
+                        modifier = Modifier
+                            .padding(horizontal = 16.dp)
+                            .fillMaxWidth()
+                            .size((LocalConfiguration.current.screenHeightDp / 5).dp)
+                            .clip(RoundedCornerShape(10.dp))
+                    ) {
+                        item {
+                            Text(
+                                modifier = Modifier.padding(top = 4.dp),
+                                text = latestDescription.value,
+                                color = SaltTheme.colors.text
+                            )
+                        }
+                    }
+                }
+            }
+        )
+    }
+
+    LaunchedEffect(key1 = checkUpdate.value) {
+        if (checkUpdate.value) {
+            coroutineScope.launch(Dispatchers.IO) {
+                checkUpdate.value = false
+                val client = OkHttpClient()
+                val request = Request.Builder()
+                    .url("https://gitee.com/winnie0408/MusicID3TagGetter/releases/latest")  //TODO 待更换为正式项目地址
+                    .header("Accept", "application/json")
+                    .get()
+                    .build()
+                try {
+                    val response = JSON.parseObject(
+                        client.newCall(request).execute().body?.string()
+                    )
+                    val latestTag =
+                        (response.get("release") as JSONObject).get("release")
+                    latestVersion.value =
+                        (latestTag as JSONObject).getString("title")
+                            .replace("v", "")
+                    if (latestVersion.value != context.getString(R.string.app_version)) {
+                        latestDescription.value = latestTag.getString("description")
+                            .replace("</?[a-z]+>".toRegex(), "")
+                            .replace("\n\n", "\n")
+
+                        latestTag.getJSONArray("attach_files").forEach {
+                            if ((it as JSONObject).getString("name")
+                                    .contains("release")
+                            ) {
+                                latestDownloadLink.value =
+                                    "https://gitee.com${it.getString("download_url")}"
+                                return@forEach
+                            }
+                        }
+                        showNewVersionAvailableDialog.value = true
+                    }
+                } catch (e: Exception) {
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(
+                            context,
+                            context.getString(R.string.auto_check_update_failed),
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                }
+            }
+        }
+    }
+
 
     Box(
         modifier = Modifier
@@ -220,18 +454,24 @@ private fun Pages(
                             0 -> {
                                 SettingsPageUi(
                                     settingsPage = settingsPage,
-                                    enableDynamicColor = settingsPage.enableDynamicColor,
-                                    selectedThemeMode = settingsPage.selectedThemeMode,
-                                    selectedLanguage = settingsPage.selectedLanguage,
+                                    enableDynamicColor = mainPage.enableDynamicColor,
+                                    selectedThemeMode = mainPage.selectedThemeMode,
+                                    selectedLanguage = mainPage.language,
                                     useRootAccess = convertPage.useRootAccess,
                                     enableAutoCheckUpdate = settingsPage.enableAutoCheckUpdate,
                                     settingsPageState = settingsPageState,
+                                    enableHaptic = mainPage.enableHaptic,
+                                    dataStore = mainPage.dataStore
                                 )
                             }
 
                             1 -> {
                                 AboutPageUi(
-                                    settingsPageState = settingsPageState
+                                    settingsPageState = settingsPageState,
+                                    showNewVersionAvailableDialog = showNewVersionAvailableDialog,
+                                    latestVersion = latestVersion,
+                                    latestDescription = latestDescription,
+                                    latestDownloadLink = latestDownloadLink,
                                 )
                             }
                         }
@@ -285,6 +525,10 @@ private fun Pages(
                 state = pageState.currentPage == 0,
                 onClick = {
                     coroutineScope.launch {
+                        settingsPageState.animateScrollToPage(
+                            0,
+                            animationSpec = spring(2f)
+                        )
                         pageState.animateScrollToPage(
                             0,
                             animationSpec = spring(2f)
@@ -298,6 +542,10 @@ private fun Pages(
                 state = pageState.currentPage == 1,
                 onClick = {
                     coroutineScope.launch {
+                        settingsPageState.animateScrollToPage(
+                            0,
+                            animationSpec = spring(2f)
+                        )
                         pageState.animateScrollToPage(
                             1,
                             animationSpec = spring(2f)
@@ -311,6 +559,10 @@ private fun Pages(
                 state = pageState.currentPage == 2,
                 onClick = {
                     coroutineScope.launch {
+                        settingsPageState.animateScrollToPage(
+                            0,
+                            animationSpec = spring(2f)
+                        )
                         pageState.animateScrollToPage(
                             2,
                             animationSpec = spring(2f)
@@ -324,6 +576,10 @@ private fun Pages(
                 state = pageState.currentPage == 3,
                 onClick = {
                     coroutineScope.launch {
+                        settingsPageState.animateScrollToPage(
+                            0,
+                            animationSpec = spring(2f)
+                        )
                         pageState.animateScrollToPage(
                             3,
                             animationSpec = spring(2f)
@@ -338,9 +594,10 @@ private fun Pages(
 }
 
 @Composable
-fun TransparentSystemBars() {
+fun TransparentSystemBars(
+    useDarkIcons: Boolean
+) {
     val systemUiController = rememberSystemUiController()
-    val useDarkIcons = !isSystemInDarkTheme()
     val statusBarColor = SaltTheme.colors.background
     val navigationBarColor = SaltTheme.colors.subBackground
     SideEffect {

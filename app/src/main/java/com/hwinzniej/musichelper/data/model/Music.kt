@@ -16,15 +16,3 @@ data class Music(
     @ColumnInfo(name = "albumArtist") val albumArtist: String,  //专辑艺术家
     @ColumnInfo(name = "genre") val genre: String,  //风格（流派）
 )
-
-class MusicInfo(
-    val id: Int,
-    val song: String,
-    val artist: String,
-    val album: String,
-    var releaseYear: String?,
-    var trackNumber: String?,
-    var albumArtist: String?,
-    var genre: String?,
-    var absolutePath: String,
-)

@@ -108,6 +108,9 @@ dependencies {
     //Navigation
     implementation("androidx.navigation:navigation-compose:2.7.6")
 
+    //DataStore
+    implementation("androidx.datastore:datastore-preferences:1.0.0")
+
     //拖拽排序-可注释
     implementation("org.burnoutcrew.composereorderable:reorderable:0.9.6")
 

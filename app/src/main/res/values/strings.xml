@@ -137,8 +137,8 @@
     <string name="follow_system">System</string>
     <string name="language">Language</string>
     <string name="app_language">App language</string>
-    <string name="chinese_s">Chinese (Simplified)</string>
-    <string name="english">English</string>
+    <string name="chinese_s" translatable="false">简体中文 - zh</string>
+    <string name="english" translatable="false">English - en</string>
     <string name="system_language">System language</string>
     <string name="file_access">File access</string>
     <string name="use_root_access_switcher_title">Using Root access</string>
@@ -159,4 +159,17 @@
     <string name="open_source_sub">A Star ⭐ would be nicer~</string>
     <string name="open_source_gitee">View this project on Gitee</string>
     <string name="open_source_licence">Open source license</string>
+    <string name="android_12_and_above_only">Android 12+ Only</string>
+    <string name="haptic">Haptic</string>
+    <string name="haptic_feedfback_switcher_title">Haptic feedback</string>
+    <string name="haptic_feedfback_switcher_sub">Add haptic feedback to certain actions</string>
+    <string name="korean" translatable="false">한국어 - ko</string>
+    <string name="new_version_available">New version available</string>
+    <string name="latest_version">Latest version</string>
+    <string name="current_version">Current version</string>
+    <string name="change_log">Change log</string>
+    <string name="check_connectivity">Please check your internet connection or try again later.</string>
+    <string name="download_lateset_ver">Download and install the latest version?</string>
+    <string name="start_download">Start downloading updates</string>
+    <string name="auto_check_update_failed">Failed to check for updates</string>
 </resources>

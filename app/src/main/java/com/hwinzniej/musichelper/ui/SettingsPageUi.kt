@@ -1,5 +1,8 @@
 package com.hwinzniej.musichelper.ui
 
+import android.content.res.Resources
+import android.os.Build
+import android.widget.Toast
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -17,8 +20,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.edit
 import com.hwinzniej.musichelper.R
 import com.hwinzniej.musichelper.activity.SettingsPage
+import com.hwinzniej.musichelper.data.DataStoreConstants
 import com.moriafly.salt.ui.ItemSwitcher
 import com.moriafly.salt.ui.ItemTitle
 import com.moriafly.salt.ui.RoundedColumn
@@ -35,10 +42,12 @@ fun SettingsPageUi(
     settingsPage: SettingsPage,
     enableDynamicColor: MutableState<Boolean>,
     selectedThemeMode: MutableIntState,
-    selectedLanguage: MutableIntState,
+    selectedLanguage: MutableState<String>,
     useRootAccess: MutableState<Boolean>,
     enableAutoCheckUpdate: MutableState<Boolean>,
-    settingsPageState: PagerState
+    settingsPageState: PagerState,
+    enableHaptic: MutableState<Boolean>,
+    dataStore: DataStore<Preferences>
 ) {
     val context = LocalContext.current
     val themeModePopupMenuState = rememberPopupState()
@@ -67,7 +76,21 @@ fun SettingsPageUi(
                 ItemTitle(text = stringResource(R.string.user_interface))
                 ItemSwitcher(
                     state = enableDynamicColor.value,
-                    onChange = { enableDynamicColor.value = it },
+                    onChange = {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                            coroutineScope.launch {
+                                dataStore.edit { settings ->
+                                    settings[DataStoreConstants.KEY_ENABLE_DYNAMIC_COLOR] = it
+                                }
+                            }
+                        } else {
+                            Toast.makeText(
+                                context,
+                                context.getString(R.string.android_12_and_above_only),
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    },
                     text = stringResource(R.string.dynamic_color_switcher_text),
                     sub = stringResource(R.string.dynamic_color_switcher_sub)
                 )
@@ -83,7 +106,23 @@ fun SettingsPageUi(
                 ) {
                     PopupMenuItem(
                         onClick = {
-                            selectedThemeMode.intValue = 0
+                            coroutineScope.launch {
+                                dataStore.edit { settings ->
+                                    settings[DataStoreConstants.KEY_THEME_MODE] = 2
+                                }
+                            }
+                            themeModePopupMenuState.dismiss()
+                        },
+                        selected = selectedThemeMode.intValue == 2,
+                        text = stringResource(R.string.follow_system),
+                    )
+                    PopupMenuItem(
+                        onClick = {
+                            coroutineScope.launch {
+                                dataStore.edit { settings ->
+                                    settings[DataStoreConstants.KEY_THEME_MODE] = 0
+                                }
+                            }
                             themeModePopupMenuState.dismiss()
                         },
                         selected = selectedThemeMode.intValue == 0,
@@ -91,19 +130,15 @@ fun SettingsPageUi(
                     )
                     PopupMenuItem(
                         onClick = {
-                            selectedThemeMode.intValue = 1
+                            coroutineScope.launch {
+                                dataStore.edit { settings ->
+                                    settings[DataStoreConstants.KEY_THEME_MODE] = 1
+                                }
+                            }
                             themeModePopupMenuState.dismiss()
                         },
                         selected = selectedThemeMode.intValue == 1,
                         text = stringResource(R.string.dark_mode)
-                    )
-                    PopupMenuItem(
-                        onClick = {
-                            selectedThemeMode.intValue = 2
-                            themeModePopupMenuState.dismiss()
-                        },
-                        selected = selectedThemeMode.intValue == 2,
-                        text = stringResource(R.string.follow_system),
                     )
                 }
             }
@@ -112,7 +147,13 @@ fun SettingsPageUi(
                 ItemTitle(text = stringResource(R.string.file_access))
                 ItemSwitcher(
                     state = useRootAccess.value,
-                    onChange = { useRootAccess.value = it },
+                    onChange = {
+                        coroutineScope.launch {
+                            dataStore.edit { settings ->
+                                settings[DataStoreConstants.KEY_USE_ROOT_ACCESS] = it
+                            }
+                        }
+                    },
                     text = stringResource(R.string.use_root_access_switcher_title),
                     sub = stringResource(R.string.use_root_access_switcher_sub)
                 )
@@ -122,41 +163,97 @@ fun SettingsPageUi(
                 ItemTitle(text = stringResource(R.string.language))
                 ItemValue(
                     text = stringResource(R.string.system_language),
-                    sub = "${context.resources.configuration.locales[0].language} - ${context.resources.configuration.locales[0].country}"
+                    rightSub = "${Resources.getSystem().configuration.locales[0].language} - ${Resources.getSystem().configuration.locales[0].country}"
                 )
                 ItemPopup(
                     state = languagePopupMenuState,
                     text = stringResource(R.string.app_language),
-                    selectedItem = when (selectedLanguage.intValue) {
-                        0 -> stringResource(R.string.chinese_s)
-                        1 -> stringResource(R.string.english)
+                    selectedItem = when (selectedLanguage.value) {
+                        "system" -> stringResource(R.string.follow_system)
+                        "zh" -> stringResource(R.string.chinese_s)
+                        "en" -> stringResource(R.string.english)
+                        "ko" -> stringResource(R.string.korean)
                         else -> ""
                     }
                 ) {
                     PopupMenuItem(
                         onClick = {
-                            selectedLanguage.intValue = 0
+                            coroutineScope.launch {
+                                dataStore.edit { settings ->
+                                    settings[DataStoreConstants.KEY_LANGUAGE] = "system"
+                                }
+                            }
                             languagePopupMenuState.dismiss()
                         },
-                        selected = selectedLanguage.intValue == 0,
+                        selected = selectedLanguage.value == "system",
+                        text = stringResource(R.string.follow_system),
+                    )
+                    PopupMenuItem(
+                        onClick = {
+                            coroutineScope.launch {
+                                dataStore.edit { settings ->
+                                    settings[DataStoreConstants.KEY_LANGUAGE] = "zh"
+                                }
+                            }
+                            languagePopupMenuState.dismiss()
+                        },
+                        selected = selectedLanguage.value == "zh",
                         text = stringResource(R.string.chinese_s),
                     )
                     PopupMenuItem(
                         onClick = {
-                            selectedLanguage.intValue = 1
+                            coroutineScope.launch {
+                                dataStore.edit { settings ->
+                                    settings[DataStoreConstants.KEY_LANGUAGE] = "en"
+                                }
+                            }
                             languagePopupMenuState.dismiss()
                         },
-                        selected = selectedLanguage.intValue == 1,
+                        selected = selectedLanguage.value == "en",
                         text = stringResource(R.string.english),
                     )
+                    PopupMenuItem(
+                        onClick = {
+                            coroutineScope.launch {
+                                dataStore.edit { settings ->
+                                    settings[DataStoreConstants.KEY_LANGUAGE] = "ko"
+                                }
+                            }
+                            languagePopupMenuState.dismiss()
+                        },
+                        selected = selectedLanguage.value == "ko",
+                        text = stringResource(R.string.korean),
+                    )
                 }
+            }
+
+            RoundedColumn {
+                ItemTitle(text = stringResource(R.string.haptic))
+                ItemSwitcher(
+                    state = enableHaptic.value,
+                    onChange = {
+                        coroutineScope.launch {
+                            dataStore.edit { settings ->
+                                settings[DataStoreConstants.KEY_ENABLE_HAPTIC] = it
+                            }
+                        }
+                    },
+                    text = stringResource(id = R.string.haptic_feedfback_switcher_title),
+                    sub = stringResource(id = R.string.haptic_feedfback_switcher_sub)
+                )
             }
 
             RoundedColumn {
                 ItemTitle(text = stringResource(R.string.version))
                 ItemSwitcher(
                     state = enableAutoCheckUpdate.value,
-                    onChange = { enableAutoCheckUpdate.value = it },
+                    onChange = {
+                        coroutineScope.launch {
+                            dataStore.edit { settings ->
+                                settings[DataStoreConstants.KEY_ENABLE_AUTO_CHECK_UPDATE] = it
+                            }
+                        }
+                    },
                     text = stringResource(id = R.string.check_updates_at_start)
                 )
             }

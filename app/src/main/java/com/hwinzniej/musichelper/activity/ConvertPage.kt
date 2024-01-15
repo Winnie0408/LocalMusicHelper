@@ -187,6 +187,8 @@ class ConvertPage(
             haveError = false
             showLoadingProgressBar.value = true
             errorDialogContent.value = context.getString(R.string.error_details)
+            loadingProgressSema.acquire()
+            loadingProgressSema.acquire()
             checkDatabaseFile()
             checkResultFile()
             delay(delay)
@@ -206,7 +208,6 @@ class ConvertPage(
 
     fun checkResultFile() {
         lifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
-            loadingProgressSema.acquire()
             if (useCustomResultFile.value) {
                 val db = SQLiteDatabase.openOrCreateDatabase(File(resultFilePath), null)
                 try {
@@ -265,7 +266,6 @@ class ConvertPage(
 
     fun checkDatabaseFile() {
         lifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
-            loadingProgressSema.acquire()
             when (selectedSourceApp.intValue) {
                 0 -> {
                     showErrorDialog.value = true

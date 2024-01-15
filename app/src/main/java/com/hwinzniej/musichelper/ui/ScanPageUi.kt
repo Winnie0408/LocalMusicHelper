@@ -158,7 +158,7 @@ fun ScanPageUi(
                         ItemTitle(text = stringResource(R.string.scanning_result))
                         ItemValue(
                             text = stringResource(R.string.number_of_total_songs),
-                            sub = progressPercent.value.toString()
+                            rightSub = progressPercent.value.toString()
                         )
                         AnimatedVisibility(
                             visible = exportResultFile.value,
@@ -191,9 +191,7 @@ fun ScanPageUi(
                             ) {
                                 items(scanResult.size) { index ->
                                     Text(
-                                        modifier = Modifier.padding(
-                                            top = 3.dp, start = 7.dp, end = 7.dp
-                                        ),
+                                        modifier = Modifier.padding(horizontal = 16.dp),
                                         text = scanResult[index],
                                         fontSize = 16.sp,
                                         style = TextStyle(

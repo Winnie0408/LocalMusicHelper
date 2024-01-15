@@ -334,7 +334,7 @@ fun ConvertPageUi(
                         ItemTitle(text = stringResource(R.string.songlist_song_info))
                         ItemValue(
                             text = stringResource(id = R.string.song_name),
-                            sub = convertResult[selectedSongIndex]!![2],
+                            rightSub = convertResult[selectedSongIndex]!![2],
                             clickable = true,
                             onClick = {
                                 inputSearchWords.value =
@@ -346,7 +346,7 @@ fun ConvertPageUi(
                                 "(：)|(: )".toRegex(),
                                 ""
                             ),
-                            sub = convertResult[selectedSongIndex]!![4],
+                            rightSub = convertResult[selectedSongIndex]!![4],
                             clickable = true,
                             onClick = {
                                 inputSearchWords.value =
@@ -358,7 +358,7 @@ fun ConvertPageUi(
                                 "(：)|(: )".toRegex(),
                                 ""
                             ),
-                            sub = convertResult[selectedSongIndex]!![6],
+                            rightSub = convertResult[selectedSongIndex]!![6],
                             clickable = true,
                             onClick = {
                                 inputSearchWords.value =
@@ -613,7 +613,7 @@ fun ConvertPageUi(
                                 ) {
                                     ItemValue(
                                         text = stringResource(R.string.you_have_selected),
-                                        sub = databaseFileName.value
+                                        rightSub = databaseFileName.value
                                     )
                                 }
 
@@ -647,7 +647,7 @@ fun ConvertPageUi(
                                         ) {
                                             ItemValue(
                                                 text = stringResource(R.string.you_have_selected),
-                                                sub = customResultFileName.value
+                                                rightSub = customResultFileName.value
                                             )
                                         }
                                     }
@@ -742,7 +742,7 @@ fun ConvertPageUi(
                                                         R.string.ge
                                                     )
                                                 }",
-                                                sub = "${stringResource(R.string.in_total)}${playlistEnabled.size}${
+                                                rightSub = "${stringResource(R.string.in_total)}${playlistEnabled.size}${
                                                     stringResource(
                                                         R.string.ge
                                                     )
@@ -784,7 +784,7 @@ fun ConvertPageUi(
                                             ItemTitle(text = stringResource(R.string.current_songlist_info))
                                             ItemValue(
                                                 text = stringResource(R.string.songlist_sequence),
-                                                sub = "${stringResource(R.string.current_no)}${
+                                                rightSub = "${stringResource(R.string.current_no)}${
                                                     if (playlistEnabled.count { it == 2 } == -1)
                                                         0
                                                     else {
@@ -798,11 +798,11 @@ fun ConvertPageUi(
                                             )
                                             ItemValue(
                                                 text = stringResource(R.string.songlist_name),
-                                                sub = if (playlistEnabled.indexOfFirst { it == 1 } == -1) "" else playlistName[playlistEnabled.indexOfFirst { it == 1 }]
+                                                rightSub = if (playlistEnabled.indexOfFirst { it == 1 } == -1) "" else playlistName[playlistEnabled.indexOfFirst { it == 1 }]
                                             )
                                             ItemValue(
                                                 text = stringResource(R.string.songlist_sum),
-                                                sub = "${if (playlistEnabled.indexOfFirst { it == 1 } == -1) "" else playlistSum[playlistEnabled.indexOfFirst { it == 1 }]}"
+                                                rightSub = "${if (playlistEnabled.indexOfFirst { it == 1 } == -1) "" else playlistSum[playlistEnabled.indexOfFirst { it == 1 }]}"
                                             )
                                         }
                                         RoundedColumn {
