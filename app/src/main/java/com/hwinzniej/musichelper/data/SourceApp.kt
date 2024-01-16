@@ -16,6 +16,7 @@ class SourceApp {
     lateinit var songInfoSongName: String
     lateinit var songInfoSongArtist: String
     lateinit var songInfoSongAlbum: String
+    lateinit var pakageName: String
 
     fun init(sourceApp: String) {
         when (sourceApp) {
@@ -35,6 +36,7 @@ class SourceApp {
                 songInfoSongName = "name"
                 songInfoSongArtist = "singername"
                 songInfoSongAlbum = "albumname"
+                pakageName = "com.tencent.qqmusic"
             }
 
             "CloudMusic" -> {
@@ -53,6 +55,7 @@ class SourceApp {
                 songInfoSongName = "name"
                 songInfoSongArtist = "artists"
                 songInfoSongAlbum = "album_name"
+                pakageName = "com.netease.cloudmusic"
             }
 
             "KugouMusic" -> {
@@ -71,6 +74,7 @@ class SourceApp {
                 songInfoSongName = "trackName"
                 songInfoSongArtist = "artistName"
                 songInfoSongAlbum = "albumName"
+                pakageName = "com.kugou.android"
             }
 
             "KuwoMusic" -> {
@@ -89,6 +93,7 @@ class SourceApp {
                 songInfoSongName = "name"
                 songInfoSongArtist = "artist"
                 songInfoSongAlbum = "album"
+                pakageName = "cn.kuwo.player"
             }
         }
     }

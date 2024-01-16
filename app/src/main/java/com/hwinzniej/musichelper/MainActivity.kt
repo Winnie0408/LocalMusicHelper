@@ -19,8 +19,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.pager.HorizontalPager
@@ -233,6 +233,8 @@ private fun Pages(
         mainPage.language.value = preferences[DataStoreConstants.KEY_LANGUAGE] ?: "system"
         settingsPage.enableAutoCheckUpdate.value =
             preferences[DataStoreConstants.KEY_ENABLE_AUTO_CHECK_UPDATE] ?: true
+        convertPage.useRootAccess.value =
+            preferences[DataStoreConstants.KEY_USE_ROOT_ACCESS] ?: false
     }
 
     LaunchedEffect(key1 = mainPage.language.value) {
@@ -308,7 +310,10 @@ private fun Pages(
                         modifier = Modifier
                             .padding(horizontal = 16.dp)
                             .fillMaxWidth()
-                            .size((LocalConfiguration.current.screenHeightDp / 5).dp)
+                            .heightIn(
+                                min = 20.dp,
+                                max = (LocalConfiguration.current.screenHeightDp / 5).dp
+                            )
                             .clip(RoundedCornerShape(10.dp))
                     ) {
                         item {
@@ -372,7 +377,6 @@ private fun Pages(
         }
     }
 
-
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -426,6 +430,8 @@ private fun Pages(
                         showSaveDialog = convertPage.showSaveDialog,
                         mainActivityPageState = pageState,
                         enableHaptic = mainPage.enableHaptic,
+                        useRootAccess = convertPage.useRootAccess,
+                        sourceApp = convertPage.sourceAppText,
                     )
                 }
 
@@ -532,11 +538,10 @@ private fun Pages(
                 onClick = {
                     MyVibrationEffect(context, mainPage.enableHaptic.value).click()
                     coroutineScope.launch {
+                        settingsPageState.scrollToPage(0)
+                    }
+                    coroutineScope.launch {
                         pageState.animateScrollToPage(
-                            0,
-                            animationSpec = spring(2f)
-                        )
-                        settingsPageState.animateScrollToPage(
                             0,
                             animationSpec = spring(2f)
                         )
@@ -550,12 +555,11 @@ private fun Pages(
                 onClick = {
                     MyVibrationEffect(context, mainPage.enableHaptic.value).click()
                     coroutineScope.launch {
+                        settingsPageState.scrollToPage(0)
+                    }
+                    coroutineScope.launch {
                         pageState.animateScrollToPage(
                             1,
-                            animationSpec = spring(2f)
-                        )
-                        settingsPageState.animateScrollToPage(
-                            0,
                             animationSpec = spring(2f)
                         )
                     }
@@ -585,12 +589,11 @@ private fun Pages(
                 onClick = {
                     MyVibrationEffect(context, mainPage.enableHaptic.value).click()
                     coroutineScope.launch {
+                        settingsPageState.scrollToPage(0)
+                    }
+                    coroutineScope.launch {
                         pageState.animateScrollToPage(
                             2,
-                            animationSpec = spring(2f)
-                        )
-                        settingsPageState.animateScrollToPage(
-                            0,
                             animationSpec = spring(2f)
                         )
                     }

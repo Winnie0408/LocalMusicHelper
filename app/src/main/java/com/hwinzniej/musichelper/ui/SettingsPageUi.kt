@@ -27,6 +27,7 @@ import com.hwinzniej.musichelper.R
 import com.hwinzniej.musichelper.activity.SettingsPage
 import com.hwinzniej.musichelper.data.DataStoreConstants
 import com.hwinzniej.musichelper.utils.MyVibrationEffect
+import com.hwinzniej.musichelper.utils.Tools
 import com.moriafly.salt.ui.ItemTitle
 import com.moriafly.salt.ui.RoundedColumn
 import com.moriafly.salt.ui.SaltTheme
@@ -34,7 +35,10 @@ import com.moriafly.salt.ui.TitleBar
 import com.moriafly.salt.ui.UnstableSaltApi
 import com.moriafly.salt.ui.popup.PopupMenuItem
 import com.moriafly.salt.ui.popup.rememberPopupState
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.io.File
 
 @OptIn(UnstableSaltApi::class, ExperimentalFoundationApi::class)
 @Composable
@@ -152,9 +156,48 @@ fun SettingsPageUi(
                 ItemSwitcher(
                     state = useRootAccess.value,
                     onChange = {
-                        coroutineScope.launch {
-                            dataStore.edit { settings ->
-                                settings[DataStoreConstants.KEY_USE_ROOT_ACCESS] = it
+                        coroutineScope.launch(Dispatchers.IO) {
+                            if (it) {
+                                var hasRoot = false
+                                try {
+                                    hasRoot =
+                                        (File("/system/bin/su").exists() || File("/system/xbin/su").exists())
+                                } catch (_: Exception) {
+                                }
+                                if (hasRoot) {
+                                    try {
+                                        if (Tools().execShellCmdWithRoot("ls /data")
+                                                .contains("Permission denied")
+                                        ) {
+                                            withContext(Dispatchers.Main) {
+                                                Toast.makeText(
+                                                    context,
+                                                    context.getString(R.string.no_grant_root_access),
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
+                                            }
+                                        } else {
+                                            dataStore.edit { settings ->
+                                                settings[DataStoreConstants.KEY_USE_ROOT_ACCESS] =
+                                                    it
+                                            }
+                                        }
+                                    } catch (_: Exception) {
+                                    }
+                                } else {
+                                    withContext(Dispatchers.Main) {
+                                        Toast.makeText(
+                                            context,
+                                            context.getString(R.string.no_root_access),
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                    }
+                                }
+                            } else {
+                                dataStore.edit { settings ->
+                                    settings[DataStoreConstants.KEY_USE_ROOT_ACCESS] =
+                                        it
+                                }
                             }
                         }
                     },

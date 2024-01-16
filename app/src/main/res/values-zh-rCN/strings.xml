@@ -168,4 +168,9 @@
     <string name="start_download">开始下载更新</string>
     <string name="auto_check_update_failed">自动检查更新失败</string>
     <string name="no_update_available">已经是最新版本</string>
+    <string name="no_root_access">未拥有Root权限</string>
+    <string name="no_grant_root_access">未授予Root权限</string>
+    <string name="get_file_with_root">自动获取#的数据库文件</string>
+    <string name="with_root_access">使用Root权限</string>
+    <string name="app_not_installed">" 未安装"</string>
 </resources>

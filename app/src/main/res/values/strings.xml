@@ -173,4 +173,9 @@
     <string name="start_download">Start downloading updates</string>
     <string name="auto_check_update_failed">Failed to check for updates</string>
     <string name="no_update_available">No update available</string>
+    <string name="no_root_access">Do not have Root access</string>
+    <string name="no_grant_root_access">Root access not granted</string>
+    <string name="get_file_with_root">Automatically get # database file</string>
+    <string name="with_root_access">With Root access</string>
+    <string name="app_not_installed">" not installed"</string>
 </resources>

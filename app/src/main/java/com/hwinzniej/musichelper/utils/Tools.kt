@@ -3,7 +3,10 @@ package com.hwinzniej.musichelper.utils
 import android.content.Context
 import android.graphics.Paint
 import android.net.Uri
+import java.io.BufferedReader
+import java.io.DataOutputStream
 import java.io.File
+import java.io.InputStreamReader
 import java.io.RandomAccessFile
 
 class Tools {
@@ -267,4 +270,28 @@ class Tools {
         return widthInPixels / (metrics.densityDpi / 160f)
     }
 
+    fun execShellCmdWithRoot(cmd: String): String {
+        val process =
+            Runtime.getRuntime().exec("su")
+        val outputStream = DataOutputStream(process.outputStream)
+        outputStream.writeBytes("${cmd}\n")
+        outputStream.flush()
+        outputStream.writeBytes("exit\n")
+        outputStream.flush()
+        val inputStream =
+            BufferedReader(InputStreamReader(process.inputStream))
+        val errorStream =
+            BufferedReader(InputStreamReader(process.errorStream))
+        val result = StringBuilder()
+        var line: String?
+        while (inputStream.readLine().also { line = it } != null) {
+            result.append(line)
+        }
+        while (errorStream.readLine().also { line = it } != null) {
+            result.append(line)
+        }
+        process.waitFor()
+        process.destroy()
+        return result.toString()
+    }
 }

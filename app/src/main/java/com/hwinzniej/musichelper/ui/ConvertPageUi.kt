@@ -108,11 +108,12 @@ fun ConvertPageUi(
     showDialogProgressBar: MutableState<Boolean>,
     showSaveDialog: MutableState<Boolean>,
     mainActivityPageState: PagerState,
-    enableHaptic: MutableState<Boolean>
+    enableHaptic: MutableState<Boolean>,
+    useRootAccess: MutableState<Boolean>,
+    sourceApp: MutableState<String>,
 ) {
     val sourceAppPopupMenuState = rememberPopupState()
     val matchingModePopupMenuState = rememberPopupState()
-    var sourceApp by remember { mutableStateOf("") }
     val pages = listOf("0", "1", "2", "3")
     val pageState = rememberPagerState(pageCount = { pages.size })
     var allEnabled by remember { mutableStateOf(false) }
@@ -579,7 +580,7 @@ fun ConvertPageUi(
                                 ItemPopup( //TODO 为每个子项添加图标
                                     state = sourceAppPopupMenuState,
                                     text = stringResource(R.string.select_source_of_songlist),
-                                    selectedItem = sourceApp
+                                    selectedItem = sourceApp.value
                                 ) {
                                     PopupMenuItem(
                                         onClick = {
@@ -627,7 +628,7 @@ fun ConvertPageUi(
                                 }
                             }
 
-                            sourceApp = when (selectedSourceApp.intValue) {
+                            sourceApp.value = when (selectedSourceApp.intValue) {
                                 1 -> stringResource(R.string.source_netease_cloud_music)
                                 2 -> stringResource(R.string.source_qq_music)
                                 3 -> stringResource(R.string.source_kugou_music)
@@ -638,15 +639,24 @@ fun ConvertPageUi(
                             RoundedColumn {
                                 ItemTitle(text = stringResource(R.string.import_database))
                                 Item(
-                                    enabled = selectedSourceApp.intValue != 0,
+                                    enabled = (selectedSourceApp.intValue != 0) && !useRootAccess.value,
                                     onClick = { convertPage.selectDatabaseFile() },
                                     text = if (selectedSourceApp.intValue == 0) {
                                         stringResource(R.string.please_select_source_app)
                                     } else {
-                                        stringResource(R.string.select_database_file_match_to_source_1) + sourceApp + stringResource(
-                                            R.string.select_database_file_match_to_source_2
-                                        )
+                                        if (useRootAccess.value)
+                                            stringResource(R.string.get_file_with_root).replace(
+                                                "#",
+                                                sourceApp.value
+                                            )
+                                        else
+                                            stringResource(R.string.select_database_file_match_to_source_1) + sourceApp.value + stringResource(
+                                                R.string.select_database_file_match_to_source_2
+                                            )
                                     },
+                                    sub = if (useRootAccess.value && (selectedSourceApp.intValue != 0)) stringResource(
+                                        R.string.with_root_access
+                                    ) else null,
                                 )
                                 AnimatedVisibility(
                                     visible = databaseFileName.value != ""
@@ -738,10 +748,6 @@ fun ConvertPageUi(
                                         Column(
                                             modifier = Modifier
                                                 .clip(RoundedCornerShape(10.dp))
-                                                .heightIn(
-                                                    min = 20.dp,
-                                                    max = (LocalConfiguration.current.screenHeightDp / 1.6).dp
-                                                )
                                                 .background(color = SaltTheme.colors.subBackground)
                                         ) {
                                             ItemCheck(
@@ -759,7 +765,9 @@ fun ConvertPageUi(
                                                 enableHaptic = enableHaptic.value
                                             )
                                             LazyColumn(
-                                                modifier = Modifier.weight(1f)
+                                                modifier = Modifier.heightIn(
+                                                    max = (LocalConfiguration.current.screenHeightDp / 1.9).dp
+                                                )
                                             ) {
                                                 items(playlistEnabled.size) { index ->
                                                     ItemCheck(

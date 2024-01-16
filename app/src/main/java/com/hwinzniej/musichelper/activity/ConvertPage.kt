@@ -28,6 +28,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import com.alibaba.fastjson2.JSON
+import com.alibaba.fastjson2.JSONObject
 import com.hwinzniej.musichelper.MainActivity
 import com.hwinzniej.musichelper.R
 import com.hwinzniej.musichelper.data.SourceApp
@@ -72,6 +73,7 @@ class ConvertPage(
     var enableAlbumNameMatch = mutableStateOf(true)
     var similarity = mutableFloatStateOf(85f)
     var useRootAccess = mutableStateOf(false)
+    var sourceAppText = mutableStateOf("")
 
     /**
      * 请求存储权限
@@ -271,6 +273,53 @@ class ConvertPage(
         }
     }
 
+    fun checkAppStatusWithRoot() {
+        val appExists =
+            Tools().execShellCmdWithRoot("pm list packages | grep ${sourceApp.pakageName}")
+        if (appExists.contains(sourceApp.pakageName)) {
+            val dirPath = context.getExternalFilesDir(null)?.absolutePath + "/userDatabase"
+            val dir = File(dirPath)
+            if (!dir.exists())
+                dir.mkdirs()
+
+            val copy = Tools().execShellCmdWithRoot(
+                "cp -f /data/data/${sourceApp.pakageName}/databases/${
+                    sourceApp.DatabaseName
+                } ${dir.absolutePath}/${sourceApp.sourceEng}_temp.db"
+            )
+
+            if (copy == "") {
+                databaseFilePath = "${dir.absolutePath}/${sourceApp.sourceEng}_temp.db"
+                loadingProgressSema.release()
+            } else {
+                showErrorDialog.value = true
+                errorDialogTitle.value =
+                    context.getString(R.string.error_while_getting_data_dialog_title)
+                errorDialogContent.value =
+                    "${errorDialogContent.value}\n- ${context.getString(R.string.database_file)} ${
+                        context.getString(
+                            R.string.read_failed
+                        )
+                    }: ${copy}"
+                haveError = true
+                loadingProgressSema.release()
+                return
+            }
+        } else {
+            showErrorDialog.value = true
+            errorDialogTitle.value =
+                context.getString(R.string.error_while_getting_data_dialog_title)
+            errorDialogContent.value =
+                "${errorDialogContent.value}\n- ${context.getString(R.string.database_file)} ${
+                    context.getString(
+                        R.string.read_failed
+                    )
+                }: ${sourceAppText.value}${context.getString(R.string.app_not_installed)}"
+            haveError = true
+            loadingProgressSema.release()
+        }
+    }
+
     fun checkDatabaseFile() {
         lifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
             when (selectedSourceApp.intValue) {
@@ -299,28 +348,32 @@ class ConvertPage(
                 4 -> sourceApp.init("KuwoMusic")
             }
             if (sourceApp.sourceEng != "") {
-                val db = SQLiteDatabase.openOrCreateDatabase(File(databaseFilePath), null)
-                try {
-                    val cursor =
-                        db.rawQuery(
-                            "SELECT ${sourceApp.songListId}, ${sourceApp.songListName} FROM ${sourceApp.songListTableName} LIMIT 1",
-                            null
-                        )
-                    cursor.close()
-                } catch (e: Exception) {
-                    showErrorDialog.value = true
-                    errorDialogTitle.value =
-                        context.getString(R.string.error_while_getting_data_dialog_title)
-                    errorDialogContent.value =
-                        "${errorDialogContent.value}\n- ${context.getString(R.string.database_file)} ${
-                            context.getString(
-                                R.string.read_failed
+                if (useRootAccess.value)
+                    checkAppStatusWithRoot()
+                else {
+                    val db = SQLiteDatabase.openOrCreateDatabase(File(databaseFilePath), null)
+                    try {
+                        val cursor =
+                            db.rawQuery(
+                                "SELECT ${sourceApp.songListId}, ${sourceApp.songListName} FROM ${sourceApp.songListTableName} LIMIT 1",
+                                null
                             )
-                        }: ${e.message}"
-                    haveError = true
-                } finally {
-                    loadingProgressSema.release()
-                    db.close()
+                        cursor.close()
+                    } catch (e: Exception) {
+                        showErrorDialog.value = true
+                        errorDialogTitle.value =
+                            context.getString(R.string.error_while_getting_data_dialog_title)
+                        errorDialogContent.value =
+                            "${errorDialogContent.value}\n- ${context.getString(R.string.database_file)} ${
+                                context.getString(
+                                    R.string.read_failed
+                                )
+                            }: ${e.message}"
+                        haveError = true
+                    } finally {
+                        loadingProgressSema.release()
+                        db.close()
+                    }
                 }
             } else {
                 showErrorDialog.value = true
@@ -485,10 +538,19 @@ class ConvertPage(
                     songInfoCursor.getString(songInfoCursor.getColumnIndexOrThrow(sourceApp.songInfoSongName))
                 songArtist =
                     songInfoCursor.getString(songInfoCursor.getColumnIndexOrThrow(sourceApp.songInfoSongArtist))
-                if (sourceApp.sourceEng == "CloudMusic")
-                    songArtist =
-                        JSON.parseObject(songArtist.substring(1, songArtist.length - 1))
-                            .getString("name")
+                if (sourceApp.sourceEng == "CloudMusic") {
+                    var tempArtist = ""
+                    val jsonResult = JSON.parseArray(songArtist)
+                    jsonResult.forEachIndexed { index, it ->
+                        tempArtist = "${tempArtist}${(it as JSONObject).getString(" name ")}"
+                        if (index != jsonResult.size - 1) {
+                            tempArtist = "$tempArtist/"
+                        }
+                    }
+                    songArtist = tempArtist
+                }
+//                        JSON.parseObject(songArtist.substring(1, songArtist.length - 1))
+//                            .getString("name")
                 songArtist = songArtist.replace(" ?& ?".toRegex(), "/").replace("、", "/")
                 songAlbum =
                     songInfoCursor.getString(songInfoCursor.getColumnIndexOrThrow(sourceApp.songInfoSongAlbum))
