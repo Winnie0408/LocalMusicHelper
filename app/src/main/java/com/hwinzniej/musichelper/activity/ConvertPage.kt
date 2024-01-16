@@ -28,10 +28,12 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import com.alibaba.fastjson2.JSON
+import com.hwinzniej.musichelper.MainActivity
 import com.hwinzniej.musichelper.R
 import com.hwinzniej.musichelper.data.SourceApp
 import com.hwinzniej.musichelper.data.database.MusicDatabase
 import com.hwinzniej.musichelper.data.model.MusicInfo
+import com.hwinzniej.musichelper.utils.MyVibrationEffect
 import com.hwinzniej.musichelper.utils.Tools
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -195,6 +197,10 @@ class ConvertPage(
             loadingProgressSema.acquire()
             loadingProgressSema.acquire()
             showLoadingProgressBar.value = false
+            MyVibrationEffect(
+                context,
+                (context as MainActivity).enableHaptic.value
+            ).done()
             if (!haveError) {
                 showLoadingProgressBar.value = true
                 currentPage.intValue = 1
@@ -230,6 +236,7 @@ class ConvertPage(
                 } finally {
                     loadingProgressSema.release()
                     db.close()
+                    File("${resultFilePath}-journal").delete()
                 }
             } else {
                 try {
@@ -386,13 +393,16 @@ class ConvertPage(
                 innerPlaylistEnabled.add(0)
             }
             cursor.close()
-//            db.endTransaction()
             db.close()
             playlistId.addAll(innerPlaylistId)
             playlistName.addAll(innerPlaylistName)
             playlistEnabled.addAll(innerPlaylistEnabled)
             playlistSum.addAll(innerPlaylistSum)
             showLoadingProgressBar.value = false
+            MyVibrationEffect(
+                context,
+                (context as MainActivity).enableHaptic.value
+            ).done()
         }
     }
 
@@ -413,7 +423,7 @@ class ConvertPage(
         currentPage.intValue = 2
     }
 
-    var convertResult = mutableStateMapOf<Int, Array<String>>()
+    var convertResult = mutableStateMapOf<Int, Array<String>>()  //TODO 切换语言后，匹配结果（成功、注意、手动）不会刷新
     fun previewResult() {
         lifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
             convertResult.clear()
@@ -447,7 +457,6 @@ class ConvertPage(
                             musicInfoList.add(musicInfo)
                         }
                     }
-//                db.endTransaction()
                 db.close()
                 musicInfoList
             } else {
@@ -656,10 +665,13 @@ class ConvertPage(
                 songInfoCursor.close()
             }
             cursor.close()
-//            db.endTransaction()
             db.close()
             convertResult.putAll(convertResultMap)
             showLoadingProgressBar.value = false
+            MyVibrationEffect(
+                context,
+                (context as MainActivity).enableHaptic.value
+            ).done()
         }
     }
 
@@ -723,6 +735,10 @@ class ConvertPage(
                 searchResult.addAll(searchResultMap)
             }
             showDialogProgressBar.value = false
+            MyVibrationEffect(
+                context,
+                (context as MainActivity).enableHaptic.value
+            ).done()
         }
     }
 
@@ -812,6 +828,10 @@ class ConvertPage(
                 ).show()
             }
             showDialogProgressBar.value = false
+            MyVibrationEffect(
+                context,
+                (context as MainActivity).enableHaptic.value
+            ).done()
             showSaveDialog.value = false
             convertResult.clear()
             playlistEnabled[firstIndex1] = 2

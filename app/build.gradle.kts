@@ -112,19 +112,19 @@ dependencies {
     implementation("androidx.datastore:datastore-preferences:1.0.0")
 
     //拖拽排序-可注释
-    implementation("org.burnoutcrew.composereorderable:reorderable:0.9.6")
+//    implementation("org.burnoutcrew.composereorderable:reorderable:0.9.6")
 
-    //OkHttp3-可注释
+    //OkHttp3
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
 
     //Jsoup-可注释
-    implementation("org.jsoup:jsoup:1.17.2")
+//    implementation("org.jsoup:jsoup:1.17.2")
 
     //HtmlUnit-可注释
-    implementation("org.htmlunit:htmlunit3-android:3.7.0")
+//    implementation("org.htmlunit:htmlunit3-android:3.7.0")
 
     //XmlAPI-可注释
-    implementation("xml-apis:xml-apis:2.0.2")
+//    implementation("xml-apis:xml-apis:2.0.2")
 
 
     // Optional - Included automatically by material, only add when you need

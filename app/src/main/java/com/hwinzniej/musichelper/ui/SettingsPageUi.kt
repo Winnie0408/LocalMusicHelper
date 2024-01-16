@@ -26,7 +26,7 @@ import androidx.datastore.preferences.core.edit
 import com.hwinzniej.musichelper.R
 import com.hwinzniej.musichelper.activity.SettingsPage
 import com.hwinzniej.musichelper.data.DataStoreConstants
-import com.moriafly.salt.ui.ItemSwitcher
+import com.hwinzniej.musichelper.utils.MyVibrationEffect
 import com.moriafly.salt.ui.ItemTitle
 import com.moriafly.salt.ui.RoundedColumn
 import com.moriafly.salt.ui.SaltTheme
@@ -92,7 +92,8 @@ fun SettingsPageUi(
                         }
                     },
                     text = stringResource(R.string.dynamic_color_switcher_text),
-                    sub = stringResource(R.string.dynamic_color_switcher_sub)
+                    sub = stringResource(R.string.dynamic_color_switcher_sub),
+                    enableHaptic = enableHaptic.value
                 )
                 ItemPopup(
                     state = themeModePopupMenuState,
@@ -106,6 +107,7 @@ fun SettingsPageUi(
                 ) {
                     PopupMenuItem(
                         onClick = {
+                            MyVibrationEffect(context, enableHaptic.value).click()
                             coroutineScope.launch {
                                 dataStore.edit { settings ->
                                     settings[DataStoreConstants.KEY_THEME_MODE] = 2
@@ -118,6 +120,7 @@ fun SettingsPageUi(
                     )
                     PopupMenuItem(
                         onClick = {
+                            MyVibrationEffect(context, enableHaptic.value).click()
                             coroutineScope.launch {
                                 dataStore.edit { settings ->
                                     settings[DataStoreConstants.KEY_THEME_MODE] = 0
@@ -130,6 +133,7 @@ fun SettingsPageUi(
                     )
                     PopupMenuItem(
                         onClick = {
+                            MyVibrationEffect(context, enableHaptic.value).click()
                             coroutineScope.launch {
                                 dataStore.edit { settings ->
                                     settings[DataStoreConstants.KEY_THEME_MODE] = 1
@@ -155,7 +159,8 @@ fun SettingsPageUi(
                         }
                     },
                     text = stringResource(R.string.use_root_access_switcher_title),
-                    sub = stringResource(R.string.use_root_access_switcher_sub)
+                    sub = stringResource(R.string.use_root_access_switcher_sub),
+                    enableHaptic = enableHaptic.value
                 )
             }
 
@@ -178,6 +183,7 @@ fun SettingsPageUi(
                 ) {
                     PopupMenuItem(
                         onClick = {
+                            MyVibrationEffect(context, enableHaptic.value).click()
                             coroutineScope.launch {
                                 dataStore.edit { settings ->
                                     settings[DataStoreConstants.KEY_LANGUAGE] = "system"
@@ -190,6 +196,7 @@ fun SettingsPageUi(
                     )
                     PopupMenuItem(
                         onClick = {
+                            MyVibrationEffect(context, enableHaptic.value).click()
                             coroutineScope.launch {
                                 dataStore.edit { settings ->
                                     settings[DataStoreConstants.KEY_LANGUAGE] = "zh"
@@ -202,6 +209,7 @@ fun SettingsPageUi(
                     )
                     PopupMenuItem(
                         onClick = {
+                            MyVibrationEffect(context, enableHaptic.value).click()
                             coroutineScope.launch {
                                 dataStore.edit { settings ->
                                     settings[DataStoreConstants.KEY_LANGUAGE] = "en"
@@ -214,6 +222,7 @@ fun SettingsPageUi(
                     )
                     PopupMenuItem(
                         onClick = {
+                            MyVibrationEffect(context, enableHaptic.value).click()
                             coroutineScope.launch {
                                 dataStore.edit { settings ->
                                     settings[DataStoreConstants.KEY_LANGUAGE] = "ko"
@@ -239,7 +248,8 @@ fun SettingsPageUi(
                         }
                     },
                     text = stringResource(id = R.string.haptic_feedfback_switcher_title),
-                    sub = stringResource(id = R.string.haptic_feedfback_switcher_sub)
+                    sub = stringResource(id = R.string.haptic_feedfback_switcher_sub),
+                    enableHaptic = enableHaptic.value
                 )
             }
 
@@ -254,7 +264,8 @@ fun SettingsPageUi(
                             }
                         }
                     },
-                    text = stringResource(id = R.string.check_updates_at_start)
+                    text = stringResource(id = R.string.check_updates_at_start),
+                    enableHaptic = enableHaptic.value
                 )
             }
 

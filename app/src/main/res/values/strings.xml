@@ -5,7 +5,7 @@
     <string name="result_file_name">MusicHelper_Export</string>
     <string name="request_permission_toast">Permissions are required to continue.</string>
     <string name="selected_directory_path">"Selected Directory: "</string>
-    <string name="scan_complete">Done.</string>
+    <string name="scan_complete">Done</string>
     <string name="file_conflict_dialog_title">Conflict detected</string>
     <string name="file_conflict_dialog_content">"Existence of results from last scan! #nPlease select your action: "</string>
     <string name="file_conflict_dialog_yes_text">Overwrite</string>
@@ -70,7 +70,7 @@
     <string name="use_scan_fun_first">Please run a music scan on the scan page first</string>
     <string name="error_details">Error details:</string>
     <string name="in_total">"Total: "</string>
-    <string name="selected">Selected:</string>
+    <string name="user_selected">"Selected: "</string>
     <string name="select_all">Select All</string>
     <string name="convert_options">Convert options</string>
     <string name="set_similarity_item">Similarity Threshold</string>
@@ -141,7 +141,7 @@
     <string name="english" translatable="false">English - en</string>
     <string name="system_language">System language</string>
     <string name="file_access">File access</string>
-    <string name="use_root_access_switcher_title">Using Root access</string>
+    <string name="use_root_access_switcher_title">Use Root access</string>
     <string name="use_root_access_switcher_sub">Automatically get the database file of the song list source App</string>
     <string name="version">Version</string>
     <string name="check_updates_at_start">Check for updates at startup</string>
@@ -172,4 +172,5 @@
     <string name="download_lateset_ver">Download and install the latest version?</string>
     <string name="start_download">Start downloading updates</string>
     <string name="auto_check_update_failed">Failed to check for updates</string>
+    <string name="no_update_available">No update available</string>
 </resources>

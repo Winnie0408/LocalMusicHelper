@@ -24,16 +24,16 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import com.hwinzniej.musichelper.R
 import com.hwinzniej.musichelper.activity.ScanPage
+import com.hwinzniej.musichelper.utils.MyVibrationEffect
 import com.moriafly.salt.ui.ItemContainer
-import com.moriafly.salt.ui.ItemSwitcher
 import com.moriafly.salt.ui.ItemTitle
 import com.moriafly.salt.ui.RoundedColumn
 import com.moriafly.salt.ui.SaltTheme
@@ -51,8 +51,10 @@ fun ScanPageUi(
     progressPercent: MutableState<Int>,
     showConflictDialog: MutableState<Boolean>,
     exportResultFile: MutableState<Boolean>,
-    selectedExportFormat: MutableIntState
+    selectedExportFormat: MutableIntState,
+    enableHaptic: MutableState<Boolean>
 ) {
+    val context = LocalContext.current
     if (showConflictDialog.value) {
         YesNoDialog(
             onCancel = { scanPage.userChoice(1) },
@@ -61,7 +63,8 @@ fun ScanPageUi(
             title = stringResource(R.string.file_conflict_dialog_title),
             content = stringResource(R.string.file_conflict_dialog_content).replace("#n", "\n"),
             cancelText = stringResource(R.string.file_conflict_dialog_no_text),
-            confirmText = stringResource(R.string.file_conflict_dialog_yes_text)
+            confirmText = stringResource(R.string.file_conflict_dialog_yes_text),
+            enableHaptic = enableHaptic.value
         )
     }
     val exportTypePopupState = rememberPopupState()
@@ -101,7 +104,8 @@ fun ScanPageUi(
                             exportResultFile.value = it
                         },
                         text = stringResource(id = R.string.export_result_file_switcher_text),
-                        sub = stringResource(id = R.string.export_result_file_switcher_sub_text)
+                        sub = stringResource(id = R.string.export_result_file_switcher_sub_text),
+                        enableHaptic = enableHaptic.value
                     )
                     AnimatedVisibility(visible = exportResultFile.value) {
                         ItemPopup( //TODO 为每个子项添加图标
@@ -115,6 +119,7 @@ fun ScanPageUi(
                         ) {
                             PopupMenuItem(
                                 onClick = {
+                                    MyVibrationEffect(context, enableHaptic.value).click()
                                     selectedExportFormat.intValue = 0
                                     exportTypePopupState.dismiss()
                                 },
@@ -123,6 +128,7 @@ fun ScanPageUi(
                             )
                             PopupMenuItem(
                                 onClick = {
+                                    MyVibrationEffect(context, enableHaptic.value).click()
                                     selectedExportFormat.intValue = 1
                                     exportTypePopupState.dismiss()
                                 },
@@ -147,7 +153,8 @@ fun ScanPageUi(
                             onClick = {
                                 scanPage.init()
                             }, text = stringResource(R.string.start_text),
-                            enabled = !it
+                            enabled = !it,
+                            enableHaptic = enableHaptic.value
                         )
                     }
                 }
@@ -191,11 +198,14 @@ fun ScanPageUi(
                             ) {
                                 items(scanResult.size) { index ->
                                     Text(
-                                        modifier = Modifier.padding(horizontal = 16.dp),
+                                        modifier = Modifier.padding(
+                                            horizontal = 16.dp,
+                                            vertical = 4.dp
+                                        ),
                                         text = scanResult[index],
                                         fontSize = 16.sp,
                                         style = TextStyle(
-                                            lineHeight = 1.5.em, color = SaltTheme.colors.subText
+                                            color = SaltTheme.colors.subText
                                         ),
                                     )
                                 }
@@ -203,7 +213,6 @@ fun ScanPageUi(
                         }
                     }
                 }
-
             }
         }
     }

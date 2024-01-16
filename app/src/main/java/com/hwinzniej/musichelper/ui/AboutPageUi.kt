@@ -1,5 +1,6 @@
 package com.hwinzniej.musichelper.ui
 
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -38,6 +39,7 @@ import androidx.compose.ui.zIndex
 import com.alibaba.fastjson2.JSON
 import com.alibaba.fastjson2.JSONObject
 import com.hwinzniej.musichelper.R
+import com.hwinzniej.musichelper.utils.MyVibrationEffect
 import com.moriafly.salt.ui.RoundedColumn
 import com.moriafly.salt.ui.SaltTheme
 import com.moriafly.salt.ui.TitleBar
@@ -54,7 +56,8 @@ fun AboutPageUi(
     showNewVersionAvailableDialog: MutableState<Boolean>,
     latestVersion: MutableState<String>,
     latestDescription: MutableState<String>,
-    latestDownloadLink: MutableState<String>
+    latestDownloadLink: MutableState<String>,
+    enableHaptic: MutableState<Boolean>
 ) {
     val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
@@ -84,7 +87,8 @@ fun AboutPageUi(
 
             },
             title = yesNoDialogTitle,
-            content = yesNoDialogContent
+            content = yesNoDialogContent,
+            enableHaptic = enableHaptic.value
         )
     }
 
@@ -93,7 +97,8 @@ fun AboutPageUi(
             onDismissRequest = { showYesDialog = false },
             title = yesDialogTitle,
             content = yesDialogContent,
-            fontSize = 14.sp
+            fontSize = 14.sp,
+            enableHaptic = enableHaptic.value
         )
     }
 
@@ -104,6 +109,7 @@ fun AboutPageUi(
     ) {
         TitleBar(
             onBack = {
+                MyVibrationEffect(context, enableHaptic.value).click()
                 coroutineScope.launch {
                     settingsPageState.animateScrollToPage(
                         0, animationSpec = spring(2f)
@@ -192,6 +198,12 @@ fun AboutPageUi(
                                             }
                                         }
                                         showNewVersionAvailableDialog.value = true
+                                    } else {
+                                        Toast.makeText(
+                                            context,
+                                            context.getString(R.string.no_update_available),
+                                            Toast.LENGTH_SHORT
+                                        ).show()
                                     }
                                 } catch (e: Exception) {
                                     showYesDialog = true

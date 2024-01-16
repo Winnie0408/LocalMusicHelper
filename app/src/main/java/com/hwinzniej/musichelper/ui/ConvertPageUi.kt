@@ -67,8 +67,8 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import com.hwinzniej.musichelper.R
 import com.hwinzniej.musichelper.activity.ConvertPage
+import com.hwinzniej.musichelper.utils.MyVibrationEffect
 import com.moriafly.salt.ui.ItemContainer
-import com.moriafly.salt.ui.ItemSwitcher
 import com.moriafly.salt.ui.ItemTitle
 import com.moriafly.salt.ui.RoundedColumn
 import com.moriafly.salt.ui.SaltTheme
@@ -107,7 +107,8 @@ fun ConvertPageUi(
     searchResult: MutableList<Array<String>>,
     showDialogProgressBar: MutableState<Boolean>,
     showSaveDialog: MutableState<Boolean>,
-    mainActivityPageState: PagerState
+    mainActivityPageState: PagerState,
+    enableHaptic: MutableState<Boolean>
 ) {
     val sourceAppPopupMenuState = rememberPopupState()
     val matchingModePopupMenuState = rememberPopupState()
@@ -167,7 +168,8 @@ fun ConvertPageUi(
                 convertResult.clear()
             },
             title = stringResource(id = R.string.go_back_confirm_dialog_title),
-            content = stringResource(id = R.string.go_back_confirm_dialog_content)
+            content = stringResource(id = R.string.go_back_confirm_dialog_content),
+            enableHaptic = enableHaptic.value
         )
     }
 
@@ -175,12 +177,22 @@ fun ConvertPageUi(
         YesDialog(
             onDismissRequest = { showErrorDialog.value = false },
             title = errorDialogTitle.value,
-            content = errorDialogContent.value
+            content = errorDialogContent.value,
+            enableHaptic = enableHaptic.value
         )
+    }
+
+    LaunchedEffect(key1 = showSetSimilarityDialog) {
+        if (showSetSimilarityDialog) {
+            MyVibrationEffect(context, enableHaptic.value).dialog()
+        }
     }
 
     if (showSetSimilarityDialog) {
         var slideSimilarity by remember { mutableFloatStateOf(similarity.floatValue) }
+        LaunchedEffect(key1 = slideSimilarity) {
+            MyVibrationEffect(context, enableHaptic.value).dragMove()
+        }
         YesNoDialog(
             onDismiss = { showSetSimilarityDialog = false },
             onCancel = { showSetSimilarityDialog = false },
@@ -193,6 +205,7 @@ fun ConvertPageUi(
             cancelText = stringResource(R.string.cancel_button_text),
             confirmText = stringResource(R.string.ok_button_text),
             onlyComposeView = true,
+            enableHaptic = enableHaptic.value,
             customContent = {
                 Column {
                     Row(
@@ -242,6 +255,12 @@ fun ConvertPageUi(
         )
     }
 
+    LaunchedEffect(key1 = showSelectedSongInfoDialog) {
+        if (showSelectedSongInfoDialog) {
+            MyVibrationEffect(context, enableHaptic.value).dialog()
+        }
+    }
+
     if (showSelectedSongInfoDialog) {
         var selectedAllIndex by remember { mutableIntStateOf(-1) }
         YesNoDialog(
@@ -263,6 +282,7 @@ fun ConvertPageUi(
             cancelText = stringResource(R.string.cancel_button_text),
             confirmText = stringResource(R.string.ok_button_text),
             onlyComposeView = true,
+            enableHaptic = enableHaptic.value,
             customContent = {
                 val focus = LocalFocusManager.current
                 Box {
@@ -287,7 +307,8 @@ fun ConvertPageUi(
                                     showClearButton = inputSearchWords.value != "",
                                     onClear = {
                                         inputSearchWords.value = ""
-                                    }
+                                    },
+                                    enableHaptic = enableHaptic.value
                                 )
                             }
                             BasicButton(
@@ -295,7 +316,8 @@ fun ConvertPageUi(
                                     .padding(top = 12.dp, bottom = 12.dp, end = 16.dp),
                                 enabled = true,
                                 onClick = { showDeleteDialog = true },
-                                backgroundColor = colorResource(id = R.color.unmatched)
+                                backgroundColor = colorResource(id = R.color.unmatched),
+                                enableHaptic = enableHaptic.value
                             ) {
                                 Icon(
                                     modifier = Modifier
@@ -325,7 +347,8 @@ fun ConvertPageUi(
                                         sub = if (searchResult[index].size == 1) null else "${searchResult[index][1]} - ${searchResult[index][2]}",
                                         iconAtLeft = false,
                                         hideIcon = searchResult[index].size == 1,
-                                        enabled = searchResult[index].size != 1
+                                        enabled = searchResult[index].size != 1,
+                                        enableHaptic = enableHaptic.value
                                     )
                                 }
                             }
@@ -371,6 +394,12 @@ fun ConvertPageUi(
         )
     }
 
+    LaunchedEffect(key1 = showSaveDialog.value) {
+        if (showSaveDialog.value) {
+            MyVibrationEffect(context, enableHaptic.value).dialog()
+        }
+    }
+
     if (showSaveDialog.value) {
         var saveSuccessSongs by remember { mutableStateOf(true) }
         var saveCautionSongs by remember { mutableStateOf(true) }
@@ -391,6 +420,7 @@ fun ConvertPageUi(
             cancelText = stringResource(R.string.cancel_button_text),
             confirmText = stringResource(R.string.ok_button_text),
             onlyComposeView = true,
+            enableHaptic = enableHaptic.value,
             customContent = {
                 Box {
                     if (showDialogProgressBar.value) {
@@ -408,17 +438,20 @@ fun ConvertPageUi(
                         ItemSwitcher(
                             state = saveSuccessSongs,
                             onChange = { saveSuccessSongs = it },
-                            text = stringResource(R.string.match_success)
+                            text = stringResource(R.string.match_success),
+                            enableHaptic = enableHaptic.value
                         )
                         ItemSwitcher(
                             state = saveCautionSongs,
                             onChange = { saveCautionSongs = it },
-                            text = stringResource(R.string.match_caution)
+                            text = stringResource(R.string.match_caution),
+                            enableHaptic = enableHaptic.value
                         )
                         ItemSwitcher(
                             state = saveManualSongs,
                             onChange = { saveManualSongs = it },
-                            text = stringResource(R.string.match_manual)
+                            text = stringResource(R.string.match_manual),
+                            enableHaptic = enableHaptic.value
                         )
 //                        ItemText(
 //                            text = "${stringResource(R.string.result_file_save_location)}\n${
@@ -436,6 +469,7 @@ fun ConvertPageUi(
             onDismiss = { showDeleteDialog = false },
             onCancel = { showDeleteDialog = false },
             onConfirm = {
+                inputSearchWords.value = ""
                 showDeleteDialog = false
                 showSelectedSongInfoDialog = false
                 convertResult.remove(selectedSongIndex)
@@ -450,6 +484,7 @@ fun ConvertPageUi(
                 convertResult[selectedSongIndex]!![2]
             } - ${convertResult[selectedSongIndex]!![4]} - ${convertResult[selectedSongIndex]!![6]}",
             confirmButtonColor = colorResource(id = R.color.unmatched),
+            enableHaptic = enableHaptic.value
         )
     }
 
@@ -482,6 +517,7 @@ fun ConvertPageUi(
         TitleBar(
             onBack = {
                 if (convertResult.isEmpty()) {
+                    MyVibrationEffect(context, enableHaptic.value).click()
                     if (currentPage.intValue == 3) {
                         currentPage.intValue = 0
                         selectedSourceApp.intValue = 0
@@ -547,6 +583,7 @@ fun ConvertPageUi(
                                 ) {
                                     PopupMenuItem(
                                         onClick = {
+                                            MyVibrationEffect(context, enableHaptic.value).click()
                                             selectedSourceApp.intValue = 1
                                             sourceAppPopupMenuState.dismiss()
                                             databaseFileName.value = ""
@@ -556,6 +593,7 @@ fun ConvertPageUi(
                                     )
                                     PopupMenuItem(
                                         onClick = {
+                                            MyVibrationEffect(context, enableHaptic.value).click()
                                             selectedSourceApp.intValue = 2
                                             sourceAppPopupMenuState.dismiss()
                                             databaseFileName.value = ""
@@ -566,6 +604,7 @@ fun ConvertPageUi(
 
                                     PopupMenuItem(
                                         onClick = {
+                                            MyVibrationEffect(context, enableHaptic.value).click()
                                             selectedSourceApp.intValue = 3
                                             sourceAppPopupMenuState.dismiss()
                                             databaseFileName.value = ""
@@ -577,6 +616,7 @@ fun ConvertPageUi(
                                     )
                                     PopupMenuItem(
                                         onClick = {
+                                            MyVibrationEffect(context, enableHaptic.value).click()
                                             selectedSourceApp.intValue = 4
                                             sourceAppPopupMenuState.dismiss()
                                             databaseFileName.value = ""
@@ -627,7 +667,8 @@ fun ConvertPageUi(
                                         useCustomResultFile.value = it
                                     },
                                     text = stringResource(R.string.use_custom_result_file),
-                                    sub = stringResource(R.string.use_other_result_file)
+                                    sub = stringResource(R.string.use_other_result_file),
+                                    enableHaptic = enableHaptic.value
                                 )
                                 AnimatedVisibility(
                                     visible = useCustomResultFile.value
@@ -669,7 +710,8 @@ fun ConvertPageUi(
                                     TextButton(
                                         onClick = { convertPage.requestPermission() },
                                         text = stringResource(R.string.next_step_text),
-                                        enabled = !it
+                                        enabled = !it,
+                                        enableHaptic = enableHaptic.value
                                     )
                                 }
                             }
@@ -714,6 +756,7 @@ fun ConvertPageUi(
                                                     }
                                                 },
                                                 text = stringResource(R.string.select_all),
+                                                enableHaptic = enableHaptic.value
                                             )
                                             LazyColumn(
                                                 modifier = Modifier.weight(1f)
@@ -730,14 +773,15 @@ fun ConvertPageUi(
                                                         text = playlistName[index],
                                                         sub = "${stringResource(R.string.total)}${playlistSum[index]}${
                                                             stringResource(R.string.songs)
-                                                        }"
+                                                        }",
+                                                        enableHaptic = enableHaptic.value
                                                     )
                                                 }
                                             }
 
                                             Spacer(modifier = Modifier.height(6.dp))
                                             ItemValue(
-                                                text = "${stringResource(R.string.selected)}${playlistEnabled.count { it != 0 }}${
+                                                text = "${stringResource(R.string.user_selected)}${playlistEnabled.count { it != 0 }}${
                                                     stringResource(
                                                         R.string.ge
                                                     )
@@ -756,7 +800,8 @@ fun ConvertPageUi(
                             ItemContainer {
                                 TextButton(
                                     onClick = { convertPage.checkSongListSelection() },
-                                    text = stringResource(R.string.next_step_text)
+                                    text = stringResource(R.string.next_step_text),
+                                    enableHaptic = enableHaptic.value
                                 )
                             }
 //                }
@@ -823,6 +868,10 @@ fun ConvertPageUi(
                                             ) {
                                                 PopupMenuItem(
                                                     onClick = {
+                                                        MyVibrationEffect(
+                                                            context,
+                                                            enableHaptic.value
+                                                        ).click()
                                                         selectedMatchingMode.intValue = 1
                                                         matchingModePopupMenuState.dismiss()
                                                     },
@@ -831,6 +880,10 @@ fun ConvertPageUi(
                                                 )
                                                 PopupMenuItem(
                                                     onClick = {
+                                                        MyVibrationEffect(
+                                                            context,
+                                                            enableHaptic.value
+                                                        ).click()
                                                         selectedMatchingMode.intValue = 2
                                                         matchingModePopupMenuState.dismiss()
                                                     },
@@ -842,17 +895,20 @@ fun ConvertPageUi(
                                             ItemSwitcher(
                                                 state = enableBracketRemoval.value,
                                                 onChange = { enableBracketRemoval.value = it },
-                                                text = stringResource(R.string.enable_bracket_removal)
+                                                text = stringResource(R.string.enable_bracket_removal),
+                                                enableHaptic = enableHaptic.value
                                             )
                                             ItemSwitcher(
                                                 state = enableArtistNameMatch.value,
                                                 onChange = { enableArtistNameMatch.value = it },
-                                                text = stringResource(R.string.enable_artist_name_match)
+                                                text = stringResource(R.string.enable_artist_name_match),
+                                                enableHaptic = enableHaptic.value
                                             )
                                             ItemSwitcher(
                                                 state = enableAlbumNameMatch.value,
                                                 onChange = { enableAlbumNameMatch.value = it },
-                                                text = stringResource(R.string.enable_album_name_match)
+                                                text = stringResource(R.string.enable_album_name_match),
+                                                enableHaptic = enableHaptic.value
                                             )
                                         }
                                         AnimatedContent(
@@ -872,7 +928,8 @@ fun ConvertPageUi(
                                                         convertPage.previewResult()
                                                     },
                                                     text = stringResource(R.string.preview_convert_result),
-                                                    enabled = !it
+                                                    enabled = !it,
+                                                    enableHaptic = enableHaptic.value
                                                 )
                                             }
                                         }
@@ -922,6 +979,10 @@ fun ConvertPageUi(
                                             ) {
                                                 PopupMenuItem(
                                                     onClick = {
+                                                        MyVibrationEffect(
+                                                            context,
+                                                            enableHaptic.value
+                                                        ).click()
                                                         selectedFilterIndex = 0
                                                         filterPopupMenuState.dismiss()
                                                     },
@@ -930,6 +991,10 @@ fun ConvertPageUi(
                                                 )
                                                 PopupMenuItem(
                                                     onClick = {
+                                                        MyVibrationEffect(
+                                                            context,
+                                                            enableHaptic.value
+                                                        ).click()
                                                         selectedFilterIndex = 1
                                                         filterPopupMenuState.dismiss()
                                                     },
@@ -944,6 +1009,10 @@ fun ConvertPageUi(
                                                 )
                                                 PopupMenuItem(
                                                     onClick = {
+                                                        MyVibrationEffect(
+                                                            context,
+                                                            enableHaptic.value
+                                                        ).click()
                                                         selectedFilterIndex = 2
                                                         filterPopupMenuState.dismiss()
                                                     },
@@ -958,6 +1027,10 @@ fun ConvertPageUi(
                                                 )
                                                 PopupMenuItem(
                                                     onClick = {
+                                                        MyVibrationEffect(
+                                                            context,
+                                                            enableHaptic.value
+                                                        ).click()
                                                         selectedFilterIndex = 3
                                                         filterPopupMenuState.dismiss()
                                                     },
@@ -1162,6 +1235,7 @@ fun ConvertPageUi(
                                                 text = stringResource(id = R.string.re_modify_params),
                                                 textColor = SaltTheme.colors.subText,
                                                 backgroundColor = SaltTheme.colors.subBackground,
+                                                enableHaptic = enableHaptic.value
                                             )
                                             Spacer(modifier = Modifier.width(12.dp))
                                             TextButton(
@@ -1169,7 +1243,8 @@ fun ConvertPageUi(
                                                     showSaveDialog.value = true
                                                 },
                                                 modifier = Modifier.weight(1f),
-                                                text = stringResource(id = R.string.save_conversion_results)
+                                                text = stringResource(id = R.string.save_conversion_results),
+                                                enableHaptic = enableHaptic.value
                                             )
                                         }
                                     }
@@ -1245,12 +1320,14 @@ fun ConvertPageUi(
                                         text = stringResource(id = R.string.copy_folder_path),
                                         textColor = SaltTheme.colors.subText,
                                         backgroundColor = SaltTheme.colors.subBackground,
+                                        enableHaptic = enableHaptic.value
                                     )
                                     Spacer(modifier = Modifier.width(12.dp))
                                     TextButton(
                                         onClick = { convertPage.launchSaltPlayer() },
                                         modifier = Modifier.weight(1f),
-                                        text = stringResource(id = R.string.open_salt_player)
+                                        text = stringResource(id = R.string.open_salt_player),
+                                        enableHaptic = enableHaptic.value
                                     )
                                 }
                             }

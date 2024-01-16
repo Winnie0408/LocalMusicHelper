@@ -23,9 +23,11 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.ContextCompat.getString
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
+import com.hwinzniej.musichelper.MainActivity
 import com.hwinzniej.musichelper.R
 import com.hwinzniej.musichelper.data.database.MusicDatabase
 import com.hwinzniej.musichelper.data.model.Music
+import com.hwinzniej.musichelper.utils.MyVibrationEffect
 import com.hwinzniej.musichelper.utils.Tools
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -195,9 +197,9 @@ class ScanPage(
                     if (musicCount != 0) {
                         showConflictDialog.value = true
                         lastIndex = musicCount - 1
-                    }
+                    } else
+                        openDirectoryLauncher.launch(null)
                 }
-                openDirectoryLauncher.launch(null)
             }
         }
     }
@@ -213,19 +215,18 @@ class ScanPage(
             2 -> {  //文件冲突，覆盖
                 showConflictDialog.value = false
                 lifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
-                    db.musicDao().deleteAll()
-                    if (selectedExportFormat.intValue == 0) {
-                        val file = File(
-                            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
-                            "${getString(context, R.string.result_file_name)}.db"
-                        )
-                        file.delete()
-                    } else {
-                        val file = File(
-                            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
-                            "${getString(context, R.string.result_file_name)}.txt"
-                        )
-                        file.delete()
+                    if (exportResultFile.value) {
+                        if (selectedExportFormat.intValue == 0) {
+                            File(
+                                Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
+                                "${getString(context, R.string.result_file_name)}.db"
+                            ).delete()
+                        } else {
+                            File(
+                                Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
+                                "${getString(context, R.string.result_file_name)}.txt"
+                            ).delete()
+                        }
                     }
                     db.musicDao().deleteAll()
                 }
@@ -284,6 +285,10 @@ class ScanPage(
                 Toast.makeText(
                     context, R.string.scan_complete, Toast.LENGTH_SHORT
                 ).show()
+                MyVibrationEffect(
+                    context,
+                    (context as MainActivity).enableHaptic.value
+                ).done()
             }
         }
     }

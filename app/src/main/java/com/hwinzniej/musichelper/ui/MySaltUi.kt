@@ -1,7 +1,11 @@
 package com.hwinzniej.musichelper.ui
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.indication
@@ -22,6 +26,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
@@ -31,19 +36,24 @@ import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -55,6 +65,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.DpOffset
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -62,6 +73,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.window.DialogWindowProvider
 import com.hwinzniej.musichelper.R
+import com.hwinzniej.musichelper.utils.MyVibrationEffect
 import com.moriafly.salt.ui.ItemSpacer
 import com.moriafly.salt.ui.SaltTheme
 import com.moriafly.salt.ui.UnstableSaltApi
@@ -69,7 +81,6 @@ import com.moriafly.salt.ui.dialog.DialogTitle
 import com.moriafly.salt.ui.popup.PopupMenu
 import com.moriafly.salt.ui.popup.PopupState
 
-//TODO 某些控件添加震动反馈
 @UnstableSaltApi
 @Composable
 fun YesNoDialog(
@@ -83,8 +94,11 @@ fun YesNoDialog(
     confirmText: String = stringResource(id = R.string.ok_button_text),
     customContent: @Composable () -> Unit = {},
     onlyComposeView: Boolean = false,
-    confirmButtonColor: Color = SaltTheme.colors.highlight
+    confirmButtonColor: Color = SaltTheme.colors.highlight,
+    enableHaptic: Boolean = false
 ) {
+    if (!onlyComposeView)
+        MyVibrationEffect(LocalContext.current, enableHaptic).dialog()
     BasicDialog(
         onDismissRequest = onDismiss,
         properties = properties,
@@ -109,6 +123,7 @@ fun YesNoDialog(
                 text = cancelText,
                 textColor = SaltTheme.colors.subText,
                 backgroundColor = SaltTheme.colors.subBackground,
+                enableHaptic = enableHaptic
 //                backgroundColor = Color.Transparent
             )
             Spacer(modifier = Modifier.width(12.dp))
@@ -116,7 +131,8 @@ fun YesNoDialog(
                 onClick = {
                     onConfirm()
                 }, modifier = Modifier.weight(1f), text = confirmText,
-                backgroundColor = confirmButtonColor
+                backgroundColor = confirmButtonColor,
+                enableHaptic = enableHaptic
             )
         }
     }
@@ -259,8 +275,10 @@ fun YesDialog(
     title: String,
     content: String,
     confirmText: String = stringResource(id = R.string.ok_button_text),
-    fontSize: TextUnit = 13.sp
+    fontSize: TextUnit = 13.sp,
+    enableHaptic: Boolean = false
 ) {
+    MyVibrationEffect(LocalContext.current, enableHaptic).dialog()
     BasicDialog(
         onDismissRequest = onDismissRequest,
         properties = properties
@@ -275,7 +293,8 @@ fun YesDialog(
             },
             modifier = Modifier
                 .padding(horizontal = SaltTheme.dimens.outerHorizontalPadding),
-            text = confirmText
+            text = confirmText,
+            enableHaptic = enableHaptic
         )
     }
 }
@@ -306,14 +325,17 @@ fun ItemCheck(
     text: String,
     iconAtLeft: Boolean = false,
     sub: String? = null,
-    hideIcon: Boolean = false
+    hideIcon: Boolean = false,
+    enableHaptic: Boolean = false
 ) {
+    val context = LocalContext.current
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .heightIn(min = 50.dp)
             .alpha(if (enabled) 1f else 0.5f)
             .clickable(enabled = enabled) {
+                MyVibrationEffect(context, enableHaptic).click()
                 onChange(!state)
             }
             .padding(horizontal = SaltTheme.dimens.innerHorizontalPadding, vertical = 12.dp),
@@ -448,13 +470,15 @@ fun TextButton(
     text: String,
     textColor: Color = Color.White,
     backgroundColor: Color = SaltTheme.colors.highlight,
-    enabled: Boolean = true
+    enabled: Boolean = true,
+    enableHaptic: Boolean = false
 ) {
     BasicButton(
         enabled = enabled,
         onClick = onClick,
         modifier = modifier,
-        backgroundColor = if (enabled) backgroundColor else Color(0xFF8C8C8C)
+        backgroundColor = if (enabled) backgroundColor else Color(0xFF8C8C8C),
+        enableHaptic = enableHaptic,
     ) {
         Text(
             text = text,
@@ -478,8 +502,10 @@ fun BasicButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     backgroundColor: Color = SaltTheme.colors.highlight,
-    content: @Composable BoxScope.() -> Unit,
+    enableHaptic: Boolean = false,
+    content: @Composable BoxScope.() -> Unit
 ) {
+    val context = LocalContext.current
     Box(
         modifier = modifier
             .semantics {
@@ -488,6 +514,7 @@ fun BasicButton(
             .clip(RoundedCornerShape(SaltTheme.dimens.corner))
             .background(color = backgroundColor)
             .clickable(enabled = enabled) {
+                MyVibrationEffect(context, enableHaptic).click()
                 onClick()
             }
             .padding(12.dp)
@@ -559,8 +586,10 @@ fun ItemEdit(
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
     showClearButton: Boolean = false,
-    onClear: () -> Unit = {}
+    onClear: () -> Unit = {},
+    enableHaptic: Boolean = false
 ) {
+    val context = LocalContext.current
     BasicTextField(
         value = text,
         onValueChange = onChange,
@@ -602,6 +631,7 @@ fun ItemEdit(
                             modifier = Modifier
                                 .size(20.dp)
                                 .clickable {
+                                    MyVibrationEffect(context, enableHaptic).click()
                                     onClear()
                                 }
                                 .alpha(0.7f),
@@ -615,6 +645,105 @@ fun ItemEdit(
 
         }
     )
+}
+
+@Composable
+fun ItemSwitcher(
+    state: Boolean,
+    onChange: (Boolean) -> Unit,
+    enabled: Boolean = true,
+    iconPainter: Painter? = null,
+    iconPaddingValues: PaddingValues = PaddingValues(0.dp),
+    iconColor: Color? = null,
+    text: String,
+    sub: String? = null,
+    enableHaptic: Boolean = false
+) {
+    val context = LocalContext.current
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(min = 56.dp)
+            .alpha(if (enabled) 1f else 0.5f)
+            .clickable(enabled = enabled) {
+                if (!state)
+                    MyVibrationEffect(context, enableHaptic).turnOn()
+                else
+                    MyVibrationEffect(context, enableHaptic).turnOff()
+                onChange(!state)
+            }
+            .padding(horizontal = SaltTheme.dimens.innerHorizontalPadding, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        iconPainter?.let {
+            Image(
+                modifier = Modifier
+                    .size(24.dp)
+                    .padding(iconPaddingValues),
+                painter = iconPainter,
+                contentDescription = null,
+                colorFilter = iconColor?.let { ColorFilter.tint(iconColor) }
+            )
+            Spacer(modifier = Modifier.width(12.dp))
+        }
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth()
+        ) {
+            Text(
+                text = text,
+                color = if (enabled) SaltTheme.colors.text else SaltTheme.colors.subText,
+                style = SaltTheme.textStyles.main
+            )
+            sub?.let {
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = sub,
+                    style = SaltTheme.textStyles.sub
+                )
+            }
+        }
+        Spacer(modifier = Modifier.width(12.dp))
+        val backgroundColor by animateColorAsState(
+            targetValue = if (state) SaltTheme.colors.highlight else SaltTheme.colors.subText.copy(
+                alpha = 0.1f
+            ),
+            animationSpec = spring(),
+            label = "backgroundColor"
+        )
+        Box(
+            modifier = Modifier
+                .size(46.dp, 26.dp)
+                .clip(CircleShape)
+                .drawBehind {
+                    drawRect(color = backgroundColor)
+                }
+                .padding(5.dp)
+        ) {
+            val layoutDirection = LocalLayoutDirection.current
+            val translationX by animateDpAsState(
+                targetValue = if (state) {
+                    when (layoutDirection) {
+                        LayoutDirection.Ltr -> 20.dp
+                        LayoutDirection.Rtl -> (-20).dp
+                    }
+                } else {
+                    0.dp
+                },
+                animationSpec = spring(),
+                label = "startPadding"
+            )
+            Box(
+                modifier = Modifier
+                    .graphicsLayer {
+                        this.translationX = translationX.toPx()
+                    }
+                    .size(16.dp)
+                    .border(width = 4.dp, color = Color.White, shape = CircleShape)
+            )
+        }
+    }
 }
 
 @OptIn(UnstableSaltApi::class)

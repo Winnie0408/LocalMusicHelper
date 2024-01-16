@@ -58,7 +58,6 @@ import com.alibaba.fastjson2.JSON
 import com.alibaba.fastjson2.JSONObject
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.hwinzniej.musichelper.activity.ConvertPage
-import com.hwinzniej.musichelper.activity.ProcessPage
 import com.hwinzniej.musichelper.activity.ScanPage
 import com.hwinzniej.musichelper.activity.SettingsPage
 import com.hwinzniej.musichelper.data.DataStoreConstants
@@ -66,10 +65,10 @@ import com.hwinzniej.musichelper.data.database.MusicDatabase
 import com.hwinzniej.musichelper.ui.AboutPageUi
 import com.hwinzniej.musichelper.ui.ConvertPageUi
 import com.hwinzniej.musichelper.ui.ItemValue
-import com.hwinzniej.musichelper.ui.ProcessPageUi
 import com.hwinzniej.musichelper.ui.ScanPageUi
 import com.hwinzniej.musichelper.ui.SettingsPageUi
 import com.hwinzniej.musichelper.ui.YesNoDialog
+import com.hwinzniej.musichelper.utils.MyVibrationEffect
 import com.moriafly.salt.ui.BottomBar
 import com.moriafly.salt.ui.BottomBarItem
 import com.moriafly.salt.ui.ItemTitle
@@ -87,13 +86,15 @@ import okhttp3.Request
 import java.io.File
 import java.util.Locale
 
+
 class MainActivity : ComponentActivity() {
 
     private lateinit var openDirectoryLauncher: ActivityResultLauncher<Uri?>
     private lateinit var openMusicPlatformSqlFileLauncher: ActivityResultLauncher<Array<String>>
     private lateinit var openResultSqlFileLauncher: ActivityResultLauncher<Array<String>>
     private lateinit var scanPage: ScanPage
-    private lateinit var processPage: ProcessPage
+
+    //    private lateinit var processPage: ProcessPage
     private lateinit var convertPage: ConvertPage
     private lateinit var settingsPage: SettingsPage
     lateinit var db: MusicDatabase
@@ -134,7 +135,7 @@ class MainActivity : ComponentActivity() {
         ).build()
 
         scanPage = ScanPage(this, this, openDirectoryLauncher, db, this)
-        processPage = ProcessPage(this, this, db)
+//        processPage = ProcessPage(this, this, db)
         convertPage =
             ConvertPage(
                 this,
@@ -176,7 +177,7 @@ class MainActivity : ComponentActivity() {
                     colors = colors
                 ) {
                     TransparentSystemBars(useDarkIcons = !(isSystemInDarkTheme() || (selectedThemeMode.intValue == 1)))
-                    Pages(this, scanPage, processPage, convertPage, settingsPage, checkUpdate)
+                    Pages(this, scanPage, convertPage, settingsPage, checkUpdate)
                 }
             }
         }
@@ -206,12 +207,12 @@ class MainActivity : ComponentActivity() {
 private fun Pages(
     mainPage: MainActivity,
     scanPage: ScanPage,
-    processPage: ProcessPage,
+//    processPage: ProcessPage,
     convertPage: ConvertPage,
     settingsPage: SettingsPage,
     checkUpdate: MutableState<Boolean>
 ) {
-    val pages = listOf("0", "1", "2", "3")
+    val pages = listOf("0", "1", "2")
     val pageState = rememberPagerState(pageCount = { pages.size })
     val coroutineScope = rememberCoroutineScope()
     val settingsPages = listOf("0", "1")
@@ -251,7 +252,9 @@ private fun Pages(
 
 
     if (showNewVersionAvailableDialog.value) {
+        MyVibrationEffect(LocalContext.current, mainPage.enableHaptic.value).dialog()
         YesNoDialog(
+            enableHaptic = mainPage.enableHaptic.value,
             onDismiss = { showNewVersionAvailableDialog.value = false },
             onCancel = { showNewVersionAvailableDialog.value = false },
             onConfirm = {
@@ -392,6 +395,7 @@ private fun Pages(
                         showConflictDialog = scanPage.showConflictDialog,
                         exportResultFile = scanPage.exportResultFile,
                         selectedExportFormat = scanPage.selectedExportFormat,
+                        enableHaptic = mainPage.enableHaptic,
                     )
                 }
 
@@ -421,36 +425,37 @@ private fun Pages(
                         showDialogProgressBar = convertPage.showDialogProgressBar,
                         showSaveDialog = convertPage.showSaveDialog,
                         mainActivityPageState = pageState,
+                        enableHaptic = mainPage.enableHaptic,
                     )
                 }
+
+//                2 -> {
+//                    ProcessPageUi(
+//                        processPage = processPage,
+//                        processAllScannedMusic = processPage.processAllScannedMusic,
+//                        overwriteOriginalTag = processPage.overwriteOriginalTag,
+//                        showSelectTagTypeDialog = processPage.showSelectTagTypeDialog,
+//                        enableAlbumArtist = processPage.enableAlbumArtist,
+//                        enableReleaseYear = processPage.enableReleaseYear,
+//                        enableGenre = processPage.enableGenre,
+//                        enableTrackNumber = processPage.enableTrackNumber,
+//                        showProgressBar = processPage.showProgressBar,
+//                        showSelectSourceDialog = processPage.showSelectSourceDialog,
+//                        useDoubanMusicSource = processPage.useDoubanMusicSource,
+//                        useMusicBrainzSource = processPage.useMusicBrainzSource,
+//                        useBaiduBaikeSource = processPage.useBaiduBaikeSource,
+//                    )
+//                }
 
                 2 -> {
-                    ProcessPageUi(
-                        processPage = processPage,
-                        processAllScannedMusic = processPage.processAllScannedMusic,
-                        overwriteOriginalTag = processPage.overwriteOriginalTag,
-                        showSelectTagTypeDialog = processPage.showSelectTagTypeDialog,
-                        enableAlbumArtist = processPage.enableAlbumArtist,
-                        enableReleaseYear = processPage.enableReleaseYear,
-                        enableGenre = processPage.enableGenre,
-                        enableTrackNumber = processPage.enableTrackNumber,
-                        showProgressBar = processPage.showProgressBar,
-                        showSelectSourceDialog = processPage.showSelectSourceDialog,
-                        useDoubanMusicSource = processPage.useDoubanMusicSource,
-                        useMusicBrainzSource = processPage.useMusicBrainzSource,
-                        useBaiduBaikeSource = processPage.useBaiduBaikeSource,
-                    )
-                }
-
-                3 -> {
                     HorizontalPager(
                         state = settingsPageState,
                         modifier = Modifier
                             .fillMaxSize(),
                         userScrollEnabled = false,
-                        beyondBoundsPageCount = 1
-                    ) { page ->
-                        when (page) {
+                        beyondBoundsPageCount = 0  //保证切换语言后，页面自动应用新语言
+                    ) { settingPage ->
+                        when (settingPage) {
                             0 -> {
                                 SettingsPageUi(
                                     settingsPage = settingsPage,
@@ -461,7 +466,7 @@ private fun Pages(
                                     enableAutoCheckUpdate = settingsPage.enableAutoCheckUpdate,
                                     settingsPageState = settingsPageState,
                                     enableHaptic = mainPage.enableHaptic,
-                                    dataStore = mainPage.dataStore
+                                    dataStore = mainPage.dataStore,
                                 )
                             }
 
@@ -472,6 +477,7 @@ private fun Pages(
                                     latestVersion = latestVersion,
                                     latestDescription = latestDescription,
                                     latestDownloadLink = latestDownloadLink,
+                                    enableHaptic = mainPage.enableHaptic,
                                 )
                             }
                         }
@@ -524,12 +530,13 @@ private fun Pages(
             BottomBarItem(
                 state = pageState.currentPage == 0,
                 onClick = {
+                    MyVibrationEffect(context, mainPage.enableHaptic.value).click()
                     coroutineScope.launch {
-                        settingsPageState.animateScrollToPage(
+                        pageState.animateScrollToPage(
                             0,
                             animationSpec = spring(2f)
                         )
-                        pageState.animateScrollToPage(
+                        settingsPageState.animateScrollToPage(
                             0,
                             animationSpec = spring(2f)
                         )
@@ -541,13 +548,14 @@ private fun Pages(
             BottomBarItem(
                 state = pageState.currentPage == 1,
                 onClick = {
+                    MyVibrationEffect(context, mainPage.enableHaptic.value).click()
                     coroutineScope.launch {
-                        settingsPageState.animateScrollToPage(
-                            0,
-                            animationSpec = spring(2f)
-                        )
                         pageState.animateScrollToPage(
                             1,
+                            animationSpec = spring(2f)
+                        )
+                        settingsPageState.animateScrollToPage(
+                            0,
                             animationSpec = spring(2f)
                         )
                     }
@@ -555,33 +563,34 @@ private fun Pages(
                 painter = painterResource(id = R.drawable.ic_launcher_foreground),
                 text = stringResource(R.string.convert_function_name)
             )
+//            BottomBarItem(
+//                state = pageState.currentPage == 2,
+//                onClick = {
+//                    coroutineScope.launch {
+//                        pageState.animateScrollToPage(
+//                            2,
+//                            animationSpec = spring(2f)
+//                        )
+//                        settingsPageState.animateScrollToPage(
+//                            0,
+//                            animationSpec = spring(2f)
+//                        )
+//                    }
+//                },
+//                painter = painterResource(id = R.drawable.ic_launcher_foreground),
+//                text = stringResource(R.string.process_function_name)
+//            )
             BottomBarItem(
                 state = pageState.currentPage == 2,
                 onClick = {
+                    MyVibrationEffect(context, mainPage.enableHaptic.value).click()
                     coroutineScope.launch {
-                        settingsPageState.animateScrollToPage(
-                            0,
-                            animationSpec = spring(2f)
-                        )
                         pageState.animateScrollToPage(
                             2,
                             animationSpec = spring(2f)
                         )
-                    }
-                },
-                painter = painterResource(id = R.drawable.ic_launcher_foreground),
-                text = stringResource(R.string.process_function_name)
-            )
-            BottomBarItem(
-                state = pageState.currentPage == 3,
-                onClick = {
-                    coroutineScope.launch {
                         settingsPageState.animateScrollToPage(
                             0,
-                            animationSpec = spring(2f)
-                        )
-                        pageState.animateScrollToPage(
-                            3,
                             animationSpec = spring(2f)
                         )
                     }
