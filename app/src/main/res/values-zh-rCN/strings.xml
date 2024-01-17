@@ -146,7 +146,7 @@
     <string name="about">关于</string>
     <string name="other">其他</string>
     <string name="update">更新</string>
-    <string name="developers">开发人员</string>
+    <string name="staff">制作人员</string>
     <string name="pc_salt_converter">Salt Converter 电脑版</string>
     <string name="buy_me_a_coffee">赞赏</string>
     <string name="join_qq_group">加入QQ群</string>
@@ -173,4 +173,20 @@
     <string name="get_file_with_root">自动获取#的数据库文件</string>
     <string name="with_root_access">使用Root权限</string>
     <string name="app_not_installed">" 未安装"</string>
+    <string name="related_info">相关信息</string>
+    <string name="contact_developer">联系开发者</string>
+    <string name="follow_on_coolapk">关注酷安</string>
+    <string name="app_developer">开发</string>
+    <string name="app_translator">翻译</string>
+    <string name="app_technical_supportor">技术支持</string>
+    <string name="app_special_thanks">特别感谢</string>
+    <string name="coolapk">酷安：</string>
+    <string name="qq_group">QQ群：</string>
+    <string name="rank_no_order">（以上排名不分先后）</string>
+    <string name="visit_the_link_below">访问以下链接？</string>
+    <string name="open_in_some_app">在#中打开？</string>
+    <string name="will_open_in_browser">将在浏览器中打开</string>
+    <string name="launching_app">正在启动</string>
+    <string name="thank_you_very_much">❤️非常感谢您的支持！❤️</string>
+    <string name="save_image">（点击图片来保存到相册喔~）</string>
 </resources>

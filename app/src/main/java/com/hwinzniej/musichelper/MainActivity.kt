@@ -51,7 +51,6 @@ import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.preferencesDataStore
 import androidx.lifecycle.lifecycleScope
 import androidx.room.Room
 import com.alibaba.fastjson2.JSON
@@ -68,6 +67,7 @@ import com.hwinzniej.musichelper.ui.ItemValue
 import com.hwinzniej.musichelper.ui.ScanPageUi
 import com.hwinzniej.musichelper.ui.SettingsPageUi
 import com.hwinzniej.musichelper.ui.YesNoDialog
+import com.hwinzniej.musichelper.utils.MyDataStore
 import com.hwinzniej.musichelper.utils.MyVibrationEffect
 import com.moriafly.salt.ui.BottomBar
 import com.moriafly.salt.ui.BottomBarItem
@@ -98,17 +98,18 @@ class MainActivity : ComponentActivity() {
     private lateinit var convertPage: ConvertPage
     private lateinit var settingsPage: SettingsPage
     lateinit var db: MusicDatabase
+    lateinit var dataStore: DataStore<Preferences>
     var enableDynamicColor = mutableStateOf(false)
     var selectedThemeMode = mutableIntStateOf(2)
     var enableHaptic = mutableStateOf(true)
     var language = mutableStateOf("system")
-    val dataStore: DataStore<Preferences> by preferencesDataStore(name = DataStoreConstants.SETTINGS_PREFERENCES)
     val checkUpdate = mutableStateOf(false)
 
     @SuppressLint("NewApi")
     @OptIn(UnstableSaltApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        dataStore = (application as MyDataStore).dataStore
 
         when (Locale.getDefault().language) {
             Locale.CHINESE.toString() -> language.value = "zh"
@@ -335,7 +336,7 @@ private fun Pages(
                 checkUpdate.value = false
                 val client = OkHttpClient()
                 val request = Request.Builder()
-                    .url("https://gitee.com/winnie0408/MusicID3TagGetter/releases/latest")  //TODO 待更换为正式项目地址
+                    .url("https://gitee.com/winnie0408/LocalMusicHelper/releases/latest")
                     .header("Accept", "application/json")
                     .get()
                     .build()
@@ -589,7 +590,10 @@ private fun Pages(
                 onClick = {
                     MyVibrationEffect(context, mainPage.enableHaptic.value).click()
                     coroutineScope.launch {
-                        settingsPageState.scrollToPage(0)
+                        settingsPageState.animateScrollToPage(
+                            0,
+                            animationSpec = spring(2f)
+                        )
                     }
                     coroutineScope.launch {
                         pageState.animateScrollToPage(

@@ -150,7 +150,7 @@
     <string name="other">Other</string>
     <string name="app_version" translatable="false">0.9.9</string>
     <string name="update">Update</string>
-    <string name="developers">Developers</string>
+    <string name="staff">Staff</string>
     <string name="pc_salt_converter">Salt Converter for PC</string>
     <string name="buy_me_a_coffee">Buy me a coffee</string>
     <string name="join_qq_group">Join QQ Group</string>
@@ -178,4 +178,20 @@
     <string name="get_file_with_root">Automatically get # database file</string>
     <string name="with_root_access">With Root access</string>
     <string name="app_not_installed">" not installed"</string>
+    <string name="related_info">Related info</string>
+    <string name="contact_developer">Contact developers</string>
+    <string name="follow_on_coolapk">Follow on Coolapk</string>
+    <string name="app_developer">Develop</string>
+    <string name="app_translator">Translate</string>
+    <string name="app_technical_supportor">Technical support</string>
+    <string name="app_special_thanks">Special thanks</string>
+    <string name="coolapk">"Coolapk: "</string>
+    <string name="qq_group">"QQ Group: "</string>
+    <string name="rank_no_order">(The above rankings are in no particular order)</string>
+    <string name="visit_the_link_below">Visit the link below?</string>
+    <string name="open_in_some_app">Open in #?</string>
+    <string name="will_open_in_browser">will open in browser</string>
+    <string name="launching_app">Launching</string>
+    <string name="thank_you_very_much">❤️ Thank you very much! ❤️</string>
+    <string name="save_image">(Touch the image to save it to gallery)</string>
 </resources>

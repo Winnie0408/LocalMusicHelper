@@ -89,7 +89,7 @@ fun YesNoDialog(
     onConfirm: () -> Unit,
     properties: DialogProperties = DialogProperties(),
     title: String,
-    content: String,
+    content: String?,
     cancelText: String = stringResource(id = R.string.cancel_button_text),
     confirmText: String = stringResource(id = R.string.ok_button_text),
     customContent: @Composable () -> Unit = {},
@@ -107,7 +107,7 @@ fun YesNoDialog(
         if (onlyComposeView) Spacer(modifier = Modifier.height(8.dp * 2))
         if (!onlyComposeView) {
             ItemSpacer()
-            ItemText(text = content, fontSize = 13.sp)
+            content?.let { ItemText(text = it, fontSize = 13.sp) }
             Spacer(modifier = Modifier.height(8.dp * 2))
         }
         customContent()
@@ -173,7 +173,7 @@ fun ItemPopup(  //TODO 添加图标、根据文字长度自动调整宽度、优
     text: String,
     sub: String? = null,
     selectedItem: String = "",
-    popupWidth: Int = 180,
+    popupWidth: Int = 160,
     content: @Composable ColumnScope.() -> Unit
 ) {
     Box {
@@ -276,7 +276,9 @@ fun YesDialog(
     content: String,
     confirmText: String = stringResource(id = R.string.ok_button_text),
     fontSize: TextUnit = 13.sp,
-    enableHaptic: Boolean = false
+    enableHaptic: Boolean = false,
+    customContent: @Composable () -> Unit = {},
+    onlyComposeView: Boolean = false
 ) {
     MyVibrationEffect(LocalContext.current, enableHaptic).dialog()
     BasicDialog(
@@ -284,9 +286,14 @@ fun YesDialog(
         properties = properties
     ) {
         DialogTitle(text = title)
-        ItemSpacer()
-        ItemText(text = content, fontSize = fontSize)
-        Spacer(modifier = Modifier.height(8.dp * 2))
+        if (onlyComposeView) Spacer(modifier = Modifier.height(8.dp * 2))
+        if (!onlyComposeView) {
+            ItemSpacer()
+            ItemText(text = content, fontSize = fontSize)
+            Spacer(modifier = Modifier.height(8.dp * 2))
+        }
+        customContent()
+        if (onlyComposeView) Spacer(modifier = Modifier.height(8.dp * 2))
         TextButton(
             onClick = {
                 onDismissRequest()

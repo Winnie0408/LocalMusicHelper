@@ -1,7 +1,5 @@
 package com.hwinzniej.musichelper.utils
 
-import android.content.Context
-import android.graphics.Paint
 import android.net.Uri
 import java.io.BufferedReader
 import java.io.DataOutputStream
@@ -257,17 +255,6 @@ class Tools {
             }
         }
         return minEntry
-    }
-
-    /**
-     * 计算字符串所占的Dp宽度 Copilot生成，未测试
-     */
-    fun measureTextWidthInDp(context: Context, text: String, textSize: Float): Float {
-        val paint = Paint()
-        paint.textSize = textSize
-        val widthInPixels = paint.measureText(text)
-        val metrics = context.resources.displayMetrics
-        return widthInPixels / (metrics.densityDpi / 160f)
     }
 
     fun execShellCmdWithRoot(cmd: String): String {

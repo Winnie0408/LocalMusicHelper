@@ -1,16 +1,24 @@
 package com.hwinzniej.musichelper.ui
 
+import android.content.Intent
+import android.graphics.BitmapFactory
+import android.net.Uri
+import android.webkit.WebView
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.rememberScrollState
@@ -29,17 +37,20 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.zIndex
 import com.alibaba.fastjson2.JSON
 import com.alibaba.fastjson2.JSONObject
 import com.hwinzniej.musichelper.R
 import com.hwinzniej.musichelper.utils.MyVibrationEffect
+import com.moriafly.salt.ui.ItemTitle
 import com.moriafly.salt.ui.RoundedColumn
 import com.moriafly.salt.ui.SaltTheme
 import com.moriafly.salt.ui.TitleBar
@@ -68,6 +79,8 @@ fun AboutPageUi(
     var showYesDialog by remember { mutableStateOf(false) }
     var yesDialogTitle by remember { mutableStateOf("") }
     var yesDialogContent by remember { mutableStateOf("") }
+    var yesDialogCustomContent by remember { mutableStateOf<@Composable () -> Unit>({}) }
+    var yesNoDialogOnConfirm by remember { mutableStateOf({}) }
 
 
     BackHandler(enabled = settingsPageState.currentPage == 1) {
@@ -84,10 +97,10 @@ fun AboutPageUi(
             onCancel = { showYesNoDialog = false },
             onConfirm = {
                 showYesNoDialog = false
-
+                yesNoDialogOnConfirm()
             },
             title = yesNoDialogTitle,
-            content = yesNoDialogContent,
+            content = if (yesNoDialogContent.isEmpty()) null else yesNoDialogContent,
             enableHaptic = enableHaptic.value
         )
     }
@@ -98,7 +111,9 @@ fun AboutPageUi(
             title = yesDialogTitle,
             content = yesDialogContent,
             fontSize = 14.sp,
-            enableHaptic = enableHaptic.value
+            enableHaptic = enableHaptic.value,
+            customContent = yesDialogCustomContent,
+            onlyComposeView = yesDialogContent.isEmpty()
         )
     }
 
@@ -159,9 +174,73 @@ fun AboutPageUi(
                     Spacer(modifier = Modifier.height(4.dp))
                 }
                 RoundedColumn {
-//                ItemTitle(text = stringResource(id = R.string.update))
+                    ItemTitle(text = stringResource(id = R.string.related_info))
                     Item(
-                        onClick = { /*TODO*/ }, text = stringResource(id = R.string.developers)
+                        onClick = {
+                            yesDialogContent = ""
+                            yesDialogCustomContent = {
+                                Column {
+                                    RoundedColumn {
+                                        ItemTitle(text = stringResource(id = R.string.app_developer))
+                                        Text(
+                                            modifier = Modifier.padding(
+                                                horizontal = 16.dp,
+                                                vertical = 8.dp
+                                            ),
+                                            text = "HWinZnieJ",
+                                            color = SaltTheme.colors.text,
+                                            fontSize = 14.sp
+                                        )
+                                    }
+                                    RoundedColumn {
+                                        ItemTitle(text = stringResource(id = R.string.app_translator))
+                                        Text(
+                                            modifier = Modifier.padding(
+                                                horizontal = 16.dp,
+                                                vertical = 8.dp
+                                            ),
+                                            text = "HWinZnieJ & DeepL Translator",
+                                            color = SaltTheme.colors.text,
+                                            fontSize = 14.sp
+                                        )
+                                    }
+                                    RoundedColumn {
+                                        ItemTitle(text = stringResource(id = R.string.app_technical_supportor))
+                                        Text(
+                                            modifier = Modifier.padding(
+                                                horizontal = 16.dp,
+                                                vertical = 8.dp
+                                            ),
+                                            text = "Microsoft Copilot & GitHub Copilot & OpenAI GPT-4",
+                                            color = SaltTheme.colors.text,
+                                            fontSize = 14.sp
+                                        )
+                                    }
+                                    RoundedColumn {
+                                        ItemTitle(text = stringResource(id = R.string.app_special_thanks))
+                                        Text(
+                                            modifier = Modifier.padding(
+                                                horizontal = 16.dp,
+                                                vertical = 8.dp
+                                            ),
+                                            text = "${
+                                                stringResource(id = R.string.coolapk)
+                                            }\n叶谖儿、网恋被骗九八上单、路还要走、星辰与月、破晓px、OmegaFallen、鷄你太魅、暮雨江天、PO8的惊堂木、叁陈小洋楼、白给少年又来了、梦中之城你和TA、大帅帅帅帅逼、不良人有品大帅、大泉麻衣、zz_xmy\n\n${
+                                                stringResource(id = R.string.qq_group)
+                                            }\n过客、　、.、王八仨水、路还要走、天中HD、曾喜樂、。、ZERO、60、MATURE、Xik-、Zj、这是一个名字、唯爱、天择\uD83D\uDCAB、九江、迷雾水珠、K、七、xmy、大泉麻衣、w、Sandmい旧梦、奔跑吧，兄弟！、吔—、匿名用户、S\n\n${
+                                                stringResource(
+                                                    id = R.string.rank_no_order
+                                                )
+                                            }",
+                                            color = SaltTheme.colors.text,
+                                            fontSize = 14.sp
+                                        )
+                                    }
+                                }
+                            }
+                            yesDialogTitle = context.getString(R.string.staff)
+                            showYesDialog = true
+                        }, text = stringResource(id = R.string.staff)
                     )
                     Item(
                         enabled = !showLoadingProgressBar,
@@ -170,7 +249,7 @@ fun AboutPageUi(
                                 showLoadingProgressBar = true
                                 val client = OkHttpClient()
                                 val request = Request.Builder()
-                                    .url("https://gitee.com/winnie0408/MusicID3TagGetter/releases/latest")  //TODO 待更换为正式项目地址
+                                    .url("https://gitee.com/winnie0408/LocalMusicHelper/releases/latest")
                                     .header("Accept", "application/json")
                                     .get()
                                     .build()
@@ -206,7 +285,7 @@ fun AboutPageUi(
                                         ).show()
                                     }
                                 } catch (e: Exception) {
-                                    showYesDialog = true
+                                    yesDialogCustomContent = {}
                                     yesDialogTitle = context.getString(R.string.error)
                                     yesDialogContent =
                                         "${context.getString(R.string.check_connectivity)}\n${
@@ -214,6 +293,7 @@ fun AboutPageUi(
                                                 R.string.error_details
                                             )
                                         }\n- ${e.message.toString()}"
+                                    showYesDialog = true
                                 } finally {
                                     showLoadingProgressBar = false
                                 }
@@ -222,43 +302,290 @@ fun AboutPageUi(
                         text = stringResource(id = R.string.check_for_updates)
                     )
                     Item(
-                        onClick = { /*TODO*/ },
+                        onClick = {
+                            yesDialogContent = ""
+                            yesDialogCustomContent = {
+                                val currentTheme = SaltTheme.colors.text.red
+                                Column(
+                                    modifier = Modifier
+                                        .heightIn(
+                                            min = 0.1.dp,
+                                            max = (LocalConfiguration.current.screenHeightDp / 1.8).dp
+                                        )
+                                ) {
+                                    AndroidView(factory = { WebView(context) }) { webView ->
+                                        val licensesHtml = if (currentTheme < 0.5f) {
+                                            context.assets.open("licenses.html")
+                                                .use { inputStream ->
+                                                    inputStream.bufferedReader().use {
+                                                        it.readText()
+                                                    }
+                                                }
+                                        } else {
+                                            context.assets.open("licenses_dark.html")
+                                                .use { inputStream ->
+                                                    inputStream.bufferedReader().use {
+                                                        it.readText()
+                                                    }
+                                                }
+                                        }
+                                        webView.setBackgroundColor(0)
+                                        webView.loadDataWithBaseURL(
+                                            null,
+                                            licensesHtml,
+                                            "text/html",
+                                            "utf-8",
+                                            null
+                                        )
+                                    }
+                                }
+                            }
+                            yesDialogTitle = context.getString(R.string.open_source_licence)
+                            showYesDialog = true
+                        },
                         text = stringResource(id = R.string.open_source_licence)
                     )
                     Item(
-                        onClick = { /*TODO*/ },
+                        onClick = {
+                            yesNoDialogOnConfirm = {
+                                context.startActivity(Intent(Intent.ACTION_VIEW).apply {
+                                    data = Uri.parse(
+                                        "https://saltconv.hwinzniej.top:45999"
+                                    )
+                                })
+                            }
+                            yesNoDialogTitle = context.getString(R.string.visit_the_link_below)
+                            yesNoDialogContent = "https://saltconv.hwinzniej.top:45999"
+                            showYesNoDialog = true
+                        },
                         text = stringResource(id = R.string.pc_salt_converter)
                     )
                     Item(
-                        onClick = { /*TODO*/ }, text = stringResource(id = R.string.buy_me_a_coffee)
+                        onClick = {
+                            yesDialogContent = ""
+                            yesDialogCustomContent = {
+                                Column(
+                                    modifier = Modifier
+                                        .heightIn(
+                                            min = 0.1.dp,
+                                            max = (LocalConfiguration.current.screenHeightDp / 1.5).dp
+                                        )
+                                        .align(Alignment.CenterHorizontally)
+                                ) {
+                                    Text(
+                                        modifier = Modifier.align(Alignment.CenterHorizontally),
+                                        text = stringResource(id = R.string.thank_you_very_much),
+                                        color = SaltTheme.colors.text,
+                                        fontSize = 15.sp
+                                    )
+                                    Spacer(modifier = Modifier.height(12.dp))
+                                    Image(
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(10.dp))
+                                            .size(200.dp)
+                                            .clickable {  //TODO 待完成点击保存图片
+                                                val bitmap = BitmapFactory.decodeResource(
+                                                    context.resources,
+                                                    R.drawable.alipay
+                                                )
+                                            },
+                                        painter = painterResource(id = R.drawable.alipay),
+                                        contentDescription = ""
+                                    )
+                                    Spacer(modifier = Modifier.height(12.dp))
+                                    Image(
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(10.dp))
+                                            .size(200.dp)
+                                            .clickable {  //TODO 待完成点击保存图片
+                                                val bitmap = BitmapFactory.decodeResource(
+                                                    context.resources,
+                                                    R.drawable.wechat
+                                                )
+                                            },
+                                        painter = painterResource(id = R.drawable.wechat),
+                                        contentDescription = ""
+                                    )
+                                    Spacer(modifier = Modifier.height(12.dp))
+                                    Text(
+                                        modifier = Modifier.align(Alignment.CenterHorizontally),
+                                        text = stringResource(id = R.string.save_image),
+                                        color = SaltTheme.colors.text,
+                                        fontSize = 12.sp
+                                    )
+                                }
+                            }
+                            yesDialogTitle = context.getString(R.string.buy_me_a_coffee)
+                            showYesDialog = true
+                        }, text = stringResource(id = R.string.buy_me_a_coffee)
                     )
                 }
 
                 RoundedColumn {
+                    ItemTitle(text = stringResource(id = R.string.contact_developer))
                     Item(
-                        onClick = { /*TODO*/ },
+                        onClick = {
+                            yesNoDialogOnConfirm = {
+                                try {
+                                    context.startActivity(
+                                        Intent(
+                                            Intent.ACTION_VIEW,
+                                            Uri.parse("mqqapi://card/show_pslcard?src_type=internal&version=1&card_type=group&uin=931819834")
+                                        )
+                                    )
+                                    Toast.makeText(
+                                        context,
+                                        "${context.getString(R.string.launching_app)} QQ",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                } catch (e: Exception) {
+                                    Toast.makeText(
+                                        context,
+                                        "QQ${context.getString(R.string.app_not_installed)}, ${
+                                            context.getString(R.string.will_open_in_browser)
+                                        }",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                    context.startActivity(
+                                        Intent(
+                                            Intent.ACTION_VIEW,
+                                            Uri.parse("https://qm.qq.com/q/dMPQiCYp8c")
+                                        )
+                                    )
+                                }
+                            }
+                            yesNoDialogTitle = context.getString(R.string.open_in_some_app)
+                                .replace("#", "QQ")
+                            yesNoDialogContent = ""
+                            showYesNoDialog = true
+                        },
                         text = stringResource(id = R.string.join_qq_group),
                         iconPainter = painterResource(id = R.drawable.ic_check)
                     )
                     Item(
-                        onClick = { /*TODO*/ },
+                        onClick = {
+                            yesNoDialogOnConfirm = {
+                                try {
+                                    context.startActivity(
+                                        Intent(
+                                            Intent.ACTION_VIEW,
+                                            Uri.parse("coolmarket://u/1844460")
+                                        )
+                                    )
+                                    Toast.makeText(
+                                        context,
+                                        "${context.getString(R.string.launching_app)} ${
+                                            context.getString(
+                                                R.string.coolapk
+                                            ).replace("(：)|(: )".toRegex(), "")
+                                        }",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                } catch (e: Exception) {
+                                    Toast.makeText(
+                                        context,
+                                        "${
+                                            context.getString(R.string.coolapk)
+                                                .replace("(：)|(: )".toRegex(), "")
+                                        }${context.getString(R.string.app_not_installed)}, ${
+                                            context.getString(R.string.will_open_in_browser)
+                                        }",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                    context.startActivity(
+                                        Intent(
+                                            Intent.ACTION_VIEW,
+                                            Uri.parse("http://www.coolapk.com/u/1844460")
+                                        )
+                                    )
+                                }
+                            }
+                            yesNoDialogTitle = context.getString(R.string.open_in_some_app)
+                                .replace(
+                                    "#",
+                                    context.getString(R.string.coolapk)
+                                        .replace("(：)|(: )".toRegex(), "")
+                                )
+                            yesNoDialogContent = ""
+                            showYesNoDialog = true
+                        },
+                        text = stringResource(id = R.string.follow_on_coolapk),
+                        iconPainter = painterResource(id = R.drawable.ic_check)
+                    )
+                    Item(
+                        onClick = {
+                            yesNoDialogOnConfirm = {
+                                try {
+                                    context.startActivity(
+                                        Intent(
+                                            Intent.ACTION_VIEW,
+                                            Uri.parse("bilibili://space/221114757")
+                                        )
+                                    )
+                                    Toast.makeText(
+                                        context,
+                                        "${context.getString(R.string.launching_app)} BiliBili",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                } catch (e: Exception) {
+                                    Toast.makeText(
+                                        context,
+                                        "BiliBili${context.getString(R.string.app_not_installed)}, ${
+                                            context.getString(R.string.will_open_in_browser)
+                                        }",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                    context.startActivity(
+                                        Intent(
+                                            Intent.ACTION_VIEW,
+                                            Uri.parse("https://space.bilibili.com/221114757")
+                                        )
+                                    )
+                                }
+                            }
+                            yesNoDialogTitle = context.getString(R.string.open_in_some_app)
+                                .replace("#", "BiliBili")
+                            yesNoDialogContent = ""
+                            showYesNoDialog = true
+                        },
                         text = stringResource(id = R.string.follow_on_bilibili),
                         iconPainter = painterResource(id = R.drawable.ic_check)
                     )
                     Item(
-                        onClick = { /*TODO*/ },
+                        onClick = {
+                            yesNoDialogOnConfirm = {
+                                context.startActivity(Intent(Intent.ACTION_VIEW).apply {
+                                    data = Uri.parse(
+                                        "https://github.com/Winnie0408/LocalMusicHelper"
+                                    )
+                                })
+                            }
+                            yesNoDialogTitle = context.getString(R.string.visit_the_link_below)
+                            yesNoDialogContent = "https://github.com/Winnie0408/LocalMusicHelper"
+                            showYesNoDialog = true
+                        },
                         text = stringResource(id = R.string.open_source_github),
                         sub = stringResource(id = R.string.open_source_sub),
                         iconPainter = painterResource(id = R.drawable.ic_check)
                     )
                     Item(
-                        onClick = { /*TODO*/ },
+                        onClick = {
+                            yesNoDialogOnConfirm = {
+                                context.startActivity(Intent(Intent.ACTION_VIEW).apply {
+                                    data = Uri.parse(
+                                        "https://gitee.com/winnie0408/LocalMusicHelper"
+                                    )
+                                })
+                            }
+                            yesNoDialogTitle = context.getString(R.string.visit_the_link_below)
+                            yesNoDialogContent = "https://gitee.com/winnie0408/LocalMusicHelper"
+                            showYesNoDialog = true
+                        },
                         text = stringResource(id = R.string.open_source_gitee),
                         sub = stringResource(id = R.string.open_source_sub),
                         iconPainter = painterResource(id = R.drawable.ic_check)
                     )
                 }
-
             }
         }
     }
