@@ -145,7 +145,6 @@
     <string name="check_for_updates">Check for updates</string>
     <string name="about">About</string>
     <string name="other">Other</string>
-    <string name="app_version" translatable="false">0.9.9</string>
     <string name="update">Update</string>
     <string name="staff">Staff</string>
     <string name="pc_salt_converter">Salt Converter for PC</string>

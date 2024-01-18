@@ -302,9 +302,10 @@ private fun Pages(
                     ItemValue(
                         text = "${stringResource(id = R.string.latest_version)}: ${latestVersion.value}",
                         sub = "${stringResource(id = R.string.current_version)}: ${
-                            stringResource(
-                                id = R.string.app_version
-                            )
+                            context.packageManager.getPackageInfo(
+                                context.packageName,
+                                0
+                            ).versionName
                         }"
                     )
                     ItemTitle(text = stringResource(id = R.string.change_log))
@@ -350,7 +351,11 @@ private fun Pages(
                     latestVersion.value =
                         (latestTag as JSONObject).getString("title")
                             .replace("v", "")
-                    if (latestVersion.value != context.getString(R.string.app_version)) {
+                    if (latestVersion.value != context.packageManager.getPackageInfo(
+                            context.packageName,
+                            0
+                        ).versionName
+                    ) {
                         latestDescription.value = latestTag.getString("description")
                             .replace("</?[a-z]+>".toRegex(), "")
                             .replace("\n\n", "\n")

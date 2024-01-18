@@ -171,9 +171,10 @@ fun AboutPageUi(
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = stringResource(
-                            id = R.string.app_version
-                        ), color = SaltTheme.colors.text
+                        text = context.packageManager.getPackageInfo(
+                            context.packageName,
+                            0
+                        ).versionName, color = SaltTheme.colors.text
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                 }
@@ -271,7 +272,11 @@ fun AboutPageUi(
                                     latestVersion.value =
                                         (latestTag as JSONObject).getString("title")
                                             .replace("v", "")
-                                    if (latestVersion.value != context.getString(R.string.app_version)) {
+                                    if (latestVersion.value != context.packageManager.getPackageInfo(
+                                            context.packageName,
+                                            0
+                                        ).versionName
+                                    ) {
                                         latestDescription.value = latestTag.getString("description")
                                             .replace("</?[a-z]+>".toRegex(), "")
                                             .replace("\n\n", "\n")

@@ -384,7 +384,10 @@ fun SettingsPageUi(
                         }
                     },
                     text = stringResource(id = R.string.about),
-                    rightSub = stringResource(id = R.string.app_version),
+                    rightSub = context.packageManager.getPackageInfo(
+                        context.packageName,
+                        0
+                    ).versionName,
                     iconPainter = painterResource(id = R.drawable.about),
                     iconColor = SaltTheme.colors.text,
                     iconPaddingValues = PaddingValues(
