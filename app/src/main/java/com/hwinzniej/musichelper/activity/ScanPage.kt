@@ -156,7 +156,12 @@ class ScanPage(
                     lifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
                         val file = File(
                             Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
-                            "${getString(context, R.string.result_file_name)}.db"
+                            "${
+                                getString(context, R.string.result_file_name).replace(
+                                    "#",
+                                    getString(context, R.string.app_name)
+                                )
+                            }.db"
                         )
                         if (file.exists()) {
                             showConflictDialog.value = true
@@ -175,7 +180,12 @@ class ScanPage(
                     lifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
                         val file = File(
                             Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
-                            "${getString(context, R.string.result_file_name)}.txt"
+                            "${
+                                getString(context, R.string.result_file_name).replace(
+                                    "#",
+                                    getString(context, R.string.app_name)
+                                )
+                            }.txt"
                         )
                         if (file.exists()) {
                             showConflictDialog.value = true
@@ -219,12 +229,22 @@ class ScanPage(
                         if (selectedExportFormat.intValue == 0) {
                             File(
                                 Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
-                                "${getString(context, R.string.result_file_name)}.db"
+                                "${
+                                    getString(context, R.string.result_file_name).replace(
+                                        "#",
+                                        getString(context, R.string.app_name)
+                                    )
+                                }.db"
                             ).delete()
                         } else {
                             File(
                                 Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
-                                "${getString(context, R.string.result_file_name)}.txt"
+                                "${
+                                    getString(context, R.string.result_file_name).replace(
+                                        "#",
+                                        getString(context, R.string.app_name)
+                                    )
+                                }.txt"
                             ).delete()
                         }
                     }
@@ -358,7 +378,12 @@ class ScanPage(
     fun exportToDb() {
         val file = File(
             Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
-            "${getString(context, R.string.result_file_name)}.db"
+            "${
+                getString(context, R.string.result_file_name).replace(
+                    "#",
+                    getString(context, R.string.app_name)
+                )
+            }.db"
         )
         val outputDb = SQLiteDatabase.openOrCreateDatabase(file, null)
         outputDb.execSQL("CREATE TABLE IF NOT EXISTS music (id INTEGER PRIMARY KEY, song TEXT, artist TEXT, album TEXT, absolutePath TEXT, releaseYear TEXT, trackNumber TEXT, albumArtist TEXT, genre TEXT)")
@@ -386,14 +411,24 @@ class ScanPage(
         outputDb.close()
         File(
             Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
-            "${getString(context, R.string.result_file_name)}.db-journal"
+            "${
+                getString(context, R.string.result_file_name).replace(
+                    "#",
+                    getString(context, R.string.app_name)
+                )
+            }.db-journal"
         ).delete()
     }
 
     fun exportToTxt() {
         val file = File(
             Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
-            "${getString(context, R.string.result_file_name)}.txt"
+            "${
+                getString(context, R.string.result_file_name).replace(
+                    "#",
+                    getString(context, R.string.app_name)
+                )
+            }.txt"
         )
         val fileWriter = FileWriter(file, true)
         for (music in musicAllList) {

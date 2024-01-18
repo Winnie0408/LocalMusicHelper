@@ -15,6 +15,7 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -577,10 +578,11 @@ fun ConvertPageUi(
                         ) {
                             RoundedColumn {
                                 ItemTitle(text = stringResource(R.string.source_of_songlist_app))
-                                ItemPopup( //TODO 为每个子项添加图标
+                                ItemPopup(
                                     state = sourceAppPopupMenuState,
                                     text = stringResource(R.string.select_source_of_songlist),
-                                    selectedItem = sourceApp.value
+                                    selectedItem = sourceApp.value,
+                                    popupWidth = 180
                                 ) {
                                     PopupMenuItem(
                                         onClick = {
@@ -590,7 +592,9 @@ fun ConvertPageUi(
                                             databaseFileName.value = ""
                                         },
                                         selected = selectedSourceApp.intValue == 1,
-                                        text = stringResource(R.string.source_netease_cloud_music)
+                                        text = stringResource(R.string.source_netease_cloud_music),
+                                        iconPainter = painterResource(id = R.drawable.cloudmusic),
+                                        iconColor = SaltTheme.colors.text
                                     )
                                     PopupMenuItem(
                                         onClick = {
@@ -600,7 +604,9 @@ fun ConvertPageUi(
                                             databaseFileName.value = ""
                                         },
                                         selected = selectedSourceApp.intValue == 2,
-                                        text = stringResource(R.string.source_qq_music)
+                                        text = stringResource(R.string.source_qq_music),
+                                        iconPainter = painterResource(id = R.drawable.qqmusic),
+                                        iconColor = SaltTheme.colors.text
                                     )
 
                                     PopupMenuItem(
@@ -612,8 +618,14 @@ fun ConvertPageUi(
                                         },
                                         selected = selectedSourceApp.intValue == 3,
                                         text = stringResource(R.string.source_kugou_music),
-//                        iconPainter = painterResource(id = R.drawable.ic_qr_code),
-//                        iconColor = SaltTheme.colors.text
+                                        iconPainter = painterResource(id = R.drawable.kugou),
+                                        iconColor = SaltTheme.colors.text,
+                                        iconPaddingValues = PaddingValues(
+                                            start = 1.5.dp,
+                                            end = 1.5.dp,
+                                            top = 1.5.dp,
+                                            bottom = 1.5.dp
+                                        )
                                     )
                                     PopupMenuItem(
                                         onClick = {
@@ -623,7 +635,15 @@ fun ConvertPageUi(
                                             databaseFileName.value = ""
                                         },
                                         selected = selectedSourceApp.intValue == 4,
-                                        text = stringResource(R.string.source_kuwo_music)
+                                        text = stringResource(R.string.source_kuwo_music),
+                                        iconPainter = painterResource(id = R.drawable.kuwo),
+                                        iconColor = SaltTheme.colors.text,
+                                        iconPaddingValues = PaddingValues(
+                                            start = 1.5.dp,
+                                            end = 1.5.dp,
+                                            top = 1.5.dp,
+                                            bottom = 1.5.dp
+                                        )
                                     )
                                 }
                             }
@@ -677,7 +697,10 @@ fun ConvertPageUi(
                                         useCustomResultFile.value = it
                                     },
                                     text = stringResource(R.string.use_custom_result_file),
-                                    sub = stringResource(R.string.use_other_result_file),
+                                    sub = stringResource(R.string.use_other_result_file).replace(
+                                        "#",
+                                        stringResource(id = R.string.app_name)
+                                    ),
                                     enableHaptic = enableHaptic.value
                                 )
                                 AnimatedVisibility(
@@ -691,7 +714,10 @@ fun ConvertPageUi(
                                     ) {
                                         Item(
                                             onClick = { convertPage.selectResultFile() },
-                                            text = stringResource(R.string.select_result_file_item_title),
+                                            text = stringResource(R.string.select_result_file_item_title).replace(
+                                                "#",
+                                                stringResource(id = R.string.app_name)
+                                            ),
                                         )
                                         AnimatedVisibility(
                                             visible = customResultFileName.value != ""
@@ -705,7 +731,6 @@ fun ConvertPageUi(
                                 }
                             }
 
-//                RoundedColumn {
                             AnimatedContent(
                                 targetState = showLoadingProgressBar.value,
                                 label = "",
@@ -725,9 +750,7 @@ fun ConvertPageUi(
                                     )
                                 }
                             }
-//                }
                         }
-
 
                     }
 
@@ -884,7 +907,15 @@ fun ConvertPageUi(
                                                         matchingModePopupMenuState.dismiss()
                                                     },
                                                     selected = selectedMatchingMode.intValue == 1,
-                                                    text = stringResource(R.string.split_matching)
+                                                    text = stringResource(R.string.split_matching),
+                                                    iconPainter = painterResource(id = R.drawable.split),
+                                                    iconColor = SaltTheme.colors.text,
+                                                    iconPaddingValues = PaddingValues(
+                                                        start = 3.dp,
+                                                        end = 2.dp,
+                                                        top = 2.dp,
+                                                        bottom = 2.dp
+                                                    )
                                                 )
                                                 PopupMenuItem(
                                                     onClick = {
@@ -896,7 +927,15 @@ fun ConvertPageUi(
                                                         matchingModePopupMenuState.dismiss()
                                                     },
                                                     selected = selectedMatchingMode.intValue == 2,
-                                                    text = stringResource(R.string.overall_matching)
+                                                    text = stringResource(R.string.overall_matching),
+                                                    iconPainter = painterResource(id = R.drawable.overall),
+                                                    iconColor = SaltTheme.colors.text,
+                                                    iconPaddingValues = PaddingValues(
+                                                        start = 3.dp,
+                                                        end = 2.dp,
+                                                        top = 2.dp,
+                                                        bottom = 2.dp
+                                                    )
                                                 )
                                             }
 
@@ -995,7 +1034,15 @@ fun ConvertPageUi(
                                                         filterPopupMenuState.dismiss()
                                                     },
                                                     text = "${stringResource(id = R.string.all)} - ${convertResult.size}",
-                                                    selected = selectedFilterIndex == 0
+                                                    selected = selectedFilterIndex == 0,
+                                                    iconPainter = painterResource(id = R.drawable.all),
+                                                    iconColor = SaltTheme.colors.text,
+                                                    iconPaddingValues = PaddingValues(
+                                                        start = 2.dp,
+                                                        end = 2.dp,
+                                                        top = 2.dp,
+                                                        bottom = 2.dp
+                                                    )
                                                 )
                                                 PopupMenuItem(
                                                     onClick = {
@@ -1013,7 +1060,15 @@ fun ConvertPageUi(
                                                             )
                                                         }
                                                     }",
-                                                    selected = selectedFilterIndex == 1
+                                                    selected = selectedFilterIndex == 1,
+                                                    iconPainter = painterResource(id = R.drawable.success),
+                                                    iconColor = SaltTheme.colors.text,
+                                                    iconPaddingValues = PaddingValues(
+                                                        start = 2.dp,
+                                                        end = 2.dp,
+                                                        top = 2.dp,
+                                                        bottom = 2.dp
+                                                    )
                                                 )
                                                 PopupMenuItem(
                                                     onClick = {
@@ -1031,7 +1086,9 @@ fun ConvertPageUi(
                                                             )
                                                         }
                                                     }",
-                                                    selected = selectedFilterIndex == 2
+                                                    selected = selectedFilterIndex == 2,
+                                                    iconPainter = painterResource(id = R.drawable.caution),
+                                                    iconColor = SaltTheme.colors.text,
                                                 )
                                                 PopupMenuItem(
                                                     onClick = {
@@ -1049,7 +1106,9 @@ fun ConvertPageUi(
                                                             )
                                                         }
                                                     }",
-                                                    selected = selectedFilterIndex == 3
+                                                    selected = selectedFilterIndex == 3,
+                                                    iconPainter = painterResource(id = R.drawable.manual),
+                                                    iconColor = SaltTheme.colors.text
                                                 )
                                             }
                                         }
@@ -1312,7 +1371,7 @@ fun ConvertPageUi(
                                                 Environment.getExternalStoragePublicDirectory(
                                                     Environment.DIRECTORY_DOWNLOADS
                                                 )
-                                            }/MusicHelper/${playlistName[index]}.txt",
+                                            }/${context.getString(R.string.app_name)}/${playlistName[index]}.txt",
                                             fontSize = 15.sp
                                         )
                                     }

@@ -7,6 +7,7 @@ import androidx.compose.animation.core.spring
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.PagerState
@@ -18,6 +19,7 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.datastore.core.DataStore
@@ -97,7 +99,9 @@ fun SettingsPageUi(
                     },
                     text = stringResource(R.string.dynamic_color_switcher_text),
                     sub = stringResource(R.string.dynamic_color_switcher_sub),
-                    enableHaptic = enableHaptic.value
+                    enableHaptic = enableHaptic.value,
+                    iconPainter = painterResource(id = R.drawable.color),
+                    iconColor = SaltTheme.colors.text
                 )
                 ItemPopup(
                     state = themeModePopupMenuState,
@@ -107,7 +111,16 @@ fun SettingsPageUi(
                         1 -> stringResource(R.string.dark_mode)
                         2 -> stringResource(R.string.follow_system)
                         else -> ""
-                    }
+                    },
+                    popupWidth = 140,
+                    iconPainter = painterResource(id = R.drawable.app_theme),
+                    iconColor = SaltTheme.colors.text,
+                    iconPaddingValues = PaddingValues(
+                        start = 2.dp,
+                        end = 2.dp,
+                        top = 2.dp,
+                        bottom = 2.dp
+                    )
                 ) {
                     PopupMenuItem(
                         onClick = {
@@ -121,6 +134,8 @@ fun SettingsPageUi(
                         },
                         selected = selectedThemeMode.intValue == 2,
                         text = stringResource(R.string.follow_system),
+                        iconPainter = painterResource(id = R.drawable.android),
+                        iconColor = SaltTheme.colors.text
                     )
                     PopupMenuItem(
                         onClick = {
@@ -133,7 +148,9 @@ fun SettingsPageUi(
                             themeModePopupMenuState.dismiss()
                         },
                         selected = selectedThemeMode.intValue == 0,
-                        text = stringResource(R.string.light_mode)
+                        text = stringResource(R.string.light_mode),
+                        iconPainter = painterResource(id = R.drawable.light_color),
+                        iconColor = SaltTheme.colors.text
                     )
                     PopupMenuItem(
                         onClick = {
@@ -146,7 +163,15 @@ fun SettingsPageUi(
                             themeModePopupMenuState.dismiss()
                         },
                         selected = selectedThemeMode.intValue == 1,
-                        text = stringResource(R.string.dark_mode)
+                        text = stringResource(R.string.dark_mode),
+                        iconPainter = painterResource(id = R.drawable.dark_color),
+                        iconColor = SaltTheme.colors.text,
+                        iconPaddingValues = PaddingValues(
+                            start = 1.dp,
+                            end = 1.dp,
+                            top = 1.dp,
+                            bottom = 1.dp
+                        )
                     )
                 }
             }
@@ -203,7 +228,9 @@ fun SettingsPageUi(
                     },
                     text = stringResource(R.string.use_root_access_switcher_title),
                     sub = stringResource(R.string.use_root_access_switcher_sub),
-                    enableHaptic = enableHaptic.value
+                    enableHaptic = enableHaptic.value,
+                    iconPainter = painterResource(id = R.drawable.root_access),
+                    iconColor = SaltTheme.colors.text
                 )
             }
 
@@ -222,7 +249,16 @@ fun SettingsPageUi(
                         "en" -> stringResource(R.string.english)
                         "ko" -> stringResource(R.string.korean)
                         else -> ""
-                    }
+                    },
+                    popupWidth = 180,
+                    iconPainter = painterResource(id = R.drawable.language),
+                    iconColor = SaltTheme.colors.text,
+                    iconPaddingValues = PaddingValues(
+                        start = 1.dp,
+                        end = 1.dp,
+                        top = 1.dp,
+                        bottom = 1.dp
+                    )
                 ) {
                     PopupMenuItem(
                         onClick = {
@@ -236,6 +272,8 @@ fun SettingsPageUi(
                         },
                         selected = selectedLanguage.value == "system",
                         text = stringResource(R.string.follow_system),
+                        iconPainter = painterResource(id = R.drawable.android),
+                        iconColor = SaltTheme.colors.text
                     )
                     PopupMenuItem(
                         onClick = {
@@ -249,6 +287,8 @@ fun SettingsPageUi(
                         },
                         selected = selectedLanguage.value == "zh",
                         text = stringResource(R.string.chinese_s),
+                        iconPainter = painterResource(id = R.drawable.chinese),
+                        iconColor = SaltTheme.colors.text
                     )
                     PopupMenuItem(
                         onClick = {
@@ -262,6 +302,8 @@ fun SettingsPageUi(
                         },
                         selected = selectedLanguage.value == "en",
                         text = stringResource(R.string.english),
+                        iconPainter = painterResource(id = R.drawable.english),
+                        iconColor = SaltTheme.colors.text
                     )
                     PopupMenuItem(
                         onClick = {
@@ -275,6 +317,14 @@ fun SettingsPageUi(
                         },
                         selected = selectedLanguage.value == "ko",
                         text = stringResource(R.string.korean),
+                        iconPainter = painterResource(id = R.drawable.korean),
+                        iconColor = SaltTheme.colors.text,
+                        iconPaddingValues = PaddingValues(
+                            start = 1.5.dp,
+                            end = 1.5.dp,
+                            top = 1.5.dp,
+                            bottom = 1.5.dp
+                        )
                     )
                 }
             }
@@ -292,7 +342,9 @@ fun SettingsPageUi(
                     },
                     text = stringResource(id = R.string.haptic_feedfback_switcher_title),
                     sub = stringResource(id = R.string.haptic_feedfback_switcher_sub),
-                    enableHaptic = enableHaptic.value
+                    enableHaptic = enableHaptic.value,
+                    iconPainter = painterResource(id = R.drawable.haptic),
+                    iconColor = SaltTheme.colors.text
                 )
             }
 
@@ -308,7 +360,15 @@ fun SettingsPageUi(
                         }
                     },
                     text = stringResource(id = R.string.check_updates_at_start),
-                    enableHaptic = enableHaptic.value
+                    enableHaptic = enableHaptic.value,
+                    iconPainter = painterResource(id = R.drawable.auto_check_update),
+                    iconColor = SaltTheme.colors.text,
+                    iconPaddingValues = PaddingValues(
+                        start = 1.5.dp,
+                        end = 1.5.dp,
+                        top = 1.5.dp,
+                        bottom = 1.5.dp
+                    )
                 )
             }
 
@@ -324,7 +384,15 @@ fun SettingsPageUi(
                         }
                     },
                     text = stringResource(id = R.string.about),
-                    rightSub = stringResource(id = R.string.app_version)
+                    rightSub = stringResource(id = R.string.app_version),
+                    iconPainter = painterResource(id = R.drawable.about),
+                    iconColor = SaltTheme.colors.text,
+                    iconPaddingValues = PaddingValues(
+                        start = 1.5.dp,
+                        end = 1.5.dp,
+                        top = 1.5.dp,
+                        bottom = 1.5.dp
+                    )
                 )
             }
         }

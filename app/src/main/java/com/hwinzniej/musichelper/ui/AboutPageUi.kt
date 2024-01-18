@@ -1,8 +1,10 @@
 package com.hwinzniej.musichelper.ui
 
 import android.content.Intent
+import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
+import android.os.Environment
 import android.webkit.WebView
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
@@ -13,6 +15,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -59,6 +62,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import java.io.File
 
 @OptIn(UnstableSaltApi::class, ExperimentalFoundationApi::class)
 @Composable
@@ -219,13 +223,16 @@ fun AboutPageUi(
                                     RoundedColumn {
                                         ItemTitle(text = stringResource(id = R.string.app_special_thanks))
                                         Text(
-                                            modifier = Modifier.padding(
-                                                horizontal = 16.dp,
-                                                vertical = 8.dp
-                                            ),
+                                            modifier = Modifier
+                                                .padding(
+                                                    horizontal = 16.dp,
+                                                    vertical = 8.dp
+                                                )
+                                                .heightIn(max = 120.dp)
+                                                .verticalScroll(rememberScrollState()),
                                             text = "${
                                                 stringResource(id = R.string.coolapk)
-                                            }\n叶谖儿、网恋被骗九八上单、路还要走、星辰与月、破晓px、OmegaFallen、鷄你太魅、暮雨江天、PO8的惊堂木、叁陈小洋楼、白给少年又来了、梦中之城你和TA、大帅帅帅帅逼、不良人有品大帅、大泉麻衣、zz_xmy\n\n${
+                                            }\n叶谖儿、网恋被骗九八上单、路还要走、星辰与月、破晓px、OmegaFallen、鷄你太魅、暮雨江天、PO8的惊堂木、叁陈小洋楼、白给少年又来了、梦中之城你和TA、大帅帅帅帅逼、不良人有品大帅、大泉麻衣、zz_xmy、迷茫和乐观的小陈\n\n${
                                                 stringResource(id = R.string.qq_group)
                                             }\n过客、　、.、王八仨水、路还要走、天中HD、曾喜樂、。、ZERO、60、MATURE、Xik-、Zj、这是一个名字、唯爱、天择\uD83D\uDCAB、九江、迷雾水珠、K、七、xmy、大泉麻衣、w、Sandmい旧梦、奔跑吧，兄弟！、吔—、匿名用户、S\n\n${
                                                 stringResource(
@@ -240,7 +247,9 @@ fun AboutPageUi(
                             }
                             yesDialogTitle = context.getString(R.string.staff)
                             showYesDialog = true
-                        }, text = stringResource(id = R.string.staff)
+                        }, text = stringResource(id = R.string.staff),
+                        iconPainter = painterResource(id = R.drawable.developer),
+                        iconColor = SaltTheme.colors.text
                     )
                     Item(
                         enabled = !showLoadingProgressBar,
@@ -299,7 +308,15 @@ fun AboutPageUi(
                                 }
                             }
                         },
-                        text = stringResource(id = R.string.check_for_updates)
+                        text = stringResource(id = R.string.check_for_updates),
+                        iconPainter = painterResource(id = R.drawable.check_update),
+                        iconColor = SaltTheme.colors.text,
+                        iconPaddingValues = PaddingValues(
+                            start = 1.5.dp,
+                            end = 1.5.dp,
+                            top = 1.5.dp,
+                            bottom = 1.5.dp
+                        )
                     )
                     Item(
                         onClick = {
@@ -330,6 +347,7 @@ fun AboutPageUi(
                                                 }
                                         }
                                         webView.setBackgroundColor(0)
+                                        webView.settings.javaScriptEnabled = false
                                         webView.loadDataWithBaseURL(
                                             null,
                                             licensesHtml,
@@ -343,7 +361,9 @@ fun AboutPageUi(
                             yesDialogTitle = context.getString(R.string.open_source_licence)
                             showYesDialog = true
                         },
-                        text = stringResource(id = R.string.open_source_licence)
+                        text = stringResource(id = R.string.open_source_licence),
+                        iconPainter = painterResource(id = R.drawable.license),
+                        iconColor = SaltTheme.colors.text
                     )
                     Item(
                         onClick = {
@@ -358,7 +378,9 @@ fun AboutPageUi(
                             yesNoDialogContent = "https://saltconv.hwinzniej.top:45999"
                             showYesNoDialog = true
                         },
-                        text = stringResource(id = R.string.pc_salt_converter)
+                        text = stringResource(id = R.string.pc_salt_converter),
+                        iconPainter = painterResource(id = R.drawable.computer),
+                        iconColor = SaltTheme.colors.text
                     )
                     Item(
                         onClick = {
@@ -383,11 +405,52 @@ fun AboutPageUi(
                                         modifier = Modifier
                                             .clip(RoundedCornerShape(10.dp))
                                             .size(200.dp)
-                                            .clickable {  //TODO 待完成点击保存图片
+                                            .clickable {
                                                 val bitmap = BitmapFactory.decodeResource(
                                                     context.resources,
                                                     R.drawable.alipay
                                                 )
+                                                try {
+                                                    val path =
+                                                        Environment.getExternalStoragePublicDirectory(
+                                                            Environment.DIRECTORY_PICTURES
+                                                        ).absolutePath
+                                                    val directory = File(path)
+                                                    if (!directory.exists()) {
+                                                        directory.mkdir()
+                                                    }
+                                                    val file =
+                                                        File(directory, "hwinzniej_alipay.jpg")
+                                                    val out = file.outputStream()
+                                                    bitmap.compress(
+                                                        Bitmap.CompressFormat.JPEG,
+                                                        100,
+                                                        out
+                                                    )
+                                                    out.flush()
+                                                    out.close()
+                                                    context.sendBroadcast(
+                                                        Intent(
+                                                            Intent.ACTION_MEDIA_SCANNER_SCAN_FILE,
+                                                            Uri.fromFile(file)
+                                                        )
+                                                    )
+                                                    Toast
+                                                        .makeText(
+                                                            context,
+                                                            context.getString(R.string.save_success),
+                                                            Toast.LENGTH_SHORT
+                                                        )
+                                                        .show()
+                                                } catch (_: Exception) {
+                                                    Toast
+                                                        .makeText(
+                                                            context,
+                                                            context.getString(R.string.save_failed),
+                                                            Toast.LENGTH_SHORT
+                                                        )
+                                                        .show()
+                                                }
                                             },
                                         painter = painterResource(id = R.drawable.alipay),
                                         contentDescription = ""
@@ -397,11 +460,52 @@ fun AboutPageUi(
                                         modifier = Modifier
                                             .clip(RoundedCornerShape(10.dp))
                                             .size(200.dp)
-                                            .clickable {  //TODO 待完成点击保存图片
+                                            .clickable {
                                                 val bitmap = BitmapFactory.decodeResource(
                                                     context.resources,
                                                     R.drawable.wechat
                                                 )
+                                                try {
+                                                    val path =
+                                                        Environment.getExternalStoragePublicDirectory(
+                                                            Environment.DIRECTORY_PICTURES
+                                                        ).absolutePath
+                                                    val directory = File(path)
+                                                    if (!directory.exists()) {
+                                                        directory.mkdir()
+                                                    }
+                                                    val file =
+                                                        File(directory, "hwinzniej_wechat.png")
+                                                    val out = file.outputStream()
+                                                    bitmap.compress(
+                                                        Bitmap.CompressFormat.PNG,
+                                                        100,
+                                                        out
+                                                    )
+                                                    out.flush()
+                                                    out.close()
+                                                    context.sendBroadcast(
+                                                        Intent(
+                                                            Intent.ACTION_MEDIA_SCANNER_SCAN_FILE,
+                                                            Uri.fromFile(file)
+                                                        )
+                                                    )
+                                                    Toast
+                                                        .makeText(
+                                                            context,
+                                                            context.getString(R.string.save_success),
+                                                            Toast.LENGTH_SHORT
+                                                        )
+                                                        .show()
+                                                } catch (_: Exception) {
+                                                    Toast
+                                                        .makeText(
+                                                            context,
+                                                            context.getString(R.string.save_failed),
+                                                            Toast.LENGTH_SHORT
+                                                        )
+                                                        .show()
+                                                }
                                             },
                                         painter = painterResource(id = R.drawable.wechat),
                                         contentDescription = ""
@@ -417,7 +521,16 @@ fun AboutPageUi(
                             }
                             yesDialogTitle = context.getString(R.string.buy_me_a_coffee)
                             showYesDialog = true
-                        }, text = stringResource(id = R.string.buy_me_a_coffee)
+                        },
+                        text = stringResource(id = R.string.buy_me_a_coffee),
+                        iconPainter = painterResource(id = R.drawable.coffee),
+                        iconColor = SaltTheme.colors.text,
+                        iconPaddingValues = PaddingValues(
+                            start = 0.5.dp,
+                            end = 0.5.dp,
+                            top = 0.5.dp,
+                            bottom = 0.5.dp
+                        )
                     )
                 }
 
@@ -460,7 +573,13 @@ fun AboutPageUi(
                             showYesNoDialog = true
                         },
                         text = stringResource(id = R.string.join_qq_group),
-                        iconPainter = painterResource(id = R.drawable.ic_check)
+                        iconPainter = painterResource(id = R.drawable.qq_group),
+                        iconPaddingValues = PaddingValues(
+                            start = 1.dp,
+                            end = 1.dp,
+                            top = 1.dp,
+                            bottom = 1.dp
+                        )
                     )
                     Item(
                         onClick = {
@@ -510,7 +629,7 @@ fun AboutPageUi(
                             showYesNoDialog = true
                         },
                         text = stringResource(id = R.string.follow_on_coolapk),
-                        iconPainter = painterResource(id = R.drawable.ic_check)
+                        iconPainter = painterResource(id = R.drawable.coolapk)
                     )
                     Item(
                         onClick = {
@@ -549,7 +668,13 @@ fun AboutPageUi(
                             showYesNoDialog = true
                         },
                         text = stringResource(id = R.string.follow_on_bilibili),
-                        iconPainter = painterResource(id = R.drawable.ic_check)
+                        iconPainter = painterResource(id = R.drawable.bilibili),
+                        iconPaddingValues = PaddingValues(
+                            start = 1.dp,
+                            end = 1.dp,
+                            top = 1.dp,
+                            bottom = 1.dp
+                        )
                     )
                     Item(
                         onClick = {
@@ -566,7 +691,8 @@ fun AboutPageUi(
                         },
                         text = stringResource(id = R.string.open_source_github),
                         sub = stringResource(id = R.string.open_source_sub),
-                        iconPainter = painterResource(id = R.drawable.ic_check)
+                        iconPainter = painterResource(id = R.drawable.github),
+                        iconColor = SaltTheme.colors.text
                     )
                     Item(
                         onClick = {
@@ -583,7 +709,13 @@ fun AboutPageUi(
                         },
                         text = stringResource(id = R.string.open_source_gitee),
                         sub = stringResource(id = R.string.open_source_sub),
-                        iconPainter = painterResource(id = R.drawable.ic_check)
+                        iconPainter = painterResource(id = R.drawable.gitee),
+                        iconPaddingValues = PaddingValues(
+                            start = 1.dp,
+                            end = 1.dp,
+                            top = 1.dp,
+                            bottom = 1.dp
+                        )
                     )
                 }
             }

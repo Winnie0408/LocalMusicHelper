@@ -74,6 +74,10 @@ class ConvertPage(
     var similarity = mutableFloatStateOf(85f)
     var useRootAccess = mutableStateOf(false)
     var sourceAppText = mutableStateOf("")
+    var playlistId = mutableStateListOf<String>()
+    var playlistName = mutableStateListOf<String>()
+    var playlistEnabled = mutableStateListOf<Int>()
+    var playlistSum = mutableStateListOf<Int>()
 
     /**
      * 请求存储权限
@@ -190,6 +194,10 @@ class ConvertPage(
         lifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
             haveError = false
             showLoadingProgressBar.value = true
+            playlistEnabled.clear()
+            playlistId.clear()
+            playlistName.clear()
+            playlistSum.clear()
             errorDialogContent.value = context.getString(R.string.error_details)
             loadingProgressSema.acquire()
             loadingProgressSema.acquire()
@@ -198,12 +206,13 @@ class ConvertPage(
             delay(delay)
             loadingProgressSema.acquire()
             loadingProgressSema.acquire()
-            showLoadingProgressBar.value = false
             MyVibrationEffect(
                 context,
                 (context as MainActivity).enableHaptic.value
             ).done()
-            if (!haveError) {
+            if (haveError) {
+                showLoadingProgressBar.value = false
+            } else {
                 showLoadingProgressBar.value = true
                 currentPage.intValue = 1
                 delay(500L)
@@ -395,17 +404,9 @@ class ConvertPage(
         }
     }
 
-    var playlistId = mutableStateListOf<String>()
-    var playlistName = mutableStateListOf<String>()
-    var playlistEnabled = mutableStateListOf<Int>()
-    var playlistSum = mutableStateListOf<Int>()
     fun databaseSummary() {
         lifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
             showLoadingProgressBar.value = true
-            playlistId.clear()
-            playlistName.clear()
-            playlistEnabled.clear()
-            playlistSum.clear()
             val innerPlaylistId = MutableList(0) { "" }
             val innerPlaylistName = MutableList(0) { "" }
             val innerPlaylistEnabled = MutableList(0) { 0 }
@@ -542,7 +543,7 @@ class ConvertPage(
                     var tempArtist = ""
                     val jsonResult = JSON.parseArray(songArtist)
                     jsonResult.forEachIndexed { index, it ->
-                        tempArtist = "${tempArtist}${(it as JSONObject).getString(" name ")}"
+                        tempArtist = "${tempArtist}${(it as JSONObject).getString("name")}"
                         if (index != jsonResult.size - 1) {
                             tempArtist = "$tempArtist/"
                         }
@@ -859,7 +860,7 @@ class ConvertPage(
             showDialogProgressBar.value = true
             val firstIndex1 = playlistEnabled.indexOfFirst { it == 1 }
             val file = File(
-                "${Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)}/MusicHelper",
+                "${Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)}/${context.getString(R.string.app_name)}",
                 fileName
             )
             if (file.exists())
@@ -924,7 +925,7 @@ class ConvertPage(
         val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         val clip = newPlainText(
             "SaltPlayerFolder",
-            "${Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).absolutePath}/MusicHelper"
+            "${Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).absolutePath}/${context.getString(R.string.app_name)}"
         )
         clipboard.setPrimaryClip(clip)
         Toast.makeText(context, context.getString(R.string.copy_success), Toast.LENGTH_SHORT).show()

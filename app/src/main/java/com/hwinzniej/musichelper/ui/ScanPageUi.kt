@@ -8,6 +8,7 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -25,6 +26,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
@@ -108,14 +110,15 @@ fun ScanPageUi(
                         enableHaptic = enableHaptic.value
                     )
                     AnimatedVisibility(visible = exportResultFile.value) {
-                        ItemPopup( //TODO 为每个子项添加图标
+                        ItemPopup(
                             state = exportTypePopupState,
                             text = stringResource(id = R.string.format_of_exported_files),
                             selectedItem = when (selectedExportFormat.intValue) {
                                 0 -> stringResource(id = R.string.database_file_popup)
                                 1 -> stringResource(id = R.string.text_file_popup)
                                 else -> ""
-                            }
+                            },
+                            popupWidth = 190
                         ) {
                             PopupMenuItem(
                                 onClick = {
@@ -124,7 +127,15 @@ fun ScanPageUi(
                                     exportTypePopupState.dismiss()
                                 },
                                 text = stringResource(id = R.string.database_file_popup),
-                                selected = selectedExportFormat.intValue == 0
+                                selected = selectedExportFormat.intValue == 0,
+                                iconPainter = painterResource(id = R.drawable.database),
+                                iconColor = SaltTheme.colors.text,
+                                iconPaddingValues = PaddingValues(
+                                    start = 1.dp,
+                                    end = 1.dp,
+                                    top = 1.dp,
+                                    bottom = 1.dp
+                                )
                             )
                             PopupMenuItem(
                                 onClick = {
@@ -133,7 +144,15 @@ fun ScanPageUi(
                                     exportTypePopupState.dismiss()
                                 },
                                 text = stringResource(id = R.string.text_file_popup),
-                                selected = selectedExportFormat.intValue == 1
+                                selected = selectedExportFormat.intValue == 1,
+                                iconPainter = painterResource(id = R.drawable.text),
+                                iconColor = SaltTheme.colors.text,
+                                iconPaddingValues = PaddingValues(
+                                    start = 2.dp,
+                                    end = 2.dp,
+                                    top = 2.dp,
+                                    bottom = 2.dp
+                                )
                             )
                         }
                     }
@@ -175,12 +194,18 @@ fun ScanPageUi(
                                     0 -> "${stringResource(id = R.string.details_of_results)}: Download/${
                                         stringResource(
                                             id = R.string.result_file_name
+                                        ).replace(
+                                            "#",
+                                            stringResource(id = R.string.app_name)
                                         )
                                     }.db"
 
                                     1 -> "${stringResource(id = R.string.details_of_results)}: Download/${
                                         stringResource(
                                             id = R.string.result_file_name
+                                        ).replace(
+                                            "#",
+                                            stringResource(id = R.string.app_name)
                                         )
                                     }.txt"
 

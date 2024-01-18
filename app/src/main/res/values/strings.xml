@@ -2,7 +2,7 @@
     <string name="app_name" translatable="false">MusicHelper</string>
     <string name="scan_result_hint">The scanning process will be shown here.</string>
     <string name="scanning_try_again_later">Scanning, please try again later.</string>
-    <string name="result_file_name">MusicHelper_Export</string>
+    <string name="result_file_name">#_Export</string>
     <string name="request_permission_toast">Permissions are required to continue.</string>
     <string name="selected_directory_path">"Selected Directory: "</string>
     <string name="scan_complete">Done</string>
@@ -55,8 +55,8 @@
     <string name="please_select_source_app">Please select source App</string>
     <string name="use_custom_result_file">Use custom music output file</string>
     <string name="import_result_file">Import result file</string>
-    <string name="use_other_result_file">Use the \"MusicHelper_Export.db\" file from external sources</string>
-    <string name="select_result_file_item_title">Select MusicHelper_Export.db file</string>
+    <string name="use_other_result_file">Use the \"#_Export.db\" file from external sources</string>
+    <string name="select_result_file_item_title">Select #_Export.db file</string>
     <string name="error_while_getting_data_dialog_title">Error while getting data</string>
     <string name="error_while_getting_data_dialog_content">Error occurred while reading the following file, please check the file selection.</string>
     <string name="database_file">Database file</string>
@@ -125,8 +125,8 @@
     <string name="export_result_file_switcher_text">Export result</string>
     <string name="export_result_file_switcher_sub_text">Export the result file to the Download directory</string>
     <string name="format_of_exported_files">Format of exported files</string>
-    <string name="database_file_popup">Database file (.db)</string>
-    <string name="text_file_popup">Text file (.txt)</string>
+    <string name="database_file_popup">Database .db file</string>
+    <string name="text_file_popup">Text .txt file</string>
     <string name="settings_function_name">Settings</string>
     <string name="user_interface">User interface</string>
     <string name="dynamic_color_switcher_text">Dynamic color</string>
@@ -194,4 +194,5 @@
     <string name="launching_app">Launching</string>
     <string name="thank_you_very_much">❤️ Thank you very much! ❤️</string>
     <string name="save_image">(Touch the image to save it to gallery)</string>
+    <string name="save_failed">Save failed</string>
 </resources>

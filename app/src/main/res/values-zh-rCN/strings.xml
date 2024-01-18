@@ -53,8 +53,8 @@
     <string name="please_select_source_app">请选择歌单来源App</string>
     <string name="use_custom_result_file">使用自定义的歌单导出文件</string>
     <string name="import_result_file">导入结果文件</string>
-    <string name="use_other_result_file">使用来自外部的“MusicHelper_导出.db”文件</string>
-    <string name="select_result_file_item_title">选择MusicHelper_导出.db文件</string>
+    <string name="use_other_result_file">使用来自外部的“#_导出.db”文件</string>
+    <string name="select_result_file_item_title">选择#_导出.db文件</string>
     <string name="error_while_getting_data_dialog_title">获取数据时发生错误</string>
     <string name="error_while_getting_data_dialog_content">读取以下文件时发生错误，请检查文件选择是否正确</string>
     <string name="database_file">数据库文件</string>
@@ -123,9 +123,9 @@
     <string name="export_result_file_switcher_text">导出结果</string>
     <string name="export_result_file_switcher_sub_text">导出结果文件到Download目录</string>
     <string name="format_of_exported_files">导出文件的格式</string>
-    <string name="result_file_name">MusicHelper_导出</string>
-    <string name="database_file_popup">数据库文件 (.db)</string>
-    <string name="text_file_popup">文本文件 (.txt)</string>
+    <string name="result_file_name">#_导出</string>
+    <string name="database_file_popup">数据库.db文件</string>
+    <string name="text_file_popup">文本.txt文件</string>
     <string name="settings_function_name">设置</string>
     <string name="user_interface">用户界面</string>
     <string name="dynamic_color_switcher_text">动态取色</string>
@@ -189,4 +189,5 @@
     <string name="launching_app">正在启动</string>
     <string name="thank_you_very_much">❤️非常感谢您的支持！❤️</string>
     <string name="save_image">（点击图片来保存到相册喔~）</string>
+    <string name="save_failed">保存失败</string>
 </resources>

@@ -14,6 +14,7 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -274,7 +275,7 @@ private fun Pages(
                     val uri = Uri.fromFile(
                         File(
                             Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
-                            "MusicHelper_Update.apk"
+                            "${context.getString(R.string.app_name)}_Update.apk"
                         )
                     )
 
@@ -382,6 +383,7 @@ private fun Pages(
         modifier = Modifier
             .fillMaxSize()
             .systemBarsPadding()
+            .background(SaltTheme.colors.background)
     ) {
         HorizontalPager(
             state = pageState,
@@ -548,7 +550,7 @@ private fun Pages(
                         )
                     }
                 },
-                painter = painterResource(id = R.drawable.ic_launcher_foreground),
+                painter = painterResource(id = R.drawable.scan),
                 text = stringResource(R.string.scan_function_name)
             )
             BottomBarItem(
@@ -565,7 +567,7 @@ private fun Pages(
                         )
                     }
                 },
-                painter = painterResource(id = R.drawable.ic_launcher_foreground),
+                painter = painterResource(id = R.drawable.convert),
                 text = stringResource(R.string.convert_function_name)
             )
 //            BottomBarItem(
@@ -602,7 +604,7 @@ private fun Pages(
                         )
                     }
                 },
-                painter = painterResource(id = R.drawable.ic_launcher_foreground),
+                painter = painterResource(id = R.drawable.settings),
                 text = stringResource(R.string.settings_function_name)
             )
         }
