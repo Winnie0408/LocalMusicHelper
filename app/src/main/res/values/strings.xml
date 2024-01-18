@@ -47,8 +47,7 @@
     <string name="source_kugou_music">Kugou Music</string>
     <string name="source_kuwo_music">Kuwo Music</string>
     <string name="import_database">Import database</string>
-    <string name="select_database_file_match_to_source_1">"Select the database file of "</string>
-    <string name="select_database_file_match_to_source_2"></string>
+    <string name="select_database_file_match_to_source">Select the database file of #</string>
     <string name="source_default">the corresponding app</string>
     <string name="you_have_selected">File selected</string>
     <string name="next_step_text">Next</string>
@@ -62,15 +61,14 @@
     <string name="database_file">Database file</string>
     <string name="result_file">Result file</string>
     <string name="select_needed_musiclist">Select the song lists to convert</string>
-    <string name="total"></string>
-    <string name="songs">" songs"</string>
+    <string name="total"># songs</string>
     <string name="error">Error</string>
     <string name="please_select_at_least_one_playlist">Please select at least one song list</string>
     <string name="read_failed">read failed</string>
     <string name="use_scan_fun_first">Please run a music scan on the scan page first</string>
     <string name="error_details">Error details:</string>
-    <string name="in_total">"Total: "</string>
-    <string name="user_selected">"Selected: "</string>
+    <string name="in_total">Total: #</string>
+    <string name="user_selected">Selected: #</string>
     <string name="select_all">Select All</string>
     <string name="convert_options">Convert options</string>
     <string name="set_similarity_item">Similarity Threshold</string>
@@ -88,8 +86,7 @@
     <string name="current_songlist_info">Current songlist info</string>
     <string name="songlist_name">Songlist name</string>
     <string name="songlist_sum">Song count</string>
-    <string name="current_no">"No. "</string>
-    <string name="ge"></string>
+    <string name="current_no">No. #</string>
     <string name="songlist_sequence">Sequence</string>
     <string name="modify_conversion_results">Modify conversion result</string>
     <string name="search_song_library">Search song library…</string>
@@ -177,7 +174,7 @@
     <string name="no_grant_root_access">Root access not granted</string>
     <string name="get_file_with_root">Automatically get # database file</string>
     <string name="with_root_access">With Root access</string>
-    <string name="app_not_installed">" not installed"</string>
+    <string name="app_not_installed"># not installed</string>
     <string name="related_info">Related info</string>
     <string name="contact_developer">Contact developers</string>
     <string name="follow_on_coolapk">Follow on Coolapk</string>
@@ -191,7 +188,7 @@
     <string name="visit_the_link_below">Visit the link below?</string>
     <string name="open_in_some_app">Open in #?</string>
     <string name="will_open_in_browser">will open in browser</string>
-    <string name="launching_app">Launching</string>
+    <string name="launching_app">Launching #</string>
     <string name="thank_you_very_much">❤️ Thank you very much! ❤️</string>
     <string name="save_image">(Touch the image to save it to gallery)</string>
     <string name="save_failed">Save failed</string>

@@ -670,8 +670,9 @@ fun ConvertPageUi(
                                                 sourceApp.value
                                             )
                                         else
-                                            stringResource(R.string.select_database_file_match_to_source_1) + sourceApp.value + stringResource(
-                                                R.string.select_database_file_match_to_source_2
+                                            stringResource(R.string.select_database_file_match_to_source).replace(
+                                                "#",
+                                                sourceApp.value
                                             )
                                     },
                                     sub = if (useRootAccess.value && (selectedSourceApp.intValue != 0)) stringResource(
@@ -802,9 +803,10 @@ fun ConvertPageUi(
                                                                 playlistEnabled[index] = 0
                                                         },
                                                         text = playlistName[index],
-                                                        sub = "${stringResource(R.string.total)}${playlistSum[index]}${
-                                                            stringResource(R.string.songs)
-                                                        }",
+                                                        sub = stringResource(R.string.total).replace(
+                                                            "#",
+                                                            playlistSum[index].toString()
+                                                        ),
                                                         enableHaptic = enableHaptic.value
                                                     )
                                                 }
@@ -812,16 +814,14 @@ fun ConvertPageUi(
 
                                             Spacer(modifier = Modifier.height(6.dp))
                                             ItemValue(
-                                                text = "${stringResource(R.string.user_selected)}${playlistEnabled.count { it != 0 }}${
-                                                    stringResource(
-                                                        R.string.ge
-                                                    )
-                                                }",
-                                                rightSub = "${stringResource(R.string.in_total)}${playlistEnabled.size}${
-                                                    stringResource(
-                                                        R.string.ge
-                                                    )
-                                                }"
+                                                text = stringResource(R.string.user_selected).replace(
+                                                    "#",
+                                                    playlistEnabled.count { it != 0 }.toString()
+                                                ),
+                                                rightSub = stringResource(R.string.in_total).replace(
+                                                    "#",
+                                                    playlistEnabled.size.toString()
+                                                )
                                             )
                                         }
                                     }
@@ -860,16 +860,18 @@ fun ConvertPageUi(
                                             ItemTitle(text = stringResource(R.string.current_songlist_info))
                                             ItemValue(
                                                 text = stringResource(R.string.songlist_sequence),
-                                                rightSub = "${stringResource(R.string.current_no)}${
-                                                    if (playlistEnabled.count { it == 2 } == -1)
-                                                        0
-                                                    else {
-                                                        playlistEnabled.count { it == 2 } + 1
-                                                    }
-                                                }${stringResource(R.string.ge)} - ${
-                                                    stringResource(R.string.in_total)
-                                                }${playlistEnabled.count { it != 0 }}${
-                                                    stringResource(R.string.ge)
+                                                rightSub = "${
+                                                    stringResource(R.string.current_no).replace("#",
+                                                        if (playlistEnabled.count { it == 2 } == -1)
+                                                            "0"
+                                                        else {
+                                                            (playlistEnabled.count { it == 2 } + 1).toString()
+                                                        })
+                                                } - ${
+                                                    stringResource(R.string.in_total).replace(
+                                                        "#",
+                                                        playlistEnabled.count { it != 0 }.toString()
+                                                    )
                                                 }"
                                             )
                                             ItemValue(

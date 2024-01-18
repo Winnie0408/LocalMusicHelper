@@ -8,7 +8,7 @@ class MyVibrationEffect(
     context: Context,
     val enable: Boolean
 ) {
-    val vibrator = context.getSystemService(Vibrator::class.java)
+    val vibrator: Vibrator = context.getSystemService(Vibrator::class.java)
 
     fun dialog() {
         if (enable) {

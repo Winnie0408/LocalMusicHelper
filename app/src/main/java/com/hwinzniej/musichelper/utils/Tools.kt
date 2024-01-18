@@ -122,7 +122,6 @@ class Tools {
         val d: Array<IntArray> // 矩阵
         val n = str.length
         val m = target.length
-        var i: Int // 遍历str
         var j: Int // 遍历target
         var ch1: Char // str
         var ch2: Char // target
@@ -135,7 +134,7 @@ class Tools {
         }
         d = Array(n + 1) { IntArray(m + 1) }
         // 初始化第一列
-        i = 0
+        var i = 0 // 遍历str
         while (i <= n) {
             d[i][0] = i
             i++

@@ -147,7 +147,7 @@ class MainActivity : ComponentActivity() {
                 db,
                 this
             )
-        settingsPage = SettingsPage(this, this)
+        settingsPage = SettingsPage(this)
 
         setContent {
             val colors = when (selectedThemeMode.intValue) {
@@ -230,7 +230,7 @@ private fun Pages(
     mainPage.dataStore.data.collectAsState(initial = null).value?.let { preferences ->
         mainPage.enableDynamicColor.value =
             preferences[DataStoreConstants.KEY_ENABLE_DYNAMIC_COLOR] ?: false
-        mainPage.selectedThemeMode.value = preferences[DataStoreConstants.KEY_THEME_MODE] ?: 2
+        mainPage.selectedThemeMode.intValue = preferences[DataStoreConstants.KEY_THEME_MODE] ?: 2
         mainPage.enableHaptic.value = preferences[DataStoreConstants.KEY_ENABLE_HAPTIC] ?: true
         mainPage.language.value = preferences[DataStoreConstants.KEY_LANGUAGE] ?: "system"
         settingsPage.enableAutoCheckUpdate.value =

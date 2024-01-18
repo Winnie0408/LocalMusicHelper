@@ -37,7 +37,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -177,8 +177,8 @@ fun ItemPopup(  //TODO 添加图标、根据文字长度自动调整宽度、优
     content: @Composable ColumnScope.() -> Unit
 ) {
     Box {
-        val boxWidth = remember { mutableStateOf(0f) }
-        val clickOffsetX = remember { mutableStateOf(0f) }
+        val boxWidth = remember { mutableFloatStateOf(0f) }
+        val clickOffsetX = remember { mutableFloatStateOf(0f) }
         val interactionSource = remember { MutableInteractionSource() }
         Row(
             modifier = Modifier
@@ -188,7 +188,7 @@ fun ItemPopup(  //TODO 添加图标、根据文字长度自动调整宽度、优
                 .pointerInput(Unit) {
                     detectTapGestures(
                         onTap = { offset ->
-                            clickOffsetX.value = offset.x
+                            clickOffsetX.floatValue = offset.x
                             state.expend()
                         },
                         onPress = { offset ->
@@ -203,7 +203,7 @@ fun ItemPopup(  //TODO 添加图标、根据文字长度自动调整宽度、优
                     indication = rememberRipple()
                 )
                 .onGloballyPositioned { layoutCoordinates ->
-                    boxWidth.value = layoutCoordinates.size.width.toFloat()
+                    boxWidth.floatValue = layoutCoordinates.size.width.toFloat()
                 }
                 .padding(horizontal = SaltTheme.dimens.innerHorizontalPadding, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically
@@ -259,7 +259,7 @@ fun ItemPopup(  //TODO 添加图标、根据文字长度自动调整宽度、优
             onDismissRequest = {
                 state.dismiss()
             },
-            offset = if (boxWidth.value / 2 > clickOffsetX.value) DpOffset(16.dp, 0.dp)
+            offset = if (boxWidth.floatValue / 2 > clickOffsetX.floatValue) DpOffset(16.dp, 0.dp)
             else DpOffset((LocalConfiguration.current.screenWidthDp - (popupWidth + 50)).dp, 0.dp),
         ) {
             content()
@@ -505,9 +505,9 @@ fun TextButton(
  */
 @Composable
 fun BasicButton(
+    modifier: Modifier = Modifier,
     enabled: Boolean = true,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier,
     backgroundColor: Color = SaltTheme.colors.highlight,
     enableHaptic: Boolean = false,
     content: @Composable BoxScope.() -> Unit
@@ -753,7 +753,6 @@ fun ItemSwitcher(
     }
 }
 
-@OptIn(UnstableSaltApi::class)
 @Preview
 @Composable
 fun Preview() {

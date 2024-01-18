@@ -3,7 +3,7 @@ package com.hwinzniej.musichelper.data
 class SourceApp {
     lateinit var sourceEng: String
     lateinit var sourceChn: String
-    lateinit var DatabaseName: String
+    lateinit var databaseName: String
     lateinit var songListTableName: String
     lateinit var songListId: String
     lateinit var songListName: String
@@ -23,7 +23,7 @@ class SourceApp {
             "QQMusic" -> {
                 sourceEng = "QQMusic"
                 sourceChn = "QQ音乐"
-                DatabaseName = "QQMusic"
+                databaseName = "QQMusic"
                 songListTableName = "User_Folder_table"
                 songListId = "folderid"
                 songListName = "foldername"
@@ -42,7 +42,7 @@ class SourceApp {
             "CloudMusic" -> {
                 sourceEng = "CloudMusic"
                 sourceChn = "网易云音乐"
-                DatabaseName = "cloudmusic.db"
+                databaseName = "cloudmusic.db"
                 songListTableName = "playlist"
                 songListId = "_id"
                 songListName = "name"
@@ -61,7 +61,7 @@ class SourceApp {
             "KugouMusic" -> {
                 sourceEng = "KuGouMusic"
                 sourceChn = "酷狗音乐"
-                DatabaseName = "kugou_music_phone_v7.db"
+                databaseName = "kugou_music_phone_v7.db"
                 songListTableName = "kugou_playlists"
                 songListId = "_id"
                 songListName = "name"
@@ -80,7 +80,7 @@ class SourceApp {
             "KuwoMusic" -> {
                 sourceEng = "KuWoMusic"
                 sourceChn = "酷我音乐"
-                DatabaseName = "kwplayer.db"
+                databaseName = "kwplayer.db"
                 songListTableName = "v3_list"
                 songListId = "id"
                 songListName = "showname"

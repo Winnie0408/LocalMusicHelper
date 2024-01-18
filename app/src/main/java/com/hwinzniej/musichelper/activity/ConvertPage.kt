@@ -293,7 +293,7 @@ class ConvertPage(
 
             val copy = Tools().execShellCmdWithRoot(
                 "cp -f /data/data/${sourceApp.pakageName}/databases/${
-                    sourceApp.DatabaseName
+                    sourceApp.databaseName
                 } ${dir.absolutePath}/${sourceApp.sourceEng}_temp.db"
             )
 
@@ -309,7 +309,7 @@ class ConvertPage(
                         context.getString(
                             R.string.read_failed
                         )
-                    }: ${copy}"
+                    }: $copy"
                 haveError = true
                 loadingProgressSema.release()
                 return
@@ -323,7 +323,9 @@ class ConvertPage(
                     context.getString(
                         R.string.read_failed
                     )
-                }: ${sourceAppText.value}${context.getString(R.string.app_not_installed)}"
+                }: ${
+                    context.getString(R.string.app_not_installed).replace("#", sourceAppText.value)
+                }"
             haveError = true
             loadingProgressSema.release()
         }
@@ -610,8 +612,8 @@ class ConvertPage(
                             }
                             songArtistMaxSimilarity =
                                 Tools().getMaxValue(artistSimilarityArray)?.value!! //获取相似度的最大值
-                            val songArtistMaxKey =
-                                Tools().getMaxValue(artistSimilarityArray)?.key //获取相似度的最大值对应的歌手名
+//                            val songArtistMaxKey =
+//                                Tools().getMaxValue(artistSimilarityArray)?.key //获取相似度的最大值对应的歌手名
                         } else {
                             songArtistMaxSimilarity = 1.0
                         }
@@ -643,8 +645,8 @@ class ConvertPage(
                             }
                             songAlbumMaxSimilarity =
                                 Tools().getMaxValue(albumSimilarityArray)?.value!! //获取相似度的最大值
-                            val songAlbumMaxKey =
-                                Tools().getMaxValue(albumSimilarityArray)?.key //获取相似度的最大值对应的专辑名
+//                            val songAlbumMaxKey =
+//                                Tools().getMaxValue(albumSimilarityArray)?.key //获取相似度的最大值对应的专辑名
                         } else {
                             songAlbumMaxSimilarity = 1.0
                         }
@@ -860,7 +862,11 @@ class ConvertPage(
             showDialogProgressBar.value = true
             val firstIndex1 = playlistEnabled.indexOfFirst { it == 1 }
             val file = File(
-                "${Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)}/${context.getString(R.string.app_name)}",
+                "${Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)}/${
+                    context.getString(
+                        R.string.app_name
+                    )
+                }",
                 fileName
             )
             if (file.exists())
@@ -925,7 +931,11 @@ class ConvertPage(
         val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         val clip = newPlainText(
             "SaltPlayerFolder",
-            "${Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).absolutePath}/${context.getString(R.string.app_name)}"
+            "${Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).absolutePath}/${
+                context.getString(
+                    R.string.app_name
+                )
+            }"
         )
         clipboard.setPrimaryClip(clip)
         Toast.makeText(context, context.getString(R.string.copy_success), Toast.LENGTH_SHORT).show()

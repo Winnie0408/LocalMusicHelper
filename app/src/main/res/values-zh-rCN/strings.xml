@@ -45,8 +45,7 @@
     <string name="source_kugou_music">酷狗音乐</string>
     <string name="source_kuwo_music">酷我音乐</string>
     <string name="import_database">导入数据库</string>
-    <string name="select_database_file_match_to_source_1">选择</string>
-    <string name="select_database_file_match_to_source_2">的数据库文件</string>
+    <string name="select_database_file_match_to_source">选择#的数据库文件</string>
     <string name="source_default">与歌单来源对应</string>
     <string name="you_have_selected">已选择</string>
     <string name="next_step_text">下一步</string>
@@ -60,15 +59,14 @@
     <string name="database_file">数据库文件</string>
     <string name="result_file">转换结果文件</string>
     <string name="select_needed_musiclist">选择要转换的歌单</string>
-    <string name="total">包含</string>
-    <string name="songs">首歌曲</string>
+    <string name="total">包含#首歌曲</string>
     <string name="error">错误</string>
     <string name="please_select_at_least_one_playlist">请至少选择1个歌单</string>
     <string name="read_failed">读取失败</string>
     <string name="use_scan_fun_first">请先在扫描页进行一次音乐扫描</string>
     <string name="error_details">错误详情：</string>
-    <string name="in_total">"共 "</string>
-    <string name="user_selected">已选：</string>
+    <string name="in_total">共 # 个</string>
+    <string name="user_selected">已选：# 个</string>
     <string name="select_all">全选</string>
     <string name="convert_options">转换选项</string>
     <string name="set_similarity_item">相似度阈值</string>
@@ -86,8 +84,7 @@
     <string name="current_songlist_info">当前歌单信息</string>
     <string name="songlist_name">歌单名</string>
     <string name="songlist_sum">包含歌曲数量</string>
-    <string name="current_no">"第 "</string>
-    <string name="ge">" 个"</string>
+    <string name="current_no">第 # 个</string>
     <string name="songlist_sequence">序列</string>
     <string name="modify_conversion_results">修改转换结果</string>
     <string name="search_song_library">搜索您的曲库…</string>
@@ -172,7 +169,7 @@
     <string name="no_grant_root_access">未授予Root权限</string>
     <string name="get_file_with_root">自动获取#的数据库文件</string>
     <string name="with_root_access">使用Root权限</string>
-    <string name="app_not_installed">" 未安装"</string>
+    <string name="app_not_installed">未安装 #</string>
     <string name="related_info">相关信息</string>
     <string name="contact_developer">联系开发者</string>
     <string name="follow_on_coolapk">关注酷安</string>
@@ -186,7 +183,7 @@
     <string name="visit_the_link_below">访问以下链接？</string>
     <string name="open_in_some_app">在#中打开？</string>
     <string name="will_open_in_browser">将在浏览器中打开</string>
-    <string name="launching_app">正在启动</string>
+    <string name="launching_app">正在启动 #</string>
     <string name="thank_you_very_much">❤️非常感谢您的支持！❤️</string>
     <string name="save_image">（点击图片来保存到相册喔~）</string>
     <string name="save_failed">保存失败</string>

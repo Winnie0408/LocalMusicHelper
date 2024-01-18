@@ -104,7 +104,7 @@ fun AboutPageUi(
                 yesNoDialogOnConfirm()
             },
             title = yesNoDialogTitle,
-            content = if (yesNoDialogContent.isEmpty()) null else yesNoDialogContent,
+            content = yesNoDialogContent.ifEmpty { null },
             enableHaptic = enableHaptic.value
         )
     }
@@ -548,13 +548,17 @@ fun AboutPageUi(
                                     )
                                     Toast.makeText(
                                         context,
-                                        "${context.getString(R.string.launching_app)} QQ",
+                                        context.getString(R.string.launching_app)
+                                            .replace("#", "QQ"),
                                         Toast.LENGTH_SHORT
                                     ).show()
                                 } catch (e: Exception) {
                                     Toast.makeText(
                                         context,
-                                        "QQ${context.getString(R.string.app_not_installed)}, ${
+                                        "${
+                                            context.getString(R.string.app_not_installed)
+                                                .replace("#", "QQ")
+                                        }, ${
                                             context.getString(R.string.will_open_in_browser)
                                         }",
                                         Toast.LENGTH_SHORT
@@ -593,20 +597,22 @@ fun AboutPageUi(
                                     )
                                     Toast.makeText(
                                         context,
-                                        "${context.getString(R.string.launching_app)} ${
-                                            context.getString(
+                                        context.getString(R.string.launching_app).replace(
+                                            "#", context.getString(
                                                 R.string.coolapk
                                             ).replace("(：)|(: )".toRegex(), "")
-                                        }",
+                                        ),
                                         Toast.LENGTH_SHORT
                                     ).show()
                                 } catch (e: Exception) {
                                     Toast.makeText(
                                         context,
                                         "${
-                                            context.getString(R.string.coolapk)
-                                                .replace("(：)|(: )".toRegex(), "")
-                                        }${context.getString(R.string.app_not_installed)}, ${
+                                            context.getString(R.string.app_not_installed).replace(
+                                                "#", context.getString(R.string.coolapk)
+                                                    .replace("(：)|(: )".toRegex(), "")
+                                            )
+                                        }, ${
                                             context.getString(R.string.will_open_in_browser)
                                         }",
                                         Toast.LENGTH_SHORT
@@ -643,13 +649,17 @@ fun AboutPageUi(
                                     )
                                     Toast.makeText(
                                         context,
-                                        "${context.getString(R.string.launching_app)} BiliBili",
+                                        context.getString(R.string.launching_app)
+                                            .replace("#", "BiliBili"),
                                         Toast.LENGTH_SHORT
                                     ).show()
                                 } catch (e: Exception) {
                                     Toast.makeText(
                                         context,
-                                        "BiliBili${context.getString(R.string.app_not_installed)}, ${
+                                        "${
+                                            context.getString(R.string.app_not_installed)
+                                                .replace("#", "BiliBili")
+                                        }, ${
                                             context.getString(R.string.will_open_in_browser)
                                         }",
                                         Toast.LENGTH_SHORT
@@ -723,7 +733,6 @@ fun AboutPageUi(
     }
 }
 
-@OptIn(UnstableSaltApi::class, ExperimentalFoundationApi::class)
 @Preview
 @Composable
 fun Preview1() {
