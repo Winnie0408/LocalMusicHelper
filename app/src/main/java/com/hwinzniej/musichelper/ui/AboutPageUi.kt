@@ -268,7 +268,7 @@ fun AboutPageUi(
                                 showLoadingProgressBar = true
                                 val client = OkHttpClient()
                                 val request = Request.Builder()
-                                    .url("https://gitlab.com/HWinZnieJ/LocalMusicHelper/-/releases")
+                                    .url("https://gitlab.com/HWinZnieJ/LocalMusicHelper/-/releases")  //TODO 替换为API调用 https://docs.gitlab.com/ee/api/releases/#get-the-latest-release
                                     .header("Accept", "application/json")
                                     .get()
                                     .build()
@@ -292,7 +292,7 @@ fun AboutPageUi(
                                             "https://gitlab.com/HWinZnieJ/LocalMusicHelper${latestDownloadLink.value}"
                                         latestDescription.value = latestDescription.value.substring(
                                             0,
-                                            latestDescription.value.indexOf("[app-")
+                                            latestDescription.value.indexOf("\n[app-")
                                         )
                                         showNewVersionAvailableDialog.value = true
                                     } else {

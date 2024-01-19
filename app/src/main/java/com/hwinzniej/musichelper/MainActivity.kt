@@ -368,7 +368,7 @@ private fun Pages(
                             "https://gitlab.com/HWinZnieJ/LocalMusicHelper${latestDownloadLink.value}"
                         latestDescription.value = latestDescription.value.substring(
                             0,
-                            latestDescription.value.indexOf("[app-")
+                            latestDescription.value.indexOf("\n[app-")
                         )
                         showNewVersionAvailableDialog.value = true
                     }
