@@ -284,7 +284,7 @@ class ConvertPage(
 
     fun checkAppStatusWithRoot() {
         val appExists =
-            Tools().execShellCmdWithRoot("pm list packages | grep ${sourceApp.pakageName}")
+            Tools().execShellCmdWithRoot("pm list packages | grep '${sourceApp.pakageName}'")
         if (appExists.contains(sourceApp.pakageName)) {
             val dirPath = context.getExternalFilesDir(null)?.absolutePath + "/userDatabase"
             val dir = File(dirPath)

@@ -281,7 +281,13 @@ private fun Pages(
 
                     val request = DownloadManager.Request(Uri.parse(latestDownloadLink.value))
                         .setTitle("${context.getString(R.string.app_name)} ${context.getString(R.string.update)}")
-                        .setDescription("${context.getString(R.string.latest_version)}: ${latestVersion.value}")
+                        .setDescription(
+                            "${context.getString(R.string.app_name)} ${
+                                context.getString(
+                                    R.string.latest_version
+                                )
+                            }: ${latestVersion.value}"
+                        )
                         .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
                         .setMimeType("application/vnd.android.package-archive")
                         .setDestinationUri(uri)
@@ -338,37 +344,32 @@ private fun Pages(
                 checkUpdate.value = false
                 val client = OkHttpClient()
                 val request = Request.Builder()
-                    .url("https://gitee.com/winnie0408/LocalMusicHelper/releases/latest")
+                    .url("https://gitlab.com/HWinZnieJ/LocalMusicHelper/-/releases")
                     .header("Accept", "application/json")
                     .get()
                     .build()
                 try {
-                    val response = JSON.parseObject(
+                    val response = JSON.parseArray(
                         client.newCall(request).execute().body?.string()
-                    )
-                    val latestTag =
-                        (response.get("release") as JSONObject).get("release")
-                    latestVersion.value =
-                        (latestTag as JSONObject).getString("title")
-                            .replace("v", "")
+                    )[0] as JSONObject
+                    latestVersion.value = response.getString("tag").replace("v", "")
                     if (latestVersion.value != context.packageManager.getPackageInfo(
                             context.packageName,
                             0
                         ).versionName
                     ) {
-                        latestDescription.value = latestTag.getString("description")
-                            .replace("</?[a-z]+>".toRegex(), "")
-                            .replace("\n\n", "\n")
-
-                        latestTag.getJSONArray("attach_files").forEach {
-                            if ((it as JSONObject).getString("name")
-                                    .contains("release")
-                            ) {
-                                latestDownloadLink.value =
-                                    "https://gitee.com${it.getString("download_url")}"
-                                return@forEach
-                            }
-                        }
+                        latestDescription.value = response.getString("description")
+                        latestDownloadLink.value = response.getString("description")
+                            .substring(
+                                latestDescription.value.indexOf("[app-release.apk](") + 18,
+                                latestDescription.value.indexOf("/app-release.apk)") + 16
+                            )
+                        latestDownloadLink.value =
+                            "https://gitlab.com/HWinZnieJ/LocalMusicHelper${latestDownloadLink.value}"
+                        latestDescription.value = latestDescription.value.substring(
+                            0,
+                            latestDescription.value.indexOf("[app-")
+                        )
                         showNewVersionAvailableDialog.value = true
                     }
                 } catch (e: Exception) {
@@ -492,6 +493,7 @@ private fun Pages(
                                     latestDescription = latestDescription,
                                     latestDownloadLink = latestDownloadLink,
                                     enableHaptic = mainPage.enableHaptic,
+                                    language = mainPage.language
                                 )
                             }
                         }

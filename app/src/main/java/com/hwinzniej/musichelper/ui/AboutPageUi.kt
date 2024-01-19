@@ -1,6 +1,7 @@
 package com.hwinzniej.musichelper.ui
 
 import android.content.Intent
+import android.content.res.Resources
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
@@ -60,9 +61,11 @@ import com.moriafly.salt.ui.TitleBar
 import com.moriafly.salt.ui.UnstableSaltApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.io.File
+import java.util.Locale
 
 @OptIn(UnstableSaltApi::class, ExperimentalFoundationApi::class)
 @Composable
@@ -72,7 +75,8 @@ fun AboutPageUi(
     latestVersion: MutableState<String>,
     latestDescription: MutableState<String>,
     latestDownloadLink: MutableState<String>,
-    enableHaptic: MutableState<Boolean>
+    enableHaptic: MutableState<Boolean>,
+    language: MutableState<String>,
 ) {
     val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
@@ -85,6 +89,7 @@ fun AboutPageUi(
     var yesDialogContent by remember { mutableStateOf("") }
     var yesDialogCustomContent by remember { mutableStateOf<@Composable () -> Unit>({}) }
     var yesNoDialogOnConfirm by remember { mutableStateOf({}) }
+    var yesDialogOnConfirm by remember { mutableStateOf({}) }
 
 
     BackHandler(enabled = settingsPageState.currentPage == 1) {
@@ -111,7 +116,10 @@ fun AboutPageUi(
 
     if (showYesDialog) {
         YesDialog(
-            onDismissRequest = { showYesDialog = false },
+            onDismissRequest = {
+                showYesDialog = false
+                yesDialogOnConfirm()
+            },
             title = yesDialogTitle,
             content = yesDialogContent,
             fontSize = 14.sp,
@@ -246,6 +254,7 @@ fun AboutPageUi(
                                     }
                                 }
                             }
+                            yesDialogOnConfirm = {}
                             yesDialogTitle = context.getString(R.string.staff)
                             showYesDialog = true
                         }, text = stringResource(id = R.string.staff),
@@ -259,44 +268,41 @@ fun AboutPageUi(
                                 showLoadingProgressBar = true
                                 val client = OkHttpClient()
                                 val request = Request.Builder()
-                                    .url("https://gitee.com/winnie0408/LocalMusicHelper/releases/latest")
+                                    .url("https://gitlab.com/HWinZnieJ/LocalMusicHelper/-/releases")
                                     .header("Accept", "application/json")
                                     .get()
                                     .build()
                                 try {
-                                    val response = JSON.parseObject(
+                                    val response = JSON.parseArray(
                                         client.newCall(request).execute().body?.string()
-                                    )
-                                    val latestTag =
-                                        (response.get("release") as JSONObject).get("release")
-                                    latestVersion.value =
-                                        (latestTag as JSONObject).getString("title")
-                                            .replace("v", "")
+                                    )[0] as JSONObject
+                                    latestVersion.value = response.getString("tag").replace("v", "")
                                     if (latestVersion.value != context.packageManager.getPackageInfo(
                                             context.packageName,
                                             0
                                         ).versionName
                                     ) {
-                                        latestDescription.value = latestTag.getString("description")
-                                            .replace("</?[a-z]+>".toRegex(), "")
-                                            .replace("\n\n", "\n")
-
-                                        latestTag.getJSONArray("attach_files").forEach {
-                                            if ((it as JSONObject).getString("name")
-                                                    .contains("release")
-                                            ) {
-                                                latestDownloadLink.value =
-                                                    "https://gitee.com${it.getString("download_url")}"
-                                                return@forEach
-                                            }
-                                        }
+                                        latestDescription.value = response.getString("description")
+                                        latestDownloadLink.value = response.getString("description")
+                                            .substring(
+                                                latestDescription.value.indexOf("[app-release.apk](") + 18,
+                                                latestDescription.value.indexOf("/app-release.apk)") + 16
+                                            )
+                                        latestDownloadLink.value =
+                                            "https://gitlab.com/HWinZnieJ/LocalMusicHelper${latestDownloadLink.value}"
+                                        latestDescription.value = latestDescription.value.substring(
+                                            0,
+                                            latestDescription.value.indexOf("[app-")
+                                        )
                                         showNewVersionAvailableDialog.value = true
                                     } else {
-                                        Toast.makeText(
-                                            context,
-                                            context.getString(R.string.no_update_available),
-                                            Toast.LENGTH_SHORT
-                                        ).show()
+                                        withContext(Dispatchers.Main) {
+                                            Toast.makeText(
+                                                context,
+                                                context.getString(R.string.no_update_available),
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                        }
                                     }
                                 } catch (e: Exception) {
                                     yesDialogCustomContent = {}
@@ -307,6 +313,7 @@ fun AboutPageUi(
                                                 R.string.error_details
                                             )
                                         }\n- ${e.message.toString()}"
+                                    yesDialogOnConfirm = {}
                                     showYesDialog = true
                                 } finally {
                                     showLoadingProgressBar = false
@@ -362,6 +369,22 @@ fun AboutPageUi(
                                         )
                                     }
                                 }
+                            }
+                            yesDialogOnConfirm = {
+                                // 第一次切换语言，打开该对话框，再关闭后，会自动切换回系统语言，
+                                // 后续再进行相同操作则不会，原因未知，使用下面的方法来规避这个问题
+                                var locale = Locale(language.value)
+                                if (language.value == "system") {
+                                    locale = Resources.getSystem().configuration.locales[0]
+                                }
+                                val resources = context.resources
+                                val configuration = resources.configuration
+                                Locale.setDefault(locale)
+                                configuration.setLocale(locale)
+                                resources.updateConfiguration(
+                                    configuration,
+                                    resources.displayMetrics
+                                )
                             }
                             yesDialogTitle = context.getString(R.string.open_source_licence)
                             showYesDialog = true
@@ -525,6 +548,7 @@ fun AboutPageUi(
                                 }
                             }
                             yesDialogTitle = context.getString(R.string.buy_me_a_coffee)
+                            yesDialogOnConfirm = {}
                             showYesDialog = true
                         },
                         text = stringResource(id = R.string.buy_me_a_coffee),
