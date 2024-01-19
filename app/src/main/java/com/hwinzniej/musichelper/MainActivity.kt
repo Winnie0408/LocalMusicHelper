@@ -55,7 +55,6 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.lifecycle.lifecycleScope
 import androidx.room.Room
 import com.alibaba.fastjson2.JSON
-import com.alibaba.fastjson2.JSONObject
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.hwinzniej.musichelper.activity.ConvertPage
 import com.hwinzniej.musichelper.activity.ScanPage
@@ -344,15 +343,19 @@ private fun Pages(
                 checkUpdate.value = false
                 val client = OkHttpClient()
                 val request = Request.Builder()
-                    .url("https://gitlab.com/HWinZnieJ/LocalMusicHelper/-/releases")
-                    .header("Accept", "application/json")
+                    .url("https://gitlab.com/api/v4/projects/54005438/releases/permalink/latest")
+                    .header(
+                        "PRIVATE-TOKEN",
+                        ""
+                    )  //TODO 不要提交到公开仓库！！！
                     .get()
                     .build()
                 try {
-                    val response = JSON.parseArray(
+                    val response = JSON.parseObject(
                         client.newCall(request).execute().body?.string()
-                    )[0] as JSONObject
-                    latestVersion.value = response.getString("tag").replace("v", "")
+                    )
+                    latestVersion.value =
+                        response.getString("name").replace("v", "")
                     if (latestVersion.value != context.packageManager.getPackageInfo(
                             context.packageName,
                             0

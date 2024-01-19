@@ -51,7 +51,6 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.zIndex
 import com.alibaba.fastjson2.JSON
-import com.alibaba.fastjson2.JSONObject
 import com.hwinzniej.musichelper.R
 import com.hwinzniej.musichelper.utils.MyVibrationEffect
 import com.moriafly.salt.ui.ItemTitle
@@ -175,7 +174,7 @@ fun AboutPageUi(
                     Text(
                         text = stringResource(
                             id = R.string.app_name
-                        ), fontSize = 20.sp, color = SaltTheme.colors.text
+                        ), fontSize = 19.sp, color = SaltTheme.colors.text
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
@@ -268,15 +267,19 @@ fun AboutPageUi(
                                 showLoadingProgressBar = true
                                 val client = OkHttpClient()
                                 val request = Request.Builder()
-                                    .url("https://gitlab.com/HWinZnieJ/LocalMusicHelper/-/releases")  //TODO 替换为API调用 https://docs.gitlab.com/ee/api/releases/#get-the-latest-release
-                                    .header("Accept", "application/json")
+                                    .url("https://gitlab.com/api/v4/projects/54005438/releases/permalink/latest")
+                                    .header(
+                                        "PRIVATE-TOKEN",
+                                        ""
+                                    )  //TODO 不要提交到公开仓库！！！
                                     .get()
                                     .build()
                                 try {
-                                    val response = JSON.parseArray(
+                                    val response = JSON.parseObject(
                                         client.newCall(request).execute().body?.string()
-                                    )[0] as JSONObject
-                                    latestVersion.value = response.getString("tag").replace("v", "")
+                                    )
+                                    latestVersion.value =
+                                        response.getString("name").replace("v", "")
                                     if (latestVersion.value != context.packageManager.getPackageInfo(
                                             context.packageName,
                                             0
@@ -738,6 +741,23 @@ fun AboutPageUi(
                             yesNoDialogOnConfirm = {
                                 context.startActivity(Intent(Intent.ACTION_VIEW).apply {
                                     data = Uri.parse(
+                                        "https://gitlab.com/HWinZnieJ/LocalMusicHelper"
+                                    )
+                                })
+                            }
+                            yesNoDialogTitle = context.getString(R.string.visit_the_link_below)
+                            yesNoDialogContent = "https://gitlab.com/HWinZnieJ/LocalMusicHelper"
+                            showYesNoDialog = true
+                        },
+                        text = stringResource(id = R.string.open_source_gitlab),
+                        sub = stringResource(id = R.string.open_source_sub),
+                        iconPainter = painterResource(id = R.drawable.gitlab)
+                    )
+                    Item(
+                        onClick = {
+                            yesNoDialogOnConfirm = {
+                                context.startActivity(Intent(Intent.ACTION_VIEW).apply {
+                                    data = Uri.parse(
                                         "https://gitee.com/winnie0408/LocalMusicHelper"
                                     )
                                 })
@@ -747,14 +767,15 @@ fun AboutPageUi(
                             showYesNoDialog = true
                         },
                         text = stringResource(id = R.string.open_source_gitee),
-                        sub = stringResource(id = R.string.open_source_sub),
+                        sub = "${stringResource(id = R.string.open_source_sub)}\n${stringResource(id = R.string.temporarily_unavailable)}",
                         iconPainter = painterResource(id = R.drawable.gitee),
                         iconPaddingValues = PaddingValues(
                             start = 1.dp,
                             end = 1.dp,
                             top = 1.dp,
                             bottom = 1.dp
-                        )
+                        ),
+                        enabled = false
                     )
                 }
             }

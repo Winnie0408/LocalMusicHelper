@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="app_name">歌单无界</string>
     <string name="scan_result_hint">扫描过程将会显示在这里。</string>
     <string name="scanning_try_again_later">正在扫描中，请稍后再试。</string>
     <string name="request_permission_toast">需要权限才能继续操作</string>
@@ -150,11 +151,11 @@
     <string name="follow_on_bilibili">关注BiliBili</string>
     <string name="open_source_github">在Github上查看本项目</string>
     <string name="open_source_sub">点个Star ⭐ 就更好啦~</string>
-    <string name="open_source_gitee">在Gitee上查看本项目</string>
+    <string name="open_source_gitlab">在GitLab上查看本项目</string>
     <string name="open_source_licence">开源代码许可证</string>
     <string name="android_12_and_above_only">仅支持Android 12及以上系统</string>
     <string name="haptic">触感</string>
-    <string name="haptic_feedfback_switcher_title">触觉反馈</string>
+    <string name="haptic_feedfback_switcher_title">触感反馈</string>
     <string name="haptic_feedfback_switcher_sub">为某些操作添加触觉反馈</string>
     <string name="new_version_available">新版本可用</string>
     <string name="latest_version">最新版本</string>
@@ -187,4 +188,9 @@
     <string name="thank_you_very_much">❤️非常感谢您的支持！❤️</string>
     <string name="save_image">（点击图片来保存到相册喔~）</string>
     <string name="save_failed">保存失败</string>
+    <string name="temporarily_unavailable">（暂时不可用）</string>
+    <string name="open_source_gitee">在Gitee上查看本项目</string>
+    <string name="no_music_found">⚠️所选目录中没有受支持的音乐文件</string>
+    <string name="original_songlist">#原始歌单</string>
+    <string name="type_of_view">查看</string>
 </resources>

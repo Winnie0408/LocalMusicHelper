@@ -80,6 +80,8 @@ import com.moriafly.salt.ui.popup.rememberPopupState
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import kotlin.math.roundToInt
 
 @OptIn(UnstableSaltApi::class, ExperimentalFoundationApi::class)
@@ -131,6 +133,8 @@ fun ConvertPageUi(
     var showDeleteDialog by remember { mutableStateOf(false) }
     val context = LocalContext.current
     var selectedFilterIndex by remember { mutableIntStateOf(0) }
+    var showOriginalSonglist by remember { mutableIntStateOf(1) }
+    val originalSonglistPopupMenuState = rememberPopupState()
 
     BackHandler(enabled = (currentPage.intValue != 0 && mainActivityPageState.currentPage == 1)) {
         if (convertResult.isEmpty()) {
@@ -576,9 +580,9 @@ fun ConvertPageUi(
                                 .background(color = SaltTheme.colors.background)
                                 .verticalScroll(rememberScrollState())
                         ) {
-                            RoundedColumn {
+                            RoundedColumn {  //TODO 支持APlayer、Poweramp
                                 ItemTitle(text = stringResource(R.string.source_of_songlist_app))
-                                ItemPopup(
+                                ItemPopup(  //TODO 合并歌单来源App选择相关的组件到一个RoundedColumn中
                                     state = sourceAppPopupMenuState,
                                     text = stringResource(R.string.select_source_of_songlist),
                                     selectedItem = sourceApp.value,
@@ -774,7 +778,7 @@ fun ConvertPageUi(
                                                 .clip(RoundedCornerShape(10.dp))
                                                 .background(color = SaltTheme.colors.subBackground)
                                         ) {
-                                            ItemCheck(
+                                            ItemCheck(  //TODO 手动全选，按钮不亮；先全选，再取消，按钮不灭
                                                 state = allEnabled,
                                                 onChange = {
                                                     if (allEnabled) {
@@ -994,7 +998,70 @@ fun ConvertPageUi(
                                     ) {
                                         RoundedColumn {
                                             ItemTitle(text = stringResource(R.string.filter))
-                                            ItemPopup( //TODO 为每个子项添加图标
+                                            ItemPopup(
+                                                state = originalSonglistPopupMenuState,
+                                                text = stringResource(id = R.string.type_of_view),
+                                                selectedItem = when (showOriginalSonglist) {
+                                                    0 -> stringResource(id = R.string.original_songlist).replace(
+                                                        "#",
+                                                        sourceApp.value
+                                                    )
+
+                                                    1 -> stringResource(R.string.convert_result)
+                                                    else -> ""
+                                                }
+                                            ) {
+                                                PopupMenuItem(
+                                                    onClick = {
+                                                        MyVibrationEffect(
+                                                            context,
+                                                            enableHaptic.value
+                                                        ).click()
+                                                        showOriginalSonglist = 0
+                                                        originalSonglistPopupMenuState.dismiss()
+                                                    },
+                                                    text = stringResource(id = R.string.original_songlist).replace(
+                                                        "#",
+                                                        sourceApp.value
+                                                    ),
+                                                    selected = showOriginalSonglist == 0,
+                                                    iconPainter = when (selectedSourceApp.intValue) {
+                                                        1 -> painterResource(id = R.drawable.cloudmusic)
+                                                        2 -> painterResource(id = R.drawable.qqmusic)
+                                                        3 -> painterResource(id = R.drawable.kugou)
+                                                        4 -> painterResource(id = R.drawable.kuwo)
+                                                        else -> painterResource(id = R.drawable.android)
+                                                    },
+                                                    iconColor = SaltTheme.colors.text,
+                                                    iconPaddingValues = PaddingValues(
+                                                        start = 2.dp,
+                                                        end = 2.dp,
+                                                        top = 2.dp,
+                                                        bottom = 2.dp
+                                                    )
+                                                )
+                                                PopupMenuItem(
+                                                    onClick = {
+                                                        MyVibrationEffect(
+                                                            context,
+                                                            enableHaptic.value
+                                                        ).click()
+                                                        showOriginalSonglist = 1
+                                                        originalSonglistPopupMenuState.dismiss()
+                                                    },
+                                                    text = stringResource(R.string.convert_result),
+                                                    selected = showOriginalSonglist == 1,
+                                                    iconPainter = painterResource(id = R.drawable.result),
+                                                    iconColor = SaltTheme.colors.text,
+                                                    iconPaddingValues = PaddingValues(
+                                                        start = 1.5.dp,
+                                                        end = 1.5.dp,
+                                                        top = 1.5.dp,
+                                                        bottom = 1.5.dp
+                                                    )
+                                                )
+                                            }
+                                            ItemPopup(
                                                 state = filterPopupMenuState,
                                                 text = stringResource(id = R.string.convert_status),
                                                 selectedItem = when (selectedFilterIndex) {
@@ -1116,12 +1183,22 @@ fun ConvertPageUi(
                                         }
 
                                         RoundedColumn {
-                                            ItemTitle(text = stringResource(R.string.convert_result))
+                                            ItemTitle(
+                                                text = when (showOriginalSonglist) {
+                                                    0 -> stringResource(id = R.string.original_songlist).replace(
+                                                        "#",
+                                                        sourceApp.value
+                                                    )
+
+                                                    1 -> stringResource(R.string.convert_result)
+                                                    else -> ""
+                                                }
+                                            )
                                             ItemContainer {
                                                 Column(
                                                     modifier = Modifier
                                                         .clip(RoundedCornerShape(10.dp))
-                                                        .heightIn(max = (LocalConfiguration.current.screenHeightDp / 1.8).dp)
+                                                        .heightIn(max = (LocalConfiguration.current.screenHeightDp / 2.05).dp)
                                                         .background(color = SaltTheme.colors.subBackground)
                                                 ) {
                                                     AnimatedContent(
@@ -1147,14 +1224,14 @@ fun ConvertPageUi(
                                                                                 showSelectedSongInfoDialog =
                                                                                     true
                                                                             },
-                                                                            text = convertResult[index]!![1],
+                                                                            text = convertResult[index]!![2 - showOriginalSonglist],
                                                                             sub = "${
                                                                                 stringResource(
                                                                                     R.string.singer
                                                                                 )
-                                                                            }${convertResult[index]!![3]}\n${
+                                                                            }${convertResult[index]!![4 - showOriginalSonglist]}\n${
                                                                                 stringResource(R.string.album)
-                                                                            }${convertResult[index]!![5]}",
+                                                                            }${convertResult[index]!![6 - showOriginalSonglist]}",
                                                                             rightSub = convertResult[index]!![0],
                                                                             rightSubColor = when (convertResult[index]!![0]) {
                                                                                 stringResource(R.string.match_success) -> colorResource(
@@ -1184,14 +1261,14 @@ fun ConvertPageUi(
                                                                                 showSelectedSongInfoDialog =
                                                                                     true
                                                                             },
-                                                                            text = convertResult[index]!![1],
+                                                                            text = convertResult[index]!![2 - showOriginalSonglist],
                                                                             sub = "${
                                                                                 stringResource(
                                                                                     R.string.singer
                                                                                 )
-                                                                            }${convertResult[index]!![3]}\n${
+                                                                            }${convertResult[index]!![4 - showOriginalSonglist]}\n${
                                                                                 stringResource(R.string.album)
-                                                                            }${convertResult[index]!![5]}",
+                                                                            }${convertResult[index]!![6 - showOriginalSonglist]}",
                                                                             rightSub = convertResult[index]!![0],
                                                                             rightSubColor = when (convertResult[index]!![0]) {
                                                                                 stringResource(R.string.match_success) -> colorResource(
@@ -1221,14 +1298,14 @@ fun ConvertPageUi(
                                                                                 showSelectedSongInfoDialog =
                                                                                     true
                                                                             },
-                                                                            text = convertResult[index]!![1],
+                                                                            text = convertResult[index]!![2 - showOriginalSonglist],
                                                                             sub = "${
                                                                                 stringResource(
                                                                                     R.string.singer
                                                                                 )
-                                                                            }${convertResult[index]!![3]}\n${
+                                                                            }${convertResult[index]!![4 - showOriginalSonglist]}\n${
                                                                                 stringResource(R.string.album)
-                                                                            }${convertResult[index]!![5]}",
+                                                                            }${convertResult[index]!![6 - showOriginalSonglist]}",
                                                                             rightSub = convertResult[index]!![0],
                                                                             rightSubColor = when (convertResult[index]!![0]) {
                                                                                 stringResource(R.string.match_success) -> colorResource(
@@ -1258,14 +1335,14 @@ fun ConvertPageUi(
                                                                                 showSelectedSongInfoDialog =
                                                                                     true
                                                                             },
-                                                                            text = convertResult[index]!![1],
+                                                                            text = convertResult[index]!![2 - showOriginalSonglist],
                                                                             sub = "${
                                                                                 stringResource(
                                                                                     R.string.singer
                                                                                 )
-                                                                            }${convertResult[index]!![3]}\n${
+                                                                            }${convertResult[index]!![4 - showOriginalSonglist]}\n${
                                                                                 stringResource(R.string.album)
-                                                                            }${convertResult[index]!![5]}",
+                                                                            }${convertResult[index]!![6 - showOriginalSonglist]}",
                                                                             rightSub = convertResult[index]!![0],
                                                                             rightSubColor = when (convertResult[index]!![0]) {
                                                                                 stringResource(R.string.match_success) -> colorResource(
@@ -1298,7 +1375,8 @@ fun ConvertPageUi(
                                         ) {
                                             TextButton(
                                                 onClick = {
-                                                    convertResult.clear()
+                                                    showConfirmGoBackDialog = true
+//                                                    convertResult.clear()
                                                 },
                                                 modifier = Modifier.weight(1f),
                                                 text = stringResource(id = R.string.re_modify_params),
@@ -1373,7 +1451,10 @@ fun ConvertPageUi(
                                                 Environment.getExternalStoragePublicDirectory(
                                                     Environment.DIRECTORY_DOWNLOADS
                                                 )
-                                            }/${context.getString(R.string.app_name)}/${playlistName[index]}.txt",
+                                            }/${context.getString(R.string.app_name)}/${
+                                                LocalDate.now()
+                                                    .format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+                                            }/${playlistName[index]}.txt",
                                             fontSize = 15.sp
                                         )
                                     }

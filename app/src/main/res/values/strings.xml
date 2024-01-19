@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name" translatable="false">MusicHelper</string>
+    <string name="app_name">Playlist NB</string>
     <string name="scan_result_hint">The scanning process will be shown here.</string>
     <string name="scanning_try_again_later">Scanning, please try again later.</string>
     <string name="result_file_name">#_Export</string>
@@ -153,7 +153,7 @@
     <string name="follow_on_bilibili">Follow on BiliBili</string>
     <string name="open_source_github">View this project on GitHub</string>
     <string name="open_source_sub">A Star ⭐ would be nicer~</string>
-    <string name="open_source_gitee">View this project on Gitee</string>
+    <string name="open_source_gitlab">View this project on GitLab</string>
     <string name="open_source_licence">Open source license</string>
     <string name="android_12_and_above_only">Android 12+ Only</string>
     <string name="haptic">Haptic</string>
@@ -191,4 +191,9 @@
     <string name="thank_you_very_much">❤️ Thank you very much! ❤️</string>
     <string name="save_image">(Touch the image to save it to gallery)</string>
     <string name="save_failed">Save failed</string>
+    <string name="temporarily_unavailable">(Temporarily unavailable)</string>
+    <string name="open_source_gitee">View this project on Gitee</string>
+    <string name="no_music_found">⚠️no supported music files in the selected directory</string>
+    <string name="original_songlist"># original</string>
+    <string name="type_of_view">View</string>
 </resources>

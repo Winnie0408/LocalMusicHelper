@@ -148,7 +148,7 @@ fun BasicDialog(
         onDismissRequest = onDismissRequest,
         properties = properties,
     ) {
-        (LocalView.current.parent as DialogWindowProvider).window.setDimAmount(0.4f)
+        (LocalView.current.parent as DialogWindowProvider).window.setDimAmount(0.5f)
         Column(
             modifier = Modifier
                 .fillMaxWidth()

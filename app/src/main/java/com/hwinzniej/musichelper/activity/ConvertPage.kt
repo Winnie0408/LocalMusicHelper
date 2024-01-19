@@ -44,6 +44,8 @@ import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileWriter
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 class ConvertPage(
     val context: Context,
@@ -866,6 +868,8 @@ class ConvertPage(
                     context.getString(
                         R.string.app_name
                     )
+                }/${
+                    LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
                 }",
                 fileName
             )

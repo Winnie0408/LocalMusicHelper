@@ -93,7 +93,7 @@
     <string name="ok_button_text">확인</string>
     <string name="open_in_some_app">#에서 열기?</string>
     <string name="open_salt_player">Salt Player 열기</string>
-    <string name="open_source_gitee">Gitee에서 이 프로젝트 보기</string>
+    <string name="open_source_gitlab">GitLab에서 이 프로젝트 보기</string>
     <string name="open_source_github">GitHub에서 이 프로젝트 보기</string>
     <string name="open_source_licence">오픈 소스 라이선스</string>
     <string name="open_source_sub">별표 ⭐가 더 좋을 것 같아요~</string>
@@ -130,6 +130,7 @@
     <string name="scan_complete">완료</string>
     <string name="scan_control">스캔 옵션</string>
     <string name="scan_function_name">스캔</string>
+    <string name="app_name">경계 없는 노래 목록</string>
     <string name="scan_result_hint">스캔 과정이 여기에 표시됩니다.</string>
     <string name="scanning_result">스캔 결과</string>
     <string name="scanning_try_again_later">스캔 중입니다. 나중에 다시 시도하십시오.</string>
@@ -187,4 +188,9 @@
     <string name="will_open_in_browser">브라우저에서 열립니다.</string>
     <string name="with_root_access">루트 액세스 사용</string>
     <string name="you_have_selected">선택한 파일</string>
+    <string name="temporarily_unavailable">(일시적으로 사용할 수 없습니다)</string>
+    <string name="open_source_gitee">Gitee에서 이 프로젝트 보기</string>
+    <string name="no_music_found">⚠️선택한 디렉토리에 지원되는 음악 파일이 없습니다</string>
+    <string name="original_songlist">#의 오리지널</string>
+    <string name="type_of_view">보기</string>
 </resources>

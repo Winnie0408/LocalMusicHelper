@@ -264,7 +264,6 @@ class ScanPage(
         if (uri == null) {
             return
         }
-
         scanResult.clear()
         val absolutePath: String = Tools().uriToAbsolutePath(uri)
         val directory = File(absolutePath)
@@ -300,16 +299,6 @@ class ScanPage(
         }
         if (isRootCall) {
             saveAndExport()
-            lifecycleOwner.lifecycleScope.launch(Dispatchers.Main) {
-                showLoadingProgressBar.value = false
-                Toast.makeText(
-                    context, R.string.scan_complete, Toast.LENGTH_SHORT
-                ).show()
-                MyVibrationEffect(
-                    context,
-                    (context as MainActivity).enableHaptic.value
-                ).done()
-            }
         }
     }
 
@@ -334,7 +323,7 @@ class ScanPage(
     }
 
     /**
-     * 将扫描到音乐的标签信息写入到文件中
+     * 将扫描到音乐的标签信息写入临时变量，准备写入数据库
      */
     @Synchronized
     private fun getTag(tag: Tag, filePath: String) {
@@ -371,6 +360,19 @@ class ScanPage(
                 } else {
                     exportToTxt()
                 }
+            }
+            lifecycleOwner.lifecycleScope.launch(Dispatchers.Main) {
+                if (musicAllList.size == 0) {
+                    scanResult.add(0, context.getString(R.string.no_music_found))
+                }
+                showLoadingProgressBar.value = false
+                Toast.makeText(
+                    context, R.string.scan_complete, Toast.LENGTH_SHORT
+                ).show()
+                MyVibrationEffect(
+                    context,
+                    (context as MainActivity).enableHaptic.value
+                ).done()
             }
         }
     }
