@@ -193,4 +193,7 @@
     <string name="no_music_found">⚠️所选目录中没有受支持的音乐文件</string>
     <string name="original_songlist">#原始歌单</string>
     <string name="type_of_view">查看</string>
+    <string name="target_formats">目标格式</string>
+    <string name="using_player">使用的音乐播放器</string>
+    <string name="developing">努力开发中</string>
 </resources>

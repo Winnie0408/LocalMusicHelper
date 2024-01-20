@@ -28,7 +28,6 @@ import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -164,11 +163,11 @@ fun AboutPageUi(
                     modifier = Modifier.fillMaxSize(),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Icon(
+                    Image(
                         modifier = Modifier
-                            .size(100.dp)
+                            .size(125.dp)
                             .clip(RoundedCornerShape(10.dp)),
-                        painter = painterResource(id = R.drawable.ic_launcher_foreground),
+                        painter = painterResource(id = R.mipmap.ic_launcher_foreground),
                         contentDescription = null
                     )
                     Text(

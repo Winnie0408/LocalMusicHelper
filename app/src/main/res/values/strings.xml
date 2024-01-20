@@ -196,4 +196,7 @@
     <string name="no_music_found">⚠️no supported music files in the selected directory</string>
     <string name="original_songlist"># original</string>
     <string name="type_of_view">View</string>
+    <string name="target_formats">Target formats</string>
+    <string name="using_player">Music player in use</string>
+    <string name="developing">Under development</string>
 </resources>

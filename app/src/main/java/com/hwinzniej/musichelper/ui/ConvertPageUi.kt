@@ -119,7 +119,6 @@ fun ConvertPageUi(
     val matchingModePopupMenuState = rememberPopupState()
     val pages = listOf("0", "1", "2", "3")
     val pageState = rememberPagerState(pageCount = { pages.size })
-    var allEnabled by remember { mutableStateOf(false) }
     var showSetSimilarityDialog by remember { mutableStateOf(false) }
     val resultPages = listOf("0", "1")
     val resultPageState = rememberPagerState(pageCount = { resultPages.size })
@@ -135,6 +134,8 @@ fun ConvertPageUi(
     var selectedFilterIndex by remember { mutableIntStateOf(0) }
     var showOriginalSonglist by remember { mutableIntStateOf(1) }
     val originalSonglistPopupMenuState = rememberPopupState()
+    var selectedTargetApp by remember { mutableIntStateOf(0) }
+    val targetAppPopupMenuState = rememberPopupState()
 
     BackHandler(enabled = (currentPage.intValue != 0 && mainActivityPageState.currentPage == 1)) {
         if (convertResult.isEmpty()) {
@@ -155,9 +156,10 @@ fun ConvertPageUi(
                 convertResult.clear()
                 inputSearchWords.value = ""
                 searchResult.clear()
-                allEnabled = false
                 selectedSongIndex = -1
                 selectedSearchResult = -1
+                showOriginalSonglist = 1
+                selectedTargetApp = 0
             } else
                 currentPage.intValue--
         } else {
@@ -541,9 +543,10 @@ fun ConvertPageUi(
                         convertResult.clear()
                         inputSearchWords.value = ""
                         searchResult.clear()
-                        allEnabled = false
                         selectedSongIndex = -1
                         selectedSearchResult = -1
+                        showOriginalSonglist = 1
+                        selectedTargetApp = 0
                     } else
                         currentPage.intValue--
                 } else {
@@ -580,13 +583,16 @@ fun ConvertPageUi(
                                 .background(color = SaltTheme.colors.background)
                                 .verticalScroll(rememberScrollState())
                         ) {
-                            RoundedColumn {  //TODO 支持APlayer、Poweramp
+                            RoundedColumn {
                                 ItemTitle(text = stringResource(R.string.source_of_songlist_app))
-                                ItemPopup(  //TODO 合并歌单来源App选择相关的组件到一个RoundedColumn中
+                                ItemPopup(
                                     state = sourceAppPopupMenuState,
                                     text = stringResource(R.string.select_source_of_songlist),
                                     selectedItem = sourceApp.value,
-                                    popupWidth = 180
+                                    popupWidth = 180,
+                                    sub = if (useRootAccess.value) stringResource(
+                                        R.string.with_root_access
+                                    ) else null
                                 ) {
                                     PopupMenuItem(
                                         onClick = {
@@ -650,39 +656,34 @@ fun ConvertPageUi(
                                         )
                                     )
                                 }
-                            }
-
-                            sourceApp.value = when (selectedSourceApp.intValue) {
-                                1 -> stringResource(R.string.source_netease_cloud_music)
-                                2 -> stringResource(R.string.source_qq_music)
-                                3 -> stringResource(R.string.source_kugou_music)
-                                4 -> stringResource(R.string.source_kuwo_music)
-                                else -> ""
-                            }
-
-                            RoundedColumn {
-                                ItemTitle(text = stringResource(R.string.import_database))
-                                Item(
-                                    enabled = (selectedSourceApp.intValue != 0) && !useRootAccess.value,
-                                    onClick = { convertPage.selectDatabaseFile() },
-                                    text = if (selectedSourceApp.intValue == 0) {
-                                        stringResource(R.string.please_select_source_app)
-                                    } else {
-                                        if (useRootAccess.value)
-                                            stringResource(R.string.get_file_with_root).replace(
-                                                "#",
-                                                sourceApp.value
-                                            )
-                                        else
-                                            stringResource(R.string.select_database_file_match_to_source).replace(
-                                                "#",
-                                                sourceApp.value
-                                            )
-                                    },
-                                    sub = if (useRootAccess.value && (selectedSourceApp.intValue != 0)) stringResource(
-                                        R.string.with_root_access
-                                    ) else null,
-                                )
+                                AnimatedVisibility(
+                                    visible = (selectedSourceApp.intValue != 0) && !useRootAccess.value
+                                ) {
+                                    Item(
+                                        onClick = { convertPage.selectDatabaseFile() },
+                                        text = stringResource(R.string.select_database_file_match_to_source).replace(
+                                            "#",
+                                            sourceApp.value
+                                        )
+//                                        if (selectedSourceApp.intValue == 0) {
+//                                            stringResource(R.string.please_select_source_app)
+//                                        } else {
+//                                            if (useRootAccess.value)
+//                                                stringResource(R.string.get_file_with_root).replace(
+//                                                    "#",
+//                                                    sourceApp.value
+//                                                )
+//                                            else
+//                                                stringResource(R.string.select_database_file_match_to_source).replace(
+//                                                    "#",
+//                                                    sourceApp.value
+//                                                )
+//                                        },
+//                                        sub = if (useRootAccess.value && (selectedSourceApp.intValue != 0)) stringResource(
+//                                            R.string.with_root_access
+//                                        ) else null,
+                                    )
+                                }
                                 AnimatedVisibility(
                                     visible = databaseFileName.value != ""
                                 ) {
@@ -691,7 +692,14 @@ fun ConvertPageUi(
                                         rightSub = databaseFileName.value
                                     )
                                 }
+                            }
 
+                            sourceApp.value = when (selectedSourceApp.intValue) {
+                                1 -> stringResource(R.string.source_netease_cloud_music)
+                                2 -> stringResource(R.string.source_qq_music)
+                                3 -> stringResource(R.string.source_kugou_music)
+                                4 -> stringResource(R.string.source_kuwo_music)
+                                else -> ""
                             }
 
                             RoundedColumn {
@@ -733,6 +741,83 @@ fun ConvertPageUi(
                                             )
                                         }
                                     }
+                                }
+                            }
+
+                            RoundedColumn {
+                                ItemTitle(text = stringResource(R.string.target_formats))
+                                ItemPopup(
+                                    state = targetAppPopupMenuState,
+                                    text = stringResource(R.string.using_player),
+                                    selectedItem = when (selectedTargetApp) {
+                                        0 -> "Salt Player"
+                                        1 -> "APlayer"
+                                        2 -> "Poweramp"
+                                        else -> ""
+                                    },
+                                    popupWidth = 150
+                                ) {
+                                    PopupMenuItem(
+                                        onClick = {
+                                            MyVibrationEffect(context, enableHaptic.value).click()
+                                            selectedTargetApp = 0
+                                            targetAppPopupMenuState.dismiss()
+                                        },
+                                        selected = selectedTargetApp == 0,
+                                        text = "Salt Player",
+//                                        iconPainter = painterResource(id = R.drawable.kuwo),
+//                                        iconColor = SaltTheme.colors.text,
+//                                        iconPaddingValues = PaddingValues(
+//                                            start = 1.5.dp,
+//                                            end = 1.5.dp,
+//                                            top = 1.5.dp,
+//                                            bottom = 1.5.dp
+//                                        )
+                                    )
+                                    PopupMenuItem(
+                                        onClick = {
+                                            MyVibrationEffect(context, enableHaptic.value).click()
+                                            selectedTargetApp = 0
+                                            targetAppPopupMenuState.dismiss()
+                                            Toast.makeText(
+                                                context,
+                                                context.getString(R.string.developing),
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                        },
+                                        selected = selectedTargetApp == 1,
+                                        text = "APlayer",
+//                                        iconPainter = painterResource(id = R.drawable.kuwo),
+//                                        iconColor = SaltTheme.colors.text,
+//                                        iconPaddingValues = PaddingValues(
+//                                            start = 1.5.dp,
+//                                            end = 1.5.dp,
+//                                            top = 1.5.dp,
+//                                            bottom = 1.5.dp
+//                                        )
+                                    )
+                                    PopupMenuItem(
+                                        onClick = {
+                                            MyVibrationEffect(context, enableHaptic.value).click()
+                                            selectedTargetApp = 0
+                                            targetAppPopupMenuState.dismiss()
+                                            Toast.makeText(
+                                                context,
+                                                context.getString(R.string.developing),
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                        },
+                                        selected = selectedTargetApp == 2,
+                                        text = "Poweramp",
+//                                        iconPainter = painterResource(id = R.drawable.kuwo),
+//                                        iconColor = SaltTheme.colors.text,
+//                                        iconPaddingValues = PaddingValues(
+//                                            start = 1.5.dp,
+//                                            end = 1.5.dp,
+//                                            top = 1.5.dp,
+//                                            bottom = 1.5.dp
+//                                        )
+                                    )
                                 }
                             }
 
@@ -778,15 +863,13 @@ fun ConvertPageUi(
                                                 .clip(RoundedCornerShape(10.dp))
                                                 .background(color = SaltTheme.colors.subBackground)
                                         ) {
-                                            ItemCheck(  //TODO 手动全选，按钮不亮；先全选，再取消，按钮不灭
-                                                state = allEnabled,
+                                            ItemCheck(
+                                                state = playlistEnabled.all { it == 1 },
                                                 onChange = {
-                                                    if (allEnabled) {
-                                                        allEnabled = false
-                                                        playlistEnabled.replaceAll { 0 }
-                                                    } else {
-                                                        allEnabled = true
+                                                    if (it) {
                                                         playlistEnabled.replaceAll { 1 }
+                                                    } else {
+                                                        playlistEnabled.replaceAll { 0 }
                                                     }
                                                 },
                                                 text = stringResource(R.string.select_all),
@@ -894,7 +977,7 @@ fun ConvertPageUi(
                                                 text = stringResource(R.string.set_similarity_item),
                                                 rightSub = "${similarity.floatValue.roundToInt()}%"
                                             )
-                                            ItemPopup( //TODO 为每个子项添加图标
+                                            ItemPopup(
                                                 state = matchingModePopupMenuState,
                                                 text = stringResource(R.string.matching_mode),
                                                 selectedItem = when (selectedMatchingMode.intValue) {

@@ -193,4 +193,7 @@
     <string name="no_music_found">⚠️선택한 디렉토리에 지원되는 음악 파일이 없습니다</string>
     <string name="original_songlist">#의 오리지널</string>
     <string name="type_of_view">보기</string>
+    <string name="target_formats">대상 형식</string>
+    <string name="using_player">사용 중인 음악 플레이어</string>
+    <string name="developing">개발 중입니다</string>
 </resources>
