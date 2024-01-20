@@ -198,5 +198,5 @@
     <string name="type_of_view">View</string>
     <string name="target_formats">Target formats</string>
     <string name="using_player">Music player in use</string>
-    <string name="developing">Under development</string>
+    <string name="developing">In development, stay tuned…</string>
 </resources>

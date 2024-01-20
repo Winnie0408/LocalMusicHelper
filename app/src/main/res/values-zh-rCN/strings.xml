@@ -195,5 +195,5 @@
     <string name="type_of_view">查看</string>
     <string name="target_formats">目标格式</string>
     <string name="using_player">使用的音乐播放器</string>
-    <string name="developing">努力开发中</string>
+    <string name="developing">开发中，敬请期待…</string>
 </resources>

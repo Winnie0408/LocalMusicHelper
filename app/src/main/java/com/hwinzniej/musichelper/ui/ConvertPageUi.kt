@@ -1105,7 +1105,7 @@ fun ConvertPageUi(
                                                     },
                                                     text = stringResource(id = R.string.original_songlist).replace(
                                                         "#",
-                                                        sourceApp.value
+                                                        "${sourceApp.value}\n"
                                                     ),
                                                     selected = showOriginalSonglist == 0,
                                                     iconPainter = when (selectedSourceApp.intValue) {

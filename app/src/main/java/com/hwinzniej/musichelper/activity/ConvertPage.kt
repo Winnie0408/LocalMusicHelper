@@ -386,6 +386,7 @@ class ConvertPage(
                     } finally {
                         loadingProgressSema.release()
                         db.close()
+                        File("${databaseFilePath}-journal").delete()
                     }
                 }
             } else {
