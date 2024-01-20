@@ -210,7 +210,7 @@ fun AboutPageUi(
                                                 horizontal = 16.dp,
                                                 vertical = 8.dp
                                             ),
-                                            text = "HWinZnieJ & DeepL Translator",
+                                            text = "HWinZnieJ & Microsoft Copilot & DeepL Translator",
                                             color = SaltTheme.colors.text,
                                             fontSize = 14.sp
                                         )

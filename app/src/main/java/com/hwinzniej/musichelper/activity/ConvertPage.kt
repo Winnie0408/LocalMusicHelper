@@ -64,7 +64,7 @@ class ConvertPage(
     var showErrorDialog = mutableStateOf(false)
     var errorDialogTitle = mutableStateOf("")
     var errorDialogContent = mutableStateOf("")
-    var databaseFilePath = ""
+    var databaseFilePath = mutableStateOf("")
     var resultFilePath = ""
     var sourceApp = SourceApp()
     val loadingProgressSema = Semaphore(2)
@@ -177,7 +177,7 @@ class ConvertPage(
         selectedFileName.value =
             selectedFileName.value.substring(selectedFileName.value.lastIndexOf("/") + 1)
         if (code == 0) {
-            databaseFilePath = Tools().uriToAbsolutePath(uri)
+            databaseFilePath.value = Tools().uriToAbsolutePath(uri)
             lifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
                 delay(200L) //播放动画
                 databaseFileName.value = selectedFileName.value
@@ -228,13 +228,17 @@ class ConvertPage(
     fun checkResultFile() {
         lifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
             if (useCustomResultFile.value) {
-                val db = SQLiteDatabase.openOrCreateDatabase(File(resultFilePath), null)
+                var db: SQLiteDatabase? = null
                 try {
-                    val cursor = db.rawQuery(
+                    db = SQLiteDatabase.openDatabase(
+                        resultFilePath,
+                        null,
+                        SQLiteDatabase.OPEN_READONLY
+                    )
+                    db.rawQuery(
                         "SELECT id, song, artist, album, absolutePath FROM music LIMIT 1",
                         null
-                    )
-                    cursor.close()
+                    ).close()
                 } catch (e: Exception) {
                     showErrorDialog.value = true
                     errorDialogTitle.value =
@@ -247,8 +251,8 @@ class ConvertPage(
                         }: ${e.message}"
                     haveError = true
                 } finally {
+                    db?.close()
                     loadingProgressSema.release()
-                    db.close()
                     File("${resultFilePath}-journal").delete()
                 }
             } else {
@@ -300,7 +304,7 @@ class ConvertPage(
             )
 
             if (copy == "") {
-                databaseFilePath = "${dir.absolutePath}/${sourceApp.sourceEng}_temp.db"
+                databaseFilePath.value = "${dir.absolutePath}/${sourceApp.sourceEng}_temp.db"
                 loadingProgressSema.release()
             } else {
                 showErrorDialog.value = true
@@ -364,14 +368,17 @@ class ConvertPage(
                 if (useRootAccess.value)
                     checkAppStatusWithRoot()
                 else {
-                    val db = SQLiteDatabase.openOrCreateDatabase(File(databaseFilePath), null)
+                    var db: SQLiteDatabase? = null
                     try {
-                        val cursor =
-                            db.rawQuery(
-                                "SELECT ${sourceApp.songListId}, ${sourceApp.songListName} FROM ${sourceApp.songListTableName} LIMIT 1",
-                                null
-                            )
-                        cursor.close()
+                        db = SQLiteDatabase.openDatabase(
+                            databaseFilePath.value,
+                            null,
+                            SQLiteDatabase.OPEN_READONLY
+                        )
+                        db.rawQuery(
+                            "SELECT ${sourceApp.songListId}, ${sourceApp.songListName} FROM ${sourceApp.songListTableName} LIMIT 1",
+                            null
+                        ).close()
                     } catch (e: Exception) {
                         showErrorDialog.value = true
                         errorDialogTitle.value =
@@ -384,9 +391,9 @@ class ConvertPage(
                             }: ${e.message}"
                         haveError = true
                     } finally {
+                        db?.close()
                         loadingProgressSema.release()
-                        db.close()
-                        File("${databaseFilePath}-journal").delete()
+                        File("${databaseFilePath.value}-journal").delete()
                     }
                 }
             } else {
@@ -417,7 +424,7 @@ class ConvertPage(
             val innerPlaylistEnabled = MutableList(0) { 0 }
             val innerPlaylistSum = MutableList(0) { 0 }
 
-            val db = SQLiteDatabase.openOrCreateDatabase(File(databaseFilePath), null)
+            val db = SQLiteDatabase.openOrCreateDatabase(File(databaseFilePath.value), null)
 
             val cursor = if (sourceApp.sourceEng == "KuWoMusic")
                 db.rawQuery(
@@ -527,7 +534,7 @@ class ConvertPage(
             var songAlbum: String
             var num = 0
 
-            val db = SQLiteDatabase.openOrCreateDatabase(File(databaseFilePath), null)
+            val db = SQLiteDatabase.openOrCreateDatabase(File(databaseFilePath.value), null)
             val cursor = db.rawQuery(
                 "SELECT ${sourceApp.songListSongInfoSongId} FROM ${sourceApp.songListSongInfoTableName} WHERE ${sourceApp.songListSongInfoPlaylistId} = '${playlistId[firstIndex1]}' ORDER BY ${sourceApp.sortField}",
                 null

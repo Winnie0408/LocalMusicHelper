@@ -114,6 +114,7 @@ fun ConvertPageUi(
     enableHaptic: MutableState<Boolean>,
     useRootAccess: MutableState<Boolean>,
     sourceApp: MutableState<String>,
+    databaseFilePath: MutableState<String>,
 ) {
     val sourceAppPopupMenuState = rememberPopupState()
     val matchingModePopupMenuState = rememberPopupState()
@@ -165,6 +166,11 @@ fun ConvertPageUi(
         } else {
             showConfirmGoBackDialog = true
         }
+    }
+
+    LaunchedEffect(key1 = useRootAccess.value) {
+        databaseFileName.value = ""
+        databaseFilePath.value = ""
     }
 
     if (showConfirmGoBackDialog) {
@@ -685,7 +691,7 @@ fun ConvertPageUi(
                                     )
                                 }
                                 AnimatedVisibility(
-                                    visible = databaseFileName.value != ""
+                                    visible = (databaseFileName.value != "") && !useRootAccess.value
                                 ) {
                                     ItemValue(
                                         text = stringResource(R.string.you_have_selected),
