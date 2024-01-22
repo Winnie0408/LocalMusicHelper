@@ -80,6 +80,8 @@ class ConvertPage(
     var playlistName = mutableStateListOf<String>()
     var playlistEnabled = mutableStateListOf<Int>()
     var playlistSum = mutableStateListOf<Int>()
+    var showSelectSourceDialog = mutableStateOf(false)
+    var multiSource = mutableStateListOf<Array<String>>()
 
     /**
      * 请求存储权限
@@ -240,7 +242,6 @@ class ConvertPage(
                         null
                     ).close()
                 } catch (e: Exception) {
-                    showErrorDialog.value = true
                     errorDialogTitle.value =
                         context.getString(R.string.error_while_getting_data_dialog_title)
                     errorDialogContent.value =
@@ -249,6 +250,7 @@ class ConvertPage(
                                 R.string.read_failed
                             )
                         }: ${e.message}"
+                    showErrorDialog.value = true
                     haveError = true
                 } finally {
                     db?.close()
@@ -259,7 +261,6 @@ class ConvertPage(
                 try {
                     val musicCount = db.musicDao().getMusicCount()
                     if (musicCount == 0) {
-                        showErrorDialog.value = true
                         errorDialogTitle.value =
                             context.getString(R.string.error_while_getting_data_dialog_title)
                         errorDialogContent.value =
@@ -268,10 +269,10 @@ class ConvertPage(
                                     R.string.read_failed
                                 )
                             }: ${context.getString(R.string.use_scan_fun_first)}"
+                        showErrorDialog.value = true
                         haveError = true
                     }
                 } catch (e: Exception) {
-                    showErrorDialog.value = true
                     errorDialogTitle.value =
                         context.getString(R.string.error_while_getting_data_dialog_title)
                     errorDialogContent.value =
@@ -280,6 +281,7 @@ class ConvertPage(
                                 R.string.read_failed
                             )
                         }: ${context.getString(R.string.use_scan_fun_first)}"
+                    showErrorDialog.value = true
                     haveError = true
                 } finally {
                     loadingProgressSema.release()
@@ -288,26 +290,25 @@ class ConvertPage(
         }
     }
 
-    fun checkAppStatusWithRoot() {
-        val appExists =
-            Tools().execShellCmdWithRoot("pm list packages | grep '${sourceApp.pakageName}'")
-        if (appExists.contains(sourceApp.pakageName)) {
+    fun getSelectedMultiSource(selected: Int) {
+        lifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
             val dirPath = context.getExternalFilesDir(null)?.absolutePath + "/userDatabase"
             val dir = File(dirPath)
             if (!dir.exists())
                 dir.mkdirs()
-
-            val copy = Tools().execShellCmdWithRoot(
-                "cp -f /data/data/${sourceApp.pakageName}/databases/${
+            val copyResult = Tools().execShellCmdWithRoot(
+                "cp -f '/data/data/${multiSource[selected][0]}/databases/${
                     sourceApp.databaseName
-                } ${dir.absolutePath}/${sourceApp.sourceEng}_temp.db"
+                }' '${dir.absolutePath}/${sourceApp.sourceEng}_temp.db'"
             )
-
-            if (copy == "") {
+            if (copyResult == "") {
                 databaseFilePath.value = "${dir.absolutePath}/${sourceApp.sourceEng}_temp.db"
+                showDialogProgressBar.value = false
+                showSelectSourceDialog.value = false
                 loadingProgressSema.release()
             } else {
-                showErrorDialog.value = true
+                showDialogProgressBar.value = false
+                showSelectSourceDialog.value = false
                 errorDialogTitle.value =
                     context.getString(R.string.error_while_getting_data_dialog_title)
                 errorDialogContent.value =
@@ -315,13 +316,66 @@ class ConvertPage(
                         context.getString(
                             R.string.read_failed
                         )
-                    }: $copy"
+                    }: $copyResult"
+                showErrorDialog.value = true
                 haveError = true
                 loadingProgressSema.release()
-                return
+                return@launch
+            }
+        }
+    }
+
+    fun checkAppStatusWithRoot() {
+        val appExists =
+            Tools().execShellCmdWithRoot("pm list packages | grep -E '${sourceApp.pakageName}'")
+        if (appExists.isNotEmpty()) {
+            if (appExists.indexOf("package:") == appExists.lastIndexOf("package:")) {
+                val dirPath = context.getExternalFilesDir(null)?.absolutePath + "/userDatabase"
+                val dir = File(dirPath)
+                if (!dir.exists())
+                    dir.mkdirs()
+
+                val copyResult = Tools().execShellCmdWithRoot(
+                    "cp -f '/data/data/${appExists.split(":")[1]}/databases/${
+                        sourceApp.databaseName
+                    }' '${dir.absolutePath}/${sourceApp.sourceEng}_temp.db'"
+                )
+
+                if (copyResult == "") {
+                    databaseFilePath.value = "${dir.absolutePath}/${sourceApp.sourceEng}_temp.db"
+                    loadingProgressSema.release()
+                } else {
+                    errorDialogTitle.value =
+                        context.getString(R.string.error_while_getting_data_dialog_title)
+                    errorDialogContent.value =
+                        "${errorDialogContent.value}\n- ${context.getString(R.string.database_file)} ${
+                            context.getString(
+                                R.string.read_failed
+                            )
+                        }: $copyResult"
+                    showErrorDialog.value = true
+                    haveError = true
+                    loadingProgressSema.release()
+                    return
+                }
+            } else {
+                multiSource.clear()
+                val pm = context.packageManager
+                val sourceAppsPackageName = appExists.split("package:").filter { it.isNotEmpty() }
+                sourceAppsPackageName.forEach {
+                    multiSource.add(
+                        arrayOf(
+                            it,
+                            pm.getPackageInfo(
+                                it,
+                                PackageManager.GET_META_DATA
+                            ).applicationInfo.loadLabel(pm).toString()
+                        )
+                    )
+                }
+                showSelectSourceDialog.value = true
             }
         } else {
-            showErrorDialog.value = true
             errorDialogTitle.value =
                 context.getString(R.string.error_while_getting_data_dialog_title)
             errorDialogContent.value =
@@ -332,6 +386,7 @@ class ConvertPage(
                 }: ${
                     context.getString(R.string.app_not_installed).replace("#", sourceAppText.value)
                 }"
+            showErrorDialog.value = true
             haveError = true
             loadingProgressSema.release()
         }
@@ -341,7 +396,6 @@ class ConvertPage(
         lifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
             when (selectedSourceApp.intValue) {
                 0 -> {
-                    showErrorDialog.value = true
                     errorDialogTitle.value =
                         context.getString(R.string.error_while_getting_data_dialog_title)
                     errorDialogContent.value =
@@ -354,6 +408,7 @@ class ConvertPage(
                                 R.string.please_select_source_app
                             )
                         }"
+                    showErrorDialog.value = true
                     loadingProgressSema.release()
                     haveError = true
                     return@launch
@@ -380,7 +435,6 @@ class ConvertPage(
                             null
                         ).close()
                     } catch (e: Exception) {
-                        showErrorDialog.value = true
                         errorDialogTitle.value =
                             context.getString(R.string.error_while_getting_data_dialog_title)
                         errorDialogContent.value =
@@ -389,6 +443,7 @@ class ConvertPage(
                                     R.string.read_failed
                                 )
                             }: ${e.message}"
+                        showErrorDialog.value = true
                         haveError = true
                     } finally {
                         db?.close()
@@ -397,7 +452,6 @@ class ConvertPage(
                     }
                 }
             } else {
-                showErrorDialog.value = true
                 errorDialogTitle.value =
                     context.getString(R.string.error_while_getting_data_dialog_title)
                 errorDialogContent.value =
@@ -410,6 +464,7 @@ class ConvertPage(
                             R.string.please_select_source_app
                         )
                     }"
+                showErrorDialog.value = true
                 haveError = true
                 loadingProgressSema.release()
             }
@@ -474,11 +529,11 @@ class ConvertPage(
 
     fun checkSongListSelection() {
         if (playlistEnabled.all { it == 0 }) {
-            showErrorDialog.value = true
             errorDialogTitle.value =
                 context.getString(R.string.error)
             errorDialogContent.value =
                 context.getString(R.string.please_select_at_least_one_playlist)
+            showErrorDialog.value = true
             return
         }
         for (i in playlistEnabled.indices) {

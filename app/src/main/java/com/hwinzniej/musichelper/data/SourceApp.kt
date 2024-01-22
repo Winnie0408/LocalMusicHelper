@@ -56,7 +56,7 @@ class SourceApp {
                 songInfoSongArtist = "artists"
                 songInfoSongAlbum = "album_name"
                 pakageName =
-                    "com.netease.cloudmusic"  //TODO 适配荣耀定制版网易云音乐 com.hihonor.cloudmusic 数据库结构相同
+                    "com.netease.cloudmusic|com.hihonor.cloudmusic"
             }
 
             "KugouMusic" -> {

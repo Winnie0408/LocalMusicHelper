@@ -199,4 +199,5 @@
     <string name="target_formats">Target formats</string>
     <string name="using_player">Music player in use</string>
     <string name="developing">In development, stay tuned…</string>
+    <string name="select_source_app">Select the source app to be used</string>
 </resources>

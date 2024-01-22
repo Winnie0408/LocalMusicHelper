@@ -115,6 +115,8 @@ fun ConvertPageUi(
     useRootAccess: MutableState<Boolean>,
     sourceApp: MutableState<String>,
     databaseFilePath: MutableState<String>,
+    showSelectSourceDialog: MutableState<Boolean>,
+    multiSource: MutableList<Array<String>>,
 ) {
     val sourceAppPopupMenuState = rememberPopupState()
     val matchingModePopupMenuState = rememberPopupState()
@@ -137,6 +139,7 @@ fun ConvertPageUi(
     val originalSonglistPopupMenuState = rememberPopupState()
     var selectedTargetApp by remember { mutableIntStateOf(0) }
     val targetAppPopupMenuState = rememberPopupState()
+    var selectedMultiSourceApp by remember { mutableIntStateOf(-1) }
 
     BackHandler(enabled = (currentPage.intValue != 0 && mainActivityPageState.currentPage == 1)) {
         if (convertResult.isEmpty()) {
@@ -161,6 +164,7 @@ fun ConvertPageUi(
                 selectedSearchResult = -1
                 showOriginalSonglist = 1
                 selectedTargetApp = 0
+                selectedMultiSourceApp = -1
             } else
                 currentPage.intValue--
         } else {
@@ -193,6 +197,60 @@ fun ConvertPageUi(
             title = errorDialogTitle.value,
             content = errorDialogContent.value,
             enableHaptic = enableHaptic.value
+        )
+    }
+
+    if (showSelectSourceDialog.value) {
+        YesNoDialog(
+            onDismiss = {
+                convertPage.haveError = true
+                convertPage.loadingProgressSema.release()
+                showSelectSourceDialog.value = false
+            },
+            onCancel = {
+                convertPage.haveError = true
+                convertPage.loadingProgressSema.release()
+                showSelectSourceDialog.value = false
+            },
+            onConfirm = {
+                if (selectedMultiSourceApp != -1) {
+                    showDialogProgressBar.value = true
+                    convertPage.getSelectedMultiSource(selectedMultiSourceApp)
+                }
+            },
+            title = stringResource(R.string.select_source_app),
+            content = "",
+            cancelText = stringResource(R.string.cancel_button_text),
+            confirmText = stringResource(R.string.ok_button_text),
+            onlyComposeView = true,
+            enableHaptic = enableHaptic.value,
+            customContent = {
+                Box {
+                    if (showDialogProgressBar.value) {
+                        LinearProgressIndicator(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .zIndex(1f),
+                            color = SaltTheme.colors.highlight,
+                            trackColor = SaltTheme.colors.background
+                        )
+                    }
+                    LazyColumn {
+                        items(multiSource.size) { index ->
+                            ItemCheck(
+                                state = selectedMultiSourceApp == index,
+                                onChange = {
+                                    selectedMultiSourceApp = if (it) index else -1
+                                },
+                                text = multiSource[index][1],
+                                sub = multiSource[index][0],
+                                iconAtLeft = false,
+                                enableHaptic = enableHaptic.value
+                            )
+                        }
+                    }
+                }
+            }
         )
     }
 
@@ -287,9 +345,11 @@ fun ConvertPageUi(
                 inputSearchWords.value = ""
             },
             onConfirm = {
-                showSelectedSongInfoDialog = false
-                inputSearchWords.value = ""
-                convertPage.saveModificationSong(selectedSongIndex, selectedAllIndex)
+                if (selectedSearchResult != -1) {
+                    showSelectedSongInfoDialog = false
+                    inputSearchWords.value = ""
+                    convertPage.saveModificationSong(selectedSongIndex, selectedAllIndex)
+                }
             },
             title = stringResource(id = R.string.modify_conversion_results),
             content = "",
@@ -572,6 +632,7 @@ fun ConvertPageUi(
                         selectedSearchResult = -1
                         showOriginalSonglist = 1
                         selectedTargetApp = 0
+                        selectedMultiSourceApp = -1
                     } else
                         currentPage.intValue--
                 } else {
@@ -860,7 +921,10 @@ fun ConvertPageUi(
                                 }) {
                                 ItemContainer {
                                     TextButton(
-                                        onClick = { convertPage.requestPermission() },
+                                        onClick = {
+                                            selectedMultiSourceApp = -1
+                                            convertPage.requestPermission()
+                                        },
                                         text = stringResource(R.string.next_step_text),
                                         enabled = !it,
                                         enableHaptic = enableHaptic.value

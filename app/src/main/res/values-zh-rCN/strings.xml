@@ -196,4 +196,5 @@
     <string name="target_formats">目标格式</string>
     <string name="using_player">使用的音乐播放器</string>
     <string name="developing">开发中，敬请期待…</string>
+    <string name="select_source_app">选择要使用的来源App</string>
 </resources>
