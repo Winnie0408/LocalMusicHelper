@@ -489,7 +489,7 @@ class ConvertPage(
         currentPage.intValue = 2
     }
 
-    var convertResult = mutableStateMapOf<Int, Array<String>>()  //TODO 切换语言后，匹配结果（成功、注意、手动）不会刷新
+    var convertResult = mutableStateMapOf<Int, Array<String>>()
     fun previewResult() {
         lifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
             convertResult.clear()
@@ -676,8 +676,8 @@ class ConvertPage(
                     val songConvertResult = music3InfoList[songNameMaxKey?.toInt()!!]
                     convertResultMap[num++] =
                         arrayOf(
-                            if (autoSuccess) context.getString(R.string.match_success)
-                            else context.getString(R.string.match_caution),  //是否自动匹配成功
+                            if (autoSuccess) "0"
+                            else "1",  //是否自动匹配成功
                             songConvertResult.song,  //本地音乐歌曲名
                             songName,  //云音乐歌曲名
                             songConvertResult.artist,  //本地音乐歌手名
@@ -726,8 +726,8 @@ class ConvertPage(
 
                     convertResultMap[num++] =
                         arrayOf(
-                            if (autoSuccess) context.getString(R.string.match_success)
-                            else context.getString(R.string.match_caution),  //是否自动匹配成功
+                            if (autoSuccess) "0"
+                            else "1",  //是否自动匹配成功
                             songConvertResult.song,  //本地音乐歌曲名
                             songName,  //云音乐歌曲名
                             songConvertResult.artist,  //本地音乐歌手名
@@ -765,8 +765,8 @@ class ConvertPage(
                 val db = SQLiteDatabase.openOrCreateDatabase(File(resultFilePath), null)
                 val musicInfoList = mutableListOf<MusicInfo>()
                 db.rawQuery(
-                    "SELECT song, artist, album, absolutePath, id FROM music WHERE song LIKE ? OR artist LIKE ? OR album LIKE ? LIMIT 3",
-                    arrayOf(inputSearchWords.value, inputSearchWords.value, inputSearchWords.value)
+                    "SELECT song, artist, album, absolutePath, id FROM music WHERE song LIKE '%${inputSearchWords.value}%' OR artist LIKE '%${inputSearchWords.value}%' OR album LIKE '%${inputSearchWords.value}%' LIMIT 3",
+                    null
                 ).use { cursor ->
                     while (cursor.moveToNext()) {
                         val id = cursor.getInt(cursor.getColumnIndexOrThrow("id"))
@@ -833,10 +833,20 @@ class ConvertPage(
                     cursor.getString(cursor.getColumnIndexOrThrow("absolutePath"))
                 cursor.close()
                 db.close()
-                MusicInfo(songId, song, artist, album, null, null, null, null, absolutePath)
+                MusicInfo(
+                    songId,
+                    song,
+                    artist,
+                    album,
+                    null,
+                    null,
+                    null,
+                    null,
+                    absolutePath
+                )
             } else
                 db.musicDao().getMusicById(songId)
-            convertResult[songPosition]?.set(0, context.getString(R.string.match_manual))
+            convertResult[songPosition]?.set(0, "2")
             convertResult[songPosition]?.set(1, songInfo.song)
             convertResult[songPosition]?.set(3, songInfo.artist)
             convertResult[songPosition]?.set(5, songInfo.album)
@@ -890,16 +900,20 @@ class ConvertPage(
             for (i in 0 until convertResult.size) {
                 if (convertResult[i] == null)
                     continue
-                if (convertResult[i]!![0] == context.getString(R.string.match_success) && saveSuccessSongs) {
+                if (convertResult[i]!![0] == "0" && saveSuccessSongs) {
                     fileWriter.write("${convertResult[i]!![7]}\n")
+                    continue
                 }
-                if (convertResult[i]!![0] == context.getString(R.string.match_caution) && saveCautionSongs) {
+                if (convertResult[i]!![0] == "1" && saveCautionSongs) {
                     fileWriter.write("${convertResult[i]!![7]}\n")
+                    continue
                 }
-                if (convertResult[i]!![0] == context.getString(R.string.match_manual) && saveManualSongs) {
+                if (convertResult[i]!![0] == "2" && saveManualSongs) {
                     fileWriter.write("${convertResult[i]!![7]}\n")
+                    continue
                 }
             }
+
             fileWriter.close()
             withContext(Dispatchers.Main) {
                 Toast.makeText(
@@ -923,9 +937,14 @@ class ConvertPage(
         }
     }
 
-    fun launchSaltPlayer() {
+    fun launchLocalPlayer(targetApp: Int) {
+        val targetAppList = listOf(
+            arrayOf("com.salt.music", "com.salt.music.ui.MainActivity"),
+            arrayOf("remix.myplayer", "remix.myplayer.ui.activity.MainActivity"),
+            arrayOf("com.maxmpz.audioplayer", "com.maxmpz.audioplayer.MainActivity"),
+        )
         val intent = Intent(Intent.ACTION_MAIN).apply {
-            setClassName("com.salt.music", "com.salt.music.ui.MainActivity")
+            setClassName(targetAppList[targetApp][0], targetAppList[targetApp][1])
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         }
         try {
@@ -933,7 +952,14 @@ class ConvertPage(
         } catch (e: ActivityNotFoundException) {
             Toast.makeText(
                 context,
-                context.getString(R.string.salt_player_not_installed),
+                context.getString(R.string.other_app_not_installed).replace(
+                    "#", when (targetApp) {
+                        0 -> "Salt Player"
+                        1 -> "APlayer"
+                        2 -> "Poweramp"
+                        else -> ""
+                    }
+                ),
                 Toast.LENGTH_SHORT
             ).show()
         }

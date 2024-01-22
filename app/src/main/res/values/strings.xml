@@ -112,9 +112,9 @@
     <string name="go_back_confirm_dialog_content">Your changes on this page will be lost!</string>
     <string name="all_done">All done!</string>
     <string name="details_of_results">Export file path</string>
-    <string name="open_salt_player">Open Salt Player</string>
+    <string name="open_other_app">Open #</string>
     <string name="copy_folder_path">Copy folder path</string>
-    <string name="salt_player_not_installed">Salt Player not installed</string>
+    <string name="other_app_not_installed"># not installed</string>
     <string name="copy_success">Copied</string>
     <string name="delete_dialog_title">Delete the current song?</string>
     <string name="delete_dialog_content">Will be deleted from the results:</string>
@@ -172,7 +172,7 @@
     <string name="no_root_access">Do not have Root access</string>
     <string name="no_grant_root_access">Root access not granted</string>
     <string name="get_file_with_root">Automatically get # database file</string>
-    <string name="with_root_access">With Root access</string>
+    <string name="with_root_access">Root access will be used to obtain the required files</string>
     <string name="app_not_installed"># not installed</string>
     <string name="related_info">Related info</string>
     <string name="contact_developer">Contact developers</string>

@@ -111,9 +111,9 @@
     <string name="go_back_confirm_dialog_content">您在该页面的修改将会丢失！</string>
     <string name="all_done">全部完成！</string>
     <string name="details_of_results">输出文件路径</string>
-    <string name="open_salt_player">打开Salt Player</string>
+    <string name="open_other_app">打开#</string>
     <string name="copy_folder_path">复制目录路径</string>
-    <string name="salt_player_not_installed">未安装Salt Player</string>
+    <string name="other_app_not_installed">未安装#</string>
     <string name="copy_success">已复制</string>
     <string name="delete_dialog_title">删除当前歌曲？</string>
     <string name="delete_dialog_content">将从结果中删除：</string>
@@ -169,7 +169,7 @@
     <string name="no_root_access">未拥有Root权限</string>
     <string name="no_grant_root_access">未授予Root权限</string>
     <string name="get_file_with_root">自动获取#的数据库文件</string>
-    <string name="with_root_access">使用Root权限</string>
+    <string name="with_root_access">将使用Root权限获取所需文件</string>
     <string name="app_not_installed">未安装 #</string>
     <string name="related_info">相关信息</string>
     <string name="contact_developer">联系开发者</string>

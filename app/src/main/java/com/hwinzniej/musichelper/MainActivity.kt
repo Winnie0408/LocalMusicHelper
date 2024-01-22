@@ -250,7 +250,7 @@ private fun Pages(
         resources.updateConfiguration(
             configuration,
             resources.displayMetrics
-        ) //TODO 更改语言后，使用Pager的页面不会自动刷新？
+        )
     }
 
 
@@ -444,6 +444,7 @@ private fun Pages(
                         enableHaptic = mainPage.enableHaptic,
                         useRootAccess = convertPage.useRootAccess,
                         sourceApp = convertPage.sourceAppText,
+                        databaseFilePath = convertPage.databaseFilePath,
                     )
                 }
 

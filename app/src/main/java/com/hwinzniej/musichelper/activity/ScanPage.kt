@@ -317,8 +317,7 @@ class ScanPage(
         lifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
             scanResult.add(0, file.name)
         }
-        val tag = audioFile.tag
-        getTag(tag, file.path)
+        getTag(audioFile.tag, file.path)
 
     }
 

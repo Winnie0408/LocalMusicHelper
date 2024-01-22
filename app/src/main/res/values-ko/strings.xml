@@ -92,7 +92,7 @@
     <string name="number_of_total_songs">총 노래 수</string>
     <string name="ok_button_text">확인</string>
     <string name="open_in_some_app">#에서 열기?</string>
-    <string name="open_salt_player">Salt Player 열기</string>
+    <string name="open_other_app"># 열기</string>
     <string name="open_source_gitlab">GitLab에서 이 프로젝트 보기</string>
     <string name="open_source_github">GitHub에서 이 프로젝트 보기</string>
     <string name="open_source_licence">오픈 소스 라이선스</string>
@@ -121,7 +121,7 @@
     <string name="result_file">결과 파일</string>
     <string name="result_file_name">#_내보내기</string>
     <string name="result_file_save_location">"결과 파일의 위치: "</string>
-    <string name="salt_player_not_installed">Salt Player가 설치되지 않았습니다.</string>
+    <string name="other_app_not_installed">#가 설치되지 않았습니다.</string>
     <string name="save_conversion_results">결과 저장</string>
     <string name="save_failed">저장 실패</string>
     <string name="save_image">(이미지를 터치하여 갤러리에 저장하십시오)</string>
@@ -186,7 +186,7 @@
     <string name="version">버전</string>
     <string name="visit_the_link_below">아래 링크를 방문하시겠습니까?</string>
     <string name="will_open_in_browser">브라우저에서 열립니다.</string>
-    <string name="with_root_access">루트 액세스 사용</string>
+    <string name="with_root_access">루트 액세스는 필요한 파일을 가져오는 데 사용됩니다</string>
     <string name="you_have_selected">선택한 파일</string>
     <string name="temporarily_unavailable">(일시적으로 사용할 수 없습니다)</string>
     <string name="open_source_gitee">Gitee에서 이 프로젝트 보기</string>

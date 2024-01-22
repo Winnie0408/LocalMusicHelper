@@ -426,7 +426,14 @@ fun ConvertPageUi(
                     saveSuccessSongs,
                     saveCautionSongs,
                     saveManualSongs,
-                    "${playlistName[playlistEnabled.indexOfFirst { it == 1 }]}.txt"
+                    "${playlistName[playlistEnabled.indexOfFirst { it == 1 }]}${
+                        when (selectedTargetApp) {
+                            0 -> ".txt"
+                            1 -> ".m3u"
+                            2 -> ".m3u8"
+                            else -> ""
+                        }
+                    }"
                 )
             },
             title = stringResource(id = R.string.save_conversion_results),
@@ -452,19 +459,31 @@ fun ConvertPageUi(
                         ItemSwitcher(
                             state = saveSuccessSongs,
                             onChange = { saveSuccessSongs = it },
-                            text = stringResource(R.string.match_success),
+                            text = "${stringResource(R.string.match_success)} - ${
+                                convertResult.count {
+                                    it.value[0] == "0"
+                                }
+                            }",
                             enableHaptic = enableHaptic.value
                         )
                         ItemSwitcher(
                             state = saveCautionSongs,
                             onChange = { saveCautionSongs = it },
-                            text = stringResource(R.string.match_caution),
+                            text = "${stringResource(R.string.match_caution)} - ${
+                                convertResult.count {
+                                    it.value[0] == "1"
+                                }
+                            }",
                             enableHaptic = enableHaptic.value
                         )
                         ItemSwitcher(
                             state = saveManualSongs,
                             onChange = { saveManualSongs = it },
-                            text = stringResource(R.string.match_manual),
+                            text = "${stringResource(R.string.match_manual)} - ${
+                                convertResult.count {
+                                    it.value[0] == "2"
+                                }
+                            }",
                             enableHaptic = enableHaptic.value
                         )
 //                        ItemText(
@@ -594,7 +613,13 @@ fun ConvertPageUi(
                                 ItemPopup(
                                     state = sourceAppPopupMenuState,
                                     text = stringResource(R.string.select_source_of_songlist),
-                                    selectedItem = sourceApp.value,
+                                    selectedItem = when (selectedSourceApp.intValue) {
+                                        1 -> stringResource(R.string.source_netease_cloud_music)
+                                        2 -> stringResource(R.string.source_qq_music)
+                                        3 -> stringResource(R.string.source_kugou_music)
+                                        4 -> stringResource(R.string.source_kuwo_music)
+                                        else -> ""
+                                    },
                                     popupWidth = 180,
                                     sub = if (useRootAccess.value) stringResource(
                                         R.string.with_root_access
@@ -669,7 +694,13 @@ fun ConvertPageUi(
                                         onClick = { convertPage.selectDatabaseFile() },
                                         text = stringResource(R.string.select_database_file_match_to_source).replace(
                                             "#",
-                                            sourceApp.value
+                                            when (selectedSourceApp.intValue) {
+                                                1 -> stringResource(R.string.source_netease_cloud_music)
+                                                2 -> stringResource(R.string.source_qq_music)
+                                                3 -> stringResource(R.string.source_kugou_music)
+                                                4 -> stringResource(R.string.source_kuwo_music)
+                                                else -> ""
+                                            }
                                         )
 //                                        if (selectedSourceApp.intValue == 0) {
 //                                            stringResource(R.string.please_select_source_app)
@@ -783,13 +814,8 @@ fun ConvertPageUi(
                                     PopupMenuItem(
                                         onClick = {
                                             MyVibrationEffect(context, enableHaptic.value).click()
-                                            selectedTargetApp = 0
+                                            selectedTargetApp = 1
                                             targetAppPopupMenuState.dismiss()
-                                            Toast.makeText(
-                                                context,
-                                                context.getString(R.string.developing),
-                                                Toast.LENGTH_SHORT
-                                            ).show()
                                         },
                                         selected = selectedTargetApp == 1,
                                         text = "APlayer",
@@ -805,13 +831,8 @@ fun ConvertPageUi(
                                     PopupMenuItem(
                                         onClick = {
                                             MyVibrationEffect(context, enableHaptic.value).click()
-                                            selectedTargetApp = 0
+                                            selectedTargetApp = 2
                                             targetAppPopupMenuState.dismiss()
-                                            Toast.makeText(
-                                                context,
-                                                context.getString(R.string.developing),
-                                                Toast.LENGTH_SHORT
-                                            ).show()
                                         },
                                         selected = selectedTargetApp == 2,
                                         text = "Poweramp",
@@ -1093,7 +1114,13 @@ fun ConvertPageUi(
                                                 selectedItem = when (showOriginalSonglist) {
                                                     0 -> stringResource(id = R.string.original_songlist).replace(
                                                         "#",
-                                                        sourceApp.value
+                                                        when (selectedSourceApp.intValue) {
+                                                            1 -> stringResource(R.string.source_netease_cloud_music)
+                                                            2 -> stringResource(R.string.source_qq_music)
+                                                            3 -> stringResource(R.string.source_kugou_music)
+                                                            4 -> stringResource(R.string.source_kuwo_music)
+                                                            else -> ""
+                                                        }
                                                     )
 
                                                     1 -> stringResource(R.string.convert_result)
@@ -1111,7 +1138,15 @@ fun ConvertPageUi(
                                                     },
                                                     text = stringResource(id = R.string.original_songlist).replace(
                                                         "#",
-                                                        "${sourceApp.value}\n"
+                                                        "${
+                                                            when (selectedSourceApp.intValue) {
+                                                                1 -> stringResource(R.string.source_netease_cloud_music)
+                                                                2 -> stringResource(R.string.source_qq_music)
+                                                                3 -> stringResource(R.string.source_kugou_music)
+                                                                4 -> stringResource(R.string.source_kuwo_music)
+                                                                else -> ""
+                                                            }
+                                                        }\n"
                                                     ),
                                                     selected = showOriginalSonglist == 0,
                                                     iconPainter = when (selectedSourceApp.intValue) {
@@ -1157,30 +1192,25 @@ fun ConvertPageUi(
                                                     0 -> "${stringResource(id = R.string.all)} - ${convertResult.size}"
                                                     1 -> "${stringResource(id = R.string.match_success)} - ${
                                                         convertResult.count {
-                                                            it.value[0] == stringResource(
-                                                                R.string.match_success
-                                                            )
+                                                            it.value[0] == "0"
                                                         }
                                                     }"
 
                                                     2 -> "${stringResource(id = R.string.match_caution)} - ${
                                                         convertResult.count {
-                                                            it.value[0] == stringResource(
-                                                                R.string.match_caution
-                                                            )
+                                                            it.value[0] == "1"
                                                         }
                                                     }"
 
                                                     3 -> "${stringResource(id = R.string.match_manual)} - ${
                                                         convertResult.count {
-                                                            it.value[0] == stringResource(
-                                                                R.string.match_manual
-                                                            )
+                                                            it.value[0] == "2"
                                                         }
                                                     }"
 
                                                     else -> ""
-                                                }
+                                                },
+                                                popupWidth = 180
                                             ) {
                                                 PopupMenuItem(
                                                     onClick = {
@@ -1213,9 +1243,7 @@ fun ConvertPageUi(
                                                     },
                                                     text = "${stringResource(id = R.string.match_success)} - ${
                                                         convertResult.count {
-                                                            it.value[0] == stringResource(
-                                                                R.string.match_success
-                                                            )
+                                                            it.value[0] == "0"
                                                         }
                                                     }",
                                                     selected = selectedFilterIndex == 1,
@@ -1239,9 +1267,7 @@ fun ConvertPageUi(
                                                     },
                                                     text = "${stringResource(id = R.string.match_caution)} - ${
                                                         convertResult.count {
-                                                            it.value[0] == stringResource(
-                                                                R.string.match_caution
-                                                            )
+                                                            it.value[0] == "1"
                                                         }
                                                     }",
                                                     selected = selectedFilterIndex == 2,
@@ -1259,9 +1285,7 @@ fun ConvertPageUi(
                                                     },
                                                     text = "${stringResource(id = R.string.match_manual)} - ${
                                                         convertResult.count {
-                                                            it.value[0] == stringResource(
-                                                                R.string.match_manual
-                                                            )
+                                                            it.value[0] == "2"
                                                         }
                                                     }",
                                                     selected = selectedFilterIndex == 3,
@@ -1276,7 +1300,13 @@ fun ConvertPageUi(
                                                 text = when (showOriginalSonglist) {
                                                     0 -> stringResource(id = R.string.original_songlist).replace(
                                                         "#",
-                                                        sourceApp.value
+                                                        when (selectedSourceApp.intValue) {
+                                                            1 -> stringResource(R.string.source_netease_cloud_music)
+                                                            2 -> stringResource(R.string.source_qq_music)
+                                                            3 -> stringResource(R.string.source_kugou_music)
+                                                            4 -> stringResource(R.string.source_kuwo_music)
+                                                            else -> ""
+                                                        }
                                                     )
 
                                                     1 -> stringResource(R.string.convert_result)
@@ -1321,27 +1351,41 @@ fun ConvertPageUi(
                                                                             }${convertResult[index]!![4 - showOriginalSonglist]}\n${
                                                                                 stringResource(R.string.album)
                                                                             }${convertResult[index]!![6 - showOriginalSonglist]}",
-                                                                            rightSub = convertResult[index]!![0],
+                                                                            rightSub = when (convertResult[index]!![0]) {
+                                                                                "0" -> stringResource(
+                                                                                    R.string.match_success
+                                                                                )
+
+                                                                                "1" -> stringResource(
+                                                                                    R.string.match_caution
+                                                                                )
+
+                                                                                "2" -> stringResource(
+                                                                                    R.string.match_manual
+                                                                                )
+
+                                                                                else -> ""
+                                                                            },
                                                                             rightSubColor = when (convertResult[index]!![0]) {
-                                                                                stringResource(R.string.match_success) -> colorResource(
+                                                                                "0" -> colorResource(
                                                                                     id = R.color.matched
                                                                                 )
 
-                                                                                stringResource(R.string.match_caution) -> colorResource(
+                                                                                "1" -> colorResource(
                                                                                     id = R.color.unmatched
                                                                                 )
 
-                                                                                else -> colorResource(
+                                                                                "2" -> colorResource(
                                                                                     R.color.manual
                                                                                 )
+
+                                                                                else -> SaltTheme.colors.text
                                                                             },
                                                                         )
                                                                 }
 
                                                                 1 -> items(convertResult.size) { index ->
-                                                                    if (convertResult[index]!![0] == stringResource(
-                                                                            R.string.match_success
-                                                                        ) && convertResult[index] != null
+                                                                    if (convertResult[index]!![0] == "0" && convertResult[index] != null
                                                                     )
                                                                         Item(
                                                                             onClick = {
@@ -1358,27 +1402,41 @@ fun ConvertPageUi(
                                                                             }${convertResult[index]!![4 - showOriginalSonglist]}\n${
                                                                                 stringResource(R.string.album)
                                                                             }${convertResult[index]!![6 - showOriginalSonglist]}",
-                                                                            rightSub = convertResult[index]!![0],
+                                                                            rightSub = when (convertResult[index]!![0]) {
+                                                                                "0" -> stringResource(
+                                                                                    R.string.match_success
+                                                                                )
+
+                                                                                "1" -> stringResource(
+                                                                                    R.string.match_caution
+                                                                                )
+
+                                                                                "2" -> stringResource(
+                                                                                    R.string.match_manual
+                                                                                )
+
+                                                                                else -> ""
+                                                                            },
                                                                             rightSubColor = when (convertResult[index]!![0]) {
-                                                                                stringResource(R.string.match_success) -> colorResource(
+                                                                                "0" -> colorResource(
                                                                                     id = R.color.matched
                                                                                 )
 
-                                                                                stringResource(R.string.match_caution) -> colorResource(
+                                                                                "1" -> colorResource(
                                                                                     id = R.color.unmatched
                                                                                 )
 
-                                                                                else -> colorResource(
+                                                                                "2" -> colorResource(
                                                                                     R.color.manual
                                                                                 )
+
+                                                                                else -> SaltTheme.colors.text
                                                                             },
                                                                         )
                                                                 }
 
                                                                 2 -> items(convertResult.size) { index ->
-                                                                    if (convertResult[index]!![0] == stringResource(
-                                                                            R.string.match_caution
-                                                                        ) && convertResult[index] != null
+                                                                    if (convertResult[index]!![0] == "1" && convertResult[index] != null
                                                                     )
                                                                         Item(
                                                                             onClick = {
@@ -1395,27 +1453,41 @@ fun ConvertPageUi(
                                                                             }${convertResult[index]!![4 - showOriginalSonglist]}\n${
                                                                                 stringResource(R.string.album)
                                                                             }${convertResult[index]!![6 - showOriginalSonglist]}",
-                                                                            rightSub = convertResult[index]!![0],
+                                                                            rightSub = when (convertResult[index]!![0]) {
+                                                                                "0" -> stringResource(
+                                                                                    R.string.match_success
+                                                                                )
+
+                                                                                "1" -> stringResource(
+                                                                                    R.string.match_caution
+                                                                                )
+
+                                                                                "2" -> stringResource(
+                                                                                    R.string.match_manual
+                                                                                )
+
+                                                                                else -> ""
+                                                                            },
                                                                             rightSubColor = when (convertResult[index]!![0]) {
-                                                                                stringResource(R.string.match_success) -> colorResource(
+                                                                                "0" -> colorResource(
                                                                                     id = R.color.matched
                                                                                 )
 
-                                                                                stringResource(R.string.match_caution) -> colorResource(
+                                                                                "1" -> colorResource(
                                                                                     id = R.color.unmatched
                                                                                 )
 
-                                                                                else -> colorResource(
+                                                                                "2" -> colorResource(
                                                                                     R.color.manual
                                                                                 )
+
+                                                                                else -> SaltTheme.colors.text
                                                                             },
                                                                         )
                                                                 }
 
                                                                 3 -> items(convertResult.size) { index ->
-                                                                    if (convertResult[index]!![0] == stringResource(
-                                                                            R.string.match_manual
-                                                                        ) && convertResult[index] != null
+                                                                    if (convertResult[index]!![0] == "2" && convertResult[index] != null
                                                                     )
                                                                         Item(
                                                                             onClick = {
@@ -1432,19 +1504,35 @@ fun ConvertPageUi(
                                                                             }${convertResult[index]!![4 - showOriginalSonglist]}\n${
                                                                                 stringResource(R.string.album)
                                                                             }${convertResult[index]!![6 - showOriginalSonglist]}",
-                                                                            rightSub = convertResult[index]!![0],
+                                                                            rightSub = when (convertResult[index]!![0]) {
+                                                                                "0" -> stringResource(
+                                                                                    R.string.match_success
+                                                                                )
+
+                                                                                "1" -> stringResource(
+                                                                                    R.string.match_caution
+                                                                                )
+
+                                                                                "2" -> stringResource(
+                                                                                    R.string.match_manual
+                                                                                )
+
+                                                                                else -> ""
+                                                                            },
                                                                             rightSubColor = when (convertResult[index]!![0]) {
-                                                                                stringResource(R.string.match_success) -> colorResource(
+                                                                                "0" -> colorResource(
                                                                                     id = R.color.matched
                                                                                 )
 
-                                                                                stringResource(R.string.match_caution) -> colorResource(
+                                                                                "1" -> colorResource(
                                                                                     id = R.color.unmatched
                                                                                 )
 
-                                                                                else -> colorResource(
+                                                                                "2" -> colorResource(
                                                                                     R.color.manual
                                                                                 )
+
+                                                                                else -> SaltTheme.colors.text
                                                                             },
                                                                         )
                                                                 }
@@ -1543,13 +1631,19 @@ fun ConvertPageUi(
                                             }/${context.getString(R.string.app_name)}/${
                                                 LocalDate.now()
                                                     .format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
-                                            }/${playlistName[index]}.txt",
+                                            }/${playlistName[index]}${
+                                                when (selectedTargetApp) {
+                                                    0 -> ".txt"
+                                                    1 -> ".m3u"
+                                                    2 -> ".m3u8"
+                                                    else -> ""
+                                                }
+                                            }",
                                             fontSize = 15.sp
                                         )
                                     }
                                 }
                                 Spacer(modifier = Modifier.height(12.dp))
-
                             }
                             ItemContainer {
                                 Row {
@@ -1563,9 +1657,16 @@ fun ConvertPageUi(
                                     )
                                     Spacer(modifier = Modifier.width(12.dp))
                                     TextButton(
-                                        onClick = { convertPage.launchSaltPlayer() },
+                                        onClick = { convertPage.launchLocalPlayer(selectedTargetApp) },
                                         modifier = Modifier.weight(1f),
-                                        text = stringResource(id = R.string.open_salt_player),
+                                        text = stringResource(id = R.string.open_other_app).replace(
+                                            "#", when (selectedTargetApp) {
+                                                0 -> "Salt Player"
+                                                1 -> "APlayer"
+                                                2 -> "Poweramp"
+                                                else -> ""
+                                            }
+                                        ),
                                         enableHaptic = enableHaptic.value
                                     )
                                 }
