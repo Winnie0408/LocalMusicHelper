@@ -445,6 +445,8 @@ private fun Pages(
                         useRootAccess = convertPage.useRootAccess,
                         sourceApp = convertPage.sourceAppText,
                         databaseFilePath = convertPage.databaseFilePath,
+                        showSelectSourceDialog = convertPage.showSelectSourceDialog,
+                        multiSource = convertPage.multiSource,
                     )
                 }
 

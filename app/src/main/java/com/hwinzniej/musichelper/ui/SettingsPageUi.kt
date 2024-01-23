@@ -35,7 +35,6 @@ import com.moriafly.salt.ui.RoundedColumn
 import com.moriafly.salt.ui.SaltTheme
 import com.moriafly.salt.ui.TitleBar
 import com.moriafly.salt.ui.UnstableSaltApi
-import com.moriafly.salt.ui.popup.PopupMenuItem
 import com.moriafly.salt.ui.popup.rememberPopupState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -344,7 +343,13 @@ fun SettingsPageUi(
                     sub = stringResource(id = R.string.haptic_feedfback_switcher_sub),
                     enableHaptic = enableHaptic.value,
                     iconPainter = painterResource(id = R.drawable.haptic),
-                    iconColor = SaltTheme.colors.text
+                    iconColor = SaltTheme.colors.text,
+                    iconPaddingValues = PaddingValues(
+                        start = 2.dp,
+                        end = 2.dp,
+                        top = 1.5.dp,
+                        bottom = 1.5.dp
+                    )
                 )
             }
 

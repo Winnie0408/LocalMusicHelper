@@ -60,6 +60,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.toggleableState
+import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -748,6 +750,79 @@ fun ItemSwitcher(
                     }
                     .size(16.dp)
                     .border(width = 4.dp, color = Color.White, shape = CircleShape)
+            )
+        }
+    }
+}
+
+@UnstableSaltApi
+@Composable
+fun PopupMenuItem(
+    onClick: () -> Unit,
+    selected: Boolean? = null,
+    text: String,
+    sub: String? = null,
+    iconPainter: Painter? = null,
+    iconPaddingValues: PaddingValues = PaddingValues(0.dp),
+    iconColor: Color? = null
+) {
+    Row(
+        modifier = Modifier
+            .semantics {
+                this.role = Role.RadioButton
+
+                if (selected != null) {
+                    this.toggleableState = when (selected) {
+                        true -> ToggleableState.On
+                        false -> ToggleableState.Off
+                    }
+                }
+            }
+            .clickable {
+                onClick()
+            }
+            .fillMaxWidth()
+            .sizeIn(
+                minWidth = 180.dp,
+                maxWidth = 280.dp,
+                minHeight = 0.dp
+            )
+            .background(if (selected == true) SaltTheme.colors.highlight.copy(alpha = 0.1f) else Color.Unspecified)
+            .padding(SaltTheme.dimens.innerHorizontalPadding, 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth()
+        ) {
+            Text(
+                text = text,
+                color = if (selected == true) SaltTheme.colors.highlight else SaltTheme.colors.text,
+                style = SaltTheme.textStyles.main
+            )
+            sub?.let {
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = sub,
+                    color = if (selected == true) SaltTheme.colors.highlight else SaltTheme.colors.subText,
+                    style = SaltTheme.textStyles.sub
+                )
+            }
+        }
+        iconPainter?.let {
+            Spacer(modifier = Modifier.width(12.dp * 2))
+            Image(
+                modifier = Modifier
+                    .size(24.dp)
+                    .padding(iconPaddingValues),
+                painter = iconPainter,
+                contentDescription = null,
+                colorFilter = iconColor?.let {
+                    if (selected == true) ColorFilter.tint(SaltTheme.colors.highlight) else ColorFilter.tint(
+                        iconColor
+                    )
+                }
             )
         }
     }

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="192.0"
+    android:viewportHeight="192.0">
+    <path
+        android:name="circle"
+        android:pathData="m95.76 6.91c49.07 0 88.86 39.78 88.86 88.86c0 49.07 -39.78 88.86 -88.86 88.86c-49.07 0 -88.86 -39.78 -88.86 -88.86c0 -49.07 39.78 -88.86 88.86 -88.86z"
+        android:strokeWidth="13.0"
+        android:strokeColor="#FF9DB9FF" />
+    <path
+        android:name="play"
+        android:fillColor="#FFFFFFFF"
+        android:pathData="m136.77 88.43c5.08 3.12 5.08 10.51 0 13.63l-54.52 33.5c-5.33 3.27 -12.19 -0.56 -12.19 -6.82v-66.99c0 -6.26 6.86 -10.09 12.19 -6.82l54.52 33.5z" />
+</vector>

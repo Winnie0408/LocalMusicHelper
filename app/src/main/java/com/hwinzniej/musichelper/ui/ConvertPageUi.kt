@@ -75,7 +75,6 @@ import com.moriafly.salt.ui.RoundedColumn
 import com.moriafly.salt.ui.SaltTheme
 import com.moriafly.salt.ui.TitleBar
 import com.moriafly.salt.ui.UnstableSaltApi
-import com.moriafly.salt.ui.popup.PopupMenuItem
 import com.moriafly.salt.ui.popup.rememberPopupState
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -853,7 +852,7 @@ fun ConvertPageUi(
                                         2 -> "Poweramp"
                                         else -> ""
                                     },
-                                    popupWidth = 150
+                                    popupWidth = 160
                                 ) {
                                     PopupMenuItem(
                                         onClick = {
@@ -863,8 +862,8 @@ fun ConvertPageUi(
                                         },
                                         selected = selectedTargetApp == 0,
                                         text = "Salt Player",
-//                                        iconPainter = painterResource(id = R.drawable.kuwo),
-//                                        iconColor = SaltTheme.colors.text,
+                                        iconPainter = painterResource(id = R.drawable.saltplayer),
+                                        iconColor = SaltTheme.colors.text,
 //                                        iconPaddingValues = PaddingValues(
 //                                            start = 1.5.dp,
 //                                            end = 1.5.dp,
@@ -880,14 +879,14 @@ fun ConvertPageUi(
                                         },
                                         selected = selectedTargetApp == 1,
                                         text = "APlayer",
-//                                        iconPainter = painterResource(id = R.drawable.kuwo),
-//                                        iconColor = SaltTheme.colors.text,
-//                                        iconPaddingValues = PaddingValues(
-//                                            start = 1.5.dp,
-//                                            end = 1.5.dp,
-//                                            top = 1.5.dp,
-//                                            bottom = 1.5.dp
-//                                        )
+                                        iconPainter = painterResource(id = R.drawable.aplayer),
+                                        iconColor = SaltTheme.colors.text,
+                                        iconPaddingValues = PaddingValues(
+                                            start = 1.dp,
+                                            end = 1.dp,
+                                            top = 1.dp,
+                                            bottom = 1.dp
+                                        )
                                     )
                                     PopupMenuItem(
                                         onClick = {
@@ -897,14 +896,14 @@ fun ConvertPageUi(
                                         },
                                         selected = selectedTargetApp == 2,
                                         text = "Poweramp",
-//                                        iconPainter = painterResource(id = R.drawable.kuwo),
-//                                        iconColor = SaltTheme.colors.text,
-//                                        iconPaddingValues = PaddingValues(
-//                                            start = 1.5.dp,
-//                                            end = 1.5.dp,
-//                                            top = 1.5.dp,
-//                                            bottom = 1.5.dp
-//                                        )
+                                        iconPainter = painterResource(id = R.drawable.poweramp),
+                                        iconColor = SaltTheme.colors.text,
+                                        iconPaddingValues = PaddingValues(
+                                            start = 2.dp,
+                                            end = 2.dp,
+                                            top = 2.dp,
+                                            bottom = 2.dp
+                                        )
                                     )
                                 }
                             }
