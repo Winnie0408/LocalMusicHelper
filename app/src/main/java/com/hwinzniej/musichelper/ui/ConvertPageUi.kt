@@ -1383,7 +1383,7 @@ fun ConvertPageUi(
                                                 Column(
                                                     modifier = Modifier
                                                         .clip(RoundedCornerShape(10.dp))
-                                                        .heightIn(max = (LocalConfiguration.current.screenHeightDp / 2.05).dp)
+                                                        .heightIn(max = (LocalConfiguration.current.screenHeightDp / 2.1).dp)
                                                         .background(color = SaltTheme.colors.subBackground)
                                                 ) {
                                                     AnimatedContent(
@@ -1614,7 +1614,10 @@ fun ConvertPageUi(
                                             }
                                         }
                                         Row(
-                                            modifier = Modifier.padding(horizontal = SaltTheme.dimens.outerHorizontalPadding)
+                                            modifier = Modifier.padding(
+                                                horizontal = SaltTheme.dimens.outerHorizontalPadding,
+                                                vertical = 8.dp
+                                            ),
                                         ) {
                                             TextButton(
                                                 onClick = {
