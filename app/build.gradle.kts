@@ -117,6 +117,9 @@ dependencies {
     //OkHttp3
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
 
+    //Markdown渲染器
+    implementation("com.github.jeziellago:compose-markdown:0.3.7")  //TODO 使用高于此版本会出现问题，已提Issue。
+
     //Jsoup-可注释
 //    implementation("org.jsoup:jsoup:1.17.2")
 
