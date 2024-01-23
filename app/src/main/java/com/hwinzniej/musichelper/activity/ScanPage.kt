@@ -41,8 +41,8 @@ import java.io.FileWriter
 
 class ScanPage(
     val context: Context,
-    val lifecycleOwner: LifecycleOwner,
-    val openDirectoryLauncher: ActivityResultLauncher<Uri?>,
+    private val lifecycleOwner: LifecycleOwner,
+    private val openDirectoryLauncher: ActivityResultLauncher<Uri?>,
     val db: MusicDatabase,
     componentActivity: ComponentActivity
 ) : PermissionResultHandler {
@@ -50,9 +50,9 @@ class ScanPage(
     val showLoadingProgressBar = mutableStateOf(false)
     val showConflictDialog = mutableStateOf(false)
     var progressPercent = mutableIntStateOf(-1)
-    var lastIndex = 0
+    private var lastIndex = 0
     var exportResultFile = mutableStateOf(false)
-    val musicAllList: ArrayList<Music> = ArrayList()
+    private val musicAllList: ArrayList<Music> = ArrayList()
     var selectedExportFormat = mutableIntStateOf(0)
 
     /**
@@ -84,7 +84,7 @@ class ScanPage(
         }
     }
 
-    fun requestPermission() {
+    private fun requestPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) { //Android 11+
             if (Environment.isExternalStorageManager()) {
                 checkFileExist()
@@ -118,7 +118,7 @@ class ScanPage(
         Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE
     )
 
-    fun allPermissionsGranted(): Boolean {
+    private fun allPermissionsGranted(): Boolean {
         for (permission in REQUIRED_PERMISSIONS) {
             if (ContextCompat.checkSelfPermission(
                     context, permission
@@ -148,7 +148,7 @@ class ScanPage(
     /**
      * 检查文件是否已存在
      */
-    fun checkFileExist(delay: Long = 0L) {
+    private fun checkFileExist(delay: Long = 0L) {
         lifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
             delay(delay)
             if (exportResultFile.value) {
@@ -278,7 +278,7 @@ class ScanPage(
     /**
      * 递归扫描所选目录及其子目录
      */
-    fun scanDirectory(directory: File, isRootCall: Boolean = true) {
+    private fun scanDirectory(directory: File, isRootCall: Boolean = true) {
         val files = directory.listFiles()
         if (files != null) {
             for (file in files) {
@@ -306,7 +306,7 @@ class ScanPage(
     /**
      * 处理扫描到的音乐文件
      */
-    fun handleFile(file: File) {
+    private fun handleFile(file: File) {
         // 在这里处理文件
         val audioFile: AudioFile
         try {
@@ -350,7 +350,7 @@ class ScanPage(
         increment()
     }
 
-    fun saveAndExport() {
+    private fun saveAndExport() {
         lifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
             db.musicDao().insertAll(*musicAllList.toTypedArray())
             if (exportResultFile.value) {
@@ -376,7 +376,7 @@ class ScanPage(
         }
     }
 
-    fun exportToDb() {
+    private fun exportToDb() {
         val file = File(
             Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
             "${
@@ -421,7 +421,7 @@ class ScanPage(
         ).delete()
     }
 
-    fun exportToTxt() {
+    private fun exportToTxt() {
         val file = File(
             Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
             "${

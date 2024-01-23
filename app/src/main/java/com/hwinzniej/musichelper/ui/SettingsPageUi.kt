@@ -26,7 +26,6 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import com.hwinzniej.musichelper.R
-import com.hwinzniej.musichelper.activity.SettingsPage
 import com.hwinzniej.musichelper.data.DataStoreConstants
 import com.hwinzniej.musichelper.utils.MyVibrationEffect
 import com.hwinzniej.musichelper.utils.Tools
@@ -44,7 +43,6 @@ import java.io.File
 @OptIn(UnstableSaltApi::class, ExperimentalFoundationApi::class)
 @Composable
 fun SettingsPageUi(
-    settingsPage: SettingsPage,
     enableDynamicColor: MutableState<Boolean>,
     selectedThemeMode: MutableIntState,
     selectedLanguage: MutableState<String>,

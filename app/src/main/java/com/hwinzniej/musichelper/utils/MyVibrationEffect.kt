@@ -6,9 +6,9 @@ import android.os.Vibrator
 
 class MyVibrationEffect(
     context: Context,
-    val enable: Boolean
+    private val enable: Boolean
 ) {
-    val vibrator: Vibrator = context.getSystemService(Vibrator::class.java)
+    private val vibrator: Vibrator = context.getSystemService(Vibrator::class.java)
 
     fun dialog() {
         if (enable) {

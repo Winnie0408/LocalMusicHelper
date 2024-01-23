@@ -48,7 +48,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
@@ -72,6 +71,7 @@ import com.hwinzniej.musichelper.utils.MyVibrationEffect
 import com.moriafly.salt.ui.BottomBar
 import com.moriafly.salt.ui.BottomBarItem
 import com.moriafly.salt.ui.ItemTitle
+import com.moriafly.salt.ui.RoundedColumn
 import com.moriafly.salt.ui.SaltTheme
 import com.moriafly.salt.ui.UnstableSaltApi
 import com.moriafly.salt.ui.darkSaltColors
@@ -103,7 +103,7 @@ class MainActivity : ComponentActivity() {
     var selectedThemeMode = mutableIntStateOf(2)
     var enableHaptic = mutableStateOf(true)
     var language = mutableStateOf("system")
-    val checkUpdate = mutableStateOf(false)
+    private val checkUpdate = mutableStateOf(false)
 
     @SuppressLint("NewApi")
     @OptIn(UnstableSaltApi::class)
@@ -293,45 +293,51 @@ private fun Pages(
                     downloadManager.enqueue(request)
                 }
             },
-            title = stringResource(id = R.string.new_version_available),
+            title = stringResource(id = R.string.download_lateset_ver),
             content = "",
             onlyComposeView = true,
             customContent = {
                 Column {
-                    Text(
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                        text = stringResource(id = R.string.download_lateset_ver),
-                        color = SaltTheme.colors.text,
-                        fontSize = 15.sp
-                    )
-                    ItemValue(
-                        text = "${stringResource(id = R.string.latest_version)}: ${latestVersion.value}",
-                        sub = "${stringResource(id = R.string.current_version)}: ${
-                            context.packageManager.getPackageInfo(
-                                context.packageName,
-                                0
-                            ).versionName
-                        }"
-                    )
-                    ItemTitle(text = stringResource(id = R.string.change_log))
-                    LazyColumn(
-                        modifier = Modifier
-                            .padding(horizontal = 16.dp)
-                            .fillMaxWidth()
-                            .heightIn(
-                                min = 20.dp,
-                                max = (LocalConfiguration.current.screenHeightDp / 5).dp
-                            )
-                            .clip(RoundedCornerShape(10.dp))
-                    ) {
-                        item {
-                            Text(
-                                modifier = Modifier.padding(top = 4.dp),
-                                text = latestDescription.value,
-                                color = SaltTheme.colors.text
-                            )
+                    RoundedColumn {
+                        ItemTitle(text = stringResource(id = R.string.new_version_available))
+                        ItemValue(
+                            text = "${stringResource(id = R.string.latest_version)}: ${latestVersion.value}",
+                            sub = "${stringResource(id = R.string.current_version)}: ${
+                                context.packageManager.getPackageInfo(
+                                    context.packageName,
+                                    0
+                                ).versionName
+                            }"
+                        )
+                    }
+                    RoundedColumn {
+                        ItemTitle(text = "${latestVersion.value} ${stringResource(id = R.string.change_log)}")
+                        LazyColumn(
+                            modifier = Modifier
+                                .padding(horizontal = 16.dp)
+                                .fillMaxWidth()
+                                .heightIn(
+                                    min = 20.dp,
+                                    max = (LocalConfiguration.current.screenHeightDp / 4.6).dp
+                                )
+                                .clip(RoundedCornerShape(10.dp))
+                        ) {
+                            item {
+                                Text(
+                                    modifier = Modifier.padding(top = 4.dp),
+                                    text = latestDescription.value,
+                                    color = SaltTheme.colors.text
+                                )
+                            }
                         }
                     }
+//                    RoundedColumn {  //TODO 查看当前版本与最新版本的差异 https://gitlab.com/HWinZnieJ/LocalMusicHelper/-/compare/v0.9.9.1...v0.9.9.5
+//                        ItemTitle(text = "${latestVersion.value} ${stringResource(id = R.string.change_log)}")
+//                        Item(
+//                            onClick = { /*TODO*/ },
+//                            text =
+//                        )
+//                    }
                 }
             }
         )
@@ -479,7 +485,6 @@ private fun Pages(
                         when (settingPage) {
                             0 -> {
                                 SettingsPageUi(
-                                    settingsPage = settingsPage,
                                     enableDynamicColor = mainPage.enableDynamicColor,
                                     selectedThemeMode = mainPage.selectedThemeMode,
                                     selectedLanguage = mainPage.language,

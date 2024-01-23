@@ -49,9 +49,9 @@ import java.time.format.DateTimeFormatter
 
 class ConvertPage(
     val context: Context,
-    val lifecycleOwner: LifecycleOwner,
-    val openMusicPlatformSqlFileLauncher: ActivityResultLauncher<Array<String>>,
-    val openResultSqlFileLauncher: ActivityResultLauncher<Array<String>>,
+    private val lifecycleOwner: LifecycleOwner,
+    private val openMusicPlatformSqlFileLauncher: ActivityResultLauncher<Array<String>>,
+    private val openResultSqlFileLauncher: ActivityResultLauncher<Array<String>>,
     val db: MusicDatabase,
     componentActivity: ComponentActivity
 ) : PermissionResultHandler {
@@ -59,14 +59,14 @@ class ConvertPage(
     var selectedSourceApp = mutableIntStateOf(0)
     var useCustomResultFile = mutableStateOf(false)
     var customResultFileName = mutableStateOf("")
-    var selectedFileName = mutableStateOf("")
+    private var selectedFileName = mutableStateOf("")
     var showLoadingProgressBar = mutableStateOf(false)
     var showErrorDialog = mutableStateOf(false)
     var errorDialogTitle = mutableStateOf("")
     var errorDialogContent = mutableStateOf("")
     var databaseFilePath = mutableStateOf("")
-    var resultFilePath = ""
-    var sourceApp = SourceApp()
+    private var resultFilePath = ""
+    private var sourceApp = SourceApp()
     val loadingProgressSema = Semaphore(2)
     var currentPage = mutableIntStateOf(0)
     var selectedMatchingMode = mutableIntStateOf(1)
@@ -76,7 +76,7 @@ class ConvertPage(
     var similarity = mutableFloatStateOf(85f)
     var useRootAccess = mutableStateOf(false)
     var sourceAppText = mutableStateOf("")
-    var playlistId = mutableStateListOf<String>()
+    private var playlistId = mutableStateListOf<String>()
     var playlistName = mutableStateListOf<String>()
     var playlistEnabled = mutableStateListOf<Int>()
     var playlistSum = mutableStateListOf<Int>()
@@ -136,7 +136,7 @@ class ConvertPage(
         Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE
     )
 
-    fun allPermissionsGranted(): Boolean {
+    private fun allPermissionsGranted(): Boolean {
         for (permission in REQUIRED_PERMISSIONS) {
             if (ContextCompat.checkSelfPermission(
                     context, permission
@@ -194,7 +194,7 @@ class ConvertPage(
     }
 
     var haveError = false
-    fun checkSelectedFiles(delay: Long = 0L) {
+    private fun checkSelectedFiles(delay: Long = 0L) {
         lifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
             haveError = false
             showLoadingProgressBar.value = true
@@ -227,7 +227,7 @@ class ConvertPage(
         }
     }
 
-    fun checkResultFile() {
+    private fun checkResultFile() {
         lifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
             if (useCustomResultFile.value) {
                 var db: SQLiteDatabase? = null
@@ -325,7 +325,7 @@ class ConvertPage(
         }
     }
 
-    fun checkAppStatusWithRoot() {
+    private fun checkAppStatusWithRoot() {
         val appExists =
             Tools().execShellCmdWithRoot("pm list packages | grep -E '${sourceApp.pakageName}'")
         if (appExists.isNotEmpty()) {
@@ -392,7 +392,7 @@ class ConvertPage(
         }
     }
 
-    fun checkDatabaseFile() {
+    private fun checkDatabaseFile() {
         lifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
             when (selectedSourceApp.intValue) {
                 0 -> {
@@ -471,7 +471,7 @@ class ConvertPage(
         }
     }
 
-    fun databaseSummary() {
+    private fun databaseSummary() {
         lifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
             showLoadingProgressBar.value = true
             val innerPlaylistId = MutableList(0) { "" }

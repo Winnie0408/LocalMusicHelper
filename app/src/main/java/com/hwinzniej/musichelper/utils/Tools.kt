@@ -27,7 +27,7 @@ class Tools {
         return lastChars
     }
 
-    fun longestCommonSubstringNoOrder(strA: String, strB: String): String {
+    private fun longestCommonSubstringNoOrder(strA: String, strB: String): String {
         return if (strA.length >= strB.length) {
             longestCommonSubstring(strA, strB)
         } else {

@@ -162,7 +162,7 @@
     <string name="current_version">当前版本</string>
     <string name="change_log">更新日志</string>
     <string name="check_connectivity">请检查网络连接或稍后再试。</string>
-    <string name="download_lateset_ver">要下载安装最新版本吗？</string>
+    <string name="download_lateset_ver">要下载最新版本吗？</string>
     <string name="start_download">开始下载更新</string>
     <string name="auto_check_update_failed">自动检查更新失败</string>
     <string name="no_update_available">已经是最新版本</string>
@@ -197,4 +197,5 @@
     <string name="using_player">使用的音乐播放器</string>
     <string name="developing">开发中，敬请期待…</string>
     <string name="select_source_app">选择要使用的来源App</string>
+    <string name="search_results">搜索结果</string>
 </resources>

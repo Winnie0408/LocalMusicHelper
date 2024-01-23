@@ -38,7 +38,7 @@
     <string name="delete_dialog_title">현재 노래를 삭제하시겠습니까?</string>
     <string name="delete_success">삭제 성공</string>
     <string name="details_of_results">출력 파일 경로</string>
-    <string name="download_lateset_ver">최신 버전을 다운로드하고 설치하시겠습니까?</string>
+    <string name="download_lateset_ver">최신 버전을 다운로드 하시겠습니까?</string>
     <string name="dynamic_color_switcher_sub">안드로이드 12 이상에서 모네 동적 색상 사용</string>
     <string name="dynamic_color_switcher_text">동적 색상</string>
     <string name="enable_album_name_match">앨범 이름 일치</string>
@@ -197,4 +197,5 @@
     <string name="using_player">사용 중인 음악 플레이어</string>
     <string name="developing">개발 중이니 계속 지켜봐 주세요…</string>
     <string name="select_source_app">사용할 소스 앱을 선택합니다</string>
+    <string name="search_results">검색 결과</string>
 </resources>

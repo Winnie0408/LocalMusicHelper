@@ -402,65 +402,68 @@ fun ConvertPageUi(
                             }
                         }
                         AnimatedVisibility(visible = searchResult.isNotEmpty()) {  //TODO 仅第一次新增搜索结果时有动画，变化与删除时无动画
-                            LazyColumn(
-                                modifier = Modifier.weight(1f)
-                            ) {
-                                items(searchResult.size) { index ->
-                                    ItemCheck(
-                                        state = selectedSearchResult == index,
-                                        onChange = {
-                                            focus.clearFocus()
-                                            if (!it) selectedSearchResult = -1
-                                            else {
-                                                selectedSearchResult = index
-                                                selectedAllIndex = searchResult[index][3].toInt()
-                                            }
-                                        },
-                                        text = searchResult[index][0],
-                                        sub = if (searchResult[index].size == 1) null else "${searchResult[index][1]} - ${searchResult[index][2]}",
-                                        iconAtLeft = false,
-                                        hideIcon = searchResult[index].size == 1,
-                                        enabled = searchResult[index].size != 1,
-                                        enableHaptic = enableHaptic.value
-                                    )
+                            RoundedColumn {
+                                ItemTitle(text = stringResource(R.string.search_results))
+                                LazyColumn {
+                                    items(searchResult.size) { index ->
+                                        ItemCheck(
+                                            state = selectedSearchResult == index,
+                                            onChange = {
+                                                focus.clearFocus()
+                                                if (!it) selectedSearchResult = -1
+                                                else {
+                                                    selectedSearchResult = index
+                                                    selectedAllIndex =
+                                                        searchResult[index][3].toInt()
+                                                }
+                                            },
+                                            text = searchResult[index][0],
+                                            sub = if (searchResult[index].size == 1) null else "${searchResult[index][1]} - ${searchResult[index][2]}",
+                                            iconAtLeft = false,
+                                            hideIcon = searchResult[index].size == 1,
+                                            enabled = searchResult[index].size != 1,
+                                            enableHaptic = enableHaptic.value
+                                        )
+                                    }
                                 }
                             }
                         }
-                        Spacer(modifier = Modifier.height(8.dp))
-                        ItemTitle(text = stringResource(R.string.songlist_song_info))
-                        ItemValue(
-                            text = stringResource(id = R.string.song_name),
-                            rightSub = convertResult[selectedSongIndex]!![2],
-                            clickable = true,
-                            onClick = {
-                                inputSearchWords.value =
-                                    "${inputSearchWords.value}${convertResult[selectedSongIndex]!![2]}"
-                            }
-                        )
-                        ItemValue(
-                            text = stringResource(id = R.string.singer).replace(
-                                "(：)|(: )".toRegex(),
-                                ""
-                            ),
-                            rightSub = convertResult[selectedSongIndex]!![4],
-                            clickable = true,
-                            onClick = {
-                                inputSearchWords.value =
-                                    "${inputSearchWords.value}${convertResult[selectedSongIndex]!![4]}"
-                            }
-                        )
-                        ItemValue(
-                            text = stringResource(id = R.string.album).replace(
-                                "(：)|(: )".toRegex(),
-                                ""
-                            ),
-                            rightSub = convertResult[selectedSongIndex]!![6],
-                            clickable = true,
-                            onClick = {
-                                inputSearchWords.value =
-                                    "${inputSearchWords.value}${convertResult[selectedSongIndex]!![6]}"
-                            }
-                        )
+                        RoundedColumn {
+                            ItemTitle(text = stringResource(R.string.songlist_song_info))
+                            ItemValue(
+                                text = stringResource(id = R.string.song_name),
+                                rightSub = convertResult[selectedSongIndex]!![2],
+                                clickable = true,
+                                onClick = {
+                                    inputSearchWords.value =
+                                        "${inputSearchWords.value}${convertResult[selectedSongIndex]!![2]}"
+                                }
+                            )
+                            ItemValue(
+                                text = stringResource(id = R.string.singer).replace(
+                                    "(：)|(: )".toRegex(),
+                                    ""
+                                ),
+                                rightSub = convertResult[selectedSongIndex]!![4],
+                                clickable = true,
+                                onClick = {
+                                    inputSearchWords.value =
+                                        "${inputSearchWords.value}${convertResult[selectedSongIndex]!![4]}"
+                                }
+                            )
+                            ItemValue(
+                                text = stringResource(id = R.string.album).replace(
+                                    "(：)|(: )".toRegex(),
+                                    ""
+                                ),
+                                rightSub = convertResult[selectedSongIndex]!![6],
+                                clickable = true,
+                                onClick = {
+                                    inputSearchWords.value =
+                                        "${inputSearchWords.value}${convertResult[selectedSongIndex]!![6]}"
+                                }
+                            )
+                        }
                     }
                 }
             }

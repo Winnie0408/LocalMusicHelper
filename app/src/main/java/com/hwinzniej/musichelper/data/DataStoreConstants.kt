@@ -5,7 +5,7 @@ import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 
 object DataStoreConstants {
-    val SETTINGS_PREFERENCES = "settings"
+    const val SETTINGS_PREFERENCES = "settings"
     val KEY_LANGUAGE = stringPreferencesKey("language")
     val KEY_THEME_MODE = intPreferencesKey("theme_mode")
     val KEY_ENABLE_DYNAMIC_COLOR = booleanPreferencesKey("enable_dynamic_color")

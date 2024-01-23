@@ -165,7 +165,7 @@
     <string name="current_version">Current version</string>
     <string name="change_log">Change log</string>
     <string name="check_connectivity">Please check your internet connection or try again later.</string>
-    <string name="download_lateset_ver">Download and install the latest version?</string>
+    <string name="download_lateset_ver">Download the latest version?</string>
     <string name="start_download">Start downloading updates</string>
     <string name="auto_check_update_failed">Failed to check for updates</string>
     <string name="no_update_available">No update available</string>
@@ -200,4 +200,5 @@
     <string name="using_player">Music player in use</string>
     <string name="developing">In development, stay tuned…</string>
     <string name="select_source_app">Select the source app to be used</string>
+    <string name="search_results">Search results</string>
 </resources>
