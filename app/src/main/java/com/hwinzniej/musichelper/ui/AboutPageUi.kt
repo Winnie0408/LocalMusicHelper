@@ -750,7 +750,13 @@ fun AboutPageUi(
                         },
                         text = stringResource(id = R.string.open_source_gitlab),
                         sub = stringResource(id = R.string.open_source_sub),
-                        iconPainter = painterResource(id = R.drawable.gitlab)
+                        iconPainter = painterResource(id = R.drawable.gitlab),
+                        iconPaddingValues = PaddingValues(
+                            start = 1.dp,
+                            end = 1.dp,
+                            top = 1.dp,
+                            bottom = 1.dp
+                        ),
                     )
                     Item(
                         onClick = {
