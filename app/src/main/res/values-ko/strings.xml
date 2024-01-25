@@ -39,7 +39,7 @@
     <string name="delete_success">삭제 성공</string>
     <string name="details_of_results">출력 파일 경로</string>
     <string name="download_lateset_ver">최신 버전을 다운로드 하시겠습니까?</string>
-    <string name="dynamic_color_switcher_sub">안드로이드 12 이상에서 모네 동적 색상 사용</string>
+    <string name="dynamic_color_switcher_sub">Android 12+의 다이나믹 컬러 기능 사용</string>
     <string name="dynamic_color_switcher_text">동적 색상</string>
     <string name="enable_album_name_match">앨범 이름 일치</string>
     <string name="enable_artist_name_match">아티스트 이름 일치</string>
@@ -198,4 +198,7 @@
     <string name="developing">개발 중이니 계속 지켜봐 주세요…</string>
     <string name="select_source_app">사용할 소스 앱을 선택합니다</string>
     <string name="search_results">검색 결과</string>
+    <string name="please_select_database_file">데이터베이스 파일을 선택하십시오</string>
+    <string name="please_select_result_file">변환 결과 파일을 선택하십시오</string>
+    <string name="update_size">"업데이트 크기: "</string>
 </resources>

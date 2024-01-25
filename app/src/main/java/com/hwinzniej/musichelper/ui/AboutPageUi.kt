@@ -31,6 +31,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableFloatState
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -75,6 +76,7 @@ fun AboutPageUi(
     latestDownloadLink: MutableState<String>,
     enableHaptic: MutableState<Boolean>,
     language: MutableState<String>,
+    updateFileSize: MutableFloatState,
 ) {
     val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
@@ -265,7 +267,7 @@ fun AboutPageUi(
                             coroutineScope.launch(Dispatchers.IO) {
                                 showLoadingProgressBar = true
                                 val client = OkHttpClient()
-                                val request = Request.Builder()
+                                var request = Request.Builder()
                                     .url("https://gitlab.com/api/v4/projects/54005438/releases/permalink/latest")
                                     .header(
                                         "PRIVATE-TOKEN",
@@ -292,6 +294,14 @@ fun AboutPageUi(
                                             )
                                         latestDownloadLink.value =
                                             "https://gitlab.com/HWinZnieJ/LocalMusicHelper${latestDownloadLink.value}"
+                                        request = Request.Builder()
+                                            .url(latestDownloadLink.value)
+                                            .head()
+                                            .build()
+                                        client.newCall(request).execute().header("Content-Length")
+                                            ?.let {
+                                                updateFileSize.floatValue = it.toFloat()
+                                            }
                                         latestDescription.value = latestDescription.value.substring(
                                             0,
                                             latestDescription.value.indexOf("\n[app-")

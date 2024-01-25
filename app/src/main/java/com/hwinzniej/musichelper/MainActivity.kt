@@ -35,6 +35,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -106,6 +107,7 @@ class MainActivity : ComponentActivity() {
     var enableHaptic = mutableStateOf(true)
     var language = mutableStateOf("system")
     private val checkUpdate = mutableStateOf(false)
+    var updateFileSize = mutableFloatStateOf(0f)
 
     @SuppressLint("NewApi")
     @OptIn(UnstableSaltApi::class)
@@ -309,7 +311,13 @@ private fun Pages(
                                     context.packageName,
                                     0
                                 ).versionName
-                            }"
+                            }",
+                            rightSub = "${stringResource(id = R.string.update_size)}${
+                                String.format(
+                                    "%.2f",
+                                    mainPage.updateFileSize.floatValue / 1024 / 1024
+                                )
+                            }MB"
                         )
                     }
                     RoundedColumn {
@@ -353,7 +361,7 @@ private fun Pages(
             coroutineScope.launch(Dispatchers.IO) {
                 checkUpdate.value = false
                 val client = OkHttpClient()
-                val request = Request.Builder()
+                var request = Request.Builder()
                     .url("https://gitlab.com/api/v4/projects/54005438/releases/permalink/latest")
                     .header(
                         "PRIVATE-TOKEN",
@@ -380,6 +388,13 @@ private fun Pages(
                             )
                         latestDownloadLink.value =
                             "https://gitlab.com/HWinZnieJ/LocalMusicHelper${latestDownloadLink.value}"
+                        request = Request.Builder()
+                            .url(latestDownloadLink.value)
+                            .head()
+                            .build()
+                        client.newCall(request).execute().header("Content-Length")?.let {
+                            mainPage.updateFileSize.floatValue = it.toFloat()
+                        }
                         latestDescription.value = latestDescription.value.substring(
                             0,
                             latestDescription.value.indexOf("\n[app-")
@@ -458,6 +473,7 @@ private fun Pages(
                         databaseFilePath = convertPage.databaseFilePath,
                         showSelectSourceDialog = convertPage.showSelectSourceDialog,
                         multiSource = convertPage.multiSource,
+                        showNumberProgressBar = convertPage.showNumberProgressBar
                     )
                 }
 
@@ -509,7 +525,8 @@ private fun Pages(
                                     latestDescription = latestDescription,
                                     latestDownloadLink = latestDownloadLink,
                                     enableHaptic = mainPage.enableHaptic,
-                                    language = mainPage.language
+                                    language = mainPage.language,
+                                    updateFileSize = mainPage.updateFileSize,
                                 )
                             }
                         }

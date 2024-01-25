@@ -13,8 +13,8 @@ android {
         applicationId = "com.hwinzniej.musichelper"
         minSdk = 26
         targetSdk = 34
-        versionCode = 8
-        versionName = "1.0.1"
+        versionCode = 9
+        versionName = "1.0.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -111,14 +111,14 @@ dependencies {
     //DataStore
     implementation("androidx.datastore:datastore-preferences:1.0.0")
 
-    //拖拽排序-可注释
-//    implementation("org.burnoutcrew.composereorderable:reorderable:0.9.6")
-
     //OkHttp3
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
 
     //Markdown渲染器
     implementation("com.github.jeziellago:compose-markdown:0.3.7")  //TODO 使用高于此版本会出现问题，已提Issue。
+
+    //拖拽排序-可注释
+//    implementation("org.burnoutcrew.composereorderable:reorderable:0.9.6")
 
     //Jsoup-可注释
 //    implementation("org.jsoup:jsoup:1.17.2")

@@ -5,7 +5,10 @@ import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
@@ -116,6 +119,7 @@ fun ConvertPageUi(
     databaseFilePath: MutableState<String>,
     showSelectSourceDialog: MutableState<Boolean>,
     multiSource: MutableList<Array<String>>,
+    showNumberProgressBar: MutableState<Boolean>,
 ) {
     val sourceAppPopupMenuState = rememberPopupState()
     val matchingModePopupMenuState = rememberPopupState()
@@ -654,6 +658,21 @@ fun ConvertPageUi(
                     trackColor = SaltTheme.colors.background
                 )
             }
+            if (showNumberProgressBar.value) {
+                val progressAnimation by animateFloatAsState(
+                    targetValue = convertPage.numberProgress.floatValue,
+                    animationSpec = tween(durationMillis = 200, easing = FastOutSlowInEasing),
+                    label = ""
+                )
+                LinearProgressIndicator(
+                    progress = { progressAnimation },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .zIndex(2f),
+                    color = SaltTheme.colors.highlight,
+                    trackColor = SaltTheme.colors.background,
+                )
+            }
 
             HorizontalPager(
                 state = pageState,
@@ -1141,7 +1160,7 @@ fun ConvertPageUi(
                                             )
                                         }
                                         AnimatedContent(
-                                            targetState = showLoadingProgressBar.value,
+                                            targetState = showNumberProgressBar.value,
                                             label = "",
                                             transitionSpec = {
                                                 if (targetState != initialState) {
@@ -1171,6 +1190,7 @@ fun ConvertPageUi(
                                             .padding(top = 4.dp)
                                             .fillMaxSize()
                                             .background(color = SaltTheme.colors.background)
+                                            .verticalScroll(rememberScrollState())
                                     ) {
                                         RoundedColumn {
                                             ItemTitle(text = stringResource(R.string.filter))

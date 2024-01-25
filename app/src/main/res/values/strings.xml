@@ -201,4 +201,7 @@
     <string name="developing">In development, stay tuned…</string>
     <string name="select_source_app">Select the source app to be used</string>
     <string name="search_results">Search results</string>
+    <string name="please_select_database_file">Please select database file</string>
+    <string name="please_select_result_file">Please select convert result file</string>
+    <string name="update_size">"Update size: "</string>
 </resources>

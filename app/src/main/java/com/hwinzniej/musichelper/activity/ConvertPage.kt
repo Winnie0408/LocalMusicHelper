@@ -82,6 +82,7 @@ class ConvertPage(
     var playlistSum = mutableStateListOf<Int>()
     var showSelectSourceDialog = mutableStateOf(false)
     var multiSource = mutableStateListOf<Array<String>>()
+    var showNumberProgressBar = mutableStateOf(false)
 
     /**
      * 请求存储权限
@@ -230,6 +231,24 @@ class ConvertPage(
     private fun checkResultFile() {
         lifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
             if (useCustomResultFile.value) {
+                if (resultFilePath.isEmpty()) {
+                    errorDialogTitle.value =
+                        context.getString(R.string.error_while_getting_data_dialog_title)
+                    errorDialogContent.value =
+                        "${errorDialogContent.value}\n- ${context.getString(R.string.result_file)} ${
+                            context.getString(
+                                R.string.read_failed
+                            )
+                        }: ${
+                            context.getString(
+                                R.string.please_select_result_file
+                            )
+                        }"
+                    showErrorDialog.value = true
+                    loadingProgressSema.release()
+                    haveError = true
+                    return@launch
+                }
                 var db: SQLiteDatabase? = null
                 try {
                     db = SQLiteDatabase.openDatabase(
@@ -297,7 +316,7 @@ class ConvertPage(
             if (!dir.exists())
                 dir.mkdirs()
             val copyResult = Tools().execShellCmdWithRoot(
-                "cp -f '/data/data/${multiSource[selected][0]}/databases/${
+                "nsenter --mount=/proc/1/ns/mnt cp -f '/data/data/${multiSource[selected][0]}/databases/${
                     sourceApp.databaseName
                 }' '${dir.absolutePath}/${sourceApp.sourceEng}_temp.db'"
             )
@@ -423,6 +442,24 @@ class ConvertPage(
                 if (useRootAccess.value)
                     checkAppStatusWithRoot()
                 else {
+                    if (databaseFilePath.value.isEmpty()) {
+                        errorDialogTitle.value =
+                            context.getString(R.string.error_while_getting_data_dialog_title)
+                        errorDialogContent.value =
+                            "${errorDialogContent.value}\n- ${context.getString(R.string.database_file)} ${
+                                context.getString(
+                                    R.string.read_failed
+                                )
+                            }: ${
+                                context.getString(
+                                    R.string.please_select_database_file
+                                )
+                            }"
+                        showErrorDialog.value = true
+                        loadingProgressSema.release()
+                        haveError = true
+                        return@launch
+                    }
                     var db: SQLiteDatabase? = null
                     try {
                         db = SQLiteDatabase.openDatabase(
@@ -545,13 +582,15 @@ class ConvertPage(
     }
 
     var convertResult = mutableStateMapOf<Int, Array<String>>()
+    var numberProgress = mutableFloatStateOf(0.0f)
     fun previewResult() {
         lifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+            numberProgress.floatValue = 0.0f
             convertResult.clear()
             val convertResultMap = mutableMapOf<Int, Array<String>>()
             val firstIndex1 = playlistEnabled.indexOfFirst { it == 1 }
 
-            showLoadingProgressBar.value = true
+            showNumberProgressBar.value = true
             val music3InfoList = if (useCustomResultFile.value) {
                 val db = SQLiteDatabase.openOrCreateDatabase(File(resultFilePath), null)
                 val musicInfoList = mutableListOf<MusicInfo>()
@@ -594,6 +633,7 @@ class ConvertPage(
                 "SELECT ${sourceApp.songListSongInfoSongId} FROM ${sourceApp.songListSongInfoTableName} WHERE ${sourceApp.songListSongInfoPlaylistId} = '${playlistId[firstIndex1]}' ORDER BY ${sourceApp.sortField}",
                 null
             )
+            val totalNum = cursor.count.toFloat()
             while (cursor.moveToNext()) {
                 val trackId =
                     cursor.getString(cursor.getColumnIndexOrThrow(sourceApp.songListSongInfoSongId))
@@ -793,11 +833,17 @@ class ConvertPage(
                         )
                 }
                 songInfoCursor.close()
+                if (num % 10 == 0)
+                    numberProgress.floatValue = num / totalNum
             }
             cursor.close()
             db.close()
+            numberProgress.floatValue = 1.0f
             convertResult.putAll(convertResultMap)
-            showLoadingProgressBar.value = false
+            lifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
+                delay(650L)
+                showNumberProgressBar.value = false
+            }
             MyVibrationEffect(
                 context,
                 (context as MainActivity).enableHaptic.value
