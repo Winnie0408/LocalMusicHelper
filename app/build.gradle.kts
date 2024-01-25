@@ -70,8 +70,6 @@ dependencies {
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
     androidTestImplementation(platform("androidx.compose:compose-bom:2023.10.01"))
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
-    debugImplementation("androidx.compose.ui:ui-tooling")
-    debugImplementation("androidx.compose.ui:ui-test-manifest:1.6.0-rc01")
 
     // Android Studio Preview support
     implementation("androidx.compose.ui:ui-tooling-preview")
@@ -79,10 +77,10 @@ dependencies {
 
     // UI Tests
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
-    debugImplementation("androidx.compose.ui:ui-test-manifest:1.6.0-rc01")
+    debugImplementation("androidx.compose.ui:ui-test-manifest:1.6.0")
 
     //SaltUI
-    implementation("com.github.Moriafly:SaltUI:0.1.0-dev45")
+    implementation("com.github.Moriafly:SaltUI:0.1.0-dev46")
 
     //JAudioTagger
     implementation("org.bitbucket.ijabz:jaudiotagger:7b004a1")

@@ -76,7 +76,8 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.window.DialogWindowProvider
 import com.hwinzniej.musichelper.R
 import com.hwinzniej.musichelper.utils.MyVibrationEffect
-import com.moriafly.salt.ui.ItemSpacer
+import com.moriafly.salt.ui.ItemOutHalfSpacer
+import com.moriafly.salt.ui.ItemOutSpacer
 import com.moriafly.salt.ui.SaltTheme
 import com.moriafly.salt.ui.UnstableSaltApi
 import com.moriafly.salt.ui.dialog.DialogTitle
@@ -105,14 +106,17 @@ fun YesNoDialog(
         onDismissRequest = onDismiss,
         properties = properties,
     ) {
+        ItemOutSpacer()
         DialogTitle(text = title)
         if (onlyComposeView) Spacer(modifier = Modifier.height(8.dp * 2))
         if (!onlyComposeView) {
-            ItemSpacer()
+            ItemOutSpacer()
             content?.let { ItemText(text = it, fontSize = 13.sp) }
-            Spacer(modifier = Modifier.height(8.dp * 2))
+            ItemOutSpacer()
         }
+        ItemOutHalfSpacer()
         customContent()
+        ItemOutHalfSpacer()
         if (onlyComposeView) Spacer(modifier = Modifier.height(8.dp * 2))
         Row(
             modifier = Modifier.padding(horizontal = SaltTheme.dimens.outerHorizontalPadding)
@@ -126,9 +130,8 @@ fun YesNoDialog(
                 textColor = SaltTheme.colors.subText,
                 backgroundColor = SaltTheme.colors.subBackground,
                 enableHaptic = enableHaptic
-//                backgroundColor = Color.Transparent
             )
-            Spacer(modifier = Modifier.width(12.dp))
+            Spacer(modifier = Modifier.width(SaltTheme.dimens.outerHorizontalPadding))
             TextButton(
                 onClick = {
                     onConfirm()
@@ -137,6 +140,7 @@ fun YesNoDialog(
                 enableHaptic = enableHaptic
             )
         }
+        ItemOutSpacer()
     }
 }
 
@@ -154,13 +158,11 @@ fun BasicDialog(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(20.dp))
+                .clip(RoundedCornerShape(SaltTheme.dimens.dialogCorner))
                 .background(color = SaltTheme.colors.background)
-                .padding(vertical = 8.dp * 2)
         ) {
             content()
         }
-
     }
 }
 
@@ -207,7 +209,10 @@ fun ItemPopup(  //TODO 添加图标、根据文字长度自动调整宽度、优
                 .onGloballyPositioned { layoutCoordinates ->
                     boxWidth.floatValue = layoutCoordinates.size.width.toFloat()
                 }
-                .padding(horizontal = SaltTheme.dimens.innerHorizontalPadding, vertical = 12.dp),
+                .padding(
+                    horizontal = SaltTheme.dimens.innerHorizontalPadding,
+                    vertical = SaltTheme.dimens.innerVerticalPadding
+                ),
             verticalAlignment = Alignment.CenterVertically
         )
         {
@@ -220,7 +225,7 @@ fun ItemPopup(  //TODO 添加图标、根据文字长度自动调整宽度、优
                     contentDescription = null,
                     colorFilter = iconColor?.let { ColorFilter.tint(iconColor) }
                 )
-                Spacer(modifier = Modifier.width(12.dp))
+                Spacer(modifier = Modifier.width(SaltTheme.dimens.contentPadding))
             }
             Column(
                 modifier = Modifier
@@ -240,7 +245,7 @@ fun ItemPopup(  //TODO 添加图标、根据文字长度自动调整宽度、优
                     )
                 }
             }
-            Spacer(modifier = Modifier.width(12.dp))
+            Spacer(modifier = Modifier.width(SaltTheme.dimens.contentPadding))
             Text(
                 text = selectedItem,
                 color = SaltTheme.colors.subText,
@@ -287,12 +292,13 @@ fun YesDialog(
         onDismissRequest = onDismissRequest,
         properties = properties
     ) {
+        ItemOutSpacer()
         DialogTitle(text = title)
         if (onlyComposeView) Spacer(modifier = Modifier.height(8.dp * 2))
         if (!onlyComposeView) {
-            ItemSpacer()
+            ItemOutSpacer()
             ItemText(text = content, fontSize = fontSize)
-            Spacer(modifier = Modifier.height(8.dp * 2))
+            ItemOutSpacer()
         }
         customContent()
         if (onlyComposeView) Spacer(modifier = Modifier.height(8.dp * 2))
@@ -305,6 +311,7 @@ fun YesDialog(
             text = confirmText,
             enableHaptic = enableHaptic
         )
+        ItemOutSpacer()
     }
 }
 
@@ -347,7 +354,10 @@ fun ItemCheck(
                 MyVibrationEffect(context, enableHaptic).click()
                 onChange(!state)
             }
-            .padding(horizontal = SaltTheme.dimens.innerHorizontalPadding, vertical = 12.dp),
+            .padding(
+                horizontal = SaltTheme.dimens.innerHorizontalPadding,
+                vertical = SaltTheme.dimens.innerVerticalPadding
+            ),
         verticalAlignment = Alignment.CenterVertically
     ) {
         if (!hideIcon) {
@@ -361,7 +371,7 @@ fun ItemCheck(
                     contentDescription = null,
                     tint = SaltTheme.colors.highlight
                 )
-                Spacer(modifier = Modifier.width(12.dp))
+                Spacer(modifier = Modifier.width(SaltTheme.dimens.contentPadding))
             }
         }
         Column(
@@ -384,7 +394,7 @@ fun ItemCheck(
         }
         if (!hideIcon) {
             if (!iconAtLeft) {
-                Spacer(modifier = Modifier.width(12.dp))
+                Spacer(modifier = Modifier.width(SaltTheme.dimens.contentPadding))
                 Icon(
                     modifier = Modifier
                         .size(24.dp),
@@ -420,7 +430,10 @@ fun Item(
             .clickable(enabled = enabled) {
                 onClick()
             }
-            .padding(horizontal = SaltTheme.dimens.innerHorizontalPadding, vertical = 12.dp),
+            .padding(
+                horizontal = SaltTheme.dimens.innerHorizontalPadding,
+                vertical = SaltTheme.dimens.innerVerticalPadding
+            ),
         verticalAlignment = Alignment.CenterVertically
     ) {
         iconPainter?.let {
@@ -432,7 +445,7 @@ fun Item(
                 contentDescription = null,
                 colorFilter = iconColor?.let { ColorFilter.tint(iconColor) }
             )
-            Spacer(modifier = Modifier.width(12.dp))
+            Spacer(modifier = Modifier.width(SaltTheme.dimens.contentPadding))
         }
         Column(
             modifier = Modifier
@@ -453,7 +466,7 @@ fun Item(
                 )
             }
         }
-        Spacer(modifier = Modifier.width(12.dp))
+        Spacer(modifier = Modifier.width(SaltTheme.dimens.contentPadding))
         rightSub?.let {
             Text(
                 text = it,
@@ -526,7 +539,7 @@ fun BasicButton(
                 MyVibrationEffect(context, enableHaptic).click()
                 onClick()
             }
-            .padding(12.dp)
+            .padding(SaltTheme.dimens.contentPadding)
     ) {
         content()
     }
@@ -545,7 +558,10 @@ fun ItemValue(
             modifier = Modifier
                 .fillMaxWidth()
                 .sizeIn(minHeight = 48.dp)
-                .padding(horizontal = SaltTheme.dimens.innerHorizontalPadding, vertical = 12.dp),
+                .padding(
+                    horizontal = SaltTheme.dimens.innerHorizontalPadding,
+                    vertical = SaltTheme.dimens.innerVerticalPadding
+                ),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.weight(1f)) {
@@ -563,7 +579,7 @@ fun ItemValue(
                 }
             }
             rightSub?.let {
-                Spacer(modifier = Modifier.width(12.dp))
+                Spacer(modifier = Modifier.width(SaltTheme.dimens.contentPadding))
                 SelectionContainer(
                     modifier = Modifier
                         .weight(1f),
@@ -590,7 +606,7 @@ fun ItemEdit(
     readOnly: Boolean = false,
     contentPaddingValues: PaddingValues = PaddingValues(
         horizontal = SaltTheme.dimens.innerHorizontalPadding,
-        vertical = 12.dp
+        vertical = SaltTheme.dimens.innerVerticalPadding
     ),
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
@@ -615,7 +631,7 @@ fun ItemEdit(
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(SaltTheme.dimens.corner))
                     .background(color = backgroundColor)
-                    .padding(12.dp)
+                    .padding(SaltTheme.dimens.contentPadding)
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -681,7 +697,10 @@ fun ItemSwitcher(
                     MyVibrationEffect(context, enableHaptic).turnOff()
                 onChange(!state)
             }
-            .padding(horizontal = SaltTheme.dimens.innerHorizontalPadding, vertical = 12.dp),
+            .padding(
+                horizontal = SaltTheme.dimens.innerHorizontalPadding,
+                vertical = SaltTheme.dimens.innerVerticalPadding
+            ),
         verticalAlignment = Alignment.CenterVertically
     ) {
         iconPainter?.let {
@@ -693,7 +712,7 @@ fun ItemSwitcher(
                 contentDescription = null,
                 colorFilter = iconColor?.let { ColorFilter.tint(iconColor) }
             )
-            Spacer(modifier = Modifier.width(12.dp))
+            Spacer(modifier = Modifier.width(SaltTheme.dimens.contentPadding))
         }
         Column(
             modifier = Modifier
@@ -713,7 +732,7 @@ fun ItemSwitcher(
                 )
             }
         }
-        Spacer(modifier = Modifier.width(12.dp))
+        Spacer(modifier = Modifier.width(SaltTheme.dimens.contentPadding))
         val backgroundColor by animateColorAsState(
             targetValue = if (state) SaltTheme.colors.highlight else SaltTheme.colors.subText.copy(
                 alpha = 0.1f
@@ -788,7 +807,10 @@ fun PopupMenuItem(
                 minHeight = 0.dp
             )
             .background(if (selected == true) SaltTheme.colors.highlight.copy(alpha = 0.1f) else Color.Unspecified)
-            .padding(SaltTheme.dimens.innerHorizontalPadding, 12.dp),
+            .padding(
+                SaltTheme.dimens.innerHorizontalPadding,
+                SaltTheme.dimens.innerVerticalPadding
+            ),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column(
@@ -811,7 +833,7 @@ fun PopupMenuItem(
             }
         }
         iconPainter?.let {
-            Spacer(modifier = Modifier.width(12.dp * 2))
+            Spacer(modifier = Modifier.width(SaltTheme.dimens.contentPadding * 2))
             Image(
                 modifier = Modifier
                     .size(24.dp)
