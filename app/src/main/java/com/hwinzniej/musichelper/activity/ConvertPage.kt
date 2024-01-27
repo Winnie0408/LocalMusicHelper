@@ -316,7 +316,7 @@ class ConvertPage(
             if (!dir.exists())
                 dir.mkdirs()
             val copyResult = Tools().execShellCmdWithRoot(
-                "nsenter --mount=/proc/1/ns/mnt cp -f '/data/data/${multiSource[selected][0]}/databases/${
+                "cp -f '/data/data/${multiSource[selected][0]}/databases/${
                     sourceApp.databaseName
                 }' '${dir.absolutePath}/${sourceApp.sourceEng}_temp.db'"
             )

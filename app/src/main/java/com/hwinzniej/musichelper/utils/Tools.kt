@@ -258,7 +258,7 @@ class Tools {
 
     fun execShellCmdWithRoot(cmd: String): String {
         val process =
-            Runtime.getRuntime().exec("su")
+            Runtime.getRuntime().exec("su --mount-master")
         val outputStream = DataOutputStream(process.outputStream)
         outputStream.writeBytes("${cmd}\n")
         outputStream.flush()
