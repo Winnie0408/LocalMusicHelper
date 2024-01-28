@@ -85,7 +85,7 @@
     <string name="new_version_available">새 버전 사용 가능</string>
     <string name="next_step_text">다음</string>
     <string name="no_grant_root_access">루트 액세스가 부여되지 않음</string>
-    <string name="no_root_access">루트 액세스 없음</string>
+    <string name="no_root_access">장치에 루트 권한이 없습니다</string>
     <string name="no_search_result">검색 결과 없음</string>
     <string name="no_song_to_save">적어도 하나의 상태를 활성화하여 저장하십시오</string>
     <string name="no_update_available">최신 버전</string>
@@ -203,5 +203,5 @@
     <string name="update_size">"업데이트 크기: "</string>
     <string name="file_no_tag">ID3태그가 포함되어 있지 않거나 읽을 수 없습니다</string>
     <string name="scan_complete_but_have_error">스캔이 완료되었는데 오류가 있습니다</string>
-    <string name="scan_failed_tips">다음 곡은 \'스캔 결과\'에 **추가되지 않습니다**.#n\"뮤직태그\" 또는 기타 이와 유사한 앱을 사용하여 아래 곡의 ID3태그를 수정한 후 다시 스캔하십시오.</string>
+    <string name="scan_failed_tips">다음 파일은 \'스캔 결과\'에 **추가되지 않습니다**.#n\"뮤직태그\" 또는 기타 이와 유사한 앱을 사용하여 아래 곡의 ID3태그를 수정한 후 다시 스캔하십시오.</string>
 </resources>

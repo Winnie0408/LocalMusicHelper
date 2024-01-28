@@ -294,7 +294,9 @@ class ScanPage(
                     try {
                         AudioFileIO.read(curFile)
                     } catch (e: Exception) {
-                        errorLog.value += "- ${curFile.name}:\n  - ${e}\n"
+                        if (!curFile.name.startsWith(".") && !curFile.name.endsWith(".lrc")) {
+                            errorLog.value += "- ${curFile.name}:\n  - ${e}\n"
+                        }
                         continue
                     }
                     handleFile(curFile)
@@ -316,7 +318,9 @@ class ScanPage(
         try {
             audioFile = AudioFileIO.read(file)
         } catch (e: Exception) {
-            errorLog.value += "- ${file.name}:\n  - ${e}\n"
+            if (!file.name.startsWith(".") && !file.name.endsWith(".lrc")) {
+                errorLog.value += "- ${file.name}:\n  - ${e}\n"
+            }
             return
         }
         if (audioFile.tag == null) {

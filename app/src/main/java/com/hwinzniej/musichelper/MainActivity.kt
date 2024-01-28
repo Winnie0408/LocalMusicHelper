@@ -187,7 +187,7 @@ class MainActivity : ComponentActivity() {
             }
         }
         lifecycleScope.launch {
-            delay(1000L)
+            delay(2000L)
             if (settingsPage.enableAutoCheckUpdate.value) {
                 checkUpdate.value = true
             }

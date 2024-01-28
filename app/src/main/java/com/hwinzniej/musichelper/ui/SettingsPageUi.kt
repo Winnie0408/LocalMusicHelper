@@ -38,7 +38,6 @@ import com.moriafly.salt.ui.popup.rememberPopupState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.io.File
 
 @OptIn(UnstableSaltApi::class, ExperimentalFoundationApi::class)
 @Composable
@@ -180,39 +179,30 @@ fun SettingsPageUi(
                     onChange = {
                         coroutineScope.launch(Dispatchers.IO) {
                             if (it) {
-                                var hasRoot = false
                                 try {
-                                    hasRoot =
-                                        (File("/system/bin/su").exists() || File("/system/xbin/su").exists())
-                                } catch (_: Exception) {
-                                }
-                                if (hasRoot) {
-                                    try {
-                                        if (Tools().execShellCmdWithRoot("ls /data")
-                                                .contains("Permission denied")
-                                        ) {
-                                            withContext(Dispatchers.Main) {
-                                                Toast.makeText(
-                                                    context,
-                                                    context.getString(R.string.no_grant_root_access),
-                                                    Toast.LENGTH_SHORT
-                                                ).show()
-                                            }
-                                        } else {
-                                            dataStore.edit { settings ->
-                                                settings[DataStoreConstants.KEY_USE_ROOT_ACCESS] =
-                                                    it
-                                            }
-                                            if (enableHaptic.value) {
-                                                MyVibrationEffect(
-                                                    context,
-                                                    enableHaptic.value
-                                                ).turnOn()
-                                            }
+                                    if (Tools().execShellCmdWithRoot("ls /data | grep data")
+                                            .contains("Permission denied")
+                                    ) {
+                                        withContext(Dispatchers.Main) {
+                                            Toast.makeText(
+                                                context,
+                                                context.getString(R.string.no_grant_root_access),
+                                                Toast.LENGTH_SHORT
+                                            ).show()
                                         }
-                                    } catch (_: Exception) {
+                                    } else {
+                                        dataStore.edit { settings ->
+                                            settings[DataStoreConstants.KEY_USE_ROOT_ACCESS] =
+                                                true
+                                        }
+                                        if (enableHaptic.value) {
+                                            MyVibrationEffect(
+                                                context,
+                                                enableHaptic.value
+                                            ).turnOn()
+                                        }
                                     }
-                                } else {
+                                } catch (_: Exception) {
                                     withContext(Dispatchers.Main) {
                                         Toast.makeText(
                                             context,
@@ -224,7 +214,7 @@ fun SettingsPageUi(
                             } else {
                                 dataStore.edit { settings ->
                                     settings[DataStoreConstants.KEY_USE_ROOT_ACCESS] =
-                                        it
+                                        false
                                 }
                                 if (enableHaptic.value) {
                                     MyVibrationEffect(context, enableHaptic.value).turnOff()

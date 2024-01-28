@@ -166,7 +166,7 @@
     <string name="start_download">开始下载更新</string>
     <string name="auto_check_update_failed">自动检查更新失败</string>
     <string name="no_update_available">已经是最新版本</string>
-    <string name="no_root_access">未拥有Root权限</string>
+    <string name="no_root_access">设备没有Root权限</string>
     <string name="no_grant_root_access">未授予Root权限</string>
     <string name="get_file_with_root">自动获取#的数据库文件</string>
     <string name="with_root_access">将使用Root权限获取所需文件</string>
@@ -203,5 +203,5 @@
     <string name="update_size">更新大小：</string>
     <string name="file_no_tag">不包含ID3标签或无法读取</string>
     <string name="scan_complete_but_have_error">扫描完成，但有错误</string>
-    <string name="scan_failed_tips">下列歌曲**不会**添加到「扫描结果」中。#n请使用“音乐标签”或其他类似软件，对下列歌曲的ID3标签修改后，再次进行扫描。</string>
+    <string name="scan_failed_tips">下列文件**不会**添加到「扫描结果」中。#n请使用“音乐标签”或其他类似软件，对下列歌曲的ID3标签修改后，再次进行扫描。</string>
 </resources>
