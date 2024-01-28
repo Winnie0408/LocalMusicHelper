@@ -66,7 +66,7 @@
 - 若当前设备没有Root权限，在本项目的Release中下载最新版本的**app-release.apk**文件后：
     - 安装在当前设备中，使用虚拟机提供的Root权限来获取歌单来源App的数据库文件，并导出到真机中。
     - 安装在虚拟机中，使用虚拟机提供的Root权限来自动获取歌单来源App的数据库文件。
-        - 可选的虚拟机：
+        - 可选的虚拟机 **（虚拟机的系统需要Android API Level 26（Android O, 8.0）及以上）**：
         - [VMOS Pro](https://www.coolapk.com/apk/com.vmos.pro)：在手机上使用的虚拟机 ~~（可能需要使用VIP版，详情查看该应用的酷安评论区）~~
         - [MuMu模拟器](https://mumu.163.com)：在电脑上使用的虚拟机
         - 或其他支持启用Root权限的虚拟机
