@@ -65,7 +65,7 @@
     <string name="please_select_at_least_one_playlist">请至少选择1个歌单</string>
     <string name="read_failed">读取失败</string>
     <string name="use_scan_fun_first">请先在扫描页进行一次音乐扫描</string>
-    <string name="error_details">错误详情：</string>
+    <string name="error_details">错误详情</string>
     <string name="in_total">共 # 个</string>
     <string name="user_selected">已选：# 个</string>
     <string name="select_all">全选</string>
@@ -201,4 +201,7 @@
     <string name="please_select_database_file">请选择数据库文件</string>
     <string name="please_select_result_file">请选择转换结果文件</string>
     <string name="update_size">更新大小：</string>
+    <string name="file_no_tag">不包含ID3标签或无法读取</string>
+    <string name="scan_complete_but_have_error">扫描完成，但有错误</string>
+    <string name="scan_failed_tips">下列歌曲**不会**添加到「扫描结果」中。#n请使用“音乐标签”或其他类似软件，对下列歌曲的ID3标签修改后，再次进行扫描。</string>
 </resources>

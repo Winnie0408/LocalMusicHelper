@@ -203,7 +203,7 @@ class ConvertPage(
             playlistId.clear()
             playlistName.clear()
             playlistSum.clear()
-            errorDialogContent.value = context.getString(R.string.error_details)
+            errorDialogContent.value = ""
             loadingProgressSema.acquire()
             loadingProgressSema.acquire()
             checkDatabaseFile()
@@ -234,16 +234,16 @@ class ConvertPage(
                 if (resultFilePath.isEmpty()) {
                     errorDialogTitle.value =
                         context.getString(R.string.error_while_getting_data_dialog_title)
-                    errorDialogContent.value =
-                        "${errorDialogContent.value}\n- ${context.getString(R.string.result_file)} ${
+                    errorDialogContent.value +=
+                        "- ${context.getString(R.string.result_file)} ${
                             context.getString(
                                 R.string.read_failed
                             )
-                        }: ${
+                        }:\n  - ${
                             context.getString(
                                 R.string.please_select_result_file
                             )
-                        }"
+                        }\n"
                     showErrorDialog.value = true
                     loadingProgressSema.release()
                     haveError = true
@@ -263,12 +263,12 @@ class ConvertPage(
                 } catch (e: Exception) {
                     errorDialogTitle.value =
                         context.getString(R.string.error_while_getting_data_dialog_title)
-                    errorDialogContent.value =
-                        "${errorDialogContent.value}\n- ${context.getString(R.string.result_file)} ${
+                    errorDialogContent.value +=
+                        "- ${context.getString(R.string.result_file)} ${
                             context.getString(
                                 R.string.read_failed
                             )
-                        }: ${e.message}"
+                        }:\n  - ${e}\n"
                     showErrorDialog.value = true
                     haveError = true
                 } finally {
@@ -282,24 +282,24 @@ class ConvertPage(
                     if (musicCount == 0) {
                         errorDialogTitle.value =
                             context.getString(R.string.error_while_getting_data_dialog_title)
-                        errorDialogContent.value =
-                            "${errorDialogContent.value}\n- ${context.getString(R.string.result_file)} ${
+                        errorDialogContent.value +=
+                            "- ${context.getString(R.string.result_file)} ${
                                 context.getString(
                                     R.string.read_failed
                                 )
-                            }: ${context.getString(R.string.use_scan_fun_first)}"
+                            }:\n  - ${context.getString(R.string.use_scan_fun_first)}\n"
                         showErrorDialog.value = true
                         haveError = true
                     }
                 } catch (e: Exception) {
                     errorDialogTitle.value =
                         context.getString(R.string.error_while_getting_data_dialog_title)
-                    errorDialogContent.value =
-                        "${errorDialogContent.value}\n- ${context.getString(R.string.result_file)} ${
+                    errorDialogContent.value +=
+                        "- ${context.getString(R.string.result_file)} ${
                             context.getString(
                                 R.string.read_failed
                             )
-                        }: ${context.getString(R.string.use_scan_fun_first)}"
+                        }:\n  - ${context.getString(R.string.use_scan_fun_first)}\n"
                     showErrorDialog.value = true
                     haveError = true
                 } finally {
@@ -330,12 +330,12 @@ class ConvertPage(
                 showSelectSourceDialog.value = false
                 errorDialogTitle.value =
                     context.getString(R.string.error_while_getting_data_dialog_title)
-                errorDialogContent.value =
-                    "${errorDialogContent.value}\n- ${context.getString(R.string.database_file)} ${
+                errorDialogContent.value +=
+                    "- ${context.getString(R.string.database_file)} ${
                         context.getString(
                             R.string.read_failed
                         )
-                    }: $copyResult"
+                    }:\n  - $copyResult\n"
                 showErrorDialog.value = true
                 haveError = true
                 loadingProgressSema.release()
@@ -366,12 +366,12 @@ class ConvertPage(
                 } else {
                     errorDialogTitle.value =
                         context.getString(R.string.error_while_getting_data_dialog_title)
-                    errorDialogContent.value =
-                        "${errorDialogContent.value}\n- ${context.getString(R.string.database_file)} ${
+                    errorDialogContent.value +=
+                        "- ${context.getString(R.string.database_file)} ${
                             context.getString(
                                 R.string.read_failed
                             )
-                        }: $copyResult"
+                        }:\n  - $copyResult\n"
                     showErrorDialog.value = true
                     haveError = true
                     loadingProgressSema.release()
@@ -397,14 +397,14 @@ class ConvertPage(
         } else {
             errorDialogTitle.value =
                 context.getString(R.string.error_while_getting_data_dialog_title)
-            errorDialogContent.value =
-                "${errorDialogContent.value}\n- ${context.getString(R.string.database_file)} ${
+            errorDialogContent.value +=
+                "- ${context.getString(R.string.database_file)} ${
                     context.getString(
                         R.string.read_failed
                     )
-                }: ${
+                }:\n  - ${
                     context.getString(R.string.app_not_installed).replace("#", sourceAppText.value)
-                }"
+                }\n"
             showErrorDialog.value = true
             haveError = true
             loadingProgressSema.release()
@@ -417,16 +417,16 @@ class ConvertPage(
                 0 -> {
                     errorDialogTitle.value =
                         context.getString(R.string.error_while_getting_data_dialog_title)
-                    errorDialogContent.value =
-                        "${errorDialogContent.value}\n- ${context.getString(R.string.database_file)} ${
+                    errorDialogContent.value +=
+                        "- ${context.getString(R.string.database_file)} ${
                             context.getString(
                                 R.string.read_failed
                             )
-                        }: ${
+                        }:\n  - ${
                             context.getString(
                                 R.string.please_select_source_app
                             )
-                        }"
+                        }\n"
                     showErrorDialog.value = true
                     loadingProgressSema.release()
                     haveError = true
@@ -445,16 +445,16 @@ class ConvertPage(
                     if (databaseFilePath.value.isEmpty()) {
                         errorDialogTitle.value =
                             context.getString(R.string.error_while_getting_data_dialog_title)
-                        errorDialogContent.value =
-                            "${errorDialogContent.value}\n- ${context.getString(R.string.database_file)} ${
+                        errorDialogContent.value +=
+                            "- ${context.getString(R.string.database_file)} ${
                                 context.getString(
                                     R.string.read_failed
                                 )
-                            }: ${
+                            }:\n  - ${
                                 context.getString(
                                     R.string.please_select_database_file
                                 )
-                            }"
+                            }\n"
                         showErrorDialog.value = true
                         loadingProgressSema.release()
                         haveError = true
@@ -474,12 +474,12 @@ class ConvertPage(
                     } catch (e: Exception) {
                         errorDialogTitle.value =
                             context.getString(R.string.error_while_getting_data_dialog_title)
-                        errorDialogContent.value =
-                            "${errorDialogContent.value}\n- ${context.getString(R.string.database_file)} ${
+                        errorDialogContent.value +=
+                            "- ${context.getString(R.string.database_file)} ${
                                 context.getString(
                                     R.string.read_failed
                                 )
-                            }: ${e.message}"
+                            }:\n  - ${e}\n"
                         showErrorDialog.value = true
                         haveError = true
                     } finally {
@@ -491,16 +491,16 @@ class ConvertPage(
             } else {
                 errorDialogTitle.value =
                     context.getString(R.string.error_while_getting_data_dialog_title)
-                errorDialogContent.value =
-                    "${errorDialogContent.value}\n- ${context.getString(R.string.database_file)} ${
+                errorDialogContent.value +=
+                    "- ${context.getString(R.string.database_file)} ${
                         context.getString(
                             R.string.read_failed
                         )
-                    }: ${
+                    }:\n  - ${
                         context.getString(
                             R.string.please_select_source_app
                         )
-                    }"
+                    }\n"
                 showErrorDialog.value = true
                 haveError = true
                 loadingProgressSema.release()
@@ -569,7 +569,7 @@ class ConvertPage(
             errorDialogTitle.value =
                 context.getString(R.string.error)
             errorDialogContent.value =
-                context.getString(R.string.please_select_at_least_one_playlist)
+                "- ${context.getString(R.string.please_select_at_least_one_playlist)}"
             showErrorDialog.value = true
             return
         }

@@ -66,7 +66,7 @@
     <string name="please_select_at_least_one_playlist">Please select at least one song list</string>
     <string name="read_failed">read failed</string>
     <string name="use_scan_fun_first">Please run a music scan on the scan page first</string>
-    <string name="error_details">Error details:</string>
+    <string name="error_details">Error details</string>
     <string name="in_total">Total: #</string>
     <string name="user_selected">Selected: #</string>
     <string name="select_all">Select All</string>
@@ -193,7 +193,7 @@
     <string name="save_failed">Save failed</string>
     <string name="temporarily_unavailable">(Temporarily unavailable)</string>
     <string name="open_source_gitee">View this project on Gitee</string>
-    <string name="no_music_found">⚠️no supported music files in the selected directory</string>
+    <string name="no_music_found">⚠️No supported music files in the selected directory</string>
     <string name="original_songlist"># original</string>
     <string name="type_of_view">View</string>
     <string name="target_formats">Target formats</string>
@@ -204,4 +204,7 @@
     <string name="please_select_database_file">Please select database file</string>
     <string name="please_select_result_file">Please select convert result file</string>
     <string name="update_size">"Update size: "</string>
+    <string name="file_no_tag">Does not contain ID3 Tags or is unreadable</string>
+    <string name="scan_complete_but_have_error">Scanning completed, but with errors</string>
+    <string name="scan_failed_tips">The following songs will **NOT** be added to Scan Results.#nPlease use \"Music Tag\" or other similar app to modify the ID3 tag of the following songs and scan again.</string>
 </resources>

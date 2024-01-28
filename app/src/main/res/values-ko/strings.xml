@@ -45,7 +45,7 @@
     <string name="enable_artist_name_match">아티스트 이름 일치</string>
     <string name="enable_bracket_removal">괄호 제거</string>
     <string name="error">오류</string>
-    <string name="error_details">"오류 세부 정보: "</string>
+    <string name="error_details">오류 세부 정보</string>
     <string name="error_while_getting_data_dialog_content">다음 파일을 읽는 중에 오류가 발생했습니다. 파일 선택을 확인하십시오.</string>
     <string name="error_while_getting_data_dialog_title">데이터를 가져오는 중 오류 발생</string>
     <string name="export_result_file_switcher_sub_text">결과 파일을 다운로드 디렉토리로 내보내기</string>
@@ -201,4 +201,7 @@
     <string name="please_select_database_file">데이터베이스 파일을 선택하십시오</string>
     <string name="please_select_result_file">변환 결과 파일을 선택하십시오</string>
     <string name="update_size">"업데이트 크기: "</string>
+    <string name="file_no_tag">ID3태그가 포함되어 있지 않거나 읽을 수 없습니다</string>
+    <string name="scan_complete_but_have_error">스캔이 완료되었는데 오류가 있습니다</string>
+    <string name="scan_failed_tips">다음 곡은 \'스캔 결과\'에 **추가되지 않습니다**.#n\"뮤직태그\" 또는 기타 이와 유사한 앱을 사용하여 아래 곡의 ID3태그를 수정한 후 다시 스캔하십시오.</string>
 </resources>

@@ -66,6 +66,7 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
@@ -79,6 +80,7 @@ import com.moriafly.salt.ui.SaltTheme
 import com.moriafly.salt.ui.TitleBar
 import com.moriafly.salt.ui.UnstableSaltApi
 import com.moriafly.salt.ui.popup.rememberPopupState
+import dev.jeziellago.compose.markdowntext.MarkdownText
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -198,8 +200,37 @@ fun ConvertPageUi(
         YesDialog(
             onDismissRequest = { showErrorDialog.value = false },
             title = errorDialogTitle.value,
-            content = errorDialogContent.value,
-            enableHaptic = enableHaptic.value
+            content = "",
+            enableHaptic = enableHaptic.value,
+            onlyComposeView = true,
+            customContent = {
+                RoundedColumn {
+                    ItemTitle(text = stringResource(id = R.string.error_details))
+                    LazyColumn(
+                        modifier = Modifier
+                            .padding(horizontal = 16.dp)
+                            .fillMaxWidth()
+                            .heightIn(
+                                min = 20.dp,
+                                max = (LocalConfiguration.current.screenHeightDp / 2.5).dp
+                            )
+                            .clip(RoundedCornerShape(10.dp))
+                    ) {
+                        item {
+                            MarkdownText(
+                                modifier = Modifier.padding(bottom = 8.dp),
+                                markdown = errorDialogContent.value,
+                                style = TextStyle(
+                                    color = SaltTheme.colors.text,
+                                    fontSize = 14.sp
+                                ),
+                                isTextSelectable = true,
+                                disableLinkMovementMethod = true
+                            )
+                        }
+                    }
+                }
+            }
         )
     }
 

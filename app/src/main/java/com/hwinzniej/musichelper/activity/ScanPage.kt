@@ -54,12 +54,15 @@ class ScanPage(
     var exportResultFile = mutableStateOf(false)
     private val musicAllList: ArrayList<Music> = ArrayList()
     var selectedExportFormat = mutableIntStateOf(0)
+    var errorLog = mutableStateOf("")
+    var showErrorDialog = mutableStateOf(false)
 
     /**
      * 功能入口，初始化变量
      */
 
     fun init() {
+        errorLog.value = ""
         musicAllList.clear()
         lastIndex = 0
         requestPermission()
@@ -291,6 +294,7 @@ class ScanPage(
                     try {
                         AudioFileIO.read(curFile)
                     } catch (e: Exception) {
+                        errorLog.value += "- ${curFile.name}:\n  - ${e}\n"
                         continue
                     }
                     handleFile(curFile)
@@ -312,13 +316,17 @@ class ScanPage(
         try {
             audioFile = AudioFileIO.read(file)
         } catch (e: Exception) {
+            errorLog.value += "- ${file.name}:\n  - ${e}\n"
+            return
+        }
+        if (audioFile.tag == null) {
+            errorLog.value += "- ${file.name}:\n  - ${context.getString(R.string.file_no_tag)}\n"
             return
         }
         lifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
             scanResult.add(0, file.name)
         }
         getTag(audioFile.tag, file.path)
-
     }
 
     /**
@@ -372,6 +380,12 @@ class ScanPage(
                     context,
                     (context as MainActivity).enableHaptic.value
                 ).done()
+                if (errorLog.value != "") {
+                    errorLog.value = "${
+                        context.getString(R.string.scan_failed_tips).replace("#n", "\n")
+                    }\n${errorLog.value}"
+                    showErrorDialog.value = true
+                }
             }
         }
     }

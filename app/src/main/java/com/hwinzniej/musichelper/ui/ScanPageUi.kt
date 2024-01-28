@@ -42,6 +42,7 @@ import com.moriafly.salt.ui.SaltTheme
 import com.moriafly.salt.ui.TitleBar
 import com.moriafly.salt.ui.UnstableSaltApi
 import com.moriafly.salt.ui.popup.rememberPopupState
+import dev.jeziellago.compose.markdowntext.MarkdownText
 
 @OptIn(UnstableSaltApi::class)
 @Composable
@@ -68,6 +69,45 @@ fun ScanPageUi(
             enableHaptic = enableHaptic.value
         )
     }
+
+    if (scanPage.showErrorDialog.value) {
+        YesDialog(
+            onDismissRequest = { scanPage.showErrorDialog.value = false },
+            title = stringResource(id = R.string.scan_complete_but_have_error),
+            content = "",
+            onlyComposeView = true,
+            enableHaptic = enableHaptic.value,
+            customContent = {
+                RoundedColumn {
+                    ItemTitle(text = stringResource(id = R.string.error_details))
+                    LazyColumn(
+                        modifier = Modifier
+                            .padding(horizontal = 16.dp)
+                            .fillMaxWidth()
+                            .heightIn(
+                                min = 20.dp,
+                                max = (LocalConfiguration.current.screenHeightDp / 2.5).dp
+                            )
+                            .clip(RoundedCornerShape(10.dp))
+                    ) {
+                        item {
+                            MarkdownText(
+                                modifier = Modifier.padding(bottom = 8.dp),
+                                markdown = scanPage.errorLog.value,
+                                style = TextStyle(
+                                    color = SaltTheme.colors.text,
+                                    fontSize = 14.sp
+                                ),
+                                isTextSelectable = true,
+                                disableLinkMovementMethod = true
+                            )
+                        }
+                    }
+                }
+            }
+        )
+    }
+
     val exportTypePopupState = rememberPopupState()
 
     Column(
