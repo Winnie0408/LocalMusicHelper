@@ -312,7 +312,7 @@ private fun Pages(
                                     0
                                 ).versionName
                             }",
-                            rightSub = "${stringResource(id = R.string.update_size)}${
+                            rightSub = "${
                                 String.format(
                                     "%.2f",
                                     mainPage.updateFileSize.floatValue / 1024 / 1024

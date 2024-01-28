@@ -203,6 +203,12 @@ fun SettingsPageUi(
                                                 settings[DataStoreConstants.KEY_USE_ROOT_ACCESS] =
                                                     it
                                             }
+                                            if (enableHaptic.value) {
+                                                MyVibrationEffect(
+                                                    context,
+                                                    enableHaptic.value
+                                                ).turnOn()
+                                            }
                                         }
                                     } catch (_: Exception) {
                                     }
@@ -220,14 +226,17 @@ fun SettingsPageUi(
                                     settings[DataStoreConstants.KEY_USE_ROOT_ACCESS] =
                                         it
                                 }
+                                if (enableHaptic.value) {
+                                    MyVibrationEffect(context, enableHaptic.value).turnOff()
+                                }
                             }
                         }
                     },
                     text = stringResource(R.string.use_root_access_switcher_title),
                     sub = stringResource(R.string.use_root_access_switcher_sub),
-                    enableHaptic = enableHaptic.value,
+                    enableHaptic = false,
                     iconPainter = painterResource(id = R.drawable.root_access),
-                    iconColor = SaltTheme.colors.text
+                    iconColor = SaltTheme.colors.text,
                 )
             }
 

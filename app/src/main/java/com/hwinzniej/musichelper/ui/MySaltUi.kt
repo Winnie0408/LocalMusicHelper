@@ -11,7 +11,6 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.indication
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
@@ -63,6 +62,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.toggleableState
 import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -603,13 +603,16 @@ fun ItemEdit(
     onChange: (String) -> Unit,
     backgroundColor: Color = SaltTheme.colors.subText.copy(alpha = 0.1f),
     hint: String? = null,
+    hintColor: Color = SaltTheme.colors.subText,
     readOnly: Boolean = false,
-    contentPaddingValues: PaddingValues = PaddingValues(
+    paddingValues: PaddingValues = PaddingValues(
         horizontal = SaltTheme.dimens.innerHorizontalPadding,
         vertical = SaltTheme.dimens.innerVerticalPadding
     ),
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
+    visualTransformation: VisualTransformation = VisualTransformation.None,
+    actionContent: (@Composable () -> Unit)? = null,
     showClearButton: Boolean = false,
     onClear: () -> Unit = {},
     enableHaptic: Boolean = false
@@ -619,55 +622,56 @@ fun ItemEdit(
         value = text,
         onValueChange = onChange,
         modifier = Modifier
-            .padding(contentPaddingValues),
+            .padding(paddingValues),
         readOnly = readOnly,
         keyboardOptions = keyboardOptions,
         keyboardActions = keyboardActions,
         textStyle = SaltTheme.textStyles.main,
+        visualTransformation = visualTransformation,
         cursorBrush = SolidColor(SaltTheme.colors.highlight),
         decorationBox = { innerTextField ->
-            Box(
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(SaltTheme.dimens.corner))
-                    .background(color = backgroundColor)
-                    .padding(SaltTheme.dimens.contentPadding)
+                    .background(color = backgroundColor),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                Spacer(modifier = Modifier.width(SaltTheme.dimens.contentPadding))
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(vertical = SaltTheme.dimens.contentPadding),
                 ) {
-                    Box(
-                        modifier = Modifier.weight(1f),
-                        contentAlignment = Alignment.CenterStart
-                    ) {
-                        innerTextField()
-                        if (hint != null && text.isEmpty()) {
-                            Text(
-                                text = hint,
-                                color = SaltTheme.colors.subText.copy(alpha = 0.5f),
-                                style = SaltTheme.textStyles.main
-                            )
-                        }
-                    }
-                    if (showClearButton) {
-                        Icon(
-                            modifier = Modifier
-                                .size(20.dp)
-                                .clickable {
-                                    MyVibrationEffect(context, enableHaptic).click()
-                                    onClear()
-                                }
-                                .alpha(0.7f),
-                            painter = painterResource(id = R.drawable.ic_clear),
-                            contentDescription = null,
-                            tint = SaltTheme.colors.subText
+                    innerTextField()
+                    if (hint != null && text.isEmpty()) {
+                        Text(
+                            text = hint,
+                            color = hintColor,
+                            style = SaltTheme.textStyles.main
                         )
                     }
                 }
+                if (showClearButton) {
+                    Icon(
+                        modifier = Modifier
+                            .size(20.dp)
+                            .clickable {
+                                MyVibrationEffect(context, enableHaptic).click()
+                                onClear()
+                            }
+                            .alpha(0.7f),
+                        painter = painterResource(id = R.drawable.ic_clear),
+                        contentDescription = null,
+                        tint = SaltTheme.colors.subText
+                    )
+                }
+                if (actionContent != null) {
+                    actionContent()
+                } else {
+                    Spacer(modifier = Modifier.width(SaltTheme.dimens.contentPadding))
+                }
             }
-
         }
     )
 }

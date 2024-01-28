@@ -127,7 +127,7 @@
     <string name="settings_function_name">设置</string>
     <string name="user_interface">用户界面</string>
     <string name="dynamic_color_switcher_text">动态取色</string>
-    <string name="dynamic_color_switcher_sub">使用Android 12 + 中的莫奈取色功能</string>
+    <string name="dynamic_color_switcher_sub">使用Android 12+ 提供的莫奈取色功能</string>
     <string name="theme_mode_switcher_text">主题模式</string>
     <string name="light_mode">浅色</string>
     <string name="dark_mode">深色</string>
