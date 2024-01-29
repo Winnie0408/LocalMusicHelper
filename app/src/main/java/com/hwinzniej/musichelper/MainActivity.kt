@@ -79,6 +79,7 @@ import com.moriafly.salt.ui.UnstableSaltApi
 import com.moriafly.salt.ui.darkSaltColors
 import com.moriafly.salt.ui.lightSaltColors
 import com.moriafly.salt.ui.saltColorsByColorScheme
+import com.moriafly.salt.ui.saltConfigs
 import dev.jeziellago.compose.markdowntext.MarkdownText
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -179,6 +180,7 @@ class MainActivity : ComponentActivity() {
             WindowCompat.setDecorFitsSystemWindows(window, false)
             CompositionLocalProvider {
                 SaltTheme(
+                    configs = saltConfigs(isSystemInDarkTheme()),
                     colors = colors
                 ) {
                     TransparentSystemBars(useDarkIcons = !(isSystemInDarkTheme() || (selectedThemeMode.intValue == 1)))
