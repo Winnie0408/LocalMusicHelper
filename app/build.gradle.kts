@@ -101,7 +101,7 @@ dependencies {
     implementation("com.google.accompanist:accompanist-systemuicontroller:0.34.0")
 
     //FastJson
-    implementation("com.alibaba.fastjson2:fastjson2-kotlin:2.0.45")
+    implementation("com.alibaba.fastjson2:fastjson2-kotlin:2.0.46")
 
     //Navigation
     implementation("androidx.navigation:navigation-compose:2.7.6")
