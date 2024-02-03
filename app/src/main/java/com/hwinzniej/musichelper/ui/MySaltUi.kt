@@ -178,6 +178,7 @@ fun ItemPopup(  //TODO 添加图标、根据文字长度自动调整宽度、优
     sub: String? = null,
     selectedItem: String = "",
     popupWidth: Int = 160,
+    offsetReparation: Int = 0,
     content: @Composable ColumnScope.() -> Unit
 ) {
     Box {
@@ -267,7 +268,10 @@ fun ItemPopup(  //TODO 添加图标、根据文字长度自动调整宽度、优
                 state.dismiss()
             },
             offset = if (boxWidth.floatValue / 2 > clickOffsetX.floatValue) DpOffset(16.dp, 0.dp)
-            else DpOffset((LocalConfiguration.current.screenWidthDp - (popupWidth + 50)).dp, 0.dp),
+            else DpOffset(
+                (LocalConfiguration.current.screenWidthDp - (popupWidth + 50) - offsetReparation).dp,
+                0.dp
+            ),
         ) {
             content()
         }

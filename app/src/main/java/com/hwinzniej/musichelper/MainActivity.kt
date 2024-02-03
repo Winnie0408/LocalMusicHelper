@@ -475,7 +475,10 @@ private fun Pages(
                         databaseFilePath = convertPage.databaseFilePath,
                         showSelectSourceDialog = convertPage.showSelectSourceDialog,
                         multiSource = convertPage.multiSource,
-                        showNumberProgressBar = convertPage.showNumberProgressBar
+                        showNumberProgressBar = convertPage.showNumberProgressBar,
+                        selectedMethod = convertPage.selectedMethod,
+                        selectedLoginMethod= convertPage.selectedLoginMethod,
+                        showLoginDialog = convertPage.showLoginDialog,
                     )
                 }
 

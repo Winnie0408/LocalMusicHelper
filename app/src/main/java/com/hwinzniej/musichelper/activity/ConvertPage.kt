@@ -83,6 +83,10 @@ class ConvertPage(
     var showSelectSourceDialog = mutableStateOf(false)
     var multiSource = mutableStateListOf<Array<String>>()
     var showNumberProgressBar = mutableStateOf(false)
+    var selectedMethod = mutableIntStateOf(0)
+    var selectedLoginMethod = mutableIntStateOf(2)
+    var cookie = mutableStateOf("")
+    var showLoginDialog = mutableStateOf(false)
 
     /**
      * 请求存储权限
@@ -438,71 +442,78 @@ class ConvertPage(
                 3 -> sourceApp.init("KugouMusic")
                 4 -> sourceApp.init("KuwoMusic")
             }
-            if (sourceApp.sourceEng != "") {
-                if (useRootAccess.value)
-                    checkAppStatusWithRoot()
-                else {
-                    if (databaseFilePath.value.isEmpty()) {
-                        errorDialogTitle.value =
-                            context.getString(R.string.error_while_getting_data_dialog_title)
-                        errorDialogContent.value +=
-                            "- ${context.getString(R.string.database_file)} ${
-                                context.getString(
-                                    R.string.read_failed
-                                )
-                            }:\n  - ${
-                                context.getString(
-                                    R.string.please_select_database_file
-                                )
-                            }\n"
-                        showErrorDialog.value = true
-                        loadingProgressSema.release()
-                        haveError = true
-                        return@launch
+            if (selectedMethod.intValue == 0) {
+                if (sourceApp.sourceEng != "") {
+                    if (useRootAccess.value)
+                        checkAppStatusWithRoot()
+                    else {
+                        if (databaseFilePath.value.isEmpty()) {
+                            errorDialogTitle.value =
+                                context.getString(R.string.error_while_getting_data_dialog_title)
+                            errorDialogContent.value +=
+                                "- ${context.getString(R.string.database_file)} ${
+                                    context.getString(
+                                        R.string.read_failed
+                                    )
+                                }:\n  - ${
+                                    context.getString(
+                                        R.string.please_select_database_file
+                                    )
+                                }\n"
+                            showErrorDialog.value = true
+                            loadingProgressSema.release()
+                            haveError = true
+                            return@launch
+                        }
+                        var db: SQLiteDatabase? = null
+                        try {
+                            db = SQLiteDatabase.openDatabase(
+                                databaseFilePath.value,
+                                null,
+                                SQLiteDatabase.OPEN_READONLY
+                            )
+                            db.rawQuery(
+                                "SELECT ${sourceApp.songListId}, ${sourceApp.songListName} FROM ${sourceApp.songListTableName} LIMIT 1",
+                                null
+                            ).close()
+                        } catch (e: Exception) {
+                            errorDialogTitle.value =
+                                context.getString(R.string.error_while_getting_data_dialog_title)
+                            errorDialogContent.value +=
+                                "- ${context.getString(R.string.database_file)} ${
+                                    context.getString(
+                                        R.string.read_failed
+                                    )
+                                }:\n  - ${e}\n"
+                            showErrorDialog.value = true
+                            haveError = true
+                        } finally {
+                            db?.close()
+                            loadingProgressSema.release()
+                            File("${databaseFilePath.value}-journal").delete()
+                        }
                     }
-                    var db: SQLiteDatabase? = null
-                    try {
-                        db = SQLiteDatabase.openDatabase(
-                            databaseFilePath.value,
-                            null,
-                            SQLiteDatabase.OPEN_READONLY
-                        )
-                        db.rawQuery(
-                            "SELECT ${sourceApp.songListId}, ${sourceApp.songListName} FROM ${sourceApp.songListTableName} LIMIT 1",
-                            null
-                        ).close()
-                    } catch (e: Exception) {
-                        errorDialogTitle.value =
-                            context.getString(R.string.error_while_getting_data_dialog_title)
-                        errorDialogContent.value +=
-                            "- ${context.getString(R.string.database_file)} ${
-                                context.getString(
-                                    R.string.read_failed
-                                )
-                            }:\n  - ${e}\n"
-                        showErrorDialog.value = true
-                        haveError = true
-                    } finally {
-                        db?.close()
-                        loadingProgressSema.release()
-                        File("${databaseFilePath.value}-journal").delete()
-                    }
+                } else {
+                    errorDialogTitle.value =
+                        context.getString(R.string.error_while_getting_data_dialog_title)
+                    errorDialogContent.value +=
+                        "- ${context.getString(R.string.database_file)} ${
+                            context.getString(
+                                R.string.read_failed
+                            )
+                        }:\n  - ${
+                            context.getString(
+                                R.string.please_select_source_app
+                            )
+                        }\n"
+                    showErrorDialog.value = true
+                    haveError = true
+                    loadingProgressSema.release()
                 }
             } else {
-                errorDialogTitle.value =
-                    context.getString(R.string.error_while_getting_data_dialog_title)
-                errorDialogContent.value +=
-                    "- ${context.getString(R.string.database_file)} ${
-                        context.getString(
-                            R.string.read_failed
-                        )
-                    }:\n  - ${
-                        context.getString(
-                            R.string.please_select_source_app
-                        )
-                    }\n"
-                showErrorDialog.value = true
+                selectedLoginMethod.intValue = 2
                 haveError = true
+                showLoginDialog.value = true
                 loadingProgressSema.release()
             }
         }

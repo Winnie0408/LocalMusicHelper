@@ -40,7 +40,7 @@
     <string name="source_of_tag_1">豆瓣音乐</string>
     <string name="source_of_tag_3">百度百科</string>
     <string name="source_of_songlist_app">歌单来源</string>
-    <string name="select_source_of_songlist">选择歌单来源App</string>
+    <string name="select_source_of_songlist">歌单来源平台</string>
     <string name="source_netease_cloud_music">网易云音乐</string>
     <string name="source_qq_music">QQ音乐</string>
     <string name="source_kugou_music">酷狗音乐</string>
@@ -204,4 +204,14 @@
     <string name="file_no_tag">不包含ID3标签或无法读取</string>
     <string name="scan_complete_but_have_error">扫描完成，但有错误</string>
     <string name="scan_failed_tips">下列文件**不会**添加到「扫描结果」中。#n请使用“音乐标签”或其他类似软件，对下列歌曲的ID3标签修改后，再次进行扫描。</string>
+    <string name="way_to_get_song_list">歌单获取方式</string>
+    <string name="online">在线</string>
+    <string name="database">数据库</string>
+    <string name="please_login">登录#</string>
+    <string name="login_method">登录方式</string>
+    <string name="web_login">网页</string>
+    <string name="cookie_login">Cookie</string>
+    <string name="please_input_cookie">输入Cookie…</string>
+    <string name="cookie_input_error">Cookie格式不正确</string>
+    <string name="no_valid_cookies_found">没有找到有效的Cookie</string>
 </resources>

@@ -1,6 +1,9 @@
 package com.hwinzniej.musichelper.ui
 
 import android.os.Environment
+import android.webkit.CookieManager
+import android.webkit.WebView
+import android.webkit.WebViewClient
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
@@ -69,6 +72,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.zIndex
 import com.hwinzniej.musichelper.R
 import com.hwinzniej.musichelper.activity.ConvertPage
@@ -122,8 +126,12 @@ fun ConvertPageUi(
     showSelectSourceDialog: MutableState<Boolean>,
     multiSource: MutableList<Array<String>>,
     showNumberProgressBar: MutableState<Boolean>,
+    selectedMethod: MutableIntState,
+    selectedLoginMethod: MutableIntState,
+    showLoginDialog: MutableState<Boolean>
 ) {
     val sourceAppPopupMenuState = rememberPopupState()
+    val methodPopupMenuState = rememberPopupState()
     val matchingModePopupMenuState = rememberPopupState()
     val pages = listOf("0", "1", "2", "3")
     val pageState = rememberPagerState(pageCount = { pages.size })
@@ -146,30 +154,33 @@ fun ConvertPageUi(
     val targetAppPopupMenuState = rememberPopupState()
     var selectedMultiSourceApp by remember { mutableIntStateOf(-1) }
 
+    fun init() {
+        currentPage.intValue = 0
+        databaseFileName.value = ""
+        useCustomResultFile.value = false
+        customResultFileName.value = ""
+        playlistName.clear()
+        playlistEnabled.clear()
+        playlistSum.clear()
+        selectedMatchingMode.intValue = 1
+        enableBracketRemoval.value = false
+        enableArtistNameMatch.value = true
+        enableAlbumNameMatch.value = true
+        similarity.floatValue = 85f
+        convertResult.clear()
+        inputSearchWords.value = ""
+        searchResult.clear()
+        selectedSongIndex = -1
+        selectedSearchResult = -1
+        showOriginalSonglist = 1
+        selectedTargetApp = 0
+        selectedMultiSourceApp = -1
+    }
+
     BackHandler(enabled = (currentPage.intValue != 0 && mainActivityPageState.currentPage == 1)) {
         if (convertResult.isEmpty()) {
             if (currentPage.intValue == 3) {
-                currentPage.intValue = 0
-                selectedSourceApp.intValue = 0
-                databaseFileName.value = ""
-                useCustomResultFile.value = false
-                customResultFileName.value = ""
-                playlistName.clear()
-                playlistEnabled.clear()
-                playlistSum.clear()
-                selectedMatchingMode.intValue = 1
-                enableBracketRemoval.value = false
-                enableArtistNameMatch.value = true
-                enableAlbumNameMatch.value = true
-                similarity.floatValue = 85f
-                convertResult.clear()
-                inputSearchWords.value = ""
-                searchResult.clear()
-                selectedSongIndex = -1
-                selectedSearchResult = -1
-                showOriginalSonglist = 1
-                selectedTargetApp = 0
-                selectedMultiSourceApp = -1
+                init()
             } else
                 currentPage.intValue--
         } else {
@@ -618,6 +629,382 @@ fun ConvertPageUi(
         )
     }
 
+    if (showLoginDialog.value) {
+        val loginMethodPopupState = rememberPopupState()
+        val webViewState = remember { mutableStateOf<WebView?>(null) }
+        var userInput by remember { mutableStateOf("") }
+
+        YesNoDialog(
+            onDismiss = {
+                showLoginDialog.value = false
+                webViewState.value?.loadDataWithBaseURL(null, "", "text/html", "utf-8", null)
+                webViewState.value?.clearHistory()
+                webViewState.value?.clearCache(true)
+                webViewState.value?.clearFormData()
+                webViewState.value?.removeAllViews()
+                webViewState.value?.onPause()
+                webViewState.value?.pauseTimers()
+                webViewState.value?.removeAllViews()
+                webViewState.value?.destroy()
+                webViewState.value?.removeAllViews()
+            },
+            onCancel = {
+                showLoginDialog.value = false
+                webViewState.value?.loadDataWithBaseURL(null, "", "text/html", "utf-8", null)
+                webViewState.value?.clearHistory()
+                webViewState.value?.clearCache(true)
+                webViewState.value?.clearFormData()
+                webViewState.value?.removeAllViews()
+                webViewState.value?.onPause()
+                webViewState.value?.pauseTimers()
+                webViewState.value?.removeAllViews()
+                webViewState.value?.destroy()
+                webViewState.value?.removeAllViews()
+            },
+            onConfirm = {
+                if (selectedLoginMethod.intValue == 0) {
+                    convertPage.cookie.value = when (selectedSourceApp.intValue) {
+                        1 -> CookieManager.getInstance().getCookie("music.163.com")
+                        2 -> CookieManager.getInstance().getCookie("y.qq.com")
+                        3 -> CookieManager.getInstance().getCookie("www.kugou.com")
+                        4 -> CookieManager.getInstance().getCookie("kuwo.cn")
+                        else -> ""
+                    }
+                    if (convertPage.cookie.value.contains(
+                            when (selectedSourceApp.intValue) {
+                                1 -> Regex("MUSIC_U=([A-Z]|[0-9])+")
+                                2 -> Regex("(uin=.+; qm_keyst=.+)|(qm_keyst=.+; uin=.+)")
+                                3 -> Regex(".*") //TODO 待填写
+                                4 -> Regex(".*") //TODO 待填写
+                                else -> Regex("")
+                            }
+                        )
+                    ) {
+                        showLoginDialog.value = false
+                        convertPage.requestPermission()  //TODO 待修改
+                    } else {
+                        convertPage.cookie.value = ""
+                        Toast.makeText(
+                            context,
+                            context.getString(R.string.no_valid_cookies_found),
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        return@YesNoDialog
+                    }
+                } else {
+                    if (userInput.contains(
+                            when (selectedSourceApp.intValue) {
+                                1 -> Regex("MUSIC_U=.+")
+                                2 -> Regex("(uin=.+; qm_keyst=.+)|(qm_keyst=.+; uin=.+)")
+                                3 -> Regex(".*") //TODO 待填写
+                                4 -> Regex(".*") //TODO 待填写
+                                else -> Regex("")
+                            }
+                        )
+                    ) {
+                        convertPage.cookie.value = userInput
+                        showLoginDialog.value = false
+                        convertPage.requestPermission()  //TODO 待修改
+                    } else {
+                        convertPage.cookie.value = ""
+                        Toast.makeText(
+                            context,
+                            context.getString(R.string.cookie_input_error),
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        return@YesNoDialog
+                    }
+                }
+                webViewState.value?.loadDataWithBaseURL(null, "", "text/html", "utf-8", null)
+                webViewState.value?.clearHistory()
+                webViewState.value?.clearCache(true)
+                webViewState.value?.clearFormData()
+                webViewState.value?.removeAllViews()
+                webViewState.value?.onPause()
+                webViewState.value?.pauseTimers()
+                webViewState.value?.removeAllViews()
+                webViewState.value?.destroy()
+                webViewState.value?.removeAllViews()
+            },
+            title = stringResource(id = R.string.please_login).replace(
+                "#", when (selectedSourceApp.intValue) {
+                    1 -> stringResource(R.string.source_netease_cloud_music)
+                    2 -> stringResource(R.string.source_qq_music)
+                    3 -> stringResource(R.string.source_kugou_music)
+                    4 -> stringResource(R.string.source_kuwo_music)
+                    else -> ""
+                }
+            ),
+            content = null,
+            onlyComposeView = true,
+            enableHaptic = enableHaptic.value,
+            customContent = {
+                Box {
+                    if (showDialogProgressBar.value) {
+                        LinearProgressIndicator(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .zIndex(1f),
+                            color = SaltTheme.colors.highlight,
+                            trackColor = SaltTheme.colors.background
+                        )
+                    }
+                    RoundedColumn {
+                        ItemPopup(
+                            state = loginMethodPopupState,
+                            text = stringResource(R.string.login_method),
+                            selectedItem = when (selectedLoginMethod.intValue) {
+                                0 -> stringResource(R.string.web_login)
+                                1 -> stringResource(R.string.cookie_login)
+                                else -> ""
+                            },
+                            popupWidth = 165,
+                            offsetReparation = 45
+                        ) {
+                            PopupMenuItem(
+                                onClick = {
+                                    MyVibrationEffect(context, enableHaptic.value).click()
+                                    selectedLoginMethod.intValue = 0
+                                    loginMethodPopupState.dismiss()
+                                    showDialogProgressBar.value = true
+                                },
+                                selected = selectedLoginMethod.intValue == 0,
+                                text = stringResource(R.string.web_login),
+                                iconPainter = painterResource(id = R.drawable.web_page),
+                                iconColor = SaltTheme.colors.text,
+                                iconPaddingValues = PaddingValues(
+                                    start = 1.dp,
+                                    end = 1.dp,
+                                    top = 1.dp,
+                                    bottom = 1.dp
+                                )
+                            )
+                            PopupMenuItem(
+                                onClick = {
+                                    MyVibrationEffect(context, enableHaptic.value).click()
+                                    selectedLoginMethod.intValue = 1
+                                    loginMethodPopupState.dismiss()
+                                },
+                                selected = selectedLoginMethod.intValue == 1,
+                                text = stringResource(R.string.cookie_login),
+                                iconPainter = painterResource(id = R.drawable.cookie),
+                                iconColor = SaltTheme.colors.text
+                            )
+                        }
+                        AnimatedVisibility(visible = selectedLoginMethod.intValue == 0) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .heightIn(max = (LocalConfiguration.current.screenHeightDp / 2).dp)
+                            ) {
+                                val loggedHtml = if (SaltTheme.colors.text.red < 0.5f) {
+                                    context.assets.open("logged.html")
+                                        .use { inputStream ->
+                                            inputStream.bufferedReader().use {
+                                                it.readText()
+                                            }
+                                        }
+                                } else {
+                                    context.assets.open("logged_dark.html")
+                                        .use { inputStream ->
+                                            inputStream.bufferedReader().use {
+                                                it.readText()
+                                            }
+                                        }
+                                }
+                                AndroidView(
+                                    modifier = Modifier.fillMaxSize(),
+                                    factory = { context ->
+                                        WebView(context).also { webView ->
+                                            webViewState.value = webView
+                                        }
+                                    },
+                                ) { webView ->
+                                    webView.webViewClient = object : WebViewClient() {
+                                        override fun onPageFinished(view: WebView, url: String) {
+                                            when (selectedSourceApp.intValue) {
+                                                1 -> {
+                                                    view.evaluateJavascript(
+                                                        """
+                                                        var xpath = '/html/body/div[1]/div[1]/div/div[1]/a';
+                                                        var result = document.evaluate(xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
+                                                        var element = result.singleNodeValue;
+                                                        if (element) {
+                                                            if (element.innerText.includes('登录')) {
+                                                                element.click();
+                                                                true;
+                                                            } else {
+                                                                'logged';
+                                                            }
+                                                        } else {
+                                                            false;
+                                                        }
+                                                        """
+                                                    ) { result ->
+                                                        if (result == "\"logged\"") {
+                                                            view.loadDataWithBaseURL(
+                                                                null,
+                                                                loggedHtml,
+                                                                "text/html",
+                                                                "utf-8",
+                                                                null
+                                                            )
+                                                        }
+                                                    }
+                                                }
+
+                                                2 -> {
+                                                    view.evaluateJavascript(  //TODO 判断是否登录有问题，可使用：/html/body/div/div[2]/div/a （立即登录按钮）
+                                                        """
+                                                        var xpath = '/html/body/div/div[1]/div/div[2]/span/a';
+                                                        var result = document.evaluate(xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
+                                                        var element =  result.singleNodeValue;
+                                                        if (element) {
+                                                            if (element.innerText.includes('登录')) {
+                                                                element.click();
+                                                                true;
+                                                            } else {
+                                                                'logged';
+                                                            }
+                                                        } else {
+                                                            false;
+                                                        }
+                                                        """
+                                                    ) { result ->
+                                                        if (result == "\"logged\"") {
+                                                            view.loadDataWithBaseURL(
+                                                                null,
+                                                                loggedHtml,
+                                                                "text/html",
+                                                                "utf-8",
+                                                                null
+                                                            )
+                                                        }
+                                                    }
+                                                }
+
+                                                3 -> {
+                                                    view.evaluateJavascript(
+                                                        """
+                                                        var xpath = '/html/body/div[1]/div[1]/div/div[2]/div[2]/div[1]';
+                                                        var result = document.evaluate(xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
+                                                        var element =  result.singleNodeValue;
+                                                        if (element) {
+                                                            if (element.innerText.includes('登录')) {
+                                                                element.click();
+                                                                true;
+                                                            } else {
+                                                                'logged';
+                                                            }
+                                                        } else {
+                                                            false;
+                                                        }
+                                                        """
+                                                    ) { result ->
+                                                        if (result == "\"logged\"") {
+                                                            view.loadDataWithBaseURL(
+                                                                null,
+                                                                loggedHtml,
+                                                                "text/html",
+                                                                "utf-8",
+                                                                null
+                                                            )
+                                                        }
+                                                    }
+                                                }
+
+                                                4 -> {
+                                                    view.evaluateJavascript(
+                                                        """
+                                                        var ad = '/html/body/div/div/div/div[7]/div/div[1]/i';
+                                                        var adResult = document.evaluate(ad, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
+                                                        if (adResult.singleNodeValue) {
+                                                            setTimeout(() => {
+                                                                adResult.singleNodeValue.click();
+                                                            }, 1000);
+                                                        }
+                                                          
+                                                        var xpath = '/html/body/div/div/div/div[1]/div/div/div[2]/div[2]/span[1]';
+                                                        var result = document.evaluate(xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
+                                                        var element =  result.singleNodeValue;
+                                                        if (element) {
+                                                            if (element.innerText.includes('登录')) {
+                                                                setTimeout(() => {
+                                                                        element.click();
+                                                                    }, 1500);
+                                                                true;
+                                                            } else {
+                                                                'logged';
+                                                            }
+                                                        } else {
+                                                            false;
+                                                        }
+                                                        """
+                                                    ) { result ->
+                                                        if (result == "\"logged\"") {
+                                                            view.loadDataWithBaseURL(
+                                                                null,
+                                                                loggedHtml,
+                                                                "text/html",
+                                                                "utf-8",
+                                                                null
+                                                            )
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                            view.scrollTo(800, 1300)
+                                            showDialogProgressBar.value = false
+                                            MyVibrationEffect(context, enableHaptic.value).done()  //TODO 可能会震动多次
+                                        }
+                                    }
+
+                                    webView.setBackgroundColor(0)
+                                    webView.settings.javaScriptEnabled = true
+                                    webView.settings.userAgentString =
+                                        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+                                    webView.settings.builtInZoomControls = true
+                                    webView.settings.useWideViewPort = true
+                                    webView.settings.loadWithOverviewMode = true
+                                    webView.settings.domStorageEnabled = true
+                                    webView.settings.displayZoomControls = false
+                                    webView.setInitialScale(250)
+                                    when (selectedSourceApp.intValue) {
+                                        1 -> webView.loadUrl("https://music.163.com/#/user/update")
+                                        2 -> webView.loadUrl("https://y.qq.com/n/ryqq/profile")
+                                        3 -> webView.loadUrl("https://www.kugou.com/newuc/user/uc")
+                                        4 -> webView.loadUrl("https://kuwo.cn/")
+                                    }
+                                }
+                            }
+                        }
+
+                        AnimatedVisibility(visible = selectedLoginMethod.intValue == 1) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .heightIn(max = (LocalConfiguration.current.screenHeightDp / 3).dp)
+                            ) {
+                                ItemEdit(
+                                    text = userInput,
+                                    hint = stringResource(R.string.please_input_cookie),
+                                    onChange = {
+                                        userInput = it
+                                    },
+                                    enableHaptic = enableHaptic.value,
+                                    showClearButton = userInput != "",
+                                    onClear = {
+                                        userInput = ""
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        )
+    }
+
     LaunchedEffect(key1 = currentPage.intValue) {
         pageState.animateScrollToPage(currentPage.intValue, animationSpec = spring(2f))
     }
@@ -649,27 +1036,7 @@ fun ConvertPageUi(
                 if (convertResult.isEmpty()) {
                     MyVibrationEffect(context, enableHaptic.value).click()
                     if (currentPage.intValue == 3) {
-                        currentPage.intValue = 0
-                        selectedSourceApp.intValue = 0
-                        databaseFileName.value = ""
-                        useCustomResultFile.value = false
-                        customResultFileName.value = ""
-                        playlistName.clear()
-                        playlistEnabled.clear()
-                        playlistSum.clear()
-                        selectedMatchingMode.intValue = 1
-                        enableBracketRemoval.value = false
-                        enableArtistNameMatch.value = true
-                        enableAlbumNameMatch.value = true
-                        similarity.floatValue = 85f
-                        convertResult.clear()
-                        inputSearchWords.value = ""
-                        searchResult.clear()
-                        selectedSongIndex = -1
-                        selectedSearchResult = -1
-                        showOriginalSonglist = 1
-                        selectedTargetApp = 0
-                        selectedMultiSourceApp = -1
+                        init()
                     } else
                         currentPage.intValue--
                 } else {
@@ -724,6 +1091,40 @@ fun ConvertPageUi(
                             RoundedColumn {
                                 ItemTitle(text = stringResource(R.string.source_of_songlist_app))
                                 ItemPopup(
+                                    state = methodPopupMenuState,
+                                    text = stringResource(R.string.way_to_get_song_list),
+                                    selectedItem = when (selectedMethod.intValue) {
+                                        0 -> stringResource(R.string.database)
+                                        1 -> stringResource(R.string.online)
+                                        else -> ""
+                                    },
+                                    popupWidth = 165,
+                                ) {
+                                    PopupMenuItem(
+                                        onClick = {
+                                            MyVibrationEffect(context, enableHaptic.value).click()
+                                            selectedMethod.intValue = 0
+                                            methodPopupMenuState.dismiss()
+                                        },
+                                        selected = selectedMethod.intValue == 0,
+                                        text = stringResource(R.string.database),
+                                        iconPainter = painterResource(id = R.drawable.database),
+                                        iconColor = SaltTheme.colors.text
+                                    )
+                                    PopupMenuItem(
+                                        onClick = {
+                                            MyVibrationEffect(context, enableHaptic.value).click()
+                                            selectedMethod.intValue = 1
+                                            methodPopupMenuState.dismiss()
+                                        },
+                                        selected = selectedMethod.intValue == 1,
+                                        text = stringResource(R.string.online),
+                                        iconPainter = painterResource(id = R.drawable.network),
+                                        iconColor = SaltTheme.colors.text
+                                    )
+                                }
+
+                                ItemPopup(
                                     state = sourceAppPopupMenuState,
                                     text = stringResource(R.string.select_source_of_songlist),
                                     selectedItem = when (selectedSourceApp.intValue) {
@@ -734,9 +1135,9 @@ fun ConvertPageUi(
                                         else -> ""
                                     },
                                     popupWidth = 180,
-                                    sub = if (useRootAccess.value) stringResource(
-                                        R.string.with_root_access
-                                    ) else null
+                                    sub = if (useRootAccess.value && selectedMethod.intValue == 0)
+                                        stringResource(R.string.with_root_access)
+                                    else null
                                 ) {
                                     PopupMenuItem(
                                         onClick = {
@@ -984,7 +1385,6 @@ fun ConvertPageUi(
                                 }
                             }
                         }
-
                     }
 
                     1 -> {
