@@ -14,9 +14,14 @@ import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableIntState
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -26,6 +31,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import com.hwinzniej.musichelper.R
+import com.hwinzniej.musichelper.activity.SettingsPage
 import com.hwinzniej.musichelper.data.DataStoreConstants
 import com.hwinzniej.musichelper.utils.MyVibrationEffect
 import com.hwinzniej.musichelper.utils.Tools
@@ -42,6 +48,7 @@ import kotlinx.coroutines.withContext
 @OptIn(UnstableSaltApi::class, ExperimentalFoundationApi::class)
 @Composable
 fun SettingsPageUi(
+    settingsPage: SettingsPage,
     enableDynamicColor: MutableState<Boolean>,
     selectedThemeMode: MutableIntState,
     selectedLanguage: MutableState<String>,
@@ -49,12 +56,79 @@ fun SettingsPageUi(
     enableAutoCheckUpdate: MutableState<Boolean>,
     settingsPageState: PagerState,
     enableHaptic: MutableState<Boolean>,
-    dataStore: DataStore<Preferences>
+    dataStore: DataStore<Preferences>,
+    encryptServer: MutableState<String>
 ) {
     val context = LocalContext.current
     val themeModePopupMenuState = rememberPopupState()
     val languagePopupMenuState = rememberPopupState()
     val coroutineScope = rememberCoroutineScope()
+    var showSelectEncryptServerDialog by remember { mutableStateOf(false) }
+
+    LaunchedEffect(key1 = showSelectEncryptServerDialog) {
+        if (showSelectEncryptServerDialog) {
+            settingsPage.serverPing.forEach { (i, _) ->
+                settingsPage.serverPing[i] += " …"
+            }
+            settingsPage.checkServerPing()
+        }
+    }
+
+    if (showSelectEncryptServerDialog) {
+        YesNoDialog(
+            enableHaptic = enableHaptic.value,
+            onDismiss = { showSelectEncryptServerDialog = false },
+            onCancel = { showSelectEncryptServerDialog = false },
+            onConfirm = {
+                coroutineScope.launch(Dispatchers.IO) {
+                    dataStore.edit { settings ->
+                        settings[DataStoreConstants.KEY_ENCRYPT_SERVER] =
+                            encryptServer.value
+                    }
+                }
+                showSelectEncryptServerDialog = false
+            },
+            title = stringResource(id = R.string.select_encrypt_server_title),
+            content = "",
+            onlyComposeView = true,
+            customContent = {
+                RoundedColumn {
+                    ItemTitle(text = stringResource(R.string.optional_servers))
+                    ItemCheck(
+                        state = encryptServer.value == "cf",
+                        onChange = {
+                            encryptServer.value = "cf"
+                        },
+                        text = "Cloudflare",
+                        sub = settingsPage.serverPing[0],
+                        iconAtLeft = false,
+                        enableHaptic = enableHaptic.value
+                    )
+                    ItemCheck(
+                        state = encryptServer.value == "gl1",
+                        onChange = {
+                            encryptServer.value = "gl1"
+                        },
+                        text = "${context.getString(R.string.guangxi_china)} 1",
+                        sub = settingsPage.serverPing[1],
+                        iconAtLeft = false,
+                        enableHaptic = enableHaptic.value
+                    )
+                    ItemCheck(
+                        state = encryptServer.value == "gl2",
+                        onChange = {
+                            encryptServer.value = "gl2"
+                        },
+                        text = "${context.getString(R.string.guangxi_china)} 2",
+                        sub = settingsPage.serverPing[2],
+                        iconAtLeft = false,
+                        enableHaptic = enableHaptic.value
+                    )
+                }
+
+            }
+        )
+    }
 
     Column(
         modifier = Modifier
@@ -180,7 +254,7 @@ fun SettingsPageUi(
                         coroutineScope.launch(Dispatchers.IO) {
                             if (it) {
                                 try {
-                                    if (Tools().execShellCmdWithRoot("ls /data | grep data")
+                                    if (Tools().execShellCmd("ls /data | grep data")
                                             .contains("Permission denied")
                                     ) {
                                         withContext(Dispatchers.Main) {
@@ -226,6 +300,18 @@ fun SettingsPageUi(
                     sub = stringResource(R.string.use_root_access_switcher_sub),
                     enableHaptic = false,
                     iconPainter = painterResource(id = R.drawable.root_access),
+                    iconColor = SaltTheme.colors.text,
+                )
+                Item(
+                    onClick = { showSelectEncryptServerDialog = true },
+                    text = stringResource(id = R.string.select_encrypt_server),
+                    rightSub = when (encryptServer.value) {
+                        "cf" -> "Cloudflare"
+                        "gl1" -> "${context.getString(R.string.guangxi_china)} 1"
+                        "gl2" -> "${context.getString(R.string.guangxi_china)} 2"
+                        else -> ""
+                    },
+                    iconPainter = painterResource(id = R.drawable.server),
                     iconColor = SaltTheme.colors.text,
                 )
             }

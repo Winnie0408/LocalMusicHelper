@@ -18,6 +18,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
@@ -42,6 +43,9 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.withContext
+import okhttp3.FormBody
+import okhttp3.OkHttpClient
+import okhttp3.Request
 import java.io.File
 import java.io.FileWriter
 import java.time.LocalDate
@@ -53,7 +57,8 @@ class ConvertPage(
     private val openMusicPlatformSqlFileLauncher: ActivityResultLauncher<Array<String>>,
     private val openResultSqlFileLauncher: ActivityResultLauncher<Array<String>>,
     val db: MusicDatabase,
-    componentActivity: ComponentActivity
+    componentActivity: ComponentActivity,
+    val encryptServer: MutableState<String>,
 ) : PermissionResultHandler {
     var databaseFileName = mutableStateOf("")
     var selectedSourceApp = mutableIntStateOf(0)
@@ -87,6 +92,7 @@ class ConvertPage(
     var selectedLoginMethod = mutableIntStateOf(2)
     var cookie = mutableStateOf("")
     var showLoginDialog = mutableStateOf(false)
+    var loginUserId = mutableStateOf("")
 
     /**
      * 请求存储权限
@@ -215,18 +221,21 @@ class ConvertPage(
             delay(delay)
             loadingProgressSema.acquire()
             loadingProgressSema.acquire()
-            MyVibrationEffect(
-                context,
-                (context as MainActivity).enableHaptic.value
-            ).done()
-            if (haveError) {
+            if (selectedMethod.intValue == 0) {
+                MyVibrationEffect(
+                    context,
+                    (context as MainActivity).enableHaptic.value
+                ).done()
+                if (haveError) {
+                    showLoadingProgressBar.value = false
+                } else {
+                    showLoadingProgressBar.value = true
+                    currentPage.intValue = 1
+                    delay(500L)
+                    databaseSummary()
+                }
+            } else
                 showLoadingProgressBar.value = false
-            } else {
-                showLoadingProgressBar.value = true
-                currentPage.intValue = 1
-                delay(500L)
-                databaseSummary()
-            }
             loadingProgressSema.release()
             loadingProgressSema.release()
         }
@@ -319,7 +328,7 @@ class ConvertPage(
             val dir = File(dirPath)
             if (!dir.exists())
                 dir.mkdirs()
-            val copyResult = Tools().execShellCmdWithRoot(
+            val copyResult = Tools().execShellCmd(
                 "cp -f '/data/data/${multiSource[selected][0]}/databases/${
                     sourceApp.databaseName
                 }' '${dir.absolutePath}/${sourceApp.sourceEng}_temp.db'"
@@ -350,7 +359,7 @@ class ConvertPage(
 
     private fun checkAppStatusWithRoot() {
         val appExists =
-            Tools().execShellCmdWithRoot("pm list packages | grep -E '${sourceApp.pakageName}'")
+            Tools().execShellCmd("pm list packages | grep -E '${sourceApp.pakageName}'")
         if (appExists.isNotEmpty()) {
             if (appExists.indexOf("package:") == appExists.lastIndexOf("package:")) {
                 val dirPath = context.getExternalFilesDir(null)?.absolutePath + "/userDatabase"
@@ -358,7 +367,7 @@ class ConvertPage(
                 if (!dir.exists())
                     dir.mkdirs()
 
-                val copyResult = Tools().execShellCmdWithRoot(
+                val copyResult = Tools().execShellCmd(
                     "cp -f '/data/data/${appExists.split(":")[1]}/databases/${
                         sourceApp.databaseName
                     }' '${dir.absolutePath}/${sourceApp.sourceEng}_temp.db'"
@@ -511,10 +520,189 @@ class ConvertPage(
                     loadingProgressSema.release()
                 }
             } else {
+                if (selectedSourceApp.intValue == 3 || selectedSourceApp.intValue == 4) {
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(
+                            context,
+                            context.getString(R.string.developing),
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                    haveError = true
+                    loadingProgressSema.release()
+                    return@launch
+                }
                 selectedLoginMethod.intValue = 2
                 haveError = true
                 showLoginDialog.value = true
                 loadingProgressSema.release()
+            }
+        }
+    }
+
+    fun getOnlinePlaylist() {
+        lifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+            currentPage.intValue = 1
+            showLoadingProgressBar.value = true
+
+            try {
+                val url = when (selectedSourceApp.intValue) {
+                    1 -> "https://music.163.com/weapi/user/playlist"
+                    2 -> "https://c.y.qq.com/rsc/fcgi-bin/fcg_user_created_diss"
+                    3 -> ""
+                    4 -> ""
+                    else -> ""
+                }
+                val client = OkHttpClient()
+                var request = Request.Builder()
+                    .addHeader("Cookie", cookie.value)
+                when (selectedSourceApp.intValue) {
+                    1 -> {
+                        val encrypted = Tools().encryptString(
+                            """{"limit":100,"offset":0,"uid":${loginUserId.value}}""",
+                            "netease",
+                            encryptServer.value
+                        )
+                        val formBody = encrypted?.let {
+                            FormBody.Builder()
+                                .add("params", it.getString("encText"))
+                                .add("encSecKey", it.getString("encSecKey"))
+                                .build()
+                        }
+                        formBody?.let {
+                            request = request.url(
+                                "${url}?csrf_token=${
+                                    "__csrf=\\w+".toRegex().find(cookie.value)?.value?.substring(7)
+                                }"
+                            ).post(it)
+                        }
+                    }
+
+                    2 -> {  //TODO 微信使用Cookie登录，获取的歌单不全（没有“我喜欢”）
+                        var uin = "(uin=\\d+)|(wxuin=\\d+)".toRegex().find(cookie.value)?.value
+                        uin = uin?.substring(uin.indexOf("=") + 1)
+                        request =
+                            request.url("${url}?uin=${uin}&hostuin=${uin}&ct=24&format=json&inCharset=utf-8&outCharset=utf-8&sin=0&size=100")
+                                .addHeader("Referer", "https://y.qq.com/")
+                                .get()
+
+                    }
+                }
+
+                val response =
+                    JSON.parseObject(client.newCall(request.build()).execute().body?.string())
+
+                if (response != null) {
+                    val innerPlaylistId = MutableList(0) { "" }
+                    val innerPlaylistName = MutableList(0) { "" }
+                    val innerPlaylistEnabled = MutableList(0) { 0 }
+                    val innerPlaylistSum = MutableList(0) { 0 }
+                    var emptyPlaylistNum = 0
+
+                    when (selectedSourceApp.intValue) {
+                        1 -> {
+                            Tools().copyFileToExternalFilesDir(
+                                context,
+                                "cloudmusic.db"
+                            )
+                            val databaseFile =
+                                File(context.getExternalFilesDir(null), "cloudmusic.db")
+                            val db = SQLiteDatabase.openDatabase(
+                                databaseFile.absolutePath,
+                                null,
+                                SQLiteDatabase.OPEN_READWRITE
+                            )
+                            databaseFilePath.value = databaseFile.absolutePath
+
+                            val playlistInfo = response.getJSONObject("playlist")
+                            playlistInfo.forEach {
+                                val playlist = it as JSONObject
+                                if (playlist.getInteger("trackCount") == 0) {
+                                    emptyPlaylistNum++
+                                    return@forEach
+                                }
+                                innerPlaylistId.add(playlist.getString("id"))
+                                innerPlaylistName.add(playlist.getString("name"))
+                                innerPlaylistSum.add(playlist.getInteger("trackCount"))
+                                innerPlaylistEnabled.add(0)
+                                db.execSQL(
+                                    "INSERT INTO playlist (_id, name, track_count) VALUES (?, ?, ?)",
+                                    arrayOf(
+                                        playlist.getString("id"),
+                                        playlist.getString("name"),
+                                        playlist.getInteger("trackCount")
+                                    )
+                                )
+                            }
+                        }
+
+                        2 -> {
+                            Tools().copyFileToExternalFilesDir(
+                                context,
+                                "QQMusic"
+                            )
+                            val databaseFile =
+                                File(context.getExternalFilesDir(null), "QQMusic")
+                            val db = SQLiteDatabase.openDatabase(
+                                databaseFile.absolutePath,
+                                null,
+                                SQLiteDatabase.OPEN_READWRITE
+                            )
+                            databaseFilePath.value = databaseFile.absolutePath
+
+                            val playlistInfo =
+                                response.getJSONObject("data").getJSONArray("disslist")
+                            playlistInfo.forEach {
+                                val playlist = it as JSONObject
+                                if (playlist.getInteger("song_cnt") == 0) {
+                                    emptyPlaylistNum++
+                                    return@forEach
+                                }
+                                innerPlaylistId.add(playlist.getString("tid"))
+                                innerPlaylistName.add(playlist.getString("diss_name"))
+                                innerPlaylistSum.add(playlist.getInteger("song_cnt"))
+                                innerPlaylistEnabled.add(0)
+                                db.execSQL(
+                                    "INSERT INTO User_Folder_table (folderid, foldername, count) VALUES (?, ?, ?)",
+                                    arrayOf(
+                                        playlist.getString("tid"),
+                                        playlist.getString("diss_name"),
+                                        playlist.getInteger("song_cnt")
+                                    )
+                                )
+                            }
+                        }
+                    }
+                    playlistId.addAll(innerPlaylistId)
+                    playlistName.addAll(innerPlaylistName)
+                    playlistEnabled.addAll(innerPlaylistEnabled)
+                    playlistSum.addAll(innerPlaylistSum)
+                    showLoadingProgressBar.value = false
+                    MyVibrationEffect(
+                        context,
+                        (context as MainActivity).enableHaptic.value
+                    ).done()
+                    if (emptyPlaylistNum != 0) {
+                        withContext(Dispatchers.Main) {
+                            Toast.makeText(
+                                context,
+                                context.getString(R.string.get_playlist_hidden)
+                                    .replace("#", emptyPlaylistNum.toString()),
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    }
+                } else {
+                    throw Exception("${sourceApp.sourceEng} server's response was null.")
+                }
+            } catch (e: Exception) {
+                showLoadingProgressBar.value = false
+                currentPage.intValue = 0
+                errorDialogTitle.value =
+                    context.getString(R.string.error_while_getting_data_dialog_title)
+                errorDialogContent.value =
+                    "- ${context.getString(R.string.get_playlist_failed)}\n  - $e"
+                showErrorDialog.value = true
             }
         }
     }
@@ -546,7 +734,7 @@ class ConvertPage(
                     cursor.getString(cursor.getColumnIndexOrThrow(sourceApp.songListName))
 
                 val currentSonglistSumCursor = db.rawQuery(
-                    "SELECT COUNT(*) FROM ${sourceApp.songListSongInfoTableName} WHERE ${sourceApp.songListSongInfoPlaylistId} = ?",
+                    "SELECT ${sourceApp.musicNum} FROM ${sourceApp.songListTableName} WHERE ${sourceApp.songListId} = ?",
                     arrayOf(songListId)
                 )
                 currentSonglistSumCursor.moveToFirst()

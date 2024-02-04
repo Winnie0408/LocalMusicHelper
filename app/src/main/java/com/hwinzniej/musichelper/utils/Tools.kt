@@ -1,10 +1,19 @@
 package com.hwinzniej.musichelper.utils
 
+import android.content.Context
 import android.net.Uri
+import com.alibaba.fastjson2.JSON
+import com.alibaba.fastjson2.JSONObject
+import okhttp3.OkHttpClient
+import okhttp3.Request
 import java.io.BufferedReader
 import java.io.DataOutputStream
 import java.io.File
+import java.io.FileOutputStream
+import java.io.IOException
+import java.io.InputStream
 import java.io.InputStreamReader
+import java.io.OutputStream
 import java.io.RandomAccessFile
 
 class Tools {
@@ -256,8 +265,10 @@ class Tools {
         return minEntry
     }
 
-    fun execShellCmdWithRoot(cmd: String): String {
-        val process =
+    fun execShellCmd(cmd: String, withoutRoot: Boolean = false): String {
+        val process = if (withoutRoot)
+            Runtime.getRuntime().exec("sh")
+        else
             Runtime.getRuntime().exec("su --mount-master")
         val outputStream = DataOutputStream(process.outputStream)
         outputStream.writeBytes("${cmd}\n")
@@ -280,4 +291,53 @@ class Tools {
         process.destroy()
         return result.toString()
     }
+
+    fun encryptString(text: String, type: String, server: String): JSONObject? {
+        val client = OkHttpClient()
+        val request = Request.Builder()
+            .url(
+                "https://${
+                    when (server) {
+                        "cf" -> "plnb-cf.hwinzniej.top"
+                        "dns" -> "dns.hwinzniej.top"
+                        "mom" -> "mom.hwinzniej.top"
+                        else -> "plnb-cf.hwinzniej.top"
+                    }
+                }/?textString=${text}&type=${type}"
+            )
+            .get()
+            .build()
+
+        return JSON.parseObject(
+            client.newCall(request).execute().body?.string()
+        )
+    }
+
+    fun copyFileToExternalFilesDir(context: Context, filename: String) {
+        val assetManager = context.assets
+
+        var inputStream: InputStream? = null
+        var outputStream: OutputStream? = null
+
+        try {
+            inputStream = assetManager.open(filename)
+            val outFile = File(context.getExternalFilesDir(null), filename)
+            if (outFile.exists()) {
+                outFile.delete()
+            }
+            outputStream = FileOutputStream(outFile)
+
+            val buffer = ByteArray(1024)
+            var read: Int
+            while (inputStream.read(buffer).also { read = it } != -1) {
+                outputStream.write(buffer, 0, read)
+            }
+        } catch (e: IOException) {
+            e.printStackTrace()
+        } finally {
+            inputStream?.close()
+            outputStream?.close()
+        }
+    }
+
 }

@@ -17,6 +17,7 @@ class SourceApp {
     lateinit var songInfoSongArtist: String
     lateinit var songInfoSongAlbum: String
     lateinit var pakageName: String
+    lateinit var musicNum: String
 
     fun init(sourceApp: String) {
         when (sourceApp) {
@@ -27,6 +28,7 @@ class SourceApp {
                 songListTableName = "User_Folder_table"
                 songListId = "folderid"
                 songListName = "foldername"
+                musicNum = "count"
                 songListSongInfoTableName = "User_Folder_Song_table"
                 songListSongInfoPlaylistId = "folderid"
                 songListSongInfoSongId = "id"
@@ -46,6 +48,7 @@ class SourceApp {
                 songListTableName = "playlist"
                 songListId = "_id"
                 songListName = "name"
+                musicNum = "track_count"
                 songListSongInfoTableName = "playlist_track"
                 songListSongInfoPlaylistId = "playlist_id"
                 songListSongInfoSongId = "track_id"
@@ -66,6 +69,7 @@ class SourceApp {
                 songListTableName = "kugou_playlists"
                 songListId = "_id"
                 songListName = "name"
+                musicNum = "num_of_songs"
                 songListSongInfoTableName = "playlistsong"
                 songListSongInfoPlaylistId = "plistid"
                 songListSongInfoSongId = "songid"
@@ -85,6 +89,7 @@ class SourceApp {
                 songListTableName = "v3_list"
                 songListId = "id"
                 songListName = "showname"
+                musicNum = "musicNum"
                 songListSongInfoTableName = "v3_music"
                 songListSongInfoPlaylistId = "listid"
                 songListSongInfoSongId = "rid"

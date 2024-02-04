@@ -78,6 +78,7 @@ import com.hwinzniej.musichelper.R
 import com.hwinzniej.musichelper.activity.ConvertPage
 import com.hwinzniej.musichelper.utils.MyVibrationEffect
 import com.moriafly.salt.ui.ItemContainer
+import com.moriafly.salt.ui.ItemSpacer
 import com.moriafly.salt.ui.ItemTitle
 import com.moriafly.salt.ui.RoundedColumn
 import com.moriafly.salt.ui.SaltTheme
@@ -85,6 +86,7 @@ import com.moriafly.salt.ui.TitleBar
 import com.moriafly.salt.ui.UnstableSaltApi
 import com.moriafly.salt.ui.popup.rememberPopupState
 import dev.jeziellago.compose.markdowntext.MarkdownText
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -672,8 +674,8 @@ fun ConvertPageUi(
                     }
                     if (convertPage.cookie.value.contains(
                             when (selectedSourceApp.intValue) {
-                                1 -> Regex("MUSIC_U=([A-Z]|[0-9])+")
-                                2 -> Regex("(uin=.+; qm_keyst=.+)|(qm_keyst=.+; uin=.+)")
+                                1 -> Regex("MUSIC_U=\\w+")
+                                2 -> Regex("(uin=\\d+)|(qm_keyst=\\w+)|(wxuin=\\d+)")
                                 3 -> Regex(".*") //TODO 待填写
                                 4 -> Regex(".*") //TODO 待填写
                                 else -> Regex("")
@@ -681,7 +683,7 @@ fun ConvertPageUi(
                         )
                     ) {
                         showLoginDialog.value = false
-                        convertPage.requestPermission()  //TODO 待修改
+                        convertPage.getOnlinePlaylist()
                     } else {
                         convertPage.cookie.value = ""
                         Toast.makeText(
@@ -694,8 +696,8 @@ fun ConvertPageUi(
                 } else {
                     if (userInput.contains(
                             when (selectedSourceApp.intValue) {
-                                1 -> Regex("MUSIC_U=.+")
-                                2 -> Regex("(uin=.+; qm_keyst=.+)|(qm_keyst=.+; uin=.+)")
+                                1 -> Regex("MUSIC_U=\\w+")
+                                2 -> Regex("(uin=\\d+)|(qm_keyst=\\w+)|(wxuin=\\d+)")
                                 3 -> Regex(".*") //TODO 待填写
                                 4 -> Regex(".*") //TODO 待填写
                                 else -> Regex("")
@@ -704,7 +706,7 @@ fun ConvertPageUi(
                     ) {
                         convertPage.cookie.value = userInput
                         showLoginDialog.value = false
-                        convertPage.requestPermission()  //TODO 待修改
+                        convertPage.getOnlinePlaylist()
                     } else {
                         convertPage.cookie.value = ""
                         Toast.makeText(
@@ -795,7 +797,6 @@ fun ConvertPageUi(
                             Column(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .heightIn(max = (LocalConfiguration.current.screenHeightDp / 2).dp)
                             ) {
                                 val loggedHtml = if (SaltTheme.colors.text.red < 0.5f) {
                                     context.assets.open("logged.html")
@@ -813,7 +814,10 @@ fun ConvertPageUi(
                                         }
                                 }
                                 AndroidView(
-                                    modifier = Modifier.fillMaxSize(),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .heightIn(max = (LocalConfiguration.current.screenHeightDp / 2.4).dp)
+                                        .clip(RoundedCornerShape(0.dp, 0.dp, 10.dp, 10.dp)),
                                     factory = { context ->
                                         WebView(context).also { webView ->
                                             webViewState.value = webView
@@ -822,11 +826,13 @@ fun ConvertPageUi(
                                 ) { webView ->
                                     webView.webViewClient = object : WebViewClient() {
                                         override fun onPageFinished(view: WebView, url: String) {
-                                            when (selectedSourceApp.intValue) {
-                                                1 -> {
-                                                    view.evaluateJavascript(
-                                                        """
-                                                        var xpath = '/html/body/div[1]/div[1]/div/div[1]/a';
+                                            coroutine.launch(Dispatchers.Main) {
+                                                delay(1000)
+                                                when (selectedSourceApp.intValue) {
+                                                    1 -> {
+                                                        view.evaluateJavascript(
+                                                            """
+                                                        var xpath = '/html/body/div[1]/div[1]/div/div[1]/div[1]/a';
                                                         var result = document.evaluate(xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
                                                         var element = result.singleNodeValue;
                                                         if (element) {
@@ -834,28 +840,36 @@ fun ConvertPageUi(
                                                                 element.click();
                                                                 true;
                                                             } else {
-                                                                'logged';
+                                                                var xpath1 = '/html/body/div[1]/div[1]/div/div[1]/div[1]/a';
+                                                                var result1 = document.evaluate(xpath1, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
+                                                                var element1 = result1.singleNodeValue;
+                                                                element1.href;
                                                             }
                                                         } else {
                                                             false;
                                                         }
                                                         """
-                                                    ) { result ->
-                                                        if (result == "\"logged\"") {
-                                                            view.loadDataWithBaseURL(
-                                                                null,
-                                                                loggedHtml,
-                                                                "text/html",
-                                                                "utf-8",
-                                                                null
-                                                            )
+                                                        ) { result ->
+                                                            if (result.contains("/user/home?id=")) {
+                                                                convertPage.loginUserId.value =
+                                                                    result.substring(
+                                                                        result.indexOf("/user/home?id=") + 14,
+                                                                        result.length - 1
+                                                                    )
+                                                                view.loadDataWithBaseURL(
+                                                                    null,
+                                                                    loggedHtml,
+                                                                    "text/html",
+                                                                    "utf-8",
+                                                                    null
+                                                                )
+                                                            }
                                                         }
                                                     }
-                                                }
 
-                                                2 -> {
-                                                    view.evaluateJavascript(  //TODO 判断是否登录有问题，可使用：/html/body/div/div[2]/div/a （立即登录按钮）
-                                                        """
+                                                    2 -> {
+                                                        view.evaluateJavascript(
+                                                            """
                                                         var xpath = '/html/body/div/div[1]/div/div[2]/span/a';
                                                         var result = document.evaluate(xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
                                                         var element =  result.singleNodeValue;
@@ -870,22 +884,22 @@ fun ConvertPageUi(
                                                             false;
                                                         }
                                                         """
-                                                    ) { result ->
-                                                        if (result == "\"logged\"") {
-                                                            view.loadDataWithBaseURL(
-                                                                null,
-                                                                loggedHtml,
-                                                                "text/html",
-                                                                "utf-8",
-                                                                null
-                                                            )
+                                                        ) { result ->
+                                                            if (result == "\"logged\"") {
+                                                                view.loadDataWithBaseURL(
+                                                                    null,
+                                                                    loggedHtml,
+                                                                    "text/html",
+                                                                    "utf-8",
+                                                                    null
+                                                                )
+                                                            }
                                                         }
                                                     }
-                                                }
 
-                                                3 -> {
-                                                    view.evaluateJavascript(
-                                                        """
+                                                    3 -> {
+                                                        view.evaluateJavascript(
+                                                            """
                                                         var xpath = '/html/body/div[1]/div[1]/div/div[2]/div[2]/div[1]';
                                                         var result = document.evaluate(xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
                                                         var element =  result.singleNodeValue;
@@ -900,22 +914,22 @@ fun ConvertPageUi(
                                                             false;
                                                         }
                                                         """
-                                                    ) { result ->
-                                                        if (result == "\"logged\"") {
-                                                            view.loadDataWithBaseURL(
-                                                                null,
-                                                                loggedHtml,
-                                                                "text/html",
-                                                                "utf-8",
-                                                                null
-                                                            )
+                                                        ) { result ->
+                                                            if (result == "\"logged\"") {
+                                                                view.loadDataWithBaseURL(
+                                                                    null,
+                                                                    loggedHtml,
+                                                                    "text/html",
+                                                                    "utf-8",
+                                                                    null
+                                                                )
+                                                            }
                                                         }
                                                     }
-                                                }
 
-                                                4 -> {
-                                                    view.evaluateJavascript(
-                                                        """
+                                                    4 -> {
+                                                        view.evaluateJavascript(
+                                                            """
                                                         var ad = '/html/body/div/div/div/div[7]/div/div[1]/i';
                                                         var adResult = document.evaluate(ad, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
                                                         if (adResult.singleNodeValue) {
@@ -929,9 +943,7 @@ fun ConvertPageUi(
                                                         var element =  result.singleNodeValue;
                                                         if (element) {
                                                             if (element.innerText.includes('登录')) {
-                                                                setTimeout(() => {
-                                                                        element.click();
-                                                                    }, 1500);
+                                                                element.click();
                                                                 true;
                                                             } else {
                                                                 'logged';
@@ -940,22 +952,23 @@ fun ConvertPageUi(
                                                             false;
                                                         }
                                                         """
-                                                    ) { result ->
-                                                        if (result == "\"logged\"") {
-                                                            view.loadDataWithBaseURL(
-                                                                null,
-                                                                loggedHtml,
-                                                                "text/html",
-                                                                "utf-8",
-                                                                null
-                                                            )
+                                                        ) { result ->
+                                                            if (result == "\"logged\"") {
+                                                                view.loadDataWithBaseURL(
+                                                                    null,
+                                                                    loggedHtml,
+                                                                    "text/html",
+                                                                    "utf-8",
+                                                                    null
+                                                                )
+                                                            }
                                                         }
                                                     }
                                                 }
+                                                view.scrollTo(800, 950)
+                                                showDialogProgressBar.value = false
+//                                            MyVibrationEffect(context, enableHaptic.value).done()  //TODO 可能会震动多次
                                             }
-                                            view.scrollTo(800, 1300)
-                                            showDialogProgressBar.value = false
-                                            MyVibrationEffect(context, enableHaptic.value).done()  //TODO 可能会震动多次
                                         }
                                     }
 
@@ -976,6 +989,39 @@ fun ConvertPageUi(
                                         4 -> webView.loadUrl("https://kuwo.cn/")
                                     }
                                 }
+                                ItemSpacer()
+                                TextButton(  //TODO 未登录时隐藏；清除Cookie无效，不会重新加载页面
+                                    onClick = {
+                                        when (selectedSourceApp.intValue) {
+                                            1 -> {
+                                                CookieManager.getInstance()
+                                                    .setCookie("music.163.com", "")
+                                                webViewState.value?.loadUrl("https://music.163.com/#/user/update")
+                                            }
+
+                                            2 -> {
+                                                CookieManager.getInstance()
+                                                    .setCookie("y.qq.com", "")
+                                                webViewState.value?.loadUrl("https://y.qq.com/n/ryqq/profile")
+                                            }
+
+                                            3 -> {
+                                                CookieManager.getInstance()
+                                                    .setCookie("www.kugou.com", "")
+                                                webViewState.value?.loadUrl("https://www.kugou.com/newuc/user/uc")
+                                            }
+
+                                            4 -> {
+                                                CookieManager.getInstance()
+                                                    .setCookie("kuwo.cn", "")
+                                                webViewState.value?.loadUrl("https://kuwo.cn/")
+                                            }
+                                        }
+                                        webViewState.value?.reload()
+                                    },
+                                    text = stringResource(id = R.string.logout),
+                                    enableHaptic = enableHaptic.value
+                                )
                             }
                         }
 

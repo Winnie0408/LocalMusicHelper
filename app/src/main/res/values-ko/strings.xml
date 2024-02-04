@@ -50,7 +50,7 @@
     <string name="error_while_getting_data_dialog_title">데이터를 가져오는 중 오류 발생</string>
     <string name="export_result_file_switcher_sub_text">결과 파일을 다운로드 디렉토리로 내보내기</string>
     <string name="export_result_file_switcher_text">결과 내보내기</string>
-    <string name="file_access">파일 액세스</string>
+    <string name="file_access">데이터 획득</string>
     <string name="file_conflict_dialog_content">"마지막 스캔에서 결과가 존재합니다! #n동작을 선택하십시오: "</string>
     <string name="file_conflict_dialog_no_text">추가</string>
     <string name="file_conflict_dialog_title">충돌 감지</string>
@@ -214,4 +214,12 @@
     <string name="please_input_cookie">쿠키 입력…</string>
     <string name="cookie_input_error">쿠키의 형식이 잘못되었습니다</string>
     <string name="no_valid_cookies_found">올바른 쿠키를 찾을 수 없음</string>
+    <string name="select_encrypt_server_title">암호화 서버 선택</string>
+    <string name="select_encrypt_server">암호화 서버</string>
+    <string name="guangxi_china">중국 광시 성</string>
+    <string name="timeout">타임아웃</string>
+    <string name="optional_servers">추가 서버</string>
+    <string name="get_playlist_failed">목록 정보를 가져오는 중 실패함</string>
+    <string name="get_playlist_hidden">#개의 빈 목록을 숨겼습니다</string>
+    <string name="logout">계정 전환 / 로그아웃</string>
 </resources>

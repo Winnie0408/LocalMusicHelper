@@ -135,7 +135,7 @@
     <string name="language">语言</string>
     <string name="app_language">应用语言</string>
     <string name="system_language">系统语言</string>
-    <string name="file_access">文件获取</string>
+    <string name="file_access">数据获取</string>
     <string name="use_root_access_switcher_title">使用Root权限</string>
     <string name="use_root_access_switcher_sub">自动获取歌单来源App的数据库文件</string>
     <string name="version">版本</string>
@@ -214,4 +214,12 @@
     <string name="please_input_cookie">输入Cookie…</string>
     <string name="cookie_input_error">Cookie格式不正确</string>
     <string name="no_valid_cookies_found">没有找到有效的Cookie</string>
+    <string name="select_encrypt_server_title">选择加密服务器</string>
+    <string name="select_encrypt_server">加密服务器</string>
+    <string name="guangxi_china">中国广西</string>
+    <string name="timeout">超时</string>
+    <string name="optional_servers">可选服务器</string>
+    <string name="get_playlist_failed">获取歌单信息失败</string>
+    <string name="get_playlist_hidden">已隐藏#个空歌单</string>
+    <string name="logout">切换账号 / 退出登录</string>
 </resources>

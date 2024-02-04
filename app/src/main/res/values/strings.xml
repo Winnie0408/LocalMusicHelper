@@ -137,7 +137,7 @@
     <string name="chinese_s" translatable="false">简体中文 - zh</string>
     <string name="english" translatable="false">English - en</string>
     <string name="system_language">System language</string>
-    <string name="file_access">File access</string>
+    <string name="file_access">Data access</string>
     <string name="use_root_access_switcher_title">Use Root access</string>
     <string name="use_root_access_switcher_sub">Automatically get the database file of the song list source App</string>
     <string name="version">Version</string>
@@ -217,4 +217,13 @@
     <string name="please_input_cookie">Enter Cookie…</string>
     <string name="cookie_input_error">Wrong Cookiesformat</string>
     <string name="no_valid_cookies_found">No valid Cookie found</string>
+    <string name="select_encrypt_server_title">Select encryption server</string>
+    <string name="select_encrypt_server">Encryption server</string>
+    <string name="guangxi_china">Guangxi, China</string>
+    <string name="timeout">Timeout</string>
+    <string name="pinging" translatable="false">Ping</string>
+    <string name="optional_servers">Optional servers</string>
+    <string name="get_playlist_failed">Failed to get songlist info.</string>
+    <string name="get_playlist_hidden">Hidden # empty playlist(s)</string>
+    <string name="logout">Switch Account / Logout</string>
 </resources>

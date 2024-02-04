@@ -142,6 +142,8 @@ class MainActivity : ComponentActivity() {
 
         scanPage = ScanPage(this, this, openDirectoryLauncher, db, this)
 //        processPage = ProcessPage(this, this, db)
+        settingsPage = SettingsPage(this, this)
+
         convertPage =
             ConvertPage(
                 this,
@@ -149,9 +151,9 @@ class MainActivity : ComponentActivity() {
                 openMusicPlatformSqlFileLauncher,
                 openResultSqlFileLauncher,
                 db,
-                this
+                this,
+                settingsPage.encryptServer
             )
-        settingsPage = SettingsPage(this)
 
         setContent {
             val colors = when (selectedThemeMode.intValue) {
@@ -242,6 +244,8 @@ private fun Pages(
             preferences[DataStoreConstants.KEY_ENABLE_AUTO_CHECK_UPDATE] ?: true
         convertPage.useRootAccess.value =
             preferences[DataStoreConstants.KEY_USE_ROOT_ACCESS] ?: false
+        settingsPage.encryptServer.value =
+            preferences[DataStoreConstants.KEY_ENCRYPT_SERVER] ?: "cf"
     }
 
     LaunchedEffect(key1 = mainPage.language.value) {
@@ -511,6 +515,7 @@ private fun Pages(
                         when (settingPage) {
                             0 -> {
                                 SettingsPageUi(
+                                    settingsPage = settingsPage,
                                     enableDynamicColor = mainPage.enableDynamicColor,
                                     selectedThemeMode = mainPage.selectedThemeMode,
                                     selectedLanguage = mainPage.language,
@@ -519,6 +524,7 @@ private fun Pages(
                                     settingsPageState = settingsPageState,
                                     enableHaptic = mainPage.enableHaptic,
                                     dataStore = mainPage.dataStore,
+                                    encryptServer = settingsPage.encryptServer,
                                 )
                             }
 
