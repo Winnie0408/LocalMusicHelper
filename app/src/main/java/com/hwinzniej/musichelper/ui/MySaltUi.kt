@@ -1,8 +1,12 @@
 package com.hwinzniej.musichelper.ui
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -98,7 +102,8 @@ fun YesNoDialog(
     customContent: @Composable () -> Unit = {},
     onlyComposeView: Boolean = false,
     confirmButtonColor: Color = SaltTheme.colors.highlight,
-    enableHaptic: Boolean = false
+    enableHaptic: Boolean = false,
+    enableConfirmButton: Boolean = true
 ) {
     if (!onlyComposeView)
         MyVibrationEffect(LocalContext.current, enableHaptic).dialog()
@@ -132,13 +137,26 @@ fun YesNoDialog(
                 enableHaptic = enableHaptic
             )
             Spacer(modifier = Modifier.width(SaltTheme.dimens.outerHorizontalPadding))
-            TextButton(
-                onClick = {
-                    onConfirm()
-                }, modifier = Modifier.weight(1f), text = confirmText,
-                backgroundColor = confirmButtonColor,
-                enableHaptic = enableHaptic
-            )
+            AnimatedContent(
+                modifier = Modifier.weight(1f),
+                targetState = enableConfirmButton,
+                label = "",
+                transitionSpec = {
+                    if (targetState != initialState) {
+                        fadeIn() togetherWith fadeOut()
+                    } else {
+                        fadeIn() togetherWith fadeOut()
+                    }
+                }) {
+                TextButton(
+                    onClick = {
+                        onConfirm()
+                    }, text = confirmText,
+                    backgroundColor = confirmButtonColor,
+                    enableHaptic = enableHaptic,
+                    enabled = it
+                )
+            }
         }
         ItemOutSpacer()
     }
@@ -550,7 +568,7 @@ fun BasicButton(
 }
 
 @Composable
-fun ItemValue(
+fun ItemValue(  //TODO  自定义Item和Value的所占的宽度比例
     text: String,
     sub: String? = null,
     rightSub: String? = null,

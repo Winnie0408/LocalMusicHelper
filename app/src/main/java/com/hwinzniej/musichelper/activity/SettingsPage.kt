@@ -23,7 +23,7 @@ class SettingsPage(
         2 to context.getString(R.string.pinging)
     )
 
-    fun checkServerPing() {
+    fun checkServerPing() {  //TODO 似乎按顺序执行了，不是并行
         lifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
             val regex = "\\d+\\.\\d+".toRegex()
             async {

@@ -226,4 +226,5 @@
     <string name="get_playlist_failed">Failed to get songlist info.</string>
     <string name="get_playlist_hidden">Hidden # empty playlist(s)</string>
     <string name="logout">Switch Account / Logout</string>
+    <string name="not_yet_deployed">(Not yet activated)</string>
 </resources>

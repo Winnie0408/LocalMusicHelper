@@ -633,7 +633,7 @@ fun ConvertPageUi(
 
     var needNcmUserId by remember { mutableStateOf(false) }
 
-    if (showLoginDialog.value) {
+    if (showLoginDialog.value) {  //TODO 检测到有Cookie且未过期，提示用户直接使用，而不是强制用户打开网页或自行输入
         val loginMethodPopupState = rememberPopupState()
         val webViewState = remember { mutableStateOf<WebView?>(null) }
         var userInput by remember { mutableStateOf("") }
@@ -695,7 +695,7 @@ fun ConvertPageUi(
                     }
 
                     if (cookieValid) {
-                        if (convertPage.loginUserId.value == "") {
+                        if (selectedSourceApp.intValue == 1 && convertPage.loginUserId.value == "") {
                             needNcmUserId = true
                             showDialogProgressBar.value = true
                             webViewState.value?.loadUrl("https://music.163.com/#/user/update")
@@ -768,6 +768,7 @@ fun ConvertPageUi(
                     else -> ""
                 }
             ),
+            enableConfirmButton = !showDialogProgressBar.value,
             content = null,
             onlyComposeView = true,
             enableHaptic = enableHaptic.value,
@@ -887,7 +888,7 @@ fun ConvertPageUi(
                                                         } else {
                                                             false;
                                                         }
-                                                        """
+                                                        """.trimIndent()
                                                             ) { result ->
                                                                 if (result.contains("/user/home?id=")) {
                                                                     convertPage.loginUserId.value =
@@ -932,7 +933,7 @@ fun ConvertPageUi(
                                                         } else {
                                                             false;
                                                         }
-                                                        """
+                                                        """.trimIndent()
                                                             ) { result ->
                                                                 if (result == "\"logged\"") {
                                                                     view.loadDataWithBaseURL(
@@ -963,7 +964,7 @@ fun ConvertPageUi(
                                                         } else {
                                                             false;
                                                         }
-                                                        """
+                                                        """.trimIndent()
                                                             ) { result ->
                                                                 if (result == "\"logged\"") {
                                                                     view.loadDataWithBaseURL(
@@ -1002,7 +1003,7 @@ fun ConvertPageUi(
                                                         } else {
                                                             false;
                                                         }
-                                                        """
+                                                        """.trimIndent()
                                                             ) { result ->
                                                                 if (result == "\"logged\"") {
                                                                     view.loadDataWithBaseURL(
@@ -1071,7 +1072,7 @@ fun ConvertPageUi(
                             }
                         }
                         AnimatedVisibility(visible = isUserLoggedIn && (selectedLoginMethod.intValue == 0)) {
-                            RoundedColumn {
+                            ItemContainer {
                                 TextButton(
                                     onClick = {
                                         showDialogProgressBar.value = true
@@ -1704,7 +1705,7 @@ fun ConvertPageUi(
                                             )
                                         }
                                         AnimatedContent(
-                                            targetState = showNumberProgressBar.value,
+                                            targetState = showNumberProgressBar.value || showLoadingProgressBar.value,
                                             label = "",
                                             transitionSpec = {
                                                 if (targetState != initialState) {

@@ -44,8 +44,10 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.withContext
 import okhttp3.FormBody
+import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.File
 import java.io.FileWriter
 import java.time.LocalDate
@@ -592,6 +594,13 @@ class ConvertPage(
                                 .addHeader("Cookie", cookie.value)
                                 .addHeader("Referer", "https://y.qq.com/")
                                 .get()
+                    }
+
+                    3 -> {
+
+                    }
+
+                    4 -> {
 
                     }
                 }
@@ -633,7 +642,7 @@ class ConvertPage(
                                 innerPlaylistSum.add(playlist.getInteger("trackCount"))
                                 innerPlaylistEnabled.add(0)
                                 db.execSQL(
-                                    "INSERT INTO playlist (_id, name, track_count) VALUES (?, ?, ?)",
+                                    "INSERT INTO ${sourceApp.songListTableName} (${sourceApp.songListId}, ${sourceApp.songListName}, ${sourceApp.musicNum}) VALUES (?, ?, ?)",
                                     arrayOf(
                                         playlist.getString("id"),
                                         playlist.getString("name"),
@@ -671,7 +680,7 @@ class ConvertPage(
                                 innerPlaylistSum.add(playlist.getInteger("song_cnt"))
                                 innerPlaylistEnabled.add(0)
                                 db.execSQL(
-                                    "INSERT INTO User_Folder_table (folderid, foldername, count) VALUES (?, ?, ?)",
+                                    "INSERT INTO ${sourceApp.songListTableName} (${sourceApp.songListId}, ${sourceApp.songListName}, ${sourceApp.musicNum}) VALUES (?, ?, ?)",
                                     arrayOf(
                                         playlist.getString("tid"),
                                         playlist.getString("diss_name"),
@@ -706,7 +715,7 @@ class ConvertPage(
                                 innerPlaylistSum.add(playlist.getInteger("songnum"))
                                 innerPlaylistEnabled.add(0)
                                 db.execSQL(
-                                    "INSERT INTO User_Folder_table (folderid, foldername, count) VALUES (?, ?, ?)",
+                                    "INSERT INTO ${sourceApp.songListTableName} (${sourceApp.songListId}, ${sourceApp.songListName}, ${sourceApp.musicNum}) VALUES (?, ?, ?)",
                                     arrayOf(
                                         playlist.getString("dissid"),
                                         playlist.getString("dissname"),
@@ -715,6 +724,14 @@ class ConvertPage(
                                 )
                             }
                             db.close()
+                        }
+
+                        3 -> {
+
+                        }
+
+                        4 -> {
+
                         }
                     }
                     playlistId.addAll(innerPlaylistId)
@@ -833,6 +850,202 @@ class ConvertPage(
             val convertResultMap = mutableMapOf<Int, Array<String>>()
             val firstIndex1 = playlistEnabled.indexOfFirst { it == 1 }
 
+            if (selectedMethod.intValue == 1) {
+                val testDb = SQLiteDatabase.openDatabase(
+                    databaseFilePath.value,
+                    null,
+                    SQLiteDatabase.OPEN_READONLY
+                )
+                val testCursor = testDb.rawQuery(
+                    "SELECT ${sourceApp.songListSongInfoPlaylistId} FROM ${sourceApp.songListSongInfoTableName} WHERE ${sourceApp.songListSongInfoPlaylistId} = ? LIMIT 1",
+                    arrayOf(playlistId[firstIndex1])
+                )
+                if (!testCursor.moveToFirst()) {
+                    showLoadingProgressBar.value = true
+
+                    try {
+                        val url = when (selectedSourceApp.intValue) {
+                            1 -> "https://interface.music.163.com/weapi/v6/playlist/detail"
+                            2 -> "https://u.y.qq.com/cgi-bin/musicu.fcg"
+                            3 -> ""
+                            4 -> ""
+                            else -> ""
+                        }
+                        val client = OkHttpClient()
+                        var request = Request.Builder()
+                        when (selectedSourceApp.intValue) {
+                            1 -> {
+                                val encrypted = Tools().encryptString(
+                                    """{"id":${playlistId[firstIndex1]},"n":1000,"shareUserId":0}""",
+                                    "netease",
+                                    encryptServer.value
+                                )
+                                val formBody = encrypted?.let {
+                                    FormBody.Builder()
+                                        .add("params", it.getString("encText"))
+                                        .add("encSecKey", it.getString("encSecKey"))
+                                        .build()
+                                }
+                                formBody?.let {
+                                    request = request.url(
+                                        "${url}?csrf_token=${
+                                            "__csrf=\\w+".toRegex()
+                                                .find(cookie.value)?.value?.substring(7)
+                                        }"
+                                    ).addHeader("Cookie", cookie.value)
+                                        .post(it)
+                                }
+                            }
+
+                            2 -> {
+                                val json =
+                                    """{"comm":{"ct":"1","cv":"10080511","v":"10080511"},"GetPlayList":{"module":"music.srfDissInfo.DissInfo","method":"CgiGetDiss","param":{"disstid":${playlistId[firstIndex1]}}}}"""
+                                val requestBody =
+                                    json.toRequestBody("application/json; charset=utf-8".toMediaType())
+                                request = request
+                                    .url(url)
+                                    .addHeader("Cookie", cookie.value)
+                                    .addHeader("Referer", "https://y.qq.com/")
+                                    .addHeader("Accept", "application/json")
+                                    .post(requestBody)
+                            }
+
+                            3 -> {
+
+                            }
+
+                            4 -> {
+
+                            }
+                        }
+
+                        val response =
+                            JSON.parseObject(
+                                client.newCall(request.build()).execute().body?.string()
+                            )
+
+                        if (response != null) {
+                            when (selectedSourceApp.intValue) {
+                                1 -> {
+                                    val db = SQLiteDatabase.openDatabase(
+                                        databaseFilePath.value,
+                                        null,
+                                        SQLiteDatabase.OPEN_READWRITE
+                                    )
+
+                                    val playListDetailInfo =
+                                        response.getJSONObject("playlist").getJSONArray("tracks")
+                                    playListDetailInfo.forEachIndexed { index, it ->
+                                        val song = it as JSONObject
+                                        val playlistId =
+                                            response.getJSONObject("playlist").getString("id")
+                                        val songId = song.getString("id")
+                                        val songName = song.getString("name")
+                                        var songArtistsBuilder = StringBuilder()
+                                        song.getJSONArray("ar").forEach { it1 ->
+                                            val artistsInfo = it1 as JSONObject
+                                            songArtistsBuilder.append(artistsInfo.getString("name"))
+                                            songArtistsBuilder.append("/")
+                                        }
+                                        songArtistsBuilder.deleteCharAt(songArtistsBuilder.length - 1)
+                                        val songArtists = songArtistsBuilder.toString()
+                                        val songAlbum = song.getJSONObject("al").getString("name")
+                                        db.execSQL(
+                                            "INSERT INTO ${sourceApp.songListSongInfoTableName} (${sourceApp.songListSongInfoPlaylistId}, ${sourceApp.songListSongInfoSongId}, ${sourceApp.sortField}) VALUES (?, ?, ?)",
+                                            arrayOf(
+                                                playlistId,
+                                                songId,
+                                                index
+                                            )
+                                        )
+                                        db.execSQL(
+                                            "INSERT INTO ${sourceApp.songInfoTableName} (${sourceApp.songInfoSongId}, ${sourceApp.songInfoSongName}, ${sourceApp.songInfoSongArtist}, ${sourceApp.songInfoSongAlbum}) VALUES (?, ?, ?, ?)",
+                                            arrayOf(
+                                                songId,
+                                                songName,
+                                                songArtists,
+                                                songAlbum
+                                            )
+                                        )
+                                    }
+                                    db.close()
+                                }
+
+                                2 -> {
+                                    val db = SQLiteDatabase.openDatabase(
+                                        databaseFilePath.value,
+                                        null,
+                                        SQLiteDatabase.OPEN_READWRITE
+                                    )
+
+                                    val playListDetailInfo =
+                                        response.getJSONObject("GetPlayList").getJSONObject("data")
+                                    playListDetailInfo.getJSONArray("songlist")
+                                        .forEachIndexed { index, it ->
+                                            val song = it as JSONObject
+                                            val playlistId =
+                                                playListDetailInfo.getJSONObject("dirinfo")
+                                                    .getString("id")
+                                            val songId = song.getString("id")
+                                            val songName = song.getString("title")
+                                            var songArtistsBuilder = StringBuilder()
+                                            song.getJSONArray("singer").forEach { it1 ->
+                                                val artistsInfo = it1 as JSONObject
+                                                songArtistsBuilder.append(artistsInfo.getString("title"))
+                                                songArtistsBuilder.append("/")
+                                            }
+                                            songArtistsBuilder.deleteCharAt(songArtistsBuilder.length - 1)
+                                            val songArtists = songArtistsBuilder.toString()
+                                            val songAlbum =
+                                                song.getJSONObject("album").getString("title")
+                                            db.execSQL(
+                                                "INSERT INTO ${sourceApp.songListSongInfoTableName} (${sourceApp.songListSongInfoPlaylistId}, ${sourceApp.songListSongInfoSongId}, ${sourceApp.sortField}) VALUES (?, ?, ?)",
+                                                arrayOf(
+                                                    playlistId,
+                                                    songId,
+                                                    index
+                                                )
+                                            )
+                                            db.execSQL(
+                                                "INSERT INTO ${sourceApp.songInfoTableName} (${sourceApp.songInfoSongId}, ${sourceApp.songInfoSongName}, ${sourceApp.songInfoSongArtist}, ${sourceApp.songInfoSongAlbum}) VALUES (?, ?, ?, ?)",
+                                                arrayOf(
+                                                    songId,
+                                                    songName,
+                                                    songArtists,
+                                                    songAlbum
+                                                )
+                                            )
+                                        }
+                                    db.close()
+                                }
+
+                                3 -> {
+
+                                }
+
+                                4 -> {
+
+                                }
+                            }
+
+                            showNumberProgressBar.value = true
+                            showLoadingProgressBar.value = false
+                        } else {
+                            throw Exception("${sourceApp.sourceEng} server's response was null.")
+                        }
+                    } catch (e: Exception) {
+                        showLoadingProgressBar.value = false
+                        errorDialogTitle.value =
+                            context.getString(R.string.error_while_getting_data_dialog_title)
+                        errorDialogContent.value =
+                            "- ${context.getString(R.string.get_playlist_failed)}\n  - $e"
+                        showErrorDialog.value = true
+                        showLoadingProgressBar.value = false
+                        return@launch
+                    }
+                }
+            }
+
             showNumberProgressBar.value = true
             val music3InfoList = if (useCustomResultFile.value) {
                 val db = SQLiteDatabase.openOrCreateDatabase(File(resultFilePath), null)
@@ -889,7 +1102,7 @@ class ConvertPage(
                     songInfoCursor.getString(songInfoCursor.getColumnIndexOrThrow(sourceApp.songInfoSongName))
                 songArtist =
                     songInfoCursor.getString(songInfoCursor.getColumnIndexOrThrow(sourceApp.songInfoSongArtist))
-                if (sourceApp.sourceEng == "CloudMusic") {
+                if (sourceApp.sourceEng == "CloudMusic" && selectedMethod.intValue == 0) {
                     var tempArtist = ""
                     val jsonResult = JSON.parseArray(songArtist)
                     jsonResult.forEachIndexed { index, it ->
@@ -998,7 +1211,7 @@ class ConvertPage(
                         } else {
                             songAlbumMaxSimilarity = 1.0
                         }
-                    }
+                    }  //TODO 待优化，直接使用歌名对应的Key来确定歌曲？
                     songThread.await()
                     artistThread.await()
                     albumThread.await()

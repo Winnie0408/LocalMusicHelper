@@ -222,4 +222,5 @@
     <string name="get_playlist_failed">获取歌单信息失败</string>
     <string name="get_playlist_hidden">已隐藏#个空歌单</string>
     <string name="logout">切换账号 / 退出登录</string>
+    <string name="not_yet_deployed">（暂未启用）</string>
 </resources>

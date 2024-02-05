@@ -222,4 +222,5 @@
     <string name="get_playlist_failed">목록 정보를 가져오는 중 실패함</string>
     <string name="get_playlist_hidden">#개의 빈 목록을 숨겼습니다</string>
     <string name="logout">계정 전환 / 로그아웃</string>
+    <string name="not_yet_deployed">(사용하지 않음)</string>
 </resources>
