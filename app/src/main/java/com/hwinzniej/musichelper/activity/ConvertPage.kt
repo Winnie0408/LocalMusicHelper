@@ -234,8 +234,11 @@ class ConvertPage(
                     delay(500L)
                     databaseSummary()
                 }
-            } else
+            } else {
                 showLoadingProgressBar.value = false
+                if (!haveError)
+                    showLoginDialog.value = true
+            }
             loadingProgressSema.release()
             loadingProgressSema.release()
         }
@@ -533,8 +536,6 @@ class ConvertPage(
                     return@launch
                 }
                 selectedLoginMethod.intValue = 2
-                haveError = true
-                showLoginDialog.value = true
                 loadingProgressSema.release()
             }
         }
@@ -555,9 +556,13 @@ class ConvertPage(
                 }
                 val client = OkHttpClient()
                 var request = Request.Builder()
-                    .addHeader("Cookie", cookie.value)
                 when (selectedSourceApp.intValue) {
                     1 -> {
+                        if (cookie.value.contains("\\buid=\\d+".toRegex())) {
+                            loginUserId.value =
+                                "\\buid=\\d+".toRegex().find(cookie.value)?.value?.substring(4)!!
+                            cookie.value = "uid=\\d+;?\\s?".toRegex().replace(cookie.value, "")
+                        }
                         val encrypted = Tools().encryptString(
                             """{"limit":100,"offset":0,"uid":${loginUserId.value}}""",
                             "netease",
@@ -574,15 +579,17 @@ class ConvertPage(
                                 "${url}?csrf_token=${
                                     "__csrf=\\w+".toRegex().find(cookie.value)?.value?.substring(7)
                                 }"
-                            ).post(it)
+                            ).addHeader("Cookie", cookie.value)
+                                .post(it)
                         }
                     }
 
-                    2 -> {  //TODO 微信使用Cookie登录，获取的歌单不全（没有“我喜欢”）
+                    2 -> {
                         var uin = "(uin=\\d+)|(wxuin=\\d+)".toRegex().find(cookie.value)?.value
                         uin = uin?.substring(uin.indexOf("=") + 1)
                         request =
                             request.url("${url}?uin=${uin}&hostuin=${uin}&ct=24&format=json&inCharset=utf-8&outCharset=utf-8&sin=0&size=100")
+                                .addHeader("Cookie", cookie.value)
                                 .addHeader("Referer", "https://y.qq.com/")
                                 .get()
 
@@ -614,7 +621,7 @@ class ConvertPage(
                             )
                             databaseFilePath.value = databaseFile.absolutePath
 
-                            val playlistInfo = response.getJSONObject("playlist")
+                            val playlistInfo = response.getJSONArray("playlist")
                             playlistInfo.forEach {
                                 val playlist = it as JSONObject
                                 if (playlist.getInteger("trackCount") == 0) {
@@ -634,6 +641,7 @@ class ConvertPage(
                                     )
                                 )
                             }
+                            db.close()
                         }
 
                         2 -> {
@@ -671,6 +679,42 @@ class ConvertPage(
                                     )
                                 )
                             }
+
+                            var uin = "(uin=\\d+)|(wxuin=\\d+)".toRegex().find(cookie.value)?.value
+                            uin = uin?.substring(uin.indexOf("=") + 1)
+                            val requestQQLikePlaylist = Request.Builder()
+                                .addHeader("Cookie", cookie.value)
+                                .url("https://c.y.qq.com/fav/fcgi-bin/fcg_get_profile_order_asset.fcg?uin=${uin}&userid=${uin}&ct=24&format=json&inCharset=utf-8&outCharset=utf-8&sin=0&ein=99&reqtype=3&cid=205360956")
+                                .addHeader("Referer", "https://y.qq.com/")
+                                .get()
+
+                            val responseQQLikePlaylist =
+                                JSON.parseObject(
+                                    client.newCall(requestQQLikePlaylist.build())
+                                        .execute().body?.string()
+                                )
+                            val qqLikePlaylistInfo =
+                                responseQQLikePlaylist.getJSONObject("data").getJSONArray("cdlist")
+                            qqLikePlaylistInfo.forEach {
+                                val playlist = it as JSONObject
+                                if (playlist.getInteger("songnum") == 0) {
+                                    emptyPlaylistNum++
+                                    return@forEach
+                                }
+                                innerPlaylistId.add(playlist.getString("dissid"))
+                                innerPlaylistName.add(playlist.getString("dissname"))
+                                innerPlaylistSum.add(playlist.getInteger("songnum"))
+                                innerPlaylistEnabled.add(0)
+                                db.execSQL(
+                                    "INSERT INTO User_Folder_table (folderid, foldername, count) VALUES (?, ?, ?)",
+                                    arrayOf(
+                                        playlist.getString("dissid"),
+                                        playlist.getString("dissname"),
+                                        playlist.getInteger("songnum")
+                                    )
+                                )
+                            }
+                            db.close()
                         }
                     }
                     playlistId.addAll(innerPlaylistId)

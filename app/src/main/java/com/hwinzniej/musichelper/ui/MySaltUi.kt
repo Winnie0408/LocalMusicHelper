@@ -168,7 +168,7 @@ fun BasicDialog(
 
 @UnstableSaltApi
 @Composable
-fun ItemPopup(  //TODO 添加图标、根据文字长度自动调整宽度、优化左右点击时弹出的位置（Tools.measureTextWidthInDp）
+fun ItemPopup(  //TODO 添加图标、根据文字长度自动调整宽度、优化左右点击时弹出的位置（Tools.measureTextWidthInDp）；右侧Popup在Dialog内使用时，位置不对
     state: PopupState,
     enabled: Boolean = true,
     iconPainter: Painter? = null,

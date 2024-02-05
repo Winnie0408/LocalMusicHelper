@@ -46,7 +46,7 @@ class SettingsPage(
                 if (text.contains("[1-2] received".toRegex()))
                     serverPing[2] = "${regex.findAll(text).toList()[3].value} ms"
                 else
-                    serverPing[0] = context.getString(R.string.timeout)
+                    serverPing[2] = context.getString(R.string.timeout)
             }
         }
     }

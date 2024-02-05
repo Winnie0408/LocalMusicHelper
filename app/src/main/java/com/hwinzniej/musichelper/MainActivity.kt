@@ -481,7 +481,7 @@ private fun Pages(
                         multiSource = convertPage.multiSource,
                         showNumberProgressBar = convertPage.showNumberProgressBar,
                         selectedMethod = convertPage.selectedMethod,
-                        selectedLoginMethod= convertPage.selectedLoginMethod,
+                        selectedLoginMethod = convertPage.selectedLoginMethod,
                         showLoginDialog = convertPage.showLoginDialog,
                     )
                 }
