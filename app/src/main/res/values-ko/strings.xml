@@ -45,7 +45,7 @@
     <string name="enable_artist_name_match">아티스트 이름 일치</string>
     <string name="enable_bracket_removal">괄호 제거</string>
     <string name="error">오류</string>
-    <string name="error_details">오류 세부 정보</string>
+    <string name="error_details">세부 정보</string>
     <string name="error_while_getting_data_dialog_content">다음 파일을 읽는 중에 오류가 발생했습니다. 파일 선택을 확인하십시오.</string>
     <string name="error_while_getting_data_dialog_title">데이터를 가져오는 중 오류 발생</string>
     <string name="export_result_file_switcher_sub_text">결과 파일을 다운로드 디렉토리로 내보내기</string>
@@ -149,8 +149,8 @@
     <string name="set_similarity_dialog_title">유사성 임계값 설정</string>
     <string name="set_similarity_item">유사성 임계값</string>
     <string name="settings_function_name">설정</string>
-    <string name="singer">"아티스트: "</string>
-    <string name="song_name">노래 이름</string>
+    <string name="singer">"가수: "</string>
+    <string name="song_name">이름</string>
     <string name="songlist_name">노래 목록 이름</string>
     <string name="songlist_sequence">순서</string>
     <string name="songlist_song_info">노래 목록 노래 정보</string>
@@ -221,6 +221,17 @@
     <string name="optional_servers">추가 서버</string>
     <string name="get_playlist_failed">목록 정보를 가져오는 중 실패함</string>
     <string name="get_playlist_hidden">#개의 빈 목록을 숨겼습니다</string>
-    <string name="logout">계정 전환 / 로그아웃</string>
+    <string name="switch_account_logout">계정 전환 / 로그아웃</string>
     <string name="not_yet_deployed">(사용하지 않음)</string>
+    <string name="unable_start_documentsui">DocumentsUI 실행 실패</string>
+    <string name="music_file_encrypted">암호화되었습니다, 먼저 암호를 푸십시오.</string>
+    <string name="no_song_in_playlist">플레이리스트가 비어 있습니다, #에서 다시 불러오십시오.</string>
+    <string name="will_skip_this_playlist">현재 플레이리스트는 건너뛰겠습니다.</string>
+    <string name="skipped">건너뛰기</string>
+    <string name="logout">로그아웃</string>
+    <string name="logged_out">로그아웃됨</string>
+    <string name="account"># 계정</string>
+    <string name="use_last_login_info">이전 로그인 정보로 자동 완성</string>
+    <string name="login_info_maybe_expired">쿠키가 만료되거나 노래 목록 데이터가 불완전할 수 있습니다.</string>
+    <string name="tips">팁들</string>
 </resources>

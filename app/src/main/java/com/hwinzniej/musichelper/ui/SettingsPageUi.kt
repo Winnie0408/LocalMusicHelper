@@ -175,6 +175,14 @@ fun SettingsPageUi(
                 )
                 ItemPopup(
                     state = themeModePopupMenuState,
+                    iconPainter = painterResource(id = R.drawable.app_theme),
+                    iconPaddingValues = PaddingValues(
+                        start = 2.dp,
+                        end = 2.dp,
+                        top = 2.dp,
+                        bottom = 2.dp
+                    ),
+                    iconColor = SaltTheme.colors.text,
                     text = stringResource(R.string.theme_mode_switcher_text),
                     selectedItem = when (selectedThemeMode.intValue) {
                         0 -> stringResource(R.string.light_mode)
@@ -182,15 +190,7 @@ fun SettingsPageUi(
                         2 -> stringResource(R.string.follow_system)
                         else -> ""
                     },
-                    popupWidth = 140,
-                    iconPainter = painterResource(id = R.drawable.app_theme),
-                    iconColor = SaltTheme.colors.text,
-                    iconPaddingValues = PaddingValues(
-                        start = 2.dp,
-                        end = 2.dp,
-                        top = 2.dp,
-                        bottom = 2.dp
-                    )
+                    popupWidth = 140
                 ) {
                     PopupMenuItem(
                         onClick = {
@@ -324,6 +324,14 @@ fun SettingsPageUi(
                 )
                 ItemPopup(
                     state = languagePopupMenuState,
+                    iconPainter = painterResource(id = R.drawable.language),
+                    iconPaddingValues = PaddingValues(
+                        start = 1.dp,
+                        end = 1.dp,
+                        top = 1.dp,
+                        bottom = 1.dp
+                    ),
+                    iconColor = SaltTheme.colors.text,
                     text = stringResource(R.string.app_language),
                     selectedItem = when (selectedLanguage.value) {
                         "system" -> stringResource(R.string.follow_system)
@@ -332,15 +340,7 @@ fun SettingsPageUi(
                         "ko" -> stringResource(R.string.korean)
                         else -> ""
                     },
-                    popupWidth = 180,
-                    iconPainter = painterResource(id = R.drawable.language),
-                    iconColor = SaltTheme.colors.text,
-                    iconPaddingValues = PaddingValues(
-                        start = 1.dp,
-                        end = 1.dp,
-                        top = 1.dp,
-                        bottom = 1.dp
-                    )
+                    popupWidth = 180
                 ) {
                     PopupMenuItem(
                         onClick = {

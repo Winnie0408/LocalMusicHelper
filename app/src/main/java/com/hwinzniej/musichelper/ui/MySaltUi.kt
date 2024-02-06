@@ -80,6 +80,7 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.window.DialogWindowProvider
 import com.hwinzniej.musichelper.R
 import com.hwinzniej.musichelper.utils.MyVibrationEffect
+import com.hwinzniej.musichelper.utils.Tools
 import com.moriafly.salt.ui.ItemOutHalfSpacer
 import com.moriafly.salt.ui.ItemOutSpacer
 import com.moriafly.salt.ui.SaltTheme
@@ -186,7 +187,7 @@ fun BasicDialog(
 
 @UnstableSaltApi
 @Composable
-fun ItemPopup(  //TODO 添加图标、根据文字长度自动调整宽度、优化左右点击时弹出的位置（Tools.measureTextWidthInDp）；右侧Popup在Dialog内使用时，位置不对
+fun ItemPopup(  //TODO 根据文字长度自动调整宽度；在对话框内点击，右侧弹出位置可能会出界
     state: PopupState,
     enabled: Boolean = true,
     iconPainter: Painter? = null,
@@ -196,9 +197,10 @@ fun ItemPopup(  //TODO 添加图标、根据文字长度自动调整宽度、优
     sub: String? = null,
     selectedItem: String = "",
     popupWidth: Int = 160,
-    offsetReparation: Int = 0,
+    rightSubWeight: Float = 0.5f,
     content: @Composable ColumnScope.() -> Unit
 ) {
+    val context = LocalContext.current
     Box {
         val boxWidth = remember { mutableFloatStateOf(0f) }
         val clickOffsetX = remember { mutableFloatStateOf(0f) }
@@ -266,10 +268,13 @@ fun ItemPopup(  //TODO 添加图标、根据文字长度自动调整宽度、优
             }
             Spacer(modifier = Modifier.width(SaltTheme.dimens.contentPadding))
             Text(
+                modifier = Modifier
+                    .weight(if (selectedItem.isEmpty()) 0.001f else rightSubWeight),
                 text = selectedItem,
                 color = SaltTheme.colors.subText,
                 style = SaltTheme.textStyles.main,
-                fontSize = 14.sp
+                fontSize = 14.sp,
+                textAlign = TextAlign.End
             )
             Icon(
                 modifier = Modifier
@@ -285,9 +290,13 @@ fun ItemPopup(  //TODO 添加图标、根据文字长度自动调整宽度、优
             onDismissRequest = {
                 state.dismiss()
             },
-            offset = if (boxWidth.floatValue / 2 > clickOffsetX.floatValue) DpOffset(16.dp, 0.dp)
-            else DpOffset(
-                (LocalConfiguration.current.screenWidthDp - (popupWidth + 50) - offsetReparation).dp,
+            offset = DpOffset(
+                Tools().calPopupLocation(
+                    context,
+                    clickOffsetX.floatValue,
+                    popupWidth,
+                    LocalConfiguration.current.screenWidthDp
+                ).dp,
                 0.dp
             ),
         ) {
@@ -568,12 +577,14 @@ fun BasicButton(
 }
 
 @Composable
-fun ItemValue(  //TODO  自定义Item和Value的所占的宽度比例
+fun ItemValue(
     text: String,
     sub: String? = null,
     rightSub: String? = null,
     clickable: Boolean = false,
-    onClick: () -> Unit = {}
+    onClick: () -> Unit = {},
+    textWeight: Float = 1f,
+    rightSubWeight: Float = 1f,
 ) {
     Column(modifier = Modifier.clickable(enabled = clickable) { onClick() }) {
         Row(
@@ -586,7 +597,7 @@ fun ItemValue(  //TODO  自定义Item和Value的所占的宽度比例
                 ),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Column(modifier = Modifier.weight(1f)) {
+            Column(modifier = Modifier.weight(textWeight)) {
                 Text(
                     text = text,
                     style = SaltTheme.textStyles.main
@@ -604,7 +615,7 @@ fun ItemValue(  //TODO  自定义Item和Value的所占的宽度比例
                 Spacer(modifier = Modifier.width(SaltTheme.dimens.contentPadding))
                 SelectionContainer(
                     modifier = Modifier
-                        .weight(1f),
+                        .weight(rightSubWeight),
                 ) {
                     Text(
                         text = rightSub,

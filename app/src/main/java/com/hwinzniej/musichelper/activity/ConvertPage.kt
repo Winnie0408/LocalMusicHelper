@@ -13,6 +13,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.Environment
 import android.provider.Settings
+import android.webkit.CookieManager
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.result.ActivityResultLauncher
@@ -26,12 +27,16 @@ import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.edit
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import com.alibaba.fastjson2.JSON
 import com.alibaba.fastjson2.JSONObject
 import com.hwinzniej.musichelper.MainActivity
 import com.hwinzniej.musichelper.R
+import com.hwinzniej.musichelper.data.DataStoreConstants
 import com.hwinzniej.musichelper.data.SourceApp
 import com.hwinzniej.musichelper.data.database.MusicDatabase
 import com.hwinzniej.musichelper.data.model.MusicInfo
@@ -61,6 +66,7 @@ class ConvertPage(
     val db: MusicDatabase,
     componentActivity: ComponentActivity,
     val encryptServer: MutableState<String>,
+    val dataStore: DataStore<Preferences>,
 ) : PermissionResultHandler {
     var databaseFileName = mutableStateOf("")
     var selectedSourceApp = mutableIntStateOf(0)
@@ -95,6 +101,8 @@ class ConvertPage(
     var cookie = mutableStateOf("")
     var showLoginDialog = mutableStateOf(false)
     var loginUserId = mutableStateOf("")
+    var errorDialogCustomAction = mutableStateOf({})
+    var lastLoginTimestamp = mutableStateOf(0L)
 
     /**
      * 请求存储权限
@@ -177,11 +185,27 @@ class ConvertPage(
 //==================== Android 10- 使用====================
 
     fun selectDatabaseFile() {
-        openMusicPlatformSqlFileLauncher.launch(arrayOf("*/*"))
+        try {
+            openMusicPlatformSqlFileLauncher.launch(arrayOf("*/*"))
+        } catch (_: Exception) {
+            Toast.makeText(
+                context,
+                context.getString(R.string.unable_start_documentsui),
+                Toast.LENGTH_SHORT
+            ).show()
+        }
     }
 
     fun selectResultFile() {
-        openResultSqlFileLauncher.launch(arrayOf("*/*"))
+        try {
+            openResultSqlFileLauncher.launch(arrayOf("*/*"))
+        } catch (_: Exception) {
+            Toast.makeText(
+                context,
+                context.getString(R.string.unable_start_documentsui),
+                Toast.LENGTH_SHORT
+            ).show()
+        }
     }
 
     fun handleUri(uri: Uri?, code: Int) {
@@ -215,6 +239,7 @@ class ConvertPage(
             playlistId.clear()
             playlistName.clear()
             playlistSum.clear()
+            errorDialogTitle.value = ""
             errorDialogContent.value = ""
             loadingProgressSema.acquire()
             loadingProgressSema.acquire()
@@ -565,6 +590,9 @@ class ConvertPage(
                                 "\\buid=\\d+".toRegex().find(cookie.value)?.value?.substring(4)!!
                             cookie.value = "uid=\\d+;?\\s?".toRegex().replace(cookie.value, "")
                         }
+                        dataStore.edit { settings ->
+                            settings[DataStoreConstants.NETEASE_USER_ID] = loginUserId.value
+                        }
                         val encrypted = Tools().encryptString(
                             """{"limit":100,"offset":0,"uid":${loginUserId.value}}""",
                             "netease",
@@ -651,6 +679,12 @@ class ConvertPage(
                                 )
                             }
                             db.close()
+                            if (response.getString("version") == "0") {
+                                errorDialogTitle.value = context.getString(R.string.tips)
+                                errorDialogContent.value =
+                                    "- ${context.getString(R.string.login_info_maybe_expired)}\n"
+                                showErrorDialog.value = true
+                            }
                         }
 
                         2 -> {
@@ -667,10 +701,14 @@ class ConvertPage(
                             )
                             databaseFilePath.value = databaseFile.absolutePath
 
+                            var loginInfoExpired = true
                             val playlistInfo =
                                 response.getJSONObject("data").getJSONArray("disslist")
                             playlistInfo.forEach {
                                 val playlist = it as JSONObject
+                                if (playlist.getString("diss_cover") == "?n=1") {
+                                    loginInfoExpired = false
+                                }
                                 if (playlist.getInteger("song_cnt") == 0) {
                                     emptyPlaylistNum++
                                     return@forEach
@@ -724,6 +762,12 @@ class ConvertPage(
                                 )
                             }
                             db.close()
+                            if (loginInfoExpired) {
+                                errorDialogTitle.value = context.getString(R.string.tips)
+                                errorDialogContent.value =
+                                    "- ${context.getString(R.string.login_info_maybe_expired)}\n"
+                                showErrorDialog.value = true
+                            }
                         }
 
                         3 -> {
@@ -762,7 +806,7 @@ class ConvertPage(
                 errorDialogTitle.value =
                     context.getString(R.string.error_while_getting_data_dialog_title)
                 errorDialogContent.value =
-                    "- ${context.getString(R.string.get_playlist_failed)}\n  - $e"
+                    "- ${context.getString(R.string.get_playlist_failed)}\n  - $e\n"
                 showErrorDialog.value = true
             }
         }
@@ -829,12 +873,12 @@ class ConvertPage(
             errorDialogTitle.value =
                 context.getString(R.string.error)
             errorDialogContent.value =
-                "- ${context.getString(R.string.please_select_at_least_one_playlist)}"
+                "- ${context.getString(R.string.please_select_at_least_one_playlist)}\n"
             showErrorDialog.value = true
             return
         }
         for (i in playlistEnabled.indices) {
-            if (playlistEnabled[i] == 2) {
+            if (playlistEnabled[i] == 2 || playlistEnabled[i] == 3) {
                 playlistEnabled[i] = 1
             }
         }
@@ -1027,7 +1071,7 @@ class ConvertPage(
 
                                 }
                             }
-
+                            delay(500L)
                             showNumberProgressBar.value = true
                             showLoadingProgressBar.value = false
                         } else {
@@ -1038,7 +1082,7 @@ class ConvertPage(
                         errorDialogTitle.value =
                             context.getString(R.string.error_while_getting_data_dialog_title)
                         errorDialogContent.value =
-                            "- ${context.getString(R.string.get_playlist_failed)}\n  - $e"
+                            "- ${context.getString(R.string.get_playlist_failed)}\n  - $e\n"
                         showErrorDialog.value = true
                         showLoadingProgressBar.value = false
                         return@launch
@@ -1115,34 +1159,36 @@ class ConvertPage(
                 }
 //                        JSON.parseObject(songArtist.substring(1, songArtist.length - 1))
 //                            .getString("name")
-                songArtist = songArtist.replace(" ?& ?".toRegex(), "/").replace("、", "/")
+                songArtist = songArtist.replace("\\s?&\\s?".toRegex(), "/").replace("、", "/")
                 songAlbum =
                     songInfoCursor.getString(songInfoCursor.getColumnIndexOrThrow(sourceApp.songInfoSongAlbum))
 
                 if (selectedMatchingMode.intValue == 1) {
-                    val songSimilarityArray = mutableMapOf<String, Double>()
-                    val artistSimilarityArray = mutableMapOf<String, Double>()
-                    val albumSimilarityArray = mutableMapOf<String, Double>()
+                    val songSimilarityArray = mutableMapOf<Int, Double>()
+                    val artistSimilarityArray = mutableMapOf<Int, Double>()
+                    val albumSimilarityArray = mutableMapOf<Int, Double>()
 
                     var songArtistMaxSimilarity = 0.0
                     var songAlbumMaxSimilarity = 0.0
+                    var songArtistMaxKey = 0
+                    var songAlbumMaxKey = 0
 
                     val songThread = async {
                         //歌曲名相似度列表
                         if (enableBracketRemoval.value) for (k in music3InfoList.indices) {
-                            songSimilarityArray[k.toString()] = Tools().similarityRatio(
+                            songSimilarityArray[k] = Tools().similarityRatio(
                                 songName.replace(
-                                    "(?i) ?\\((?!inst|[^()]* ver)[^)]*\\) ?".toRegex(),
+                                    "(?i)\\s?\\((?!inst|[^()]* ver)[^)]*\\)\\s?".toRegex(),
                                     ""
                                 ).lowercase(),
                                 music3InfoList[k].song
                                     .replace(
-                                        "(?i) ?\\((?!inst|[^()]* ver)[^)]*\\) ?".toRegex(),
+                                        "(?i)\\s?\\((?!inst|[^()]* ver)[^)]*\\)\\s?".toRegex(),
                                         ""
                                     ).lowercase()
                             )
                         } else for (k in music3InfoList.indices) {
-                            songSimilarityArray[k.toString()] = Tools().similarityRatio(
+                            songSimilarityArray[k] = Tools().similarityRatio(
                                 songName.lowercase(), music3InfoList[k].song.lowercase()
                             )
                         }
@@ -1152,29 +1198,29 @@ class ConvertPage(
                         //歌手名相似度列表
                         if (enableArtistNameMatch.value) {
                             if (enableBracketRemoval.value) for (k in music3InfoList.indices) {
-                                artistSimilarityArray[k.toString()] =
+                                artistSimilarityArray[k] =
                                     Tools().similarityRatio(
                                         songArtist.replace(
-                                            "(?i) ?\\((?!inst|[^()]* ver)[^)]*\\) ?".toRegex(),
+                                            "(?i)\\s?\\((?!inst|[^()]* ver)[^)]*\\)\\s?".toRegex(),
                                             ""
                                         ).lowercase(),
                                         music3InfoList[k].artist
                                             .replace(
-                                                "(?i) ?\\((?!inst|[^()]* ver)[^)]*\\) ?".toRegex(),
+                                                "(?i)\\s?\\((?!inst|[^()]* ver)[^)]*\\)\\s?".toRegex(),
                                                 ""
                                             ).lowercase()
                                     )
                             } else for (k in music3InfoList.indices) {
-                                artistSimilarityArray[k.toString()] =
+                                artistSimilarityArray[k] =
                                     Tools().similarityRatio(
                                         songArtist.lowercase(),
                                         music3InfoList[k].artist.lowercase()
                                     )
                             }
                             songArtistMaxSimilarity =
-                                Tools().getMaxValue(artistSimilarityArray)?.value!! //获取相似度的最大值
-//                            val songArtistMaxKey =
-//                                Tools().getMaxValue(artistSimilarityArray)?.key //获取相似度的最大值对应的歌手名
+                                Tools().getMaxValueIntDouble(artistSimilarityArray)?.value!! //获取相似度的最大值
+                            songArtistMaxKey =
+                                Tools().getMaxValueIntDouble(artistSimilarityArray)?.key!! //获取相似度的最大值对应的歌手名的位置
                         } else {
                             songArtistMaxSimilarity = 1.0
                         }
@@ -1184,30 +1230,30 @@ class ConvertPage(
                         //专辑名相似度列表
                         if (enableAlbumNameMatch.value) {
                             if (enableBracketRemoval.value) for (k in music3InfoList.indices) {
-                                albumSimilarityArray[k.toString()] =
+                                albumSimilarityArray[k] =
                                     Tools().similarityRatio(
                                         songAlbum.replace(
-                                            "(?i) ?\\((?!inst|[^()]* ver)[^)]*\\) ?".toRegex(),
+                                            "(?i)\\s?\\((?!inst|[^()]* ver)[^)]*\\)\\s?".toRegex(),
                                             ""
                                         ).lowercase(),
                                         music3InfoList[k].album
                                             .replace(
-                                                "(?i) ?\\((?!inst|[^()]* ver)[^)]*\\) ?".toRegex(),
+                                                "(?i)\\s?\\((?!inst|[^()]* ver)[^)]*\\)\\s?".toRegex(),
                                                 ""
                                             )
                                             .lowercase()
                                     )
                             } else for (k in music3InfoList.indices) {
-                                albumSimilarityArray[k.toString()] =
+                                albumSimilarityArray[k] =
                                     Tools().similarityRatio(
                                         songAlbum.lowercase(),
                                         music3InfoList[k].album.lowercase()
                                     )
                             }
                             songAlbumMaxSimilarity =
-                                Tools().getMaxValue(albumSimilarityArray)?.value!! //获取相似度的最大值
-//                            val songAlbumMaxKey =
-//                                Tools().getMaxValue(albumSimilarityArray)?.key //获取相似度的最大值对应的专辑名
+                                Tools().getMaxValueIntDouble(albumSimilarityArray)?.value!! //获取相似度的最大值
+                            songAlbumMaxKey =
+                                Tools().getMaxValueIntDouble(albumSimilarityArray)?.key!! //获取相似度的最大值对应的专辑名的位置
                         } else {
                             songAlbumMaxSimilarity = 1.0
                         }
@@ -1216,15 +1262,16 @@ class ConvertPage(
                     artistThread.await()
                     albumThread.await()
 
-                    val songNameMaxSimilarity = Tools().getMaxValue(songSimilarityArray)?.value!!
-                    val songNameMaxKey = Tools().getMaxValue(songSimilarityArray)?.key
+                    val songNameMaxSimilarity =
+                        Tools().getMaxValueIntDouble(songSimilarityArray)?.value!!
+                    val songNameMaxKey = Tools().getMaxValueIntDouble(songSimilarityArray)?.key!!
 
                     val autoSuccess =
                         (songNameMaxSimilarity >= similarity.floatValue / 100
                                 && songArtistMaxSimilarity >= similarity.floatValue / 100
                                 && songAlbumMaxSimilarity >= similarity.floatValue / 100)
 
-                    val songConvertResult = music3InfoList[songNameMaxKey?.toInt()!!]
+                    val songConvertResult = music3InfoList[songNameMaxKey]
                     convertResultMap[num++] =
                         arrayOf(
                             if (autoSuccess) "0"
@@ -1239,7 +1286,7 @@ class ConvertPage(
                         )
 
                 } else if (selectedMatchingMode.intValue == 2) {
-                    val similarityArray = mutableMapOf<String, Double>()
+                    val similarityArray = mutableMapOf<Int, Double>()
                     var songInfo = songName
                     if (enableArtistNameMatch.value)
                         songInfo = "$songInfo$songArtist"
@@ -1248,32 +1295,32 @@ class ConvertPage(
 
                     if (enableBracketRemoval.value)
                         for (k in music3InfoList.indices) {
-                            similarityArray[k.toString()] = Tools().similarityRatio(
+                            similarityArray[k] = Tools().similarityRatio(
                                 songInfo.replace(
-                                    "(?i) ?\\((?!inst|[^()]* ver)[^)]*\\) ?".toRegex(),
+                                    "(?i)\\s?\\((?!inst|[^()]* ver)[^)]*\\)\\s?".toRegex(),
                                     ""
                                 ).lowercase(),
                                 "${music3InfoList[k].song}${music3InfoList[k].artist}${music3InfoList[k].album}"
                                     .replace(
-                                        "(?i) ?\\((?!inst|[^()]* ver)[^)]*\\) ?".toRegex(),
+                                        "(?i)\\s?\\((?!inst|[^()]* ver)[^)]*\\)\\s?".toRegex(),
                                         ""
                                     ).lowercase()
                             )
                         }
                     else
                         for (k in music3InfoList.indices) {
-                            similarityArray[k.toString()] = Tools().similarityRatio(
+                            similarityArray[k] = Tools().similarityRatio(
                                 songInfo.lowercase(),
                                 "${music3InfoList[k].song}${music3InfoList[k].artist}${music3InfoList[k].album}".lowercase()
                             )
                         }
-                    val maxSimilarity = Tools().getMaxValue(similarityArray)
+                    val maxSimilarity = Tools().getMaxValueIntDouble(similarityArray)
                     val songMaxSimilarity = maxSimilarity?.value!!
                     val songMaxKey = maxSimilarity.key
 
                     val autoSuccess = songMaxSimilarity >= similarity.floatValue / 100
 
-                    val songConvertResult = music3InfoList[songMaxKey.toInt()]
+                    val songConvertResult = music3InfoList[songMaxKey]
 
                     convertResultMap[num++] =
                         arrayOf(
@@ -1295,7 +1342,39 @@ class ConvertPage(
             cursor.close()
             db.close()
             numberProgress.floatValue = 1.0f
-            convertResult.putAll(convertResultMap)
+            if (convertResultMap.isEmpty()) {
+                errorDialogTitle.value =
+                    context.getString(R.string.error)
+                errorDialogContent.value =
+                    "- ${playlistName[firstIndex1]}:\n  - ${
+                        context.getString(R.string.no_song_in_playlist).replace(
+                            "#",
+                            when (selectedSourceApp.intValue) {
+                                1 -> context.getString(R.string.source_netease_cloud_music)
+                                2 -> context.getString(R.string.source_qq_music)
+                                3 -> context.getString(R.string.source_kugou_music)
+                                4 -> context.getString(R.string.source_kuwo_music)
+                                else -> ""
+                            }
+                        )
+                    }\n\n${context.getString(R.string.will_skip_this_playlist)}\n"
+                errorDialogCustomAction.value = {
+                    saveCurrentConvertResult(
+                        saveSuccessSongs = false,
+                        saveCautionSongs = false,
+                        saveManualSongs = true,
+                        fileName = ""
+                    )
+                    Toast.makeText(
+                        context,
+                        context.getString(R.string.skipped),
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+                showErrorDialog.value = true
+            } else {
+                convertResult.putAll(convertResultMap)
+            }
             lifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
                 delay(650L)
                 showNumberProgressBar.value = false
@@ -1426,67 +1505,71 @@ class ConvertPage(
         fileName: String
     ) {
         lifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
-            if (!saveSuccessSongs && !saveCautionSongs && !saveManualSongs) {
+            val firstIndex1 = playlistEnabled.indexOfFirst { it == 1 }
+            if (!convertResult.isEmpty()) {
+                if (!saveSuccessSongs && !saveCautionSongs && !saveManualSongs) {
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(
+                            context,
+                            context.getString(R.string.no_song_to_save),
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                    return@launch
+                }
+                showDialogProgressBar.value = true
+                val file = File(
+                    "${Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)}/${
+                        context.getString(
+                            R.string.app_name
+                        )
+                    }/${
+                        LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+                    }",
+                    fileName
+                )
+                if (file.exists())
+                    file.delete()
+                if (file.parentFile?.exists() == false)
+                    file.parentFile?.mkdirs()
+                val fileWriter = FileWriter(file, true)
+
+                for (i in 0 until convertResult.size) {
+                    if (convertResult[i] == null)
+                        continue
+                    if (convertResult[i]!![0] == "0" && saveSuccessSongs) {
+                        fileWriter.write("${convertResult[i]!![7]}\n")
+                        continue
+                    }
+                    if (convertResult[i]!![0] == "1" && saveCautionSongs) {
+                        fileWriter.write("${convertResult[i]!![7]}\n")
+                        continue
+                    }
+                    if (convertResult[i]!![0] == "2" && saveManualSongs) {
+                        fileWriter.write("${convertResult[i]!![7]}\n")
+                        continue
+                    }
+                }
+
+                fileWriter.close()
                 withContext(Dispatchers.Main) {
                     Toast.makeText(
                         context,
-                        context.getString(R.string.no_song_to_save),
+                        context.getString(R.string.save_success),
                         Toast.LENGTH_SHORT
                     ).show()
                 }
-                return@launch
-            }
-            showDialogProgressBar.value = true
-            val firstIndex1 = playlistEnabled.indexOfFirst { it == 1 }
-            val file = File(
-                "${Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)}/${
-                    context.getString(
-                        R.string.app_name
-                    )
-                }/${
-                    LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
-                }",
-                fileName
-            )
-            if (file.exists())
-                file.delete()
-            if (file.parentFile?.exists() == false)
-                file.parentFile?.mkdirs()
-            val fileWriter = FileWriter(file, true)
-
-            for (i in 0 until convertResult.size) {
-                if (convertResult[i] == null)
-                    continue
-                if (convertResult[i]!![0] == "0" && saveSuccessSongs) {
-                    fileWriter.write("${convertResult[i]!![7]}\n")
-                    continue
-                }
-                if (convertResult[i]!![0] == "1" && saveCautionSongs) {
-                    fileWriter.write("${convertResult[i]!![7]}\n")
-                    continue
-                }
-                if (convertResult[i]!![0] == "2" && saveManualSongs) {
-                    fileWriter.write("${convertResult[i]!![7]}\n")
-                    continue
-                }
-            }
-
-            fileWriter.close()
-            withContext(Dispatchers.Main) {
-                Toast.makeText(
+                showDialogProgressBar.value = false
+                MyVibrationEffect(
                     context,
-                    context.getString(R.string.save_success),
-                    Toast.LENGTH_SHORT
-                ).show()
+                    (context as MainActivity).enableHaptic.value
+                ).done()
+                showSaveDialog.value = false
+                playlistEnabled[firstIndex1] = 2
+            } else {
+                playlistEnabled[firstIndex1] = 3
             }
-            showDialogProgressBar.value = false
-            MyVibrationEffect(
-                context,
-                (context as MainActivity).enableHaptic.value
-            ).done()
-            showSaveDialog.value = false
             convertResult.clear()
-            playlistEnabled[firstIndex1] = 2
             if (playlistEnabled.count { it == 1 } == 0) {
                 currentPage.intValue = 3
                 File("${resultFilePath}-journal").delete()
@@ -1525,7 +1608,7 @@ class ConvertPage(
     fun copyFolderPathToClipboard() {
         val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         val clip = newPlainText(
-            "SaltPlayerFolder",
+            "PLNBTargetFolder",
             "${Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).absolutePath}/${
                 context.getString(
                     R.string.app_name
@@ -1534,6 +1617,53 @@ class ConvertPage(
         )
         clipboard.setPrimaryClip(clip)
         Toast.makeText(context, context.getString(R.string.copy_success), Toast.LENGTH_SHORT).show()
+    }
+
+    fun autoFillCookie(): String {
+        if (System.currentTimeMillis() - lastLoginTimestamp.value > 259200000) {
+            return ""
+        }
+        if (selectedLoginMethod.intValue == 2) {
+            val temp = when (selectedSourceApp.intValue) {
+                1 -> "${
+                    CookieManager.getInstance().getCookie("music.163.com")
+                }; uid=${loginUserId.value}"
+
+                2 -> CookieManager.getInstance().getCookie("y.qq.com")
+                3 -> CookieManager.getInstance().getCookie("www.kugou.com")
+                4 -> CookieManager.getInstance().getCookie("kuwo.cn")
+                else -> ""
+            }
+            val cookieValid = when (selectedSourceApp.intValue) {
+                1 -> {
+                    temp.contains("\\bMUSIC_U=\\w+".toRegex()) &&
+                            temp.contains("\\b__csrf=\\w+".toRegex()) &&
+                            temp.contains("\\buid=\\d+".toRegex())
+                }
+
+                2 -> {
+                    (temp.contains("\\buin=\\d+".toRegex())
+                            ||
+                            temp.contains("\\bwxuin=\\d+".toRegex()))
+                            &&
+                            temp.contains("\\bqm_keyst=\\w+".toRegex())
+                }
+
+                3 -> false //TODO 待填写
+                4 -> false //TODO 待填写
+                else -> false
+            }
+            if (cookieValid) {
+                selectedLoginMethod.intValue = 1
+                Toast.makeText(
+                    context,
+                    context.getString(R.string.use_last_login_info),
+                    Toast.LENGTH_SHORT
+                ).show()
+                return temp
+            }
+        }
+        return ""
     }
 }
 

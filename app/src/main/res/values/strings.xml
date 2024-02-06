@@ -66,7 +66,7 @@
     <string name="please_select_at_least_one_playlist">Please select at least one song list</string>
     <string name="read_failed">read failed</string>
     <string name="use_scan_fun_first">Please run a music scan on the scan page first</string>
-    <string name="error_details">Error details</string>
+    <string name="error_details">Details</string>
     <string name="in_total">Total: #</string>
     <string name="user_selected">Selected: #</string>
     <string name="select_all">Select All</string>
@@ -91,7 +91,7 @@
     <string name="modify_conversion_results">Modify conversion result</string>
     <string name="search_song_library">Search song library…</string>
     <string name="songlist_song_info">Songlist song info</string>
-    <string name="song_name">Song name</string>
+    <string name="song_name">Name</string>
     <string name="no_search_result">No results for the search</string>
     <string name="modification_result">Modification result</string>
     <string name="match_success">Success</string>
@@ -102,7 +102,7 @@
     <string name="all">All</string>
     <string name="filter">Filter</string>
     <string name="re_modify_params">Re-modify params</string>
-    <string name="save_conversion_results">Save results</string>
+    <string name="save_conversion_results">Save result</string>
     <string name="save_options">Save options</string>
     <string name="state_of_the_song_to_be_saved">Status of the song to be saved</string>
     <string name="result_file_save_location">Location of the result file:</string>
@@ -215,7 +215,7 @@
     <string name="web_login">Web</string>
     <string name="cookie_login">Cookie</string>
     <string name="please_input_cookie">Enter Cookie…</string>
-    <string name="cookie_input_error">Wrong Cookiesformat</string>
+    <string name="cookie_input_error">Wrong Cookie format</string>
     <string name="no_valid_cookies_found">No valid Cookie found</string>
     <string name="select_encrypt_server_title">Select encryption server</string>
     <string name="select_encrypt_server">Encryption server</string>
@@ -225,6 +225,17 @@
     <string name="optional_servers">Optional servers</string>
     <string name="get_playlist_failed">Failed to get songlist info.</string>
     <string name="get_playlist_hidden">Hidden # empty playlist(s)</string>
-    <string name="logout">Switch Account / Logout</string>
+    <string name="switch_account_logout">Switch Account / Logout</string>
     <string name="not_yet_deployed">(Not yet activated)</string>
+    <string name="unable_start_documentsui">DocumentsUI launch failed</string>
+    <string name="music_file_encrypted">Encrypted, please decrypt first.</string>
+    <string name="no_song_in_playlist">The song list is empty, please reload it in #.</string>
+    <string name="will_skip_this_playlist">Will skip current playlist.</string>
+    <string name="skipped">Skipped</string>
+    <string name="logout">Logout</string>
+    <string name="logged_out">Logged out</string>
+    <string name="account">Account of #</string>
+    <string name="use_last_login_info">Autofill with previous login infos</string>
+    <string name="login_info_maybe_expired">Cookies may expire and song list data may be incomplete.</string>
+    <string name="tips">Tips</string>
 </resources>

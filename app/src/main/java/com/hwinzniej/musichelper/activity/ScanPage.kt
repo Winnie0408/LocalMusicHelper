@@ -32,6 +32,7 @@ import com.hwinzniej.musichelper.utils.Tools
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.jaudiotagger.audio.AudioFile
 import org.jaudiotagger.audio.AudioFileIO
 import org.jaudiotagger.tag.FieldKey
@@ -176,7 +177,17 @@ class ScanPage(
                             fileDb.close()
                         } else {
                             db.musicDao().deleteAll()
-                            openDirectoryLauncher.launch(null)
+                            try {
+                                openDirectoryLauncher.launch(null)
+                            } catch (_: Exception) {
+                                withContext(Dispatchers.Main) {
+                                    Toast.makeText(
+                                        context,
+                                        context.getString(R.string.unable_start_documentsui),
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+                            }
                         }
                     }
                 } else {
@@ -200,7 +211,17 @@ class ScanPage(
                                 ).toInt()
                         } else {
                             db.musicDao().deleteAll()
-                            openDirectoryLauncher.launch(null)
+                            try {
+                                openDirectoryLauncher.launch(null)
+                            } catch (_: Exception) {
+                                withContext(Dispatchers.Main) {
+                                    Toast.makeText(
+                                        context,
+                                        context.getString(R.string.unable_start_documentsui),
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+                            }
                         }
                     }
                 }
@@ -210,8 +231,19 @@ class ScanPage(
                     if (musicCount != 0) {
                         showConflictDialog.value = true
                         lastIndex = musicCount - 1
-                    } else
-                        openDirectoryLauncher.launch(null)
+                    } else {
+                        try {
+                            openDirectoryLauncher.launch(null)
+                        } catch (_: Exception) {
+                            withContext(Dispatchers.Main) {
+                                Toast.makeText(
+                                    context,
+                                    context.getString(R.string.unable_start_documentsui),
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -222,7 +254,15 @@ class ScanPage(
             1 -> {  //文件冲突，追加
                 showConflictDialog.value = false
                 lastIndex++
-                openDirectoryLauncher.launch(null)
+                try {
+                    openDirectoryLauncher.launch(null)
+                } catch (_: Exception) {
+                    Toast.makeText(
+                        context,
+                        context.getString(R.string.unable_start_documentsui),
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
             }
 
             2 -> {  //文件冲突，覆盖
@@ -254,7 +294,15 @@ class ScanPage(
                     db.musicDao().deleteAll()
                 }
                 lastIndex = 0
-                openDirectoryLauncher.launch(null)
+                try {
+                    openDirectoryLauncher.launch(null)
+                } catch (_: Exception) {
+                    Toast.makeText(
+                        context,
+                        context.getString(R.string.unable_start_documentsui),
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
             }
         }
     }
@@ -295,7 +343,17 @@ class ScanPage(
                         AudioFileIO.read(curFile)
                     } catch (e: Exception) {
                         if (!curFile.name.startsWith(".") && !curFile.name.endsWith(".lrc")) {
-                            errorLog.value += "- ${curFile.name}:\n  - ${e}\n"
+                            if (curFile.name.contains(".ncm") || curFile.name.contains(".qmc") || curFile.name.contains(
+                                    ".kgm"
+                                ) || curFile.name.contains(".kwm") || curFile.name.contains(".mflac") || curFile.name.contains(
+                                    ".mgg"
+                                ) || curFile.name.contains(".tkm") || curFile.name.contains(".tm") || curFile.name.contains(
+                                    ".bkc"
+                                )
+                            ) {
+                                errorLog.value += "- ${curFile.name}:\n  - ${context.getString(R.string.music_file_encrypted)}\n"
+                            } else
+                                errorLog.value += "- ${curFile.name}:\n  - ${e}\n"
                         }
                         continue
                     }

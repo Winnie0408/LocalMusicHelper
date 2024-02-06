@@ -70,6 +70,7 @@ import com.hwinzniej.musichelper.ui.SettingsPageUi
 import com.hwinzniej.musichelper.ui.YesNoDialog
 import com.hwinzniej.musichelper.utils.MyDataStore
 import com.hwinzniej.musichelper.utils.MyVibrationEffect
+import com.hwinzniej.musichelper.utils.Tools
 import com.moriafly.salt.ui.BottomBar
 import com.moriafly.salt.ui.BottomBarItem
 import com.moriafly.salt.ui.ItemTitle
@@ -140,19 +141,26 @@ class MainActivity : ComponentActivity() {
             applicationContext, MusicDatabase::class.java, "music"
         ).build()
 
-        scanPage = ScanPage(this, this, openDirectoryLauncher, db, this)
+        scanPage = ScanPage(
+            context = this,
+            lifecycleOwner = this,
+            openDirectoryLauncher = openDirectoryLauncher,
+            db = db,
+            componentActivity = this
+        )
 //        processPage = ProcessPage(this, this, db)
-        settingsPage = SettingsPage(this, this)
+        settingsPage = SettingsPage(context = this, lifecycleOwner = this)
 
         convertPage =
             ConvertPage(
-                this,
-                this,
-                openMusicPlatformSqlFileLauncher,
-                openResultSqlFileLauncher,
-                db,
-                this,
-                settingsPage.encryptServer
+                context = this,
+                lifecycleOwner = this,
+                openMusicPlatformSqlFileLauncher = openMusicPlatformSqlFileLauncher,
+                openResultSqlFileLauncher = openResultSqlFileLauncher,
+                db = db,
+                componentActivity = this,
+                encryptServer = settingsPage.encryptServer,
+                dataStore = dataStore
             )
 
         setContent {
@@ -246,6 +254,10 @@ private fun Pages(
             preferences[DataStoreConstants.KEY_USE_ROOT_ACCESS] ?: false
         settingsPage.encryptServer.value =
             preferences[DataStoreConstants.KEY_ENCRYPT_SERVER] ?: "cf"
+        convertPage.loginUserId.value =
+            preferences[DataStoreConstants.NETEASE_USER_ID] ?: ""
+        convertPage.lastLoginTimestamp.value =
+            preferences[DataStoreConstants.LAST_LOGIN_TIMESTAMP] ?: 0L
     }
 
     LaunchedEffect(key1 = mainPage.language.value) {
@@ -334,7 +346,7 @@ private fun Pages(
                                 .fillMaxWidth()
                                 .heightIn(
                                     min = 20.dp,
-                                    max = (LocalConfiguration.current.screenHeightDp / 4.6).dp
+                                    max = (LocalConfiguration.current.screenHeightDp / 3.5).dp
                                 )
                                 .clip(RoundedCornerShape(10.dp))
                         ) {
@@ -381,10 +393,13 @@ private fun Pages(
                     )
                     latestVersion.value =
                         response.getString("name").replace("v", "")
-                    if (latestVersion.value != context.packageManager.getPackageInfo(
-                            context.packageName,
-                            0
-                        ).versionName
+                    if (Tools().isVersionNewer(
+                            curVersion = context.packageManager.getPackageInfo(
+                                context.packageName,
+                                0
+                            ).versionName,
+                            newVersion = latestVersion.value
+                        )
                     ) {
                         latestDescription.value = response.getString("description")
                         latestDownloadLink.value = response.getString("description")
@@ -483,6 +498,7 @@ private fun Pages(
                         selectedMethod = convertPage.selectedMethod,
                         selectedLoginMethod = convertPage.selectedLoginMethod,
                         showLoginDialog = convertPage.showLoginDialog,
+                        dataStore = mainPage.dataStore,
                     )
                 }
 

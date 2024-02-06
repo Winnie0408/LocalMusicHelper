@@ -13,8 +13,8 @@ android {
         applicationId = "com.hwinzniej.musichelper"
         minSdk = 26
         targetSdk = 34
-        versionCode = 15
-        versionName = "1.1.0"
+        versionCode = 16
+        versionName = "1.1.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -80,7 +80,7 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-test-manifest:1.6.0")
 
     //SaltUI
-    implementation("com.github.Moriafly:SaltUI:0.1.0-dev48")
+    implementation("com.github.Moriafly:SaltUI:0.1.0-dev49")
 
     //JAudioTagger
     implementation("org.bitbucket.ijabz:jaudiotagger:7b004a1")

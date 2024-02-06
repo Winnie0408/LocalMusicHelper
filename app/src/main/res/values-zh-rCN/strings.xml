@@ -65,7 +65,7 @@
     <string name="please_select_at_least_one_playlist">请至少选择1个歌单</string>
     <string name="read_failed">读取失败</string>
     <string name="use_scan_fun_first">请先在扫描页进行一次音乐扫描</string>
-    <string name="error_details">错误详情</string>
+    <string name="error_details">详情</string>
     <string name="in_total">共 # 个</string>
     <string name="user_selected">已选：# 个</string>
     <string name="select_all">全选</string>
@@ -221,6 +221,17 @@
     <string name="optional_servers">可选服务器</string>
     <string name="get_playlist_failed">获取歌单信息失败</string>
     <string name="get_playlist_hidden">已隐藏#个空歌单</string>
-    <string name="logout">切换账号 / 退出登录</string>
+    <string name="switch_account_logout">切换账号 / 退出登录</string>
     <string name="not_yet_deployed">（暂未启用）</string>
+    <string name="unable_start_documentsui">“文件”启动失败</string>
+    <string name="music_file_encrypted">似乎已被加密，请先解密。</string>
+    <string name="no_song_in_playlist">歌单为空，请在#中重新加载。</string>
+    <string name="will_skip_this_playlist">将跳过当前歌单。</string>
+    <string name="skipped">已跳过</string>
+    <string name="logout">退出登录</string>
+    <string name="logged_out">已退出登录</string>
+    <string name="account">#账号</string>
+    <string name="use_last_login_info">已使用之前的登录信息自动填写</string>
+    <string name="login_info_maybe_expired">Cookie可能过期，歌单数据可能不完整。</string>
+    <string name="tips">提示</string>
 </resources>

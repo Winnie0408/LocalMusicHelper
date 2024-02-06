@@ -53,6 +53,7 @@ import androidx.compose.ui.zIndex
 import com.alibaba.fastjson2.JSON
 import com.hwinzniej.musichelper.R
 import com.hwinzniej.musichelper.utils.MyVibrationEffect
+import com.hwinzniej.musichelper.utils.Tools
 import com.moriafly.salt.ui.ItemTitle
 import com.moriafly.salt.ui.RoundedColumn
 import com.moriafly.salt.ui.SaltTheme
@@ -281,10 +282,13 @@ fun AboutPageUi(
                                     )
                                     latestVersion.value =
                                         response.getString("name").replace("v", "")
-                                    if (latestVersion.value != context.packageManager.getPackageInfo(
-                                            context.packageName,
-                                            0
-                                        ).versionName
+                                    if (Tools().isVersionNewer(
+                                            curVersion = context.packageManager.getPackageInfo(
+                                                context.packageName,
+                                                0
+                                            ).versionName,
+                                            newVersion = latestVersion.value
+                                        )
                                     ) {
                                         latestDescription.value = response.getString("description")
                                         latestDownloadLink.value = response.getString("description")
@@ -641,7 +645,7 @@ fun AboutPageUi(
                                         context.getString(R.string.launching_app).replace(
                                             "#", context.getString(
                                                 R.string.coolapk
-                                            ).replace("(：)|(: )".toRegex(), "")
+                                            ).replace("(：)|(:\\s)".toRegex(), "")
                                         ),
                                         Toast.LENGTH_SHORT
                                     ).show()
@@ -651,7 +655,7 @@ fun AboutPageUi(
                                         "${
                                             context.getString(R.string.app_not_installed).replace(
                                                 "#", context.getString(R.string.coolapk)
-                                                    .replace("(：)|(: )".toRegex(), "")
+                                                    .replace("(：)|(:\\s)".toRegex(), "")
                                             )
                                         }, ${
                                             context.getString(R.string.will_open_in_browser)
@@ -670,7 +674,7 @@ fun AboutPageUi(
                                 .replace(
                                     "#",
                                     context.getString(R.string.coolapk)
-                                        .replace("(：)|(: )".toRegex(), "")
+                                        .replace("(：)|(:\\s)".toRegex(), "")
                                 )
                             yesNoDialogContent = ""
                             showYesNoDialog = true

@@ -2,6 +2,7 @@ package com.hwinzniej.musichelper.data
 
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 
 object DataStoreConstants {
@@ -13,4 +14,6 @@ object DataStoreConstants {
     val KEY_USE_ROOT_ACCESS = booleanPreferencesKey("use_root_access")
     val KEY_ENABLE_HAPTIC = booleanPreferencesKey("enable_haptic")
     val KEY_ENCRYPT_SERVER = stringPreferencesKey("encrypt_server")
+    val LAST_LOGIN_TIMESTAMP = longPreferencesKey("last_login_timestamp")
+    val NETEASE_USER_ID = stringPreferencesKey("netease_user_id")
 }

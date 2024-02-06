@@ -239,8 +239,18 @@ class Tools {
      * @param map 要计算的Map集合
      * @return Map.Entry<String, Double> 集合中最大值(Value)的键值对
      */
-    fun getMaxValue(map: Map<String, Double>): Map.Entry<String, Double>? {
+    fun getMaxValueStringDouble(map: Map<String, Double>): Map.Entry<String, Double>? {
         var maxEntry: Map.Entry<String, Double>? = null
+        for (entry in map.entries) {
+            if (maxEntry == null || entry.value > maxEntry.value) {
+                maxEntry = entry
+            }
+        }
+        return maxEntry
+    }
+
+    fun getMaxValueIntDouble(map: Map<Int, Double>): Map.Entry<Int, Double>? {
+        var maxEntry: Map.Entry<Int, Double>? = null
         for (entry in map.entries) {
             if (maxEntry == null || entry.value > maxEntry.value) {
                 maxEntry = entry
@@ -340,4 +350,41 @@ class Tools {
         }
     }
 
+    fun getExceptionDetail(e: Exception): String {
+        val sb = StringBuilder()
+        sb.append(e.toString())
+        sb.append("\n")
+        for (element in e.stackTrace) {
+            sb.append(element.toString())
+            sb.append("\n")
+        }
+        return sb.toString()
+    }
+
+    fun isVersionNewer(curVersion: String, newVersion: String): Boolean {
+        return versionStringToDouble(curVersion) < versionStringToDouble(newVersion)
+    }
+
+    private fun versionStringToDouble(version: String): Double {
+        val versionArray = version.split(".")
+        val integerPart = versionArray[0]
+        val decimalPart = versionArray.drop(1).joinToString("")
+        return "$integerPart.$decimalPart".toDouble()
+    }
+
+    fun calPopupLocation(
+        context: Context,
+        clickOffsetX: Float,
+        popupWidth: Int,
+        screenWidthDp: Int
+    ): Float {
+        val temp = (clickOffsetX / context.resources.displayMetrics.density)
+        return if (temp < 42 + popupWidth / 2) {
+            16f
+        } else if (temp > (screenWidthDp - popupWidth)) {
+            (screenWidthDp - popupWidth - 48).toFloat()
+        } else {
+            temp - popupWidth + 50
+        }
+    }
 }

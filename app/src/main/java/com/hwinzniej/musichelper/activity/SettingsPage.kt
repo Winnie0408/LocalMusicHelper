@@ -23,27 +23,27 @@ class SettingsPage(
         2 to context.getString(R.string.pinging)
     )
 
-    fun checkServerPing() {  //TODO 似乎按顺序执行了，不是并行
+    fun checkServerPing() {
         lifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
             val regex = "\\d+\\.\\d+".toRegex()
             async {
-                val text = Tools().execShellCmd("ping -c 2 -q -W 3 'plnb-cf.hwinzniej.top'", true)
-                if (text.contains("[1-2] received".toRegex()))
+                val text = Tools().execShellCmd("ping -c 1 -q -W 3 'plnb-cf.hwinzniej.top'", true)
+                if (text.contains("1 received"))
                     serverPing[0] = "${regex.findAll(text).toList()[3].value} ms"
                 else
                     serverPing[0] = context.getString(R.string.timeout)
             }
             async {
-                val text = Tools().execShellCmd("ping -c 2 -q -W 3 'dns.hwinzniej.top'", true)
-                if (text.contains("[1-2] received".toRegex()))
+                val text = Tools().execShellCmd("ping -c 1 -q -W 3 'dns.hwinzniej.top'", true)
+                if (text.contains("1 received"))
                     serverPing[1] = "${regex.findAll(text).toList()[3].value} ms"
                 else
                     serverPing[1] = context.getString(R.string.timeout)
 
             }
             async {
-                val text = Tools().execShellCmd("ping -c 2 -q -W 3 'mom.hwinzniej.top'", true)
-                if (text.contains("[1-2] received".toRegex()))
+                val text = Tools().execShellCmd("ping -c 1 -q -W 3 'mom.hwinzniej.top'", true)
+                if (text.contains("1 received"))
                     serverPing[2] = "${regex.findAll(text).toList()[3].value} ms"
                 else
                     serverPing[2] = context.getString(R.string.timeout)

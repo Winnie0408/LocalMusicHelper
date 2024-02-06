@@ -46,7 +46,6 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableFloatState
@@ -74,8 +73,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.zIndex
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.edit
 import com.hwinzniej.musichelper.R
 import com.hwinzniej.musichelper.activity.ConvertPage
+import com.hwinzniej.musichelper.data.DataStoreConstants
 import com.hwinzniej.musichelper.utils.MyVibrationEffect
 import com.moriafly.salt.ui.ItemContainer
 import com.moriafly.salt.ui.ItemTitle
@@ -129,7 +132,8 @@ fun ConvertPageUi(
     showNumberProgressBar: MutableState<Boolean>,
     selectedMethod: MutableIntState,
     selectedLoginMethod: MutableIntState,
-    showLoginDialog: MutableState<Boolean>
+    showLoginDialog: MutableState<Boolean>,
+    dataStore: DataStore<Preferences>,
 ) {
     val sourceAppPopupMenuState = rememberPopupState()
     val methodPopupMenuState = rememberPopupState()
@@ -154,29 +158,32 @@ fun ConvertPageUi(
     var selectedTargetApp by remember { mutableIntStateOf(0) }
     val targetAppPopupMenuState = rememberPopupState()
     var selectedMultiSourceApp by remember { mutableIntStateOf(-1) }
-    var isUserLoggedIn by remember { mutableStateOf(false) }
+    var userLoggedIn by remember { mutableStateOf(false) }
 
     fun init() {
-        currentPage.intValue = 0
-        databaseFileName.value = ""
-        useCustomResultFile.value = false
-        customResultFileName.value = ""
-        playlistName.clear()
-        playlistEnabled.clear()
-        playlistSum.clear()
-        selectedMatchingMode.intValue = 1
-        enableBracketRemoval.value = false
-        enableArtistNameMatch.value = true
-        enableAlbumNameMatch.value = true
-        similarity.floatValue = 85f
-        convertResult.clear()
-        inputSearchWords.value = ""
-        searchResult.clear()
-        selectedSongIndex = -1
-        selectedSearchResult = -1
-        showOriginalSonglist = 1
-        selectedTargetApp = 0
-        selectedMultiSourceApp = -1
+        coroutine.launch {
+            currentPage.intValue = 0
+            delay(500L)
+            databaseFileName.value = ""
+            useCustomResultFile.value = false
+            customResultFileName.value = ""
+            playlistName.clear()
+            playlistEnabled.clear()
+            playlistSum.clear()
+            selectedMatchingMode.intValue = 1
+            enableBracketRemoval.value = false
+            enableArtistNameMatch.value = true
+            enableAlbumNameMatch.value = true
+            similarity.floatValue = 85f
+            convertResult.clear()
+            inputSearchWords.value = ""
+            searchResult.clear()
+            selectedSongIndex = -1
+            selectedSearchResult = -1
+            showOriginalSonglist = 1
+            selectedTargetApp = 0
+            selectedMultiSourceApp = -1
+        }
     }
 
     BackHandler(enabled = (currentPage.intValue != 0 && mainActivityPageState.currentPage == 1)) {
@@ -211,7 +218,11 @@ fun ConvertPageUi(
 
     if (showErrorDialog.value) {
         YesDialog(
-            onDismissRequest = { showErrorDialog.value = false },
+            onDismissRequest = {
+                showErrorDialog.value = false
+                convertPage.errorDialogCustomAction.value()
+                convertPage.errorDialogCustomAction.value = {}
+            },
             title = errorDialogTitle.value,
             content = "",
             enableHaptic = enableHaptic.value,
@@ -331,7 +342,7 @@ fun ConvertPageUi(
                         modifier = Modifier.align(Alignment.CenterHorizontally),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        TextButton(
+                        androidx.compose.material3.TextButton(
                             onClick = { slideSimilarity-- },
                             colors = ButtonDefaults.textButtonColors(
                                 contentColor = SaltTheme.colors.text
@@ -346,7 +357,7 @@ fun ConvertPageUi(
                             color = SaltTheme.colors.text
                         )
                         Spacer(modifier = Modifier.width(8.dp))
-                        TextButton(
+                        androidx.compose.material3.TextButton(
                             onClick = { slideSimilarity++ },
                             colors = ButtonDefaults.textButtonColors(
                                 contentColor = SaltTheme.colors.text
@@ -485,11 +496,13 @@ fun ConvertPageUi(
                                 onClick = {
                                     inputSearchWords.value =
                                         "${inputSearchWords.value}${convertResult[selectedSongIndex]!![2]}"
-                                }
+                                },
+                                textWeight = 1f,
+                                rightSubWeight = 2.6f
                             )
                             ItemValue(
                                 text = stringResource(id = R.string.singer).replace(
-                                    "(：)|(: )".toRegex(),
+                                    "(：)|(:\\s)".toRegex(),
                                     ""
                                 ),
                                 rightSub = convertResult[selectedSongIndex]!![4],
@@ -497,11 +510,13 @@ fun ConvertPageUi(
                                 onClick = {
                                     inputSearchWords.value =
                                         "${inputSearchWords.value}${convertResult[selectedSongIndex]!![4]}"
-                                }
+                                },
+                                textWeight = 1f,
+                                rightSubWeight = 2.6f
                             )
                             ItemValue(
                                 text = stringResource(id = R.string.album).replace(
-                                    "(：)|(: )".toRegex(),
+                                    "(：)|(:\\s)".toRegex(),
                                     ""
                                 ),
                                 rightSub = convertResult[selectedSongIndex]!![6],
@@ -509,7 +524,9 @@ fun ConvertPageUi(
                                 onClick = {
                                     inputSearchWords.value =
                                         "${inputSearchWords.value}${convertResult[selectedSongIndex]!![6]}"
-                                }
+                                },
+                                textWeight = 1f,
+                                rightSubWeight = 2.6f
                             )
                         }
                     }
@@ -632,11 +649,22 @@ fun ConvertPageUi(
     }
 
     var needNcmUserId by remember { mutableStateOf(false) }
+    var userInput by remember { mutableStateOf("") }
 
-    if (showLoginDialog.value) {  //TODO 检测到有Cookie且未过期，提示用户直接使用，而不是强制用户打开网页或自行输入
+    LaunchedEffect(key1 = showLoginDialog.value) {
+        if (showLoginDialog.value) {
+            userInput = ""
+            delay(300L)
+            userInput = convertPage.autoFillCookie()
+            if (userInput != "") {
+                userLoggedIn = true
+            }
+        }
+    }
+
+    if (showLoginDialog.value) {
         val loginMethodPopupState = rememberPopupState()
         val webViewState = remember { mutableStateOf<WebView?>(null) }
-        var userInput by remember { mutableStateOf("") }
 
         YesNoDialog(
             onDismiss = {
@@ -666,6 +694,8 @@ fun ConvertPageUi(
                 webViewState.value?.removeAllViews()
             },
             onConfirm = {
+                if (selectedLoginMethod.intValue == 2)
+                    return@YesNoDialog
                 if (selectedLoginMethod.intValue == 0) {
                     convertPage.cookie.value = when (selectedSourceApp.intValue) {
                         1 -> CookieManager.getInstance().getCookie("music.163.com")
@@ -698,6 +728,8 @@ fun ConvertPageUi(
                         if (selectedSourceApp.intValue == 1 && convertPage.loginUserId.value == "") {
                             needNcmUserId = true
                             showDialogProgressBar.value = true
+                            webViewState.value?.settings?.javaScriptEnabled = true
+                            webViewState.value?.resumeTimers()
                             webViewState.value?.loadUrl("https://music.163.com/#/user/update")
                             return@YesNoDialog
                         } else {
@@ -724,8 +756,8 @@ fun ConvertPageUi(
                         2 -> {
                             (userInput.contains("\\buin=\\d+".toRegex())
                                     ||
-                                    userInput.contains("\\bwxuin=\\d+".toRegex())
-                                    ) &&
+                                    userInput.contains("\\bwxuin=\\d+".toRegex()))
+                                    &&
                                     userInput.contains("\\bqm_keyst=\\w+".toRegex())
                         }
 
@@ -748,7 +780,7 @@ fun ConvertPageUi(
                         return@YesNoDialog
                     }
                 }
-                webViewState.value?.loadDataWithBaseURL(null, "", "text/html", "utf-8", null)
+                webViewState.value?.loadUrl("about:blank")
                 webViewState.value?.clearHistory()
                 webViewState.value?.clearCache(true)
                 webViewState.value?.clearFormData()
@@ -793,13 +825,12 @@ fun ConvertPageUi(
                                     1 -> stringResource(R.string.cookie_login)
                                     else -> ""
                                 },
-                                popupWidth = 140,
-                                offsetReparation = 65
+                                popupWidth = 140
                             ) {
                                 PopupMenuItem(
                                     onClick = {
                                         MyVibrationEffect(context, enableHaptic.value).click()
-                                        isUserLoggedIn = false
+                                        userLoggedIn = false
                                         convertPage.cookie.value = ""
                                         selectedLoginMethod.intValue = 0
                                         loginMethodPopupState.dismiss()
@@ -819,7 +850,7 @@ fun ConvertPageUi(
                                 PopupMenuItem(
                                     onClick = {
                                         MyVibrationEffect(context, enableHaptic.value).click()
-                                        isUserLoggedIn = false
+                                        userLoggedIn = false
                                         convertPage.cookie.value = ""
                                         selectedLoginMethod.intValue = 1
                                         loginMethodPopupState.dismiss()
@@ -867,7 +898,7 @@ fun ConvertPageUi(
                                                 url: String
                                             ) {
                                                 coroutine.launch(Dispatchers.Main) {
-                                                    delay(1000)
+                                                    delay(1000L)
                                                     when (selectedSourceApp.intValue) {
                                                         1 -> {
                                                             view.evaluateJavascript(
@@ -889,7 +920,7 @@ fun ConvertPageUi(
                                                             false;
                                                         }
                                                         """.trimIndent()
-                                                            ) { result ->
+                                                            ) { result ->  //TODO 页面频繁自动刷新，无法停止?
                                                                 if (result.contains("/user/home?id=")) {
                                                                     convertPage.loginUserId.value =
                                                                         result.substring(
@@ -904,6 +935,12 @@ fun ConvertPageUi(
                                                                         needNcmUserId = false
                                                                         convertPage.getOnlinePlaylist()
                                                                     } else {
+                                                                        view.stopLoading()
+                                                                        view.pauseTimers()
+                                                                        view.onPause()
+                                                                        view.settings.javaScriptEnabled =
+                                                                            false
+                                                                        view.onResume()
                                                                         view.loadDataWithBaseURL(
                                                                             null,
                                                                             loggedHtml,
@@ -912,7 +949,15 @@ fun ConvertPageUi(
                                                                             null
                                                                         )
                                                                     }
-                                                                    isUserLoggedIn = true
+                                                                    userLoggedIn = true
+                                                                    convertPage.lastLoginTimestamp.value =
+                                                                        System.currentTimeMillis()
+                                                                    coroutine.launch {
+                                                                        dataStore.edit { settings ->
+                                                                            settings[DataStoreConstants.LAST_LOGIN_TIMESTAMP] =
+                                                                                System.currentTimeMillis()
+                                                                        }
+                                                                    }
                                                                 }
                                                             }
                                                         }
@@ -936,6 +981,9 @@ fun ConvertPageUi(
                                                         """.trimIndent()
                                                             ) { result ->
                                                                 if (result == "\"logged\"") {
+                                                                    view.pauseTimers()
+                                                                    view.settings.javaScriptEnabled =
+                                                                        false
                                                                     view.loadDataWithBaseURL(
                                                                         null,
                                                                         loggedHtml,
@@ -943,7 +991,15 @@ fun ConvertPageUi(
                                                                         "utf-8",
                                                                         null
                                                                     )
-                                                                    isUserLoggedIn = true
+                                                                    userLoggedIn = true
+                                                                    convertPage.lastLoginTimestamp.value =
+                                                                        System.currentTimeMillis()
+                                                                    coroutine.launch {
+                                                                        dataStore.edit { settings ->
+                                                                            settings[DataStoreConstants.LAST_LOGIN_TIMESTAMP] =
+                                                                                System.currentTimeMillis()
+                                                                        }
+                                                                    }
                                                                 }
                                                             }
                                                         }
@@ -967,6 +1023,9 @@ fun ConvertPageUi(
                                                         """.trimIndent()
                                                             ) { result ->
                                                                 if (result == "\"logged\"") {
+                                                                    view.pauseTimers()
+                                                                    view.settings.javaScriptEnabled =
+                                                                        false
                                                                     view.loadDataWithBaseURL(
                                                                         null,
                                                                         loggedHtml,
@@ -974,7 +1033,15 @@ fun ConvertPageUi(
                                                                         "utf-8",
                                                                         null
                                                                     )
-                                                                    isUserLoggedIn = true
+                                                                    userLoggedIn = true
+                                                                    convertPage.lastLoginTimestamp.value =
+                                                                        System.currentTimeMillis()
+                                                                    coroutine.launch {
+                                                                        dataStore.edit { settings ->
+                                                                            settings[DataStoreConstants.LAST_LOGIN_TIMESTAMP] =
+                                                                                System.currentTimeMillis()
+                                                                        }
+                                                                    }
                                                                 }
                                                             }
                                                         }
@@ -1006,6 +1073,9 @@ fun ConvertPageUi(
                                                         """.trimIndent()
                                                             ) { result ->
                                                                 if (result == "\"logged\"") {
+                                                                    view.pauseTimers()
+                                                                    view.settings.javaScriptEnabled =
+                                                                        false
                                                                     view.loadDataWithBaseURL(
                                                                         null,
                                                                         loggedHtml,
@@ -1013,14 +1083,22 @@ fun ConvertPageUi(
                                                                         "utf-8",
                                                                         null
                                                                     )
-                                                                    isUserLoggedIn = true
+                                                                    userLoggedIn = true
+                                                                    convertPage.lastLoginTimestamp.value =
+                                                                        System.currentTimeMillis()
+                                                                    coroutine.launch {
+                                                                        dataStore.edit { settings ->
+                                                                            settings[DataStoreConstants.LAST_LOGIN_TIMESTAMP] =
+                                                                                System.currentTimeMillis()
+                                                                        }
+                                                                    }
                                                                 }
                                                             }
                                                         }
                                                     }
 //                                                view.scrollTo(800, 950)
                                                     showDialogProgressBar.value = false
-//                                            MyVibrationEffect(context, enableHaptic.value).done()  //TODO 可能会震动多次
+//                                            MyVibrationEffect(context, enableHaptic.value).done()
                                                 }
                                             }
                                         }
@@ -1071,12 +1149,19 @@ fun ConvertPageUi(
                                 }
                             }
                         }
-                        AnimatedVisibility(visible = isUserLoggedIn && (selectedLoginMethod.intValue == 0)) {
+                        AnimatedVisibility(visible = userLoggedIn && (selectedLoginMethod.intValue == 0)) {
                             ItemContainer {
                                 TextButton(
                                     onClick = {
                                         showDialogProgressBar.value = true
                                         convertPage.loginUserId.value = ""
+                                        coroutine.launch {
+                                            dataStore.edit { settings ->
+                                                settings[DataStoreConstants.NETEASE_USER_ID] = ""
+                                                settings[DataStoreConstants.LAST_LOGIN_TIMESTAMP] =
+                                                    0L
+                                            }
+                                        }
                                         CookieManager.getInstance().removeAllCookies(null)
                                         CookieManager.getInstance().flush()
                                         when (selectedSourceApp.intValue) {
@@ -1096,9 +1181,9 @@ fun ConvertPageUi(
                                                 webViewState.value?.loadUrl("https://kuwo.cn/")
                                             }
                                         }
-                                        isUserLoggedIn = false
+                                        userLoggedIn = false
                                     },
-                                    text = stringResource(id = R.string.logout),
+                                    text = stringResource(id = R.string.switch_account_logout),
                                     enableHaptic = enableHaptic.value
                                 )
                             }
@@ -1122,9 +1207,9 @@ fun ConvertPageUi(
     LaunchedEffect(key1 = inputSearchWords.value) {
         job?.cancel()
         job = coroutine.launch {
-            delay(500)
+            delay(500L)
             showDialogProgressBar.value = true
-            delay(500)
+            delay(500L)
             convertPage.searchSong()
             selectedSearchResult = -1
         }
@@ -1228,83 +1313,107 @@ fun ConvertPageUi(
                                     )
                                 }
 
-                                ItemPopup(
-                                    state = sourceAppPopupMenuState,
-                                    text = stringResource(R.string.select_source_of_songlist),
-                                    selectedItem = when (selectedSourceApp.intValue) {
-                                        1 -> stringResource(R.string.source_netease_cloud_music)
-                                        2 -> stringResource(R.string.source_qq_music)
-                                        3 -> stringResource(R.string.source_kugou_music)
-                                        4 -> stringResource(R.string.source_kuwo_music)
-                                        else -> ""
-                                    },
-                                    popupWidth = 180,
-                                    sub = if (useRootAccess.value && selectedMethod.intValue == 0)
-                                        stringResource(R.string.with_root_access)
-                                    else null
-                                ) {
-                                    PopupMenuItem(
-                                        onClick = {
-                                            MyVibrationEffect(context, enableHaptic.value).click()
-                                            selectedSourceApp.intValue = 1
-                                            sourceAppPopupMenuState.dismiss()
-                                            databaseFileName.value = ""
+                                AnimatedContent(
+                                    targetState = useRootAccess.value && selectedMethod.intValue == 0,
+                                    label = "",
+                                    transitionSpec = {
+                                        if (targetState != initialState) {
+                                            fadeIn() togetherWith fadeOut()
+                                        } else {
+                                            fadeIn() togetherWith fadeOut()
+                                        }
+                                    }) {
+                                    ItemPopup(
+                                        state = sourceAppPopupMenuState,
+                                        text = stringResource(R.string.select_source_of_songlist),
+                                        sub = if (it)
+                                            stringResource(R.string.with_root_access)
+                                        else null,
+                                        selectedItem = when (selectedSourceApp.intValue) {
+                                            1 -> stringResource(R.string.source_netease_cloud_music)
+                                            2 -> stringResource(R.string.source_qq_music)
+                                            3 -> stringResource(R.string.source_kugou_music)
+                                            4 -> stringResource(R.string.source_kuwo_music)
+                                            else -> ""
                                         },
-                                        selected = selectedSourceApp.intValue == 1,
-                                        text = stringResource(R.string.source_netease_cloud_music),
-                                        iconPainter = painterResource(id = R.drawable.cloudmusic),
-                                        iconColor = SaltTheme.colors.text
-                                    )
-                                    PopupMenuItem(
-                                        onClick = {
-                                            MyVibrationEffect(context, enableHaptic.value).click()
-                                            selectedSourceApp.intValue = 2
-                                            sourceAppPopupMenuState.dismiss()
-                                            databaseFileName.value = ""
-                                        },
-                                        selected = selectedSourceApp.intValue == 2,
-                                        text = stringResource(R.string.source_qq_music),
-                                        iconPainter = painterResource(id = R.drawable.qqmusic),
-                                        iconColor = SaltTheme.colors.text
-                                    )
+                                        popupWidth = 180
+                                    ) {
+                                        PopupMenuItem(
+                                            onClick = {
+                                                MyVibrationEffect(
+                                                    context,
+                                                    enableHaptic.value
+                                                ).click()
+                                                selectedSourceApp.intValue = 1
+                                                sourceAppPopupMenuState.dismiss()
+                                                databaseFileName.value = ""
+                                            },
+                                            selected = selectedSourceApp.intValue == 1,
+                                            text = stringResource(R.string.source_netease_cloud_music),
+                                            iconPainter = painterResource(id = R.drawable.cloudmusic),
+                                            iconColor = SaltTheme.colors.text
+                                        )
+                                        PopupMenuItem(
+                                            onClick = {
+                                                MyVibrationEffect(
+                                                    context,
+                                                    enableHaptic.value
+                                                ).click()
+                                                selectedSourceApp.intValue = 2
+                                                sourceAppPopupMenuState.dismiss()
+                                                databaseFileName.value = ""
+                                            },
+                                            selected = selectedSourceApp.intValue == 2,
+                                            text = stringResource(R.string.source_qq_music),
+                                            iconPainter = painterResource(id = R.drawable.qqmusic),
+                                            iconColor = SaltTheme.colors.text
+                                        )
 
-                                    PopupMenuItem(
-                                        onClick = {
-                                            MyVibrationEffect(context, enableHaptic.value).click()
-                                            selectedSourceApp.intValue = 3
-                                            sourceAppPopupMenuState.dismiss()
-                                            databaseFileName.value = ""
-                                        },
-                                        selected = selectedSourceApp.intValue == 3,
-                                        text = stringResource(R.string.source_kugou_music),
-                                        iconPainter = painterResource(id = R.drawable.kugou),
-                                        iconColor = SaltTheme.colors.text,
-                                        iconPaddingValues = PaddingValues(
-                                            start = 1.5.dp,
-                                            end = 1.5.dp,
-                                            top = 1.5.dp,
-                                            bottom = 1.5.dp
+                                        PopupMenuItem(
+                                            onClick = {
+                                                MyVibrationEffect(
+                                                    context,
+                                                    enableHaptic.value
+                                                ).click()
+                                                selectedSourceApp.intValue = 3
+                                                sourceAppPopupMenuState.dismiss()
+                                                databaseFileName.value = ""
+                                            },
+                                            selected = selectedSourceApp.intValue == 3,
+                                            text = stringResource(R.string.source_kugou_music),
+                                            iconPainter = painterResource(id = R.drawable.kugou),
+                                            iconColor = SaltTheme.colors.text,
+                                            iconPaddingValues = PaddingValues(
+                                                start = 1.5.dp,
+                                                end = 1.5.dp,
+                                                top = 1.5.dp,
+                                                bottom = 1.5.dp
+                                            )
                                         )
-                                    )
-                                    PopupMenuItem(
-                                        onClick = {
-                                            MyVibrationEffect(context, enableHaptic.value).click()
-                                            selectedSourceApp.intValue = 4
-                                            sourceAppPopupMenuState.dismiss()
-                                            databaseFileName.value = ""
-                                        },
-                                        selected = selectedSourceApp.intValue == 4,
-                                        text = stringResource(R.string.source_kuwo_music),
-                                        iconPainter = painterResource(id = R.drawable.kuwo),
-                                        iconColor = SaltTheme.colors.text,
-                                        iconPaddingValues = PaddingValues(
-                                            start = 1.5.dp,
-                                            end = 1.5.dp,
-                                            top = 1.5.dp,
-                                            bottom = 1.5.dp
+                                        PopupMenuItem(
+                                            onClick = {
+                                                MyVibrationEffect(
+                                                    context,
+                                                    enableHaptic.value
+                                                ).click()
+                                                selectedSourceApp.intValue = 4
+                                                sourceAppPopupMenuState.dismiss()
+                                                databaseFileName.value = ""
+                                            },
+                                            selected = selectedSourceApp.intValue == 4,
+                                            text = stringResource(R.string.source_kuwo_music),
+                                            iconPainter = painterResource(id = R.drawable.kuwo),
+                                            iconColor = SaltTheme.colors.text,
+                                            iconPaddingValues = PaddingValues(
+                                                start = 1.5.dp,
+                                                end = 1.5.dp,
+                                                top = 1.5.dp,
+                                                bottom = 1.5.dp
+                                            )
                                         )
-                                    )
+                                    }
                                 }
+
                                 AnimatedVisibility(
                                     visible = (selectedSourceApp.intValue != 0) && !useRootAccess.value && (selectedMethod.intValue == 0)
                                 ) {
@@ -1606,10 +1715,10 @@ fun ConvertPageUi(
                                                 text = stringResource(R.string.songlist_sequence),
                                                 rightSub = "${
                                                     stringResource(R.string.current_no).replace("#",
-                                                        if (playlistEnabled.count { it == 2 } == -1)
+                                                        if (playlistEnabled.count { it == 2 || it == 3 } == -1)
                                                             "0"
                                                         else {
-                                                            (playlistEnabled.count { it == 2 } + 1).toString()
+                                                            (playlistEnabled.count { it == 2 || it == 3 } + 1).toString()
                                                         })
                                                 } - ${
                                                     stringResource(R.string.in_total).replace(
@@ -1620,6 +1729,8 @@ fun ConvertPageUi(
                                             )
                                             ItemValue(
                                                 text = stringResource(R.string.songlist_name),
+                                                textWeight = 1f,
+                                                rightSubWeight = 2f,
                                                 rightSub = if (playlistEnabled.indexOfFirst { it == 1 } == -1) "" else playlistName[playlistEnabled.indexOfFirst { it == 1 }]
                                             )
                                             ItemValue(
@@ -1756,7 +1867,9 @@ fun ConvertPageUi(
 
                                                     1 -> stringResource(R.string.convert_result)
                                                     else -> ""
-                                                }
+                                                },
+                                                popupWidth = 180,
+                                                rightSubWeight = 2f
                                             ) {
                                                 PopupMenuItem(
                                                     onClick = {
@@ -2253,32 +2366,75 @@ fun ConvertPageUi(
                                 LazyColumn(
                                     modifier = Modifier
                                         .fillMaxSize()
-                                        .heightIn(max = (LocalConfiguration.current.screenHeightDp / 2).dp)
+                                        .heightIn(max = (LocalConfiguration.current.screenHeightDp / 2.2).dp)
                                         .clip(RoundedCornerShape(10.dp))
                                 ) {
                                     items(indices) { index ->
-                                        ItemText(
-                                            text = "${
-                                                Environment.getExternalStoragePublicDirectory(
-                                                    Environment.DIRECTORY_DOWNLOADS
-                                                )
-                                            }/${context.getString(R.string.app_name)}/${
-                                                LocalDate.now()
-                                                    .format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
-                                            }/${playlistName[index]}${
-                                                when (selectedTargetApp) {
-                                                    0 -> ".txt"
-                                                    1 -> ".m3u"
-                                                    2 -> ".m3u8"
-                                                    else -> ""
+                                        if (playlistEnabled[index] == 2) {
+                                            ItemText(
+                                                text = "${
+                                                    Environment.getExternalStoragePublicDirectory(
+                                                        Environment.DIRECTORY_DOWNLOADS
+                                                    )
+                                                }/${context.getString(R.string.app_name)}/${
+                                                    LocalDate.now()
+                                                        .format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+                                                }/${playlistName[index]}${
+                                                    when (selectedTargetApp) {
+                                                        0 -> ".txt"
+                                                        1 -> ".m3u"
+                                                        2 -> ".m3u8"
+                                                        else -> ""
+                                                    }
+                                                }",
+                                                fontSize = 15.sp
+                                            )
+                                        }
+                                    }
+                                }
+                                Spacer(modifier = Modifier.height(8.dp))
+                            }
+                            AnimatedVisibility(visible = userLoggedIn) {
+                                RoundedColumn {
+                                    ItemTitle(
+                                        text = stringResource(R.string.account).replace(
+                                            "#",
+                                            when (selectedSourceApp.intValue) {
+                                                1 -> stringResource(id = R.string.source_netease_cloud_music)
+                                                2 -> stringResource(id = R.string.source_qq_music)
+                                                3 -> stringResource(id = R.string.source_kugou_music)
+                                                4 -> stringResource(id = R.string.source_kuwo_music)
+                                                else -> ""
+                                            }
+                                        )
+                                    )
+                                    ItemContainer {
+                                        TextButton(
+                                            onClick = {
+                                                CookieManager.getInstance().removeAllCookies(null)
+                                                CookieManager.getInstance().flush()
+                                                coroutine.launch {
+                                                    dataStore.edit { settings ->
+                                                        settings[DataStoreConstants.NETEASE_USER_ID] =
+                                                            ""
+                                                        settings[DataStoreConstants.LAST_LOGIN_TIMESTAMP] =
+                                                            0L
+                                                    }
                                                 }
-                                            }",
-                                            fontSize = 15.sp
+                                                Toast.makeText(
+                                                    context,
+                                                    context.getString(R.string.logged_out),
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
+                                                userLoggedIn = false
+                                            },
+                                            text = stringResource(id = R.string.logout),
+                                            enableHaptic = enableHaptic.value
                                         )
                                     }
                                 }
-                                Spacer(modifier = Modifier.height(12.dp))
                             }
+
                             ItemContainer {
                                 Row {
                                     TextButton(
