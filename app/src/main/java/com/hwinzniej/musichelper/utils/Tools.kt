@@ -373,12 +373,12 @@ class Tools {
     }
 
     fun calPopupLocation(
-        context: Context,
+        density: Float,
         clickOffsetX: Float,
         popupWidth: Int,
         screenWidthDp: Int
     ): Float {
-        val temp = (clickOffsetX / context.resources.displayMetrics.density)
+        val temp = (clickOffsetX / density)
         return if (temp < 42 + popupWidth / 2) {
             16f
         } else if (temp > (screenWidthDp - popupWidth)) {

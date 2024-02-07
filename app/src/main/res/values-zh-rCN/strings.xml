@@ -203,7 +203,7 @@
     <string name="update_size">更新大小：</string>
     <string name="file_no_tag">不包含ID3标签或无法读取</string>
     <string name="scan_complete_but_have_error">扫描完成，但有错误</string>
-    <string name="scan_failed_tips">下列文件**不会**添加到「扫描结果」中。#n请使用“音乐标签”或其他类似软件，对下列歌曲的ID3标签修改后，再次进行扫描。</string>
+    <string name="scan_failed_tips">所选目录中的下列文件**不会**添加到「扫描结果」中。</string>
     <string name="way_to_get_song_list">歌单获取方式</string>
     <string name="online">在线</string>
     <string name="database">数据库</string>
@@ -234,4 +234,5 @@
     <string name="use_last_login_info">已使用之前的登录信息自动填写</string>
     <string name="login_info_maybe_expired">Cookie可能过期，歌单数据可能不完整。</string>
     <string name="tips">提示</string>
+    <string name="already_logged_in_click_ok">- 您已登录。#n- 请点击「确定」按钮。</string>
 </resources>

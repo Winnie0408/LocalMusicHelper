@@ -292,7 +292,7 @@ fun ItemPopup(  //TODO 根据文字长度自动调整宽度；在对话框内点
             },
             offset = DpOffset(
                 Tools().calPopupLocation(
-                    context,
+                    context.resources.displayMetrics.density,
                     clickOffsetX.floatValue,
                     popupWidth,
                     LocalConfiguration.current.screenWidthDp

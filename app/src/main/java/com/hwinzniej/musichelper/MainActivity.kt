@@ -9,7 +9,9 @@ import android.os.Bundle
 import android.os.Environment
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.spring
@@ -43,6 +45,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -56,7 +59,6 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.lifecycle.lifecycleScope
 import androidx.room.Room
 import com.alibaba.fastjson2.JSON
-import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.hwinzniej.musichelper.activity.ConvertPage
 import com.hwinzniej.musichelper.activity.ScanPage
 import com.hwinzniej.musichelper.activity.SettingsPage
@@ -162,7 +164,7 @@ class MainActivity : ComponentActivity() {
                 encryptServer = settingsPage.encryptServer,
                 dataStore = dataStore
             )
-
+        enableEdgeToEdge()
         setContent {
             val colors = when (selectedThemeMode.intValue) {
                 0 -> if (enableDynamicColor.value) saltColorsByColorScheme(
@@ -193,7 +195,7 @@ class MainActivity : ComponentActivity() {
                     configs = saltConfigs(isSystemInDarkTheme()),
                     colors = colors
                 ) {
-                    TransparentSystemBars(useDarkIcons = !(isSystemInDarkTheme() || (selectedThemeMode.intValue == 1)))
+                    TransparentSystemBars(dark = isSystemInDarkTheme() || (selectedThemeMode.intValue == 1))
                     Pages(this, scanPage, convertPage, settingsPage, checkUpdate)
                 }
             }
@@ -212,6 +214,28 @@ class MainActivity : ComponentActivity() {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         scanPage.onPermissionResult(requestCode, permissions, grantResults)
         convertPage.onPermissionResult(requestCode, permissions, grantResults)
+    }
+
+    @Composable
+    fun TransparentSystemBars(dark: Boolean) {
+        val statusBarColor = SaltTheme.colors.background.toArgb()
+        val navigationBarColor = SaltTheme.colors.subBackground.toArgb()
+        SideEffect {
+            if (dark) {
+                enableEdgeToEdge(
+                    statusBarStyle = SystemBarStyle.dark(statusBarColor),
+                    navigationBarStyle = SystemBarStyle.dark(navigationBarColor)
+                )
+            } else {
+                enableEdgeToEdge(
+                    statusBarStyle = SystemBarStyle.light(statusBarColor, statusBarColor),
+                    navigationBarStyle = SystemBarStyle.light(
+                        navigationBarColor,
+                        navigationBarColor
+                    )
+                )
+            }
+        }
     }
 }
 
@@ -256,7 +280,7 @@ private fun Pages(
             preferences[DataStoreConstants.KEY_ENCRYPT_SERVER] ?: "cf"
         convertPage.loginUserId.value =
             preferences[DataStoreConstants.NETEASE_USER_ID] ?: ""
-        convertPage.lastLoginTimestamp.value =
+        convertPage.lastLoginTimestamp.longValue =
             preferences[DataStoreConstants.LAST_LOGIN_TIMESTAMP] ?: 0L
     }
 
@@ -357,7 +381,9 @@ private fun Pages(
                                     style = TextStyle(
                                         color = SaltTheme.colors.text,
                                         fontSize = 14.sp
-                                    )
+                                    ),
+                                    isTextSelectable = true,
+                                    disableLinkMovementMethod = true
                                 )
                             }
                         }
@@ -677,32 +703,3 @@ private fun Pages(
         }
     }
 }
-
-@Composable
-fun TransparentSystemBars(
-    useDarkIcons: Boolean
-) {
-    val systemUiController = rememberSystemUiController()
-    val statusBarColor = SaltTheme.colors.background
-    val navigationBarColor = SaltTheme.colors.subBackground
-    SideEffect {
-        systemUiController.setStatusBarColor(
-            color = statusBarColor,
-            darkIcons = useDarkIcons,
-        )
-
-        systemUiController.setNavigationBarColor(
-            color = navigationBarColor,
-            darkIcons = useDarkIcons,
-            navigationBarContrastEnforced = false
-        )
-    }
-}
-
-//@Preview(showBackground = true)
-//@Composable
-//fun GreetingPreview() {
-//    MusicHelperTheme {
-//        MainUI(MainActivity())
-//    }
-//}

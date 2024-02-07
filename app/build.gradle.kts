@@ -13,8 +13,8 @@ android {
         applicationId = "com.hwinzniej.musichelper"
         minSdk = 26
         targetSdk = 34
-        versionCode = 16
-        versionName = "1.1.1"
+        versionCode = 17
+        versionName = "1.1.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -96,9 +96,6 @@ dependencies {
     implementation("androidx.room:room-runtime:$roomVersion")
     annotationProcessor("androidx.room:room-compiler:$roomVersion")
     ksp("androidx.room:room-compiler:$roomVersion")
-
-    //SystemUi控制器
-    implementation("com.google.accompanist:accompanist-systemuicontroller:0.34.0")
 
     //FastJson
     implementation("com.alibaba.fastjson2:fastjson2-kotlin:2.0.46")

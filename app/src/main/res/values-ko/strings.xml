@@ -203,7 +203,7 @@
     <string name="update_size">"업데이트 크기: "</string>
     <string name="file_no_tag">ID3태그가 포함되어 있지 않거나 읽을 수 없습니다</string>
     <string name="scan_complete_but_have_error">스캔이 완료되었는데 오류가 있습니다</string>
-    <string name="scan_failed_tips">다음 파일은 \'스캔 결과\'에 **추가되지 않습니다**.#n\"뮤직태그\" 또는 기타 이와 유사한 앱을 사용하여 아래 곡의 ID3태그를 수정한 후 다시 스캔하십시오.</string>
+    <string name="scan_failed_tips">선택한 디렉터리에 있는 다음 파일은 스캔 결과에 **추가되지 않습니다**.</string>
     <string name="way_to_get_song_list">목록 가져오기 방법</string>
     <string name="online">온라인</string>
     <string name="database">데이터베이스</string>
@@ -234,4 +234,5 @@
     <string name="use_last_login_info">이전 로그인 정보로 자동 완성</string>
     <string name="login_info_maybe_expired">쿠키가 만료되거나 노래 목록 데이터가 불완전할 수 있습니다.</string>
     <string name="tips">팁들</string>
+    <string name="already_logged_in_click_ok">- 로그인되었습니다.#n- \"확인\" 버튼을 클릭하세요.</string>
 </resources>

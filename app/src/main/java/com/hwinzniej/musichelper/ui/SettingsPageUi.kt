@@ -105,21 +105,23 @@ fun SettingsPageUi(
                         enableHaptic = enableHaptic.value
                     )
                     ItemCheck(
+                        enabled = false,
                         state = encryptServer.value == "gl1",
                         onChange = {
                             encryptServer.value = "gl1"
                         },
-                        text = "${context.getString(R.string.guangxi_china)} 1",
+                        text = "${context.getString(R.string.guangxi_china)} 1${stringResource(id = R.string.not_yet_deployed)}",
                         sub = settingsPage.serverPing[1],
                         iconAtLeft = false,
                         enableHaptic = enableHaptic.value
                     )
                     ItemCheck(
+                        enabled = false,
                         state = encryptServer.value == "gl2",
                         onChange = {
                             encryptServer.value = "gl2"
                         },
-                        text = "${context.getString(R.string.guangxi_china)} 2",
+                        text = "${context.getString(R.string.guangxi_china)} 2${stringResource(id = R.string.not_yet_deployed)}",
                         sub = settingsPage.serverPing[2],
                         iconAtLeft = false,
                         enableHaptic = enableHaptic.value

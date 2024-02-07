@@ -22,6 +22,7 @@ import androidx.annotation.RequiresApi
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
@@ -102,7 +103,7 @@ class ConvertPage(
     var showLoginDialog = mutableStateOf(false)
     var loginUserId = mutableStateOf("")
     var errorDialogCustomAction = mutableStateOf({})
-    var lastLoginTimestamp = mutableStateOf(0L)
+    var lastLoginTimestamp = mutableLongStateOf(0L)
 
     /**
      * 请求存储权限
@@ -985,7 +986,7 @@ class ConvertPage(
                                             response.getJSONObject("playlist").getString("id")
                                         val songId = song.getString("id")
                                         val songName = song.getString("name")
-                                        var songArtistsBuilder = StringBuilder()
+                                        val songArtistsBuilder = StringBuilder()
                                         song.getJSONArray("ar").forEach { it1 ->
                                             val artistsInfo = it1 as JSONObject
                                             songArtistsBuilder.append(artistsInfo.getString("name"))
@@ -1032,7 +1033,7 @@ class ConvertPage(
                                                     .getString("id")
                                             val songId = song.getString("id")
                                             val songName = song.getString("title")
-                                            var songArtistsBuilder = StringBuilder()
+                                            val songArtistsBuilder = StringBuilder()
                                             song.getJSONArray("singer").forEach { it1 ->
                                                 val artistsInfo = it1 as JSONObject
                                                 songArtistsBuilder.append(artistsInfo.getString("title"))
@@ -1088,6 +1089,8 @@ class ConvertPage(
                         return@launch
                     }
                 }
+                testCursor.close()
+                testDb.close()
             }
 
             showNumberProgressBar.value = true
@@ -1170,8 +1173,8 @@ class ConvertPage(
 
                     var songArtistMaxSimilarity = 0.0
                     var songAlbumMaxSimilarity = 0.0
-                    var songArtistMaxKey = 0
-                    var songAlbumMaxKey = 0
+//                    var songArtistMaxKey = 0
+//                    var songAlbumMaxKey = 0
 
                     val songThread = async {
                         //歌曲名相似度列表
@@ -1219,8 +1222,8 @@ class ConvertPage(
                             }
                             songArtistMaxSimilarity =
                                 Tools().getMaxValueIntDouble(artistSimilarityArray)?.value!! //获取相似度的最大值
-                            songArtistMaxKey =
-                                Tools().getMaxValueIntDouble(artistSimilarityArray)?.key!! //获取相似度的最大值对应的歌手名的位置
+//                            songArtistMaxKey =
+//                                Tools().getMaxValueIntDouble(artistSimilarityArray)?.key!! //获取相似度的最大值对应的歌手名的位置
                         } else {
                             songArtistMaxSimilarity = 1.0
                         }
@@ -1252,8 +1255,8 @@ class ConvertPage(
                             }
                             songAlbumMaxSimilarity =
                                 Tools().getMaxValueIntDouble(albumSimilarityArray)?.value!! //获取相似度的最大值
-                            songAlbumMaxKey =
-                                Tools().getMaxValueIntDouble(albumSimilarityArray)?.key!! //获取相似度的最大值对应的专辑名的位置
+//                            songAlbumMaxKey =
+//                                Tools().getMaxValueIntDouble(albumSimilarityArray)?.key!! //获取相似度的最大值对应的专辑名的位置
                         } else {
                             songAlbumMaxSimilarity = 1.0
                         }
@@ -1620,7 +1623,7 @@ class ConvertPage(
     }
 
     fun autoFillCookie(): String {
-        if (System.currentTimeMillis() - lastLoginTimestamp.value > 259200000) {
+        if (System.currentTimeMillis() - lastLoginTimestamp.longValue > 259200000) {
             return ""
         }
         if (selectedLoginMethod.intValue == 2) {
@@ -1633,6 +1636,9 @@ class ConvertPage(
                 3 -> CookieManager.getInstance().getCookie("www.kugou.com")
                 4 -> CookieManager.getInstance().getCookie("kuwo.cn")
                 else -> ""
+            }
+            if (temp == null || temp.isBlank()) {
+                return ""
             }
             val cookieValid = when (selectedSourceApp.intValue) {
                 1 -> {

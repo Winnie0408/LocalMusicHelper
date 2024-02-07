@@ -206,7 +206,7 @@
     <string name="update_size">"Update size: "</string>
     <string name="file_no_tag">Does not contain ID3 Tags or is unreadable</string>
     <string name="scan_complete_but_have_error">Scanning completed, but with errors</string>
-    <string name="scan_failed_tips">The following files will **NOT** be added to Scan Results.#nPlease use \"Music Tag\" or other similar app to modify the ID3 tag of the following songs and scan again.</string>
+    <string name="scan_failed_tips">The following files in the selected directory will **NOT** be added to the scan results.</string>
     <string name="way_to_get_song_list">Way to get song list</string>
     <string name="online">Online</string>
     <string name="database">Database</string>
@@ -238,4 +238,5 @@
     <string name="use_last_login_info">Autofill with previous login infos</string>
     <string name="login_info_maybe_expired">Cookies may expire and song list data may be incomplete.</string>
     <string name="tips">Tips</string>
+    <string name="already_logged_in_click_ok">- You have already logged in.#n- Please click the \"OK\" button.</string>
 </resources>

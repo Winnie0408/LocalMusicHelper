@@ -351,7 +351,7 @@ class ScanPage(
                                     ".bkc"
                                 )
                             ) {
-                                errorLog.value += "- ${curFile.name}:\n  - ${context.getString(R.string.music_file_encrypted)}\n"
+                                errorLog.value += "- ${curFile.name}:\n  - **${context.getString(R.string.music_file_encrypted)}**\n"
                             } else
                                 errorLog.value += "- ${curFile.name}:\n  - ${e}\n"
                         }

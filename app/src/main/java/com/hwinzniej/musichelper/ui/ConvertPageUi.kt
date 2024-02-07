@@ -70,6 +70,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.zIndex
@@ -91,6 +92,7 @@ import dev.jeziellago.compose.markdowntext.MarkdownText
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -666,32 +668,28 @@ fun ConvertPageUi(
         val loginMethodPopupState = rememberPopupState()
         val webViewState = remember { mutableStateOf<WebView?>(null) }
 
+        fun destoryWebview() {
+            showDialogProgressBar.value = false
+            webViewState.value?.loadUrl("about:blank")
+            webViewState.value?.clearHistory()
+            webViewState.value?.clearCache(true)
+            webViewState.value?.clearFormData()
+            webViewState.value?.removeAllViews()
+            webViewState.value?.pauseTimers()
+            webViewState.value?.onPause()
+            webViewState.value?.removeAllViews()
+            webViewState.value?.destroy()
+            webViewState.value?.removeAllViews()
+        }
+
         YesNoDialog(
             onDismiss = {
+                destoryWebview()
                 showLoginDialog.value = false
-                webViewState.value?.loadDataWithBaseURL(null, "", "text/html", "utf-8", null)
-                webViewState.value?.clearHistory()
-                webViewState.value?.clearCache(true)
-                webViewState.value?.clearFormData()
-                webViewState.value?.removeAllViews()
-                webViewState.value?.onPause()
-                webViewState.value?.pauseTimers()
-                webViewState.value?.removeAllViews()
-                webViewState.value?.destroy()
-                webViewState.value?.removeAllViews()
             },
             onCancel = {
+                destoryWebview()
                 showLoginDialog.value = false
-                webViewState.value?.loadDataWithBaseURL(null, "", "text/html", "utf-8", null)
-                webViewState.value?.clearHistory()
-                webViewState.value?.clearCache(true)
-                webViewState.value?.clearFormData()
-                webViewState.value?.removeAllViews()
-                webViewState.value?.onPause()
-                webViewState.value?.pauseTimers()
-                webViewState.value?.removeAllViews()
-                webViewState.value?.destroy()
-                webViewState.value?.removeAllViews()
             },
             onConfirm = {
                 if (selectedLoginMethod.intValue == 2)
@@ -728,11 +726,12 @@ fun ConvertPageUi(
                         if (selectedSourceApp.intValue == 1 && convertPage.loginUserId.value == "") {
                             needNcmUserId = true
                             showDialogProgressBar.value = true
-                            webViewState.value?.settings?.javaScriptEnabled = true
+                            webViewState.value?.onResume()
                             webViewState.value?.resumeTimers()
                             webViewState.value?.loadUrl("https://music.163.com/#/user/update")
                             return@YesNoDialog
                         } else {
+                            destoryWebview()
                             showLoginDialog.value = false
                             convertPage.getOnlinePlaylist()
                         }
@@ -768,6 +767,7 @@ fun ConvertPageUi(
 
                     if (inputValid) {
                         convertPage.cookie.value = userInput
+                        destoryWebview()
                         showLoginDialog.value = false
                         convertPage.getOnlinePlaylist()
                     } else {
@@ -780,16 +780,7 @@ fun ConvertPageUi(
                         return@YesNoDialog
                     }
                 }
-                webViewState.value?.loadUrl("about:blank")
-                webViewState.value?.clearHistory()
-                webViewState.value?.clearCache(true)
-                webViewState.value?.clearFormData()
-                webViewState.value?.removeAllViews()
-                webViewState.value?.onPause()
-                webViewState.value?.pauseTimers()
-                webViewState.value?.removeAllViews()
-                webViewState.value?.destroy()
-                webViewState.value?.removeAllViews()
+                destoryWebview()
             },
             title = stringResource(id = R.string.please_login).replace(
                 "#", when (selectedSourceApp.intValue) {
@@ -830,6 +821,8 @@ fun ConvertPageUi(
                                 PopupMenuItem(
                                     onClick = {
                                         MyVibrationEffect(context, enableHaptic.value).click()
+                                        webViewState.value?.onResume()
+                                        webViewState.value?.resumeTimers()
                                         userLoggedIn = false
                                         convertPage.cookie.value = ""
                                         selectedLoginMethod.intValue = 0
@@ -866,43 +859,59 @@ fun ConvertPageUi(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                 ) {
-                                    val loggedHtml = if (SaltTheme.colors.text.red < 0.5f) {
-                                        context.assets.open("logged.html")
-                                            .use { inputStream ->
-                                                inputStream.bufferedReader().use {
-                                                    it.readText()
-                                                }
-                                            }
-                                    } else {
-                                        context.assets.open("logged_dark.html")
-                                            .use { inputStream ->
-                                                inputStream.bufferedReader().use {
-                                                    it.readText()
-                                                }
-                                            }
+                                    AnimatedVisibility(visible = userLoggedIn) {
+                                        ItemContainer {
+                                            MarkdownText(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .padding(vertical = 8.dp)
+                                                    .clip(
+                                                        RoundedCornerShape(
+                                                            0.dp,
+                                                            0.dp,
+                                                            10.dp,
+                                                            10.dp
+                                                        )
+                                                    ),
+                                                markdown = stringResource(id = R.string.already_logged_in_click_ok).replace(
+                                                    "#n",
+                                                    "\n"
+                                                ),
+                                                style = TextStyle(
+                                                    color = SaltTheme.colors.text,
+                                                    fontSize = 16.sp,
+                                                    lineHeight = 1.5.em
+                                                ),
+                                                isTextSelectable = true,
+                                                disableLinkMovementMethod = true
+                                            )
+                                        }
                                     }
-                                    AndroidView(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .height((LocalConfiguration.current.screenHeightDp / 3).dp)
-                                            .clip(RoundedCornerShape(0.dp, 0.dp, 10.dp, 10.dp)),
-                                        factory = { context ->
-                                            WebView(context).also { webView ->
-                                                webViewState.value = webView
-                                            }
-                                        },
-                                    ) { webView ->
-                                        webView.webViewClient = object : WebViewClient() {
-                                            override fun onPageFinished(
-                                                view: WebView,
-                                                url: String
-                                            ) {
-                                                coroutine.launch(Dispatchers.Main) {
-                                                    delay(1000L)
-                                                    when (selectedSourceApp.intValue) {
-                                                        1 -> {
-                                                            view.evaluateJavascript(
-                                                                """
+                                    AnimatedVisibility(visible = !userLoggedIn) {
+                                        AndroidView(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .height((LocalConfiguration.current.screenHeightDp / 3).dp)
+                                                .clip(RoundedCornerShape(0.dp, 0.dp, 10.dp, 10.dp)),
+                                            factory = { context ->
+                                                WebView(context).also { webView ->
+                                                    webViewState.value = webView
+                                                }
+                                            },
+                                        ) { webView ->
+                                            webView.webViewClient = object : WebViewClient() {
+                                                override fun onPageFinished(
+                                                    view: WebView,
+                                                    url: String
+                                                ) {
+                                                    job?.cancel()
+                                                    job = coroutine.launch(Dispatchers.Main) {
+                                                        delay(1000L)
+                                                        ensureActive()
+                                                        when (selectedSourceApp.intValue) {
+                                                            1 -> {
+                                                                view.evaluateJavascript(
+                                                                    """
                                                         var xpath = '/html/body/div[1]/div[1]/div/div[1]/a';
                                                         var result = document.evaluate(xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
                                                         var element = result.singleNodeValue;
@@ -920,51 +929,46 @@ fun ConvertPageUi(
                                                             false;
                                                         }
                                                         """.trimIndent()
-                                                            ) { result ->  //TODO 页面频繁自动刷新，无法停止?
-                                                                if (result.contains("/user/home?id=")) {
-                                                                    convertPage.loginUserId.value =
-                                                                        result.substring(
-                                                                            result.indexOf("/user/home?id=") + 14,
-                                                                            result.length - 1
-                                                                        )
-                                                                    if (needNcmUserId) {
+                                                                ) { result ->
+                                                                    ensureActive()
+                                                                    if (result.contains("/user/home\\?id=\\d+".toRegex())) {
+                                                                        convertPage.loginUserId.value =
+                                                                            result.substring(
+                                                                                result.indexOf("/user/home?id=") + 14,
+                                                                                result.length - 1
+                                                                            )
+                                                                        userLoggedIn = true
+                                                                        convertPage.lastLoginTimestamp.longValue =
+                                                                            System.currentTimeMillis()
+                                                                        coroutine.launch {
+                                                                            dataStore.edit { settings ->
+                                                                                settings[DataStoreConstants.LAST_LOGIN_TIMESTAMP] =
+                                                                                    System.currentTimeMillis()
+                                                                            }
+                                                                        }
+                                                                        if (needNcmUserId) {
+                                                                            destoryWebview()
+                                                                            showDialogProgressBar.value =
+                                                                                false
+                                                                            showLoginDialog.value =
+                                                                                false
+                                                                            needNcmUserId = false
+                                                                            convertPage.getOnlinePlaylist()
+                                                                        } else {
+                                                                            view.pauseTimers()
+                                                                            view.onPause()
+                                                                        }
+                                                                    } else if (result == "false") {
                                                                         showDialogProgressBar.value =
                                                                             false
-                                                                        showLoginDialog.value =
-                                                                            false
-                                                                        needNcmUserId = false
-                                                                        convertPage.getOnlinePlaylist()
-                                                                    } else {
-                                                                        view.stopLoading()
-                                                                        view.pauseTimers()
-                                                                        view.onPause()
-                                                                        view.settings.javaScriptEnabled =
-                                                                            false
-                                                                        view.onResume()
-                                                                        view.loadDataWithBaseURL(
-                                                                            null,
-                                                                            loggedHtml,
-                                                                            "text/html",
-                                                                            "utf-8",
-                                                                            null
-                                                                        )
-                                                                    }
-                                                                    userLoggedIn = true
-                                                                    convertPage.lastLoginTimestamp.value =
-                                                                        System.currentTimeMillis()
-                                                                    coroutine.launch {
-                                                                        dataStore.edit { settings ->
-                                                                            settings[DataStoreConstants.LAST_LOGIN_TIMESTAMP] =
-                                                                                System.currentTimeMillis()
-                                                                        }
+                                                                        view.loadUrl("https://music.163.com/#/user/update")
                                                                     }
                                                                 }
                                                             }
-                                                        }
 
-                                                        2 -> {
-                                                            view.evaluateJavascript(
-                                                                """
+                                                            2 -> {
+                                                                view.evaluateJavascript(
+                                                                    """
                                                         var xpath = '/html/body/div/div[1]/div/div[2]/span/a';
                                                         var result = document.evaluate(xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
                                                         var element =  result.singleNodeValue;
@@ -979,34 +983,27 @@ fun ConvertPageUi(
                                                             false;
                                                         }
                                                         """.trimIndent()
-                                                            ) { result ->
-                                                                if (result == "\"logged\"") {
-                                                                    view.pauseTimers()
-                                                                    view.settings.javaScriptEnabled =
-                                                                        false
-                                                                    view.loadDataWithBaseURL(
-                                                                        null,
-                                                                        loggedHtml,
-                                                                        "text/html",
-                                                                        "utf-8",
-                                                                        null
-                                                                    )
-                                                                    userLoggedIn = true
-                                                                    convertPage.lastLoginTimestamp.value =
-                                                                        System.currentTimeMillis()
-                                                                    coroutine.launch {
-                                                                        dataStore.edit { settings ->
-                                                                            settings[DataStoreConstants.LAST_LOGIN_TIMESTAMP] =
-                                                                                System.currentTimeMillis()
+                                                                ) { result ->
+                                                                    ensureActive()
+                                                                    if (result == "\"logged\"") {
+                                                                        view.pauseTimers()
+                                                                        view.onPause()
+                                                                        userLoggedIn = true
+                                                                        convertPage.lastLoginTimestamp.longValue =
+                                                                            System.currentTimeMillis()
+                                                                        coroutine.launch {
+                                                                            dataStore.edit { settings ->
+                                                                                settings[DataStoreConstants.LAST_LOGIN_TIMESTAMP] =
+                                                                                    System.currentTimeMillis()
+                                                                            }
                                                                         }
                                                                     }
                                                                 }
                                                             }
-                                                        }
 
-                                                        3 -> {
-                                                            view.evaluateJavascript(
-                                                                """
+                                                            3 -> {
+                                                                view.evaluateJavascript(
+                                                                    """
                                                         var xpath = '/html/body/div[1]/div[1]/div/div[2]/div[2]/div[1]';
                                                         var result = document.evaluate(xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
                                                         var element =  result.singleNodeValue;
@@ -1021,34 +1018,27 @@ fun ConvertPageUi(
                                                             false;
                                                         }
                                                         """.trimIndent()
-                                                            ) { result ->
-                                                                if (result == "\"logged\"") {
-                                                                    view.pauseTimers()
-                                                                    view.settings.javaScriptEnabled =
-                                                                        false
-                                                                    view.loadDataWithBaseURL(
-                                                                        null,
-                                                                        loggedHtml,
-                                                                        "text/html",
-                                                                        "utf-8",
-                                                                        null
-                                                                    )
-                                                                    userLoggedIn = true
-                                                                    convertPage.lastLoginTimestamp.value =
-                                                                        System.currentTimeMillis()
-                                                                    coroutine.launch {
-                                                                        dataStore.edit { settings ->
-                                                                            settings[DataStoreConstants.LAST_LOGIN_TIMESTAMP] =
-                                                                                System.currentTimeMillis()
+                                                                ) { result ->
+                                                                    ensureActive()
+                                                                    if (result == "\"logged\"") {
+                                                                        view.pauseTimers()
+                                                                        view.onPause()
+                                                                        userLoggedIn = true
+                                                                        convertPage.lastLoginTimestamp.longValue =
+                                                                            System.currentTimeMillis()
+                                                                        coroutine.launch {
+                                                                            dataStore.edit { settings ->
+                                                                                settings[DataStoreConstants.LAST_LOGIN_TIMESTAMP] =
+                                                                                    System.currentTimeMillis()
+                                                                            }
                                                                         }
                                                                     }
                                                                 }
                                                             }
-                                                        }
 
-                                                        4 -> {
-                                                            view.evaluateJavascript(
-                                                                """
+                                                            4 -> {
+                                                                view.evaluateJavascript(
+                                                                    """
                                                         var ad = '/html/body/div/div/div/div[7]/div/div[1]/i';
                                                         var adResult = document.evaluate(ad, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
                                                         if (adResult.singleNodeValue) {
@@ -1071,53 +1061,47 @@ fun ConvertPageUi(
                                                             false;
                                                         }
                                                         """.trimIndent()
-                                                            ) { result ->
-                                                                if (result == "\"logged\"") {
-                                                                    view.pauseTimers()
-                                                                    view.settings.javaScriptEnabled =
-                                                                        false
-                                                                    view.loadDataWithBaseURL(
-                                                                        null,
-                                                                        loggedHtml,
-                                                                        "text/html",
-                                                                        "utf-8",
-                                                                        null
-                                                                    )
-                                                                    userLoggedIn = true
-                                                                    convertPage.lastLoginTimestamp.value =
-                                                                        System.currentTimeMillis()
-                                                                    coroutine.launch {
-                                                                        dataStore.edit { settings ->
-                                                                            settings[DataStoreConstants.LAST_LOGIN_TIMESTAMP] =
-                                                                                System.currentTimeMillis()
+                                                                ) { result ->
+                                                                    ensureActive()
+                                                                    if (result == "\"logged\"") {
+                                                                        view.pauseTimers()
+                                                                        view.onPause()
+                                                                        userLoggedIn = true
+                                                                        convertPage.lastLoginTimestamp.longValue =
+                                                                            System.currentTimeMillis()
+                                                                        coroutine.launch {
+                                                                            dataStore.edit { settings ->
+                                                                                settings[DataStoreConstants.LAST_LOGIN_TIMESTAMP] =
+                                                                                    System.currentTimeMillis()
+                                                                            }
                                                                         }
                                                                     }
                                                                 }
                                                             }
                                                         }
-                                                    }
 //                                                view.scrollTo(800, 950)
-                                                    showDialogProgressBar.value = false
+                                                        showDialogProgressBar.value = false
 //                                            MyVibrationEffect(context, enableHaptic.value).done()
+                                                    }
                                                 }
                                             }
-                                        }
 
-                                        webView.setBackgroundColor(0)
-                                        webView.settings.javaScriptEnabled = true
-                                        webView.settings.userAgentString =
-                                            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-                                        webView.settings.builtInZoomControls = true
-                                        webView.settings.useWideViewPort = true
-                                        webView.settings.loadWithOverviewMode = true
-                                        webView.settings.domStorageEnabled = true
-                                        webView.settings.displayZoomControls = false
+                                            webView.setBackgroundColor(0)
+                                            webView.settings.javaScriptEnabled = true
+                                            webView.settings.userAgentString =
+                                                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+                                            webView.settings.builtInZoomControls = true
+                                            webView.settings.useWideViewPort = true
+                                            webView.settings.loadWithOverviewMode = true
+                                            webView.settings.domStorageEnabled = true
+                                            webView.settings.displayZoomControls = false
 //                                        webView.setInitialScale(250)
-                                        when (selectedSourceApp.intValue) {
-                                            1 -> webView.loadUrl("https://music.163.com/#/user/update")
-                                            2 -> webView.loadUrl("https://y.qq.com/n/ryqq/profile")
-                                            3 -> webView.loadUrl("https://www.kugou.com/newuc/user/uc")
-                                            4 -> webView.loadUrl("https://kuwo.cn/")
+                                            when (selectedSourceApp.intValue) {
+                                                1 -> webView.loadUrl("https://music.163.com/#/user/update")
+                                                2 -> webView.loadUrl("https://y.qq.com/n/ryqq/profile")
+                                                3 -> webView.loadUrl("https://www.kugou.com/newuc/user/uc")
+                                                4 -> webView.loadUrl("https://kuwo.cn/")
+                                            }
                                         }
                                     }
                                 }
@@ -1164,6 +1148,8 @@ fun ConvertPageUi(
                                         }
                                         CookieManager.getInstance().removeAllCookies(null)
                                         CookieManager.getInstance().flush()
+                                        webViewState.value?.onResume()
+                                        webViewState.value?.resumeTimers()
                                         when (selectedSourceApp.intValue) {
                                             1 -> {
                                                 webViewState.value?.loadUrl("https://music.163.com/#/user/update")
