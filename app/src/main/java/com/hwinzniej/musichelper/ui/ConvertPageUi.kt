@@ -92,7 +92,6 @@ import dev.jeziellago.compose.markdowntext.MarkdownText
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -904,10 +903,8 @@ fun ConvertPageUi(
                                                     view: WebView,
                                                     url: String
                                                 ) {
-                                                    job?.cancel()
-                                                    job = coroutine.launch(Dispatchers.Main) {
+                                                    coroutine.launch(Dispatchers.Main) {
                                                         delay(1000L)
-                                                        ensureActive()
                                                         when (selectedSourceApp.intValue) {
                                                             1 -> {
                                                                 view.evaluateJavascript(
@@ -930,7 +927,6 @@ fun ConvertPageUi(
                                                         }
                                                         """.trimIndent()
                                                                 ) { result ->
-                                                                    ensureActive()
                                                                     if (result.contains("/user/home\\?id=\\d+".toRegex())) {
                                                                         convertPage.loginUserId.value =
                                                                             result.substring(
@@ -984,7 +980,6 @@ fun ConvertPageUi(
                                                         }
                                                         """.trimIndent()
                                                                 ) { result ->
-                                                                    ensureActive()
                                                                     if (result == "\"logged\"") {
                                                                         view.pauseTimers()
                                                                         view.onPause()
@@ -1019,7 +1014,6 @@ fun ConvertPageUi(
                                                         }
                                                         """.trimIndent()
                                                                 ) { result ->
-                                                                    ensureActive()
                                                                     if (result == "\"logged\"") {
                                                                         view.pauseTimers()
                                                                         view.onPause()
@@ -1062,7 +1056,6 @@ fun ConvertPageUi(
                                                         }
                                                         """.trimIndent()
                                                                 ) { result ->
-                                                                    ensureActive()
                                                                     if (result == "\"logged\"") {
                                                                         view.pauseTimers()
                                                                         view.onPause()
