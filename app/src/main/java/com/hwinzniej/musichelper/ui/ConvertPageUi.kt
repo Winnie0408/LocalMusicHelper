@@ -225,38 +225,36 @@ fun ConvertPageUi(
                 convertPage.errorDialogCustomAction.value = {}
             },
             title = errorDialogTitle.value,
-            content = "",
-            enableHaptic = enableHaptic.value,
-            onlyComposeView = true,
-            customContent = {
-                RoundedColumn {
-                    ItemTitle(text = stringResource(id = R.string.error_details))
-                    LazyColumn(
-                        modifier = Modifier
-                            .padding(horizontal = 16.dp)
-                            .fillMaxWidth()
-                            .heightIn(
-                                min = 20.dp,
-                                max = (LocalConfiguration.current.screenHeightDp / 2.5).dp
-                            )
-                            .clip(RoundedCornerShape(10.dp))
-                    ) {
-                        item {
-                            MarkdownText(
-                                modifier = Modifier.padding(bottom = 8.dp),
-                                markdown = errorDialogContent.value,
-                                style = TextStyle(
-                                    color = SaltTheme.colors.text,
-                                    fontSize = 14.sp
-                                ),
-                                isTextSelectable = true,
-                                disableLinkMovementMethod = true
-                            )
-                        }
+            content = null,
+            enableHaptic = enableHaptic.value
+        ) {
+            RoundedColumn {
+                ItemTitle(text = stringResource(id = R.string.error_details))
+                LazyColumn(
+                    modifier = Modifier
+                        .padding(horizontal = 16.dp)
+                        .fillMaxWidth()
+                        .heightIn(
+                            min = 20.dp,
+                            max = (LocalConfiguration.current.screenHeightDp / 2.5).dp
+                        )
+                        .clip(RoundedCornerShape(10.dp))
+                ) {
+                    item {
+                        MarkdownText(
+                            modifier = Modifier.padding(bottom = 8.dp),
+                            markdown = errorDialogContent.value,
+                            style = TextStyle(
+                                color = SaltTheme.colors.text,
+                                fontSize = 14.sp
+                            ),
+                            isTextSelectable = true,
+                            disableLinkMovementMethod = true
+                        )
                     }
                 }
             }
-        )
+        }
     }
 
     if (showSelectSourceDialog.value) {
@@ -278,39 +276,37 @@ fun ConvertPageUi(
                 }
             },
             title = stringResource(R.string.select_source_app),
-            content = "",
+            content = null,
             cancelText = stringResource(R.string.cancel_button_text),
             confirmText = stringResource(R.string.ok_button_text),
-            onlyComposeView = true,
-            enableHaptic = enableHaptic.value,
-            customContent = {
-                Box {
-                    if (showDialogProgressBar.value) {
-                        LinearProgressIndicator(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .zIndex(1f),
-                            color = SaltTheme.colors.highlight,
-                            trackColor = SaltTheme.colors.background
+            enableHaptic = enableHaptic.value
+        ) {
+            Box {
+                if (showDialogProgressBar.value) {
+                    LinearProgressIndicator(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .zIndex(1f),
+                        color = SaltTheme.colors.highlight,
+                        trackColor = SaltTheme.colors.background
+                    )
+                }
+                LazyColumn {
+                    items(multiSource.size) { index ->
+                        ItemCheck(
+                            state = selectedMultiSourceApp == index,
+                            onChange = {
+                                selectedMultiSourceApp = if (it) index else -1
+                            },
+                            text = multiSource[index][1],
+                            sub = multiSource[index][0],
+                            iconAtLeft = false,
+                            enableHaptic = enableHaptic.value
                         )
-                    }
-                    LazyColumn {
-                        items(multiSource.size) { index ->
-                            ItemCheck(
-                                state = selectedMultiSourceApp == index,
-                                onChange = {
-                                    selectedMultiSourceApp = if (it) index else -1
-                                },
-                                text = multiSource[index][1],
-                                sub = multiSource[index][0],
-                                iconAtLeft = false,
-                                enableHaptic = enableHaptic.value
-                            )
-                        }
                     }
                 }
             }
-        )
+        }
     }
 
     LaunchedEffect(key1 = showSetSimilarityDialog) {
@@ -332,58 +328,62 @@ fun ConvertPageUi(
                 showSetSimilarityDialog = false
             },
             title = stringResource(R.string.set_similarity_dialog_title),
-            content = "",
+            content = null,
             cancelText = stringResource(R.string.cancel_button_text),
             confirmText = stringResource(R.string.ok_button_text),
-            onlyComposeView = true,
-            enableHaptic = enableHaptic.value,
-            customContent = {
-                Column {
-                    Row(
-                        modifier = Modifier.align(Alignment.CenterHorizontally),
-                        verticalAlignment = Alignment.CenterVertically
+            enableHaptic = enableHaptic.value
+        ) {
+            Column {
+                Row(
+                    modifier = Modifier.align(Alignment.CenterHorizontally),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    androidx.compose.material3.TextButton(
+                        onClick = {
+                            if (slideSimilarity > 0)
+                                slideSimilarity--
+                        },
+                        colors = ButtonDefaults.textButtonColors(
+                            contentColor = SaltTheme.colors.text
+                        ),
                     ) {
-                        androidx.compose.material3.TextButton(
-                            onClick = { slideSimilarity-- },
-                            colors = ButtonDefaults.textButtonColors(
-                                contentColor = SaltTheme.colors.text
-                            ),
-                        ) {
-                            Text("-", fontSize = 22.sp)
-                        }
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "${slideSimilarity.roundToInt()}%",
-                            fontSize = 18.sp,
-                            color = SaltTheme.colors.text
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        androidx.compose.material3.TextButton(
-                            onClick = { slideSimilarity++ },
-                            colors = ButtonDefaults.textButtonColors(
-                                contentColor = SaltTheme.colors.text
-                            ),
-                        ) {
-                            Text(text = "+", fontSize = 22.sp)
-                        }
+                        Text("-", fontSize = 22.sp)
                     }
-
-                    Slider(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp),
-                        value = slideSimilarity,
-                        onValueChange = { slideSimilarity = it.roundToInt().toFloat() },
-                        valueRange = 0f..100f,
-                        colors = SliderDefaults.colors(
-                            thumbColor = SaltTheme.colors.highlight,
-                            activeTrackColor = SaltTheme.colors.highlight,
-                            inactiveTrackColor = SaltTheme.colors.subBackground
-                        )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "${slideSimilarity.roundToInt()}%",
+                        fontSize = 18.sp,
+                        color = SaltTheme.colors.text
                     )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    androidx.compose.material3.TextButton(
+                        onClick = {
+                            if (slideSimilarity < 100)
+                                slideSimilarity++
+                        },
+                        colors = ButtonDefaults.textButtonColors(
+                            contentColor = SaltTheme.colors.text
+                        ),
+                    ) {
+                        Text(text = "+", fontSize = 22.sp)
+                    }
                 }
+
+                Slider(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    value = slideSimilarity,
+                    onValueChange = { slideSimilarity = it.roundToInt().toFloat() },
+                    valueRange = 0f..100f,
+                    colors = SliderDefaults.colors(
+                        thumbColor = SaltTheme.colors.highlight,
+                        activeTrackColor = SaltTheme.colors.highlight,
+                        inactiveTrackColor = SaltTheme.colors.subBackground
+                    )
+                )
             }
-        )
+        }
     }
 
     LaunchedEffect(key1 = showSelectedSongInfoDialog) {
@@ -411,129 +411,127 @@ fun ConvertPageUi(
                 }
             },
             title = stringResource(id = R.string.modify_conversion_results),
-            content = "",
+            content = null,
             cancelText = stringResource(R.string.cancel_button_text),
             confirmText = stringResource(R.string.ok_button_text),
-            onlyComposeView = true,
-            enableHaptic = enableHaptic.value,
-            customContent = {
-                val focus = LocalFocusManager.current
-                Box {
-                    if (showDialogProgressBar.value) {
-                        LinearProgressIndicator(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .zIndex(1f),
-                            color = SaltTheme.colors.highlight,
-                            trackColor = SaltTheme.colors.background
-                        )
-                    }
-                    Column {
-                        Row {
-                            Column(modifier = Modifier.weight(1f)) {
-                                ItemEdit(
-                                    text = inputSearchWords.value,
-                                    hint = stringResource(R.string.search_song_library),
-                                    onChange = {
-                                        inputSearchWords.value = it
-                                    },
-                                    showClearButton = inputSearchWords.value != "",
-                                    onClear = {
-                                        inputSearchWords.value = ""
-                                    },
-                                    enableHaptic = enableHaptic.value
-                                )
-                            }
-                            BasicButton(
-                                modifier = Modifier
-                                    .padding(top = 12.dp, bottom = 12.dp, end = 16.dp),
-                                enabled = true,
-                                onClick = { showDeleteDialog = true },
-                                backgroundColor = colorResource(id = R.color.unmatched),
+            enableHaptic = enableHaptic.value
+        ) {
+            val focus = LocalFocusManager.current
+            Box {
+                if (showDialogProgressBar.value) {
+                    LinearProgressIndicator(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .zIndex(1f),
+                        color = SaltTheme.colors.highlight,
+                        trackColor = SaltTheme.colors.background
+                    )
+                }
+                Column {
+                    Row {
+                        Column(modifier = Modifier.weight(1f)) {
+                            ItemEdit(
+                                text = inputSearchWords.value,
+                                hint = stringResource(R.string.search_song_library),
+                                onChange = {
+                                    inputSearchWords.value = it
+                                },
+                                showClearButton = inputSearchWords.value != "",
+                                onClear = {
+                                    inputSearchWords.value = ""
+                                },
                                 enableHaptic = enableHaptic.value
-                            ) {
-                                Icon(
-                                    modifier = Modifier
-                                        .size(20.dp),
-                                    painter = painterResource(id = R.drawable.ic_delete),
-                                    contentDescription = null,
-                                    tint = Color.White
-                                )
-                            }
+                            )
                         }
-                        AnimatedVisibility(visible = searchResult.isNotEmpty()) {  //TODO 仅第一次新增搜索结果时有动画，变化与删除时无动画
-                            RoundedColumn {
-                                ItemTitle(text = stringResource(R.string.search_results))
-                                LazyColumn {
-                                    items(searchResult.size) { index ->
-                                        ItemCheck(
-                                            state = selectedSearchResult == index,
-                                            onChange = {
-                                                focus.clearFocus()
-                                                if (!it) selectedSearchResult = -1
-                                                else {
-                                                    selectedSearchResult = index
-                                                    selectedAllIndex =
-                                                        searchResult[index][3].toInt()
-                                                }
-                                            },
-                                            text = searchResult[index][0],
-                                            sub = if (searchResult[index].size == 1) null else "${searchResult[index][1]} - ${searchResult[index][2]}",
-                                            iconAtLeft = false,
-                                            hideIcon = searchResult[index].size == 1,
-                                            enabled = searchResult[index].size != 1,
-                                            enableHaptic = enableHaptic.value
-                                        )
-                                    }
+                        BasicButton(
+                            modifier = Modifier
+                                .padding(top = 12.dp, bottom = 12.dp, end = 16.dp),
+                            enabled = true,
+                            onClick = { showDeleteDialog = true },
+                            backgroundColor = colorResource(id = R.color.unmatched),
+                            enableHaptic = enableHaptic.value
+                        ) {
+                            Icon(
+                                modifier = Modifier
+                                    .size(20.dp),
+                                painter = painterResource(id = R.drawable.ic_delete),
+                                contentDescription = null,
+                                tint = Color.White
+                            )
+                        }
+                    }
+                    AnimatedVisibility(visible = searchResult.isNotEmpty()) {  //TODO 仅第一次新增搜索结果时有动画，变化与删除时无动画
+                        RoundedColumn {
+                            ItemTitle(text = stringResource(R.string.search_results))
+                            LazyColumn {
+                                items(searchResult.size) { index ->
+                                    ItemCheck(
+                                        state = selectedSearchResult == index,
+                                        onChange = {
+                                            focus.clearFocus()
+                                            if (!it) selectedSearchResult = -1
+                                            else {
+                                                selectedSearchResult = index
+                                                selectedAllIndex =
+                                                    searchResult[index][3].toInt()
+                                            }
+                                        },
+                                        text = searchResult[index][0],
+                                        sub = if (searchResult[index].size == 1) null else "${searchResult[index][1]} - ${searchResult[index][2]}",
+                                        iconAtLeft = false,
+                                        hideIcon = searchResult[index].size == 1,
+                                        enabled = searchResult[index].size != 1,
+                                        enableHaptic = enableHaptic.value
+                                    )
                                 }
                             }
                         }
-                        RoundedColumn {
-                            ItemTitle(text = stringResource(R.string.songlist_song_info))
-                            ItemValue(
-                                text = stringResource(id = R.string.song_name),
-                                rightSub = convertResult[selectedSongIndex]!![2],
-                                clickable = true,
-                                onClick = {
-                                    inputSearchWords.value =
-                                        "${inputSearchWords.value}${convertResult[selectedSongIndex]!![2]}"
-                                },
-                                textWeight = 1f,
-                                rightSubWeight = 2.6f
-                            )
-                            ItemValue(
-                                text = stringResource(id = R.string.singer).replace(
-                                    "(：)|(:\\s)".toRegex(),
-                                    ""
-                                ),
-                                rightSub = convertResult[selectedSongIndex]!![4],
-                                clickable = true,
-                                onClick = {
-                                    inputSearchWords.value =
-                                        "${inputSearchWords.value}${convertResult[selectedSongIndex]!![4]}"
-                                },
-                                textWeight = 1f,
-                                rightSubWeight = 2.6f
-                            )
-                            ItemValue(
-                                text = stringResource(id = R.string.album).replace(
-                                    "(：)|(:\\s)".toRegex(),
-                                    ""
-                                ),
-                                rightSub = convertResult[selectedSongIndex]!![6],
-                                clickable = true,
-                                onClick = {
-                                    inputSearchWords.value =
-                                        "${inputSearchWords.value}${convertResult[selectedSongIndex]!![6]}"
-                                },
-                                textWeight = 1f,
-                                rightSubWeight = 2.6f
-                            )
-                        }
+                    }
+                    RoundedColumn {
+                        ItemTitle(text = stringResource(R.string.songlist_song_info))
+                        ItemValue(
+                            text = stringResource(id = R.string.song_name),
+                            rightSub = convertResult[selectedSongIndex]!![2],
+                            clickable = true,
+                            onClick = {
+                                inputSearchWords.value =
+                                    "${inputSearchWords.value}${convertResult[selectedSongIndex]!![2]}"
+                            },
+                            textWeight = 1f,
+                            rightSubWeight = 2.6f
+                        )
+                        ItemValue(
+                            text = stringResource(id = R.string.singer).replace(
+                                "(：)|(:\\s)".toRegex(),
+                                ""
+                            ),
+                            rightSub = convertResult[selectedSongIndex]!![4],
+                            clickable = true,
+                            onClick = {
+                                inputSearchWords.value =
+                                    "${inputSearchWords.value}${convertResult[selectedSongIndex]!![4]}"
+                            },
+                            textWeight = 1f,
+                            rightSubWeight = 2.6f
+                        )
+                        ItemValue(
+                            text = stringResource(id = R.string.album).replace(
+                                "(：)|(:\\s)".toRegex(),
+                                ""
+                            ),
+                            rightSub = convertResult[selectedSongIndex]!![6],
+                            clickable = true,
+                            onClick = {
+                                inputSearchWords.value =
+                                    "${inputSearchWords.value}${convertResult[selectedSongIndex]!![6]}"
+                            },
+                            textWeight = 1f,
+                            rightSubWeight = 2.6f
+                        )
                     }
                 }
             }
-        )
+        }
     }
 
     LaunchedEffect(key1 = showSaveDialog.value) {
@@ -565,64 +563,62 @@ fun ConvertPageUi(
                 )
             },
             title = stringResource(id = R.string.save_conversion_results),
-            content = "",
+            content = null,
             cancelText = stringResource(R.string.cancel_button_text),
             confirmText = stringResource(R.string.ok_button_text),
-            onlyComposeView = true,
-            enableHaptic = enableHaptic.value,
-            customContent = {
-                Box {
-                    if (showDialogProgressBar.value) {
-                        LinearProgressIndicator(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .zIndex(1f),
-                            color = SaltTheme.colors.highlight,
-                            trackColor = SaltTheme.colors.background
-                        )
-                    }
-                    Column {
-                        ItemTitle(text = stringResource(R.string.state_of_the_song_to_be_saved))
+            enableHaptic = enableHaptic.value
+        ) {
+            Box {
+                if (showDialogProgressBar.value) {
+                    LinearProgressIndicator(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .zIndex(1f),
+                        color = SaltTheme.colors.highlight,
+                        trackColor = SaltTheme.colors.background
+                    )
+                }
+                Column {
+                    ItemTitle(text = stringResource(R.string.state_of_the_song_to_be_saved))
 //                        ItemText(text = stringResource(R.string.state_of_the_song_to_be_saved))
-                        ItemSwitcher(
-                            state = saveSuccessSongs,
-                            onChange = { saveSuccessSongs = it },
-                            text = "${stringResource(R.string.match_success)} - ${
-                                convertResult.count {
-                                    it.value[0] == "0"
-                                }
-                            }",
-                            enableHaptic = enableHaptic.value
-                        )
-                        ItemSwitcher(
-                            state = saveCautionSongs,
-                            onChange = { saveCautionSongs = it },
-                            text = "${stringResource(R.string.match_caution)} - ${
-                                convertResult.count {
-                                    it.value[0] == "1"
-                                }
-                            }",
-                            enableHaptic = enableHaptic.value
-                        )
-                        ItemSwitcher(
-                            state = saveManualSongs,
-                            onChange = { saveManualSongs = it },
-                            text = "${stringResource(R.string.match_manual)} - ${
-                                convertResult.count {
-                                    it.value[0] == "2"
-                                }
-                            }",
-                            enableHaptic = enableHaptic.value
-                        )
+                    ItemSwitcher(
+                        state = saveSuccessSongs,
+                        onChange = { saveSuccessSongs = it },
+                        text = "${stringResource(R.string.match_success)} - ${
+                            convertResult.count {
+                                it.value[0] == "0"
+                            }
+                        }",
+                        enableHaptic = enableHaptic.value
+                    )
+                    ItemSwitcher(
+                        state = saveCautionSongs,
+                        onChange = { saveCautionSongs = it },
+                        text = "${stringResource(R.string.match_caution)} - ${
+                            convertResult.count {
+                                it.value[0] == "1"
+                            }
+                        }",
+                        enableHaptic = enableHaptic.value
+                    )
+                    ItemSwitcher(
+                        state = saveManualSongs,
+                        onChange = { saveManualSongs = it },
+                        text = "${stringResource(R.string.match_manual)} - ${
+                            convertResult.count {
+                                it.value[0] == "2"
+                            }
+                        }",
+                        enableHaptic = enableHaptic.value
+                    )
 //                        ItemText(
 //                            text = "${stringResource(R.string.result_file_save_location)}\n${
 //                                Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
 //                            }/MusicHelper/${playlistName[playlistEnabled.indexOfFirst { it == 1 }]}.txt"
 //                        )
-                    }
                 }
             }
-        )
+        }
     }
 
     if (showDeleteDialog) {
@@ -641,12 +637,29 @@ fun ConvertPageUi(
                 ).show()
             },
             title = stringResource(id = R.string.delete_dialog_title),
-            content = "${stringResource(id = R.string.delete_dialog_content)}\n${
-                convertResult[selectedSongIndex]!![2]
-            } - ${convertResult[selectedSongIndex]!![4]} - ${convertResult[selectedSongIndex]!![6]}",
+            content = null,
             confirmButtonColor = colorResource(id = R.color.unmatched),
-            enableHaptic = enableHaptic.value
-        )
+            enableHaptic = enableHaptic.value,
+        ) {
+            ItemContainer {
+                MarkdownText(
+                    modifier = Modifier.padding(vertical = 8.dp),
+                    markdown = "${stringResource(id = R.string.delete_dialog_content)}\n- ${
+                        convertResult[selectedSongIndex]!![2]
+                    }\n  - ${
+                        stringResource(R.string.singer)
+                    }${convertResult[selectedSongIndex]!![4]}\n  - ${
+                        stringResource(R.string.album)
+                    }${convertResult[selectedSongIndex]!![6]}",
+                    style = TextStyle(
+                        color = SaltTheme.colors.text,
+                        fontSize = 14.sp
+                    ),
+                    isTextSelectable = true,
+                    disableLinkMovementMethod = true
+                )
+            }
+        }
     }
 
     var needNcmUserId by remember { mutableStateOf(false) }
@@ -790,125 +803,124 @@ fun ConvertPageUi(
                     else -> ""
                 }
             ),
-            enableConfirmButton = !showDialogProgressBar.value,
             content = null,
-            onlyComposeView = true,
             enableHaptic = enableHaptic.value,
-            customContent = {
-                Box {
-                    if (showDialogProgressBar.value) {
-                        LinearProgressIndicator(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .zIndex(1f),
-                            color = SaltTheme.colors.highlight,
-                            trackColor = SaltTheme.colors.background
-                        )
-                    }
-                    Column {
-                        RoundedColumn {
-                            ItemPopup(
-                                state = loginMethodPopupState,
-                                text = stringResource(R.string.login_method),
-                                selectedItem = when (selectedLoginMethod.intValue) {
-                                    0 -> stringResource(R.string.web_login)
-                                    1 -> stringResource(R.string.cookie_login)
-                                    else -> ""
+            enableConfirmButton = !showDialogProgressBar.value
+        ) {
+            Box {
+                if (showDialogProgressBar.value) {
+                    LinearProgressIndicator(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .zIndex(1f),
+                        color = SaltTheme.colors.highlight,
+                        trackColor = SaltTheme.colors.background
+                    )
+                }
+                Column {
+                    RoundedColumn {
+                        ItemPopup(
+                            state = loginMethodPopupState,
+                            text = stringResource(R.string.login_method),
+                            selectedItem = when (selectedLoginMethod.intValue) {
+                                0 -> stringResource(R.string.web_login)
+                                1 -> stringResource(R.string.cookie_login)
+                                else -> ""
+                            },
+                            popupWidth = 140
+                        ) {
+                            PopupMenuItem(
+                                onClick = {
+                                    MyVibrationEffect(context, enableHaptic.value).click()
+                                    webViewState.value?.onResume()
+                                    webViewState.value?.resumeTimers()
+                                    userLoggedIn = false
+                                    convertPage.cookie.value = ""
+                                    selectedLoginMethod.intValue = 0
+                                    loginMethodPopupState.dismiss()
+                                    showDialogProgressBar.value = true
                                 },
-                                popupWidth = 140
+                                selected = selectedLoginMethod.intValue == 0,
+                                text = stringResource(R.string.web_login),
+                                iconPainter = painterResource(id = R.drawable.web_page),
+                                iconColor = SaltTheme.colors.text,
+                                iconPaddingValues = PaddingValues(
+                                    start = 1.dp,
+                                    end = 1.dp,
+                                    top = 1.dp,
+                                    bottom = 1.dp
+                                )
+                            )
+                            PopupMenuItem(
+                                onClick = {
+                                    MyVibrationEffect(context, enableHaptic.value).click()
+                                    userLoggedIn = false
+                                    convertPage.cookie.value = ""
+                                    selectedLoginMethod.intValue = 1
+                                    loginMethodPopupState.dismiss()
+                                },
+                                selected = selectedLoginMethod.intValue == 1,
+                                text = stringResource(R.string.cookie_login),
+                                iconPainter = painterResource(id = R.drawable.cookie),
+                                iconColor = SaltTheme.colors.text
+                            )
+                        }
+                        AnimatedVisibility(visible = selectedLoginMethod.intValue == 0) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
                             ) {
-                                PopupMenuItem(
-                                    onClick = {
-                                        MyVibrationEffect(context, enableHaptic.value).click()
-                                        webViewState.value?.onResume()
-                                        webViewState.value?.resumeTimers()
-                                        userLoggedIn = false
-                                        convertPage.cookie.value = ""
-                                        selectedLoginMethod.intValue = 0
-                                        loginMethodPopupState.dismiss()
-                                        showDialogProgressBar.value = true
-                                    },
-                                    selected = selectedLoginMethod.intValue == 0,
-                                    text = stringResource(R.string.web_login),
-                                    iconPainter = painterResource(id = R.drawable.web_page),
-                                    iconColor = SaltTheme.colors.text,
-                                    iconPaddingValues = PaddingValues(
-                                        start = 1.dp,
-                                        end = 1.dp,
-                                        top = 1.dp,
-                                        bottom = 1.dp
-                                    )
-                                )
-                                PopupMenuItem(
-                                    onClick = {
-                                        MyVibrationEffect(context, enableHaptic.value).click()
-                                        userLoggedIn = false
-                                        convertPage.cookie.value = ""
-                                        selectedLoginMethod.intValue = 1
-                                        loginMethodPopupState.dismiss()
-                                    },
-                                    selected = selectedLoginMethod.intValue == 1,
-                                    text = stringResource(R.string.cookie_login),
-                                    iconPainter = painterResource(id = R.drawable.cookie),
-                                    iconColor = SaltTheme.colors.text
-                                )
-                            }
-                            AnimatedVisibility(visible = selectedLoginMethod.intValue == 0) {
-                                Column(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                ) {
-                                    AnimatedVisibility(visible = userLoggedIn) {
-                                        ItemContainer {
-                                            MarkdownText(
-                                                modifier = Modifier
-                                                    .fillMaxWidth()
-                                                    .padding(vertical = 8.dp)
-                                                    .clip(
-                                                        RoundedCornerShape(
-                                                            0.dp,
-                                                            0.dp,
-                                                            10.dp,
-                                                            10.dp
-                                                        )
-                                                    ),
-                                                markdown = stringResource(id = R.string.already_logged_in_click_ok).replace(
-                                                    "#n",
-                                                    "\n"
-                                                ),
-                                                style = TextStyle(
-                                                    color = SaltTheme.colors.text,
-                                                    fontSize = 16.sp,
-                                                    lineHeight = 1.5.em
-                                                ),
-                                                isTextSelectable = true,
-                                                disableLinkMovementMethod = true
-                                            )
-                                        }
-                                    }
-                                    AnimatedVisibility(visible = !userLoggedIn) {
-                                        AndroidView(
+                                AnimatedVisibility(visible = userLoggedIn) {
+                                    ItemContainer {
+                                        MarkdownText(
                                             modifier = Modifier
                                                 .fillMaxWidth()
-                                                .height((LocalConfiguration.current.screenHeightDp / 3).dp)
-                                                .clip(RoundedCornerShape(0.dp, 0.dp, 10.dp, 10.dp)),
-                                            factory = { context ->
-                                                WebView(context).also { webView ->
-                                                    webViewState.value = webView
-                                                }
-                                            },
-                                        ) { webView ->
-                                            webView.webViewClient = object : WebViewClient() {
-                                                override fun onPageFinished(
-                                                    view: WebView,
-                                                    url: String
-                                                ) {
-                                                    coroutine.launch(Dispatchers.Main) {
-                                                        delay(1000L)
-                                                        when (selectedSourceApp.intValue) {
-                                                            1 -> {
-                                                                view.evaluateJavascript(
-                                                                    """
+                                                .padding(vertical = 8.dp)
+                                                .clip(
+                                                    RoundedCornerShape(
+                                                        0.dp,
+                                                        0.dp,
+                                                        10.dp,
+                                                        10.dp
+                                                    )
+                                                ),
+                                            markdown = stringResource(id = R.string.already_logged_in_click_ok).replace(
+                                                "#n",
+                                                "\n"
+                                            ),
+                                            style = TextStyle(
+                                                color = SaltTheme.colors.text,
+                                                fontSize = 16.sp,
+                                                lineHeight = 1.5.em
+                                            ),
+                                            isTextSelectable = true,
+                                            disableLinkMovementMethod = true
+                                        )
+                                    }
+                                }
+                                AnimatedVisibility(visible = !userLoggedIn) {
+                                    AndroidView(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .height((LocalConfiguration.current.screenHeightDp / 3).dp)
+                                            .clip(RoundedCornerShape(0.dp, 0.dp, 10.dp, 10.dp)),
+                                        factory = { context ->
+                                            WebView(context).also { webView ->
+                                                webViewState.value = webView
+                                            }
+                                        },
+                                    ) { webView ->
+                                        webView.webViewClient = object : WebViewClient() {
+                                            override fun onPageFinished(
+                                                view: WebView,
+                                                url: String
+                                            ) {
+                                                coroutine.launch(Dispatchers.Main) {
+                                                    delay(1000L)
+                                                    when (selectedSourceApp.intValue) {
+                                                        1 -> {
+                                                            view.evaluateJavascript(
+                                                                """
                                                         var xpath = '/html/body/div[1]/div[1]/div/div[1]/a';
                                                         var result = document.evaluate(xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
                                                         var element = result.singleNodeValue;
@@ -926,45 +938,45 @@ fun ConvertPageUi(
                                                             false;
                                                         }
                                                         """.trimIndent()
-                                                                ) { result ->
-                                                                    if (result.contains("/user/home\\?id=\\d+".toRegex())) {
-                                                                        convertPage.loginUserId.value =
-                                                                            result.substring(
-                                                                                result.indexOf("/user/home?id=") + 14,
-                                                                                result.length - 1
-                                                                            )
-                                                                        userLoggedIn = true
-                                                                        convertPage.lastLoginTimestamp.longValue =
-                                                                            System.currentTimeMillis()
-                                                                        coroutine.launch {
-                                                                            dataStore.edit { settings ->
-                                                                                settings[DataStoreConstants.LAST_LOGIN_TIMESTAMP] =
-                                                                                    System.currentTimeMillis()
-                                                                            }
+                                                            ) { result ->
+                                                                if (result.contains("/user/home\\?id=\\d+".toRegex())) {
+                                                                    convertPage.loginUserId.value =
+                                                                        result.substring(
+                                                                            result.indexOf("/user/home?id=") + 14,
+                                                                            result.length - 1
+                                                                        )
+                                                                    userLoggedIn = true
+                                                                    convertPage.lastLoginTimestamp.longValue =
+                                                                        System.currentTimeMillis()
+                                                                    coroutine.launch {
+                                                                        dataStore.edit { settings ->
+                                                                            settings[DataStoreConstants.LAST_LOGIN_TIMESTAMP] =
+                                                                                System.currentTimeMillis()
                                                                         }
-                                                                        if (needNcmUserId) {
-                                                                            destoryWebview()
-                                                                            showDialogProgressBar.value =
-                                                                                false
-                                                                            showLoginDialog.value =
-                                                                                false
-                                                                            needNcmUserId = false
-                                                                            convertPage.getOnlinePlaylist()
-                                                                        } else {
-                                                                            view.pauseTimers()
-                                                                            view.onPause()
-                                                                        }
-                                                                    } else if (result == "false") {
+                                                                    }
+                                                                    if (needNcmUserId) {
+                                                                        destoryWebview()
                                                                         showDialogProgressBar.value =
                                                                             false
-                                                                        view.loadUrl("https://music.163.com/#/user/update")
+                                                                        showLoginDialog.value =
+                                                                            false
+                                                                        needNcmUserId = false
+                                                                        convertPage.getOnlinePlaylist()
+                                                                    } else {
+                                                                        view.pauseTimers()
+                                                                        view.onPause()
                                                                     }
+                                                                } else if (result == "false") {
+                                                                    showDialogProgressBar.value =
+                                                                        false
+                                                                    view.loadUrl("https://music.163.com/#/user/update")
                                                                 }
                                                             }
+                                                        }
 
-                                                            2 -> {
-                                                                view.evaluateJavascript(
-                                                                    """
+                                                        2 -> {
+                                                            view.evaluateJavascript(
+                                                                """
                                                         var xpath = '/html/body/div/div[1]/div/div[2]/span/a';
                                                         var result = document.evaluate(xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
                                                         var element =  result.singleNodeValue;
@@ -979,26 +991,26 @@ fun ConvertPageUi(
                                                             false;
                                                         }
                                                         """.trimIndent()
-                                                                ) { result ->
-                                                                    if (result == "\"logged\"") {
-                                                                        view.pauseTimers()
-                                                                        view.onPause()
-                                                                        userLoggedIn = true
-                                                                        convertPage.lastLoginTimestamp.longValue =
-                                                                            System.currentTimeMillis()
-                                                                        coroutine.launch {
-                                                                            dataStore.edit { settings ->
-                                                                                settings[DataStoreConstants.LAST_LOGIN_TIMESTAMP] =
-                                                                                    System.currentTimeMillis()
-                                                                            }
+                                                            ) { result ->
+                                                                if (result == "\"logged\"") {
+                                                                    view.pauseTimers()
+                                                                    view.onPause()
+                                                                    userLoggedIn = true
+                                                                    convertPage.lastLoginTimestamp.longValue =
+                                                                        System.currentTimeMillis()
+                                                                    coroutine.launch {
+                                                                        dataStore.edit { settings ->
+                                                                            settings[DataStoreConstants.LAST_LOGIN_TIMESTAMP] =
+                                                                                System.currentTimeMillis()
                                                                         }
                                                                     }
                                                                 }
                                                             }
+                                                        }
 
-                                                            3 -> {
-                                                                view.evaluateJavascript(
-                                                                    """
+                                                        3 -> {
+                                                            view.evaluateJavascript(
+                                                                """
                                                         var xpath = '/html/body/div[1]/div[1]/div/div[2]/div[2]/div[1]';
                                                         var result = document.evaluate(xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
                                                         var element =  result.singleNodeValue;
@@ -1013,26 +1025,26 @@ fun ConvertPageUi(
                                                             false;
                                                         }
                                                         """.trimIndent()
-                                                                ) { result ->
-                                                                    if (result == "\"logged\"") {
-                                                                        view.pauseTimers()
-                                                                        view.onPause()
-                                                                        userLoggedIn = true
-                                                                        convertPage.lastLoginTimestamp.longValue =
-                                                                            System.currentTimeMillis()
-                                                                        coroutine.launch {
-                                                                            dataStore.edit { settings ->
-                                                                                settings[DataStoreConstants.LAST_LOGIN_TIMESTAMP] =
-                                                                                    System.currentTimeMillis()
-                                                                            }
+                                                            ) { result ->
+                                                                if (result == "\"logged\"") {
+                                                                    view.pauseTimers()
+                                                                    view.onPause()
+                                                                    userLoggedIn = true
+                                                                    convertPage.lastLoginTimestamp.longValue =
+                                                                        System.currentTimeMillis()
+                                                                    coroutine.launch {
+                                                                        dataStore.edit { settings ->
+                                                                            settings[DataStoreConstants.LAST_LOGIN_TIMESTAMP] =
+                                                                                System.currentTimeMillis()
                                                                         }
                                                                     }
                                                                 }
                                                             }
+                                                        }
 
-                                                            4 -> {
-                                                                view.evaluateJavascript(
-                                                                    """
+                                                        4 -> {
+                                                            view.evaluateJavascript(
+                                                                """
                                                         var ad = '/html/body/div/div/div/div[7]/div/div[1]/i';
                                                         var adResult = document.evaluate(ad, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
                                                         if (adResult.singleNodeValue) {
@@ -1055,122 +1067,121 @@ fun ConvertPageUi(
                                                             false;
                                                         }
                                                         """.trimIndent()
-                                                                ) { result ->
-                                                                    if (result == "\"logged\"") {
-                                                                        view.pauseTimers()
-                                                                        view.onPause()
-                                                                        userLoggedIn = true
-                                                                        convertPage.lastLoginTimestamp.longValue =
-                                                                            System.currentTimeMillis()
-                                                                        coroutine.launch {
-                                                                            dataStore.edit { settings ->
-                                                                                settings[DataStoreConstants.LAST_LOGIN_TIMESTAMP] =
-                                                                                    System.currentTimeMillis()
-                                                                            }
+                                                            ) { result ->
+                                                                if (result == "\"logged\"") {
+                                                                    view.pauseTimers()
+                                                                    view.onPause()
+                                                                    userLoggedIn = true
+                                                                    convertPage.lastLoginTimestamp.longValue =
+                                                                        System.currentTimeMillis()
+                                                                    coroutine.launch {
+                                                                        dataStore.edit { settings ->
+                                                                            settings[DataStoreConstants.LAST_LOGIN_TIMESTAMP] =
+                                                                                System.currentTimeMillis()
                                                                         }
                                                                     }
                                                                 }
                                                             }
                                                         }
-//                                                view.scrollTo(800, 950)
-                                                        showDialogProgressBar.value = false
-//                                            MyVibrationEffect(context, enableHaptic.value).done()
                                                     }
+//                                                view.scrollTo(800, 950)
+                                                    showDialogProgressBar.value = false
+//                                            MyVibrationEffect(context, enableHaptic.value).done()
                                                 }
                                             }
+                                        }
 
-                                            webView.setBackgroundColor(0)
-                                            webView.settings.javaScriptEnabled = true
-                                            webView.settings.userAgentString =
-                                                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-                                            webView.settings.builtInZoomControls = true
-                                            webView.settings.useWideViewPort = true
-                                            webView.settings.loadWithOverviewMode = true
-                                            webView.settings.domStorageEnabled = true
-                                            webView.settings.displayZoomControls = false
+                                        webView.setBackgroundColor(0)
+                                        webView.settings.javaScriptEnabled = true
+                                        webView.settings.userAgentString =
+                                            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+                                        webView.settings.builtInZoomControls = true
+                                        webView.settings.useWideViewPort = true
+                                        webView.settings.loadWithOverviewMode = true
+                                        webView.settings.domStorageEnabled = true
+                                        webView.settings.displayZoomControls = false
 //                                        webView.setInitialScale(250)
-                                            when (selectedSourceApp.intValue) {
-                                                1 -> webView.loadUrl("https://music.163.com/#/user/update")
-                                                2 -> webView.loadUrl("https://y.qq.com/n/ryqq/profile")
-                                                3 -> webView.loadUrl("https://www.kugou.com/newuc/user/uc")
-                                                4 -> webView.loadUrl("https://kuwo.cn/")
-                                            }
+                                        when (selectedSourceApp.intValue) {
+                                            1 -> webView.loadUrl("https://music.163.com/#/user/update")
+                                            2 -> webView.loadUrl("https://y.qq.com/n/ryqq/profile")
+                                            3 -> webView.loadUrl("https://www.kugou.com/newuc/user/uc")
+                                            4 -> webView.loadUrl("https://kuwo.cn/")
                                         }
                                     }
                                 }
                             }
-                            AnimatedVisibility(visible = selectedLoginMethod.intValue == 1) {
-                                Column(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .heightIn(max = (LocalConfiguration.current.screenHeightDp / 4).dp)
-                                ) {
-                                    ItemEdit(
-                                        text = userInput,
-                                        hint = when (selectedSourceApp.intValue) {
-                                            1 -> "MUSIC_U=xxx; __csrf=xxx; uid=xxx"
-                                            2 -> "(wx)uin=xxx; qm_keyst=xxx"
-                                            3 -> ""
-                                            4 -> ""
-                                            else -> ""
-                                        },
-                                        onChange = {
-                                            userInput = it
-                                        },
-                                        enableHaptic = enableHaptic.value,
-                                        showClearButton = userInput != "",
-                                        onClear = {
-                                            userInput = ""
-                                        }
-                                    )
-                                }
-                            }
                         }
-                        AnimatedVisibility(visible = userLoggedIn && (selectedLoginMethod.intValue == 0)) {
-                            ItemContainer {
-                                TextButton(
-                                    onClick = {
-                                        showDialogProgressBar.value = true
-                                        convertPage.loginUserId.value = ""
-                                        coroutine.launch {
-                                            dataStore.edit { settings ->
-                                                settings[DataStoreConstants.NETEASE_USER_ID] = ""
-                                                settings[DataStoreConstants.LAST_LOGIN_TIMESTAMP] =
-                                                    0L
-                                            }
-                                        }
-                                        CookieManager.getInstance().removeAllCookies(null)
-                                        CookieManager.getInstance().flush()
-                                        webViewState.value?.onResume()
-                                        webViewState.value?.resumeTimers()
-                                        when (selectedSourceApp.intValue) {
-                                            1 -> {
-                                                webViewState.value?.loadUrl("https://music.163.com/#/user/update")
-                                            }
-
-                                            2 -> {
-                                                webViewState.value?.loadUrl("https://y.qq.com/n/ryqq/profile")
-                                            }
-
-                                            3 -> {
-                                                webViewState.value?.loadUrl("https://www.kugou.com/newuc/user/uc")
-                                            }
-
-                                            4 -> {
-                                                webViewState.value?.loadUrl("https://kuwo.cn/")
-                                            }
-                                        }
-                                        userLoggedIn = false
+                        AnimatedVisibility(visible = selectedLoginMethod.intValue == 1) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .heightIn(max = (LocalConfiguration.current.screenHeightDp / 4).dp)
+                            ) {
+                                ItemEdit(
+                                    text = userInput,
+                                    hint = when (selectedSourceApp.intValue) {
+                                        1 -> "MUSIC_U=xxx; __csrf=xxx; uid=xxx"
+                                        2 -> "(wx)uin=xxx; qm_keyst=xxx"
+                                        3 -> ""
+                                        4 -> ""
+                                        else -> ""
                                     },
-                                    text = stringResource(id = R.string.switch_account_logout),
-                                    enableHaptic = enableHaptic.value
+                                    onChange = {
+                                        userInput = it
+                                    },
+                                    enableHaptic = enableHaptic.value,
+                                    showClearButton = userInput != "",
+                                    onClear = {
+                                        userInput = ""
+                                    }
                                 )
                             }
                         }
                     }
+                    AnimatedVisibility(visible = userLoggedIn && (selectedLoginMethod.intValue == 0)) {
+                        ItemContainer {
+                            TextButton(
+                                onClick = {
+                                    showDialogProgressBar.value = true
+                                    convertPage.loginUserId.value = ""
+                                    coroutine.launch {
+                                        dataStore.edit { settings ->
+                                            settings[DataStoreConstants.NETEASE_USER_ID] = ""
+                                            settings[DataStoreConstants.LAST_LOGIN_TIMESTAMP] =
+                                                0L
+                                        }
+                                    }
+                                    CookieManager.getInstance().removeAllCookies(null)
+                                    CookieManager.getInstance().flush()
+                                    webViewState.value?.onResume()
+                                    webViewState.value?.resumeTimers()
+                                    when (selectedSourceApp.intValue) {
+                                        1 -> {
+                                            webViewState.value?.loadUrl("https://music.163.com/#/user/update")
+                                        }
+
+                                        2 -> {
+                                            webViewState.value?.loadUrl("https://y.qq.com/n/ryqq/profile")
+                                        }
+
+                                        3 -> {
+                                            webViewState.value?.loadUrl("https://www.kugou.com/newuc/user/uc")
+                                        }
+
+                                        4 -> {
+                                            webViewState.value?.loadUrl("https://kuwo.cn/")
+                                        }
+                                    }
+                                    userLoggedIn = false
+                                },
+                                text = stringResource(id = R.string.switch_account_logout),
+                                enableHaptic = enableHaptic.value
+                            )
+                        }
+                    }
                 }
             }
-        )
+        }
     }
 
     LaunchedEffect(key1 = currentPage.intValue) {
@@ -1248,7 +1259,7 @@ fun ConvertPageUi(
                 beyondBoundsPageCount = 1
             ) { page ->
                 when (page) {
-                    0 -> {
+                    0 -> {  //TODO 使用DataStore保存上次选择的值
                         Column(
                             modifier = Modifier
                                 .padding(top = 4.dp)
@@ -2108,7 +2119,7 @@ fun ConvertPageUi(
                                                                 }
 
                                                                 1 -> items(convertResult.size) { index ->
-                                                                    if (convertResult[index]!![0] == "0" && convertResult[index] != null
+                                                                    if (convertResult[index] != null && convertResult[index]!![0] == "0"
                                                                     )
                                                                         Item(
                                                                             onClick = {
@@ -2159,7 +2170,7 @@ fun ConvertPageUi(
                                                                 }
 
                                                                 2 -> items(convertResult.size) { index ->
-                                                                    if (convertResult[index]!![0] == "1" && convertResult[index] != null
+                                                                    if (convertResult[index] != null && convertResult[index]!![0] == "1"
                                                                     )
                                                                         Item(
                                                                             onClick = {
@@ -2210,7 +2221,7 @@ fun ConvertPageUi(
                                                                 }
 
                                                                 3 -> items(convertResult.size) { index ->
-                                                                    if (convertResult[index]!![0] == "2" && convertResult[index] != null
+                                                                    if (convertResult[index] != null && convertResult[index]!![0] == "2"
                                                                     )
                                                                         Item(
                                                                             onClick = {

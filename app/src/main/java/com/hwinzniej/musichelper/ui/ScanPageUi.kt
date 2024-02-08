@@ -59,9 +59,9 @@ fun ScanPageUi(
     val context = LocalContext.current
     if (showConflictDialog.value) {
         YesNoDialog(
+            onDismiss = { showConflictDialog.value = false },
             onCancel = { scanPage.userChoice(1) },
             onConfirm = { scanPage.userChoice(2) },
-            onDismiss = { showConflictDialog.value = false },
             title = stringResource(R.string.file_conflict_dialog_title),
             content = stringResource(R.string.file_conflict_dialog_content).replace("#n", "\n"),
             cancelText = stringResource(R.string.file_conflict_dialog_no_text),
@@ -74,38 +74,36 @@ fun ScanPageUi(
         YesDialog(
             onDismissRequest = { scanPage.showErrorDialog.value = false },
             title = stringResource(id = R.string.scan_complete_but_have_error),
-            content = "",
-            onlyComposeView = true,
-            enableHaptic = enableHaptic.value,
-            customContent = {
-                RoundedColumn {
-                    ItemTitle(text = stringResource(id = R.string.error_details))
-                    LazyColumn(
-                        modifier = Modifier
-                            .padding(horizontal = 16.dp)
-                            .fillMaxWidth()
-                            .heightIn(
-                                min = 20.dp,
-                                max = (LocalConfiguration.current.screenHeightDp / 2.5).dp
-                            )
-                            .clip(RoundedCornerShape(10.dp))
-                    ) {
-                        item {
-                            MarkdownText(
-                                modifier = Modifier.padding(bottom = 8.dp),
-                                markdown = scanPage.errorLog.value,
-                                style = TextStyle(
-                                    color = SaltTheme.colors.text,
-                                    fontSize = 14.sp
-                                ),
-                                isTextSelectable = true,
-                                disableLinkMovementMethod = true
-                            )
-                        }
+            content = null,
+            enableHaptic = enableHaptic.value
+        ) {
+            RoundedColumn {
+                ItemTitle(text = stringResource(id = R.string.error_details))
+                LazyColumn(
+                    modifier = Modifier
+                        .padding(horizontal = 16.dp)
+                        .fillMaxWidth()
+                        .heightIn(
+                            min = 20.dp,
+                            max = (LocalConfiguration.current.screenHeightDp / 2.5).dp
+                        )
+                        .clip(RoundedCornerShape(10.dp))
+                ) {
+                    item {
+                        MarkdownText(
+                            modifier = Modifier.padding(bottom = 8.dp),
+                            markdown = scanPage.errorLog.value,
+                            style = TextStyle(
+                                color = SaltTheme.colors.text,
+                                fontSize = 14.sp
+                            ),
+                            isTextSelectable = true,
+                            disableLinkMovementMethod = true
+                        )
                     }
                 }
             }
-        )
+        }
     }
 
     val exportTypePopupState = rememberPopupState()

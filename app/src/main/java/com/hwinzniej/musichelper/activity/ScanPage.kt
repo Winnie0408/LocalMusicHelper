@@ -424,10 +424,18 @@ class ScanPage(
         lifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
             db.musicDao().insertAll(*musicAllList.toTypedArray())
             if (exportResultFile.value) {
-                if (selectedExportFormat.intValue == 0) {
-                    exportToDb()
-                } else {
-                    exportToTxt()
+                try {
+                    when (selectedExportFormat.intValue) {
+                        0 -> {
+                            exportToDb()
+                        }
+
+                        1 -> {
+                            exportToTxt()
+                        }
+                    }
+                } catch (e: Exception) {
+                    errorLog.value += "- ${context.getString(R.string.export_scan_result_failed)}:\n  - $e\n"
                 }
             }
             lifecycleOwner.lifecycleScope.launch(Dispatchers.Main) {
@@ -443,9 +451,10 @@ class ScanPage(
                     (context as MainActivity).enableHaptic.value
                 ).done()
                 if (errorLog.value != "") {
-                    errorLog.value = "${
-                        context.getString(R.string.scan_failed_tips).replace("#n", "\n")
-                    }\n${errorLog.value}"
+                    if (!errorLog.value.startsWith("- ${context.getString(R.string.export_scan_result_failed)}:"))
+                        errorLog.value = "${
+                            context.getString(R.string.scan_failed_tips).replace("#n", "\n")
+                        }\n${errorLog.value}"
                     showErrorDialog.value = true
                 }
             }

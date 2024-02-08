@@ -117,7 +117,7 @@
     <string name="other_app_not_installed"># not installed</string>
     <string name="copy_success">Copied</string>
     <string name="delete_dialog_title">Delete the current song?</string>
-    <string name="delete_dialog_content">Will be deleted from the results:</string>
+    <string name="delete_dialog_content">Will be **Deleted** from the results:</string>
     <string name="delete_success">Delete success</string>
     <string name="export_result_file_switcher_text">Export result</string>
     <string name="export_result_file_switcher_sub_text">Export the result file to the Download directory</string>
@@ -239,4 +239,7 @@
     <string name="login_info_maybe_expired">Cookies may expire and song list data may be incomplete.</string>
     <string name="tips">Tips</string>
     <string name="already_logged_in_click_ok">- You have already logged in.#n- Please click the \"OK\" button.</string>
+    <string name="error_while_saving_result_dialog_title">Error while saving data</string>
+    <string name="saving_convert_result_failed">Failed to save the conversion result.</string>
+    <string name="export_scan_result_failed">Export of scan results failed.</string>
 </resources>

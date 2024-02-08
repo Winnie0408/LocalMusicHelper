@@ -13,8 +13,8 @@ android {
         applicationId = "com.hwinzniej.musichelper"
         minSdk = 26
         targetSdk = 34
-        versionCode = 18
-        versionName = "1.1.2.1"
+        versionCode = 19
+        versionName = "1.1.3"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {

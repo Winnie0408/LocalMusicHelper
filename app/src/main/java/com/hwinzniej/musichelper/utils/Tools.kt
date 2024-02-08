@@ -309,8 +309,8 @@ class Tools {
                 "https://${
                     when (server) {
                         "cf" -> "plnb-cf.hwinzniej.top"
-                        "dns" -> "dns.hwinzniej.top"
-                        "mom" -> "mom.hwinzniej.top"
+                        "gx1" -> "dns.hwinzniej.top"
+                        "gx2" -> "mom.hwinzniej.top"
                         else -> "plnb-cf.hwinzniej.top"
                     }
                 }/?textString=${text}&type=${type}"
@@ -384,7 +384,7 @@ class Tools {
         } else if (temp > (screenWidthDp - popupWidth)) {
             (screenWidthDp - popupWidth - 48).toFloat()
         } else {
-            temp - popupWidth + 50
+            temp - popupWidth + 65
         }
     }
 }

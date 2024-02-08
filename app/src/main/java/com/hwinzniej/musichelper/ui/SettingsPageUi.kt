@@ -75,11 +75,12 @@ fun SettingsPageUi(
     }
 
     if (showSelectEncryptServerDialog) {
+        var selectedEncryptServer by remember { mutableStateOf(encryptServer.value) }
         YesNoDialog(
-            enableHaptic = enableHaptic.value,
             onDismiss = { showSelectEncryptServerDialog = false },
             onCancel = { showSelectEncryptServerDialog = false },
             onConfirm = {
+                encryptServer.value = selectedEncryptServer
                 coroutineScope.launch(Dispatchers.IO) {
                     dataStore.edit { settings ->
                         settings[DataStoreConstants.KEY_ENCRYPT_SERVER] =
@@ -89,47 +90,45 @@ fun SettingsPageUi(
                 showSelectEncryptServerDialog = false
             },
             title = stringResource(id = R.string.select_encrypt_server_title),
-            content = "",
-            onlyComposeView = true,
-            customContent = {
-                RoundedColumn {
-                    ItemTitle(text = stringResource(R.string.optional_servers))
-                    ItemCheck(
-                        state = encryptServer.value == "cf",
-                        onChange = {
-                            encryptServer.value = "cf"
-                        },
-                        text = "Cloudflare",
-                        sub = settingsPage.serverPing[0],
-                        iconAtLeft = false,
-                        enableHaptic = enableHaptic.value
-                    )
-                    ItemCheck(
-                        enabled = false,
-                        state = encryptServer.value == "gl1",
-                        onChange = {
-                            encryptServer.value = "gl1"
-                        },
-                        text = "${context.getString(R.string.guangxi_china)} 1${stringResource(id = R.string.not_yet_deployed)}",
-                        sub = settingsPage.serverPing[1],
-                        iconAtLeft = false,
-                        enableHaptic = enableHaptic.value
-                    )
-                    ItemCheck(
-                        enabled = false,
-                        state = encryptServer.value == "gl2",
-                        onChange = {
-                            encryptServer.value = "gl2"
-                        },
-                        text = "${context.getString(R.string.guangxi_china)} 2${stringResource(id = R.string.not_yet_deployed)}",
-                        sub = settingsPage.serverPing[2],
-                        iconAtLeft = false,
-                        enableHaptic = enableHaptic.value
-                    )
-                }
-
+            content = null,
+            enableHaptic = enableHaptic.value
+        ) {
+            RoundedColumn {
+                ItemTitle(text = stringResource(R.string.optional_servers))
+                ItemCheck(
+                    state = selectedEncryptServer == "cf",
+                    onChange = {
+                        selectedEncryptServer = "cf"
+                    },
+                    text = "Cloudflare",
+                    sub = settingsPage.serverPing[0],
+                    iconAtLeft = false,
+                    enableHaptic = enableHaptic.value
+                )
+                ItemCheck(
+                    enabled = false,
+                    state = selectedEncryptServer == "gx1",
+                    onChange = {
+                        selectedEncryptServer = "gx1"
+                    },
+                    text = "${context.getString(R.string.guangxi_china)} 1${stringResource(id = R.string.not_yet_deployed)}",
+                    sub = settingsPage.serverPing[1],
+                    iconAtLeft = false,
+                    enableHaptic = enableHaptic.value
+                )
+                ItemCheck(
+                    enabled = false,
+                    state = selectedEncryptServer == "gx2",
+                    onChange = {
+                        selectedEncryptServer = "gx2"
+                    },
+                    text = "${context.getString(R.string.guangxi_china)} 2${stringResource(id = R.string.not_yet_deployed)}",
+                    sub = settingsPage.serverPing[2],
+                    iconAtLeft = false,
+                    enableHaptic = enableHaptic.value
+                )
             }
-        )
+        }
     }
 
     Column(

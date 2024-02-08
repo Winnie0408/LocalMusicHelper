@@ -100,30 +100,28 @@ fun YesNoDialog(
     content: String?,
     cancelText: String = stringResource(id = R.string.cancel_button_text),
     confirmText: String = stringResource(id = R.string.ok_button_text),
-    customContent: @Composable () -> Unit = {},
-    onlyComposeView: Boolean = false,
     confirmButtonColor: Color = SaltTheme.colors.highlight,
     enableHaptic: Boolean = false,
-    enableConfirmButton: Boolean = true
+    enableConfirmButton: Boolean = true,
+    drawContent: @Composable() (() -> Unit)? = null,
 ) {
-    if (!onlyComposeView)
-        MyVibrationEffect(LocalContext.current, enableHaptic).dialog()
+//    if (drawContent!=null)
+    MyVibrationEffect(LocalContext.current, enableHaptic).dialog()
     BasicDialog(
         onDismissRequest = onDismiss,
         properties = properties,
     ) {
         ItemOutSpacer()
         DialogTitle(text = title)
-        if (onlyComposeView) Spacer(modifier = Modifier.height(8.dp * 2))
-        if (!onlyComposeView) {
+        content?.let {
             ItemOutSpacer()
-            content?.let { ItemText(text = it, fontSize = 13.sp) }
-            ItemOutSpacer()
+            ItemText(text = it, fontSize = 13.sp)
         }
-        ItemOutHalfSpacer()
-        customContent()
-        ItemOutHalfSpacer()
-        if (onlyComposeView) Spacer(modifier = Modifier.height(8.dp * 2))
+        drawContent?.let {
+            ItemOutHalfSpacer()
+            drawContent.invoke()
+        }
+        ItemOutSpacer()
         Row(
             modifier = Modifier.padding(horizontal = SaltTheme.dimens.outerHorizontalPadding)
         ) {
@@ -311,12 +309,11 @@ fun YesDialog(
     onDismissRequest: () -> Unit,
     properties: DialogProperties = DialogProperties(),
     title: String,
-    content: String,
+    content: String?,
     confirmText: String = stringResource(id = R.string.ok_button_text),
     fontSize: TextUnit = 13.sp,
     enableHaptic: Boolean = false,
-    customContent: @Composable () -> Unit = {},
-    onlyComposeView: Boolean = false
+    drawContent: @Composable() (() -> Unit)? = null
 ) {
     MyVibrationEffect(LocalContext.current, enableHaptic).dialog()
     BasicDialog(
@@ -325,14 +322,15 @@ fun YesDialog(
     ) {
         ItemOutSpacer()
         DialogTitle(text = title)
-        if (onlyComposeView) Spacer(modifier = Modifier.height(8.dp * 2))
-        if (!onlyComposeView) {
+        content?.let {
             ItemOutSpacer()
-            ItemText(text = content, fontSize = fontSize)
-            ItemOutSpacer()
+            ItemText(text = it, fontSize = fontSize)
         }
-        customContent()
-        if (onlyComposeView) Spacer(modifier = Modifier.height(8.dp * 2))
+        drawContent?.let {
+            ItemOutHalfSpacer()
+            drawContent.invoke()
+        }
+        ItemOutSpacer()
         TextButton(
             onClick = {
                 onDismissRequest()

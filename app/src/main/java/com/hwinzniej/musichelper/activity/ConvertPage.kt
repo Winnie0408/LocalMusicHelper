@@ -83,7 +83,7 @@ class ConvertPage(
     private var sourceApp = SourceApp()
     val loadingProgressSema = Semaphore(2)
     var currentPage = mutableIntStateOf(0)
-    var selectedMatchingMode = mutableIntStateOf(1)
+    var selectedMatchingMode = mutableIntStateOf(2)
     var enableBracketRemoval = mutableStateOf(false)
     var enableArtistNameMatch = mutableStateOf(true)
     var enableAlbumNameMatch = mutableStateOf(true)
@@ -1079,7 +1079,6 @@ class ConvertPage(
                             throw Exception("${sourceApp.sourceEng} server's response was null.")
                         }
                     } catch (e: Exception) {
-                        showLoadingProgressBar.value = false
                         errorDialogTitle.value =
                             context.getString(R.string.error_while_getting_data_dialog_title)
                         errorDialogContent.value =
@@ -1378,7 +1377,7 @@ class ConvertPage(
             } else {
                 convertResult.putAll(convertResultMap)
             }
-            lifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
+            lifecycleOwner.lifecycleScope.launch {
                 delay(650L)
                 showNumberProgressBar.value = false
             }
@@ -1521,40 +1520,51 @@ class ConvertPage(
                     return@launch
                 }
                 showDialogProgressBar.value = true
-                val file = File(
-                    "${Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)}/${
-                        context.getString(
-                            R.string.app_name
-                        )
-                    }/${
-                        LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
-                    }",
-                    fileName
-                )
-                if (file.exists())
-                    file.delete()
-                if (file.parentFile?.exists() == false)
-                    file.parentFile?.mkdirs()
-                val fileWriter = FileWriter(file, true)
+                try {
+                    val file = File(
+                        "${Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)}/${
+                            context.getString(
+                                R.string.app_name
+                            )
+                        }/${
+                            LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+                        }",
+                        fileName
+                    )
+                    if (file.exists())
+                        file.delete()
+                    if (file.parentFile?.exists() == false)
+                        file.parentFile?.mkdirs()
+                    val fileWriter = FileWriter(file, true)
 
-                for (i in 0 until convertResult.size) {
-                    if (convertResult[i] == null)
-                        continue
-                    if (convertResult[i]!![0] == "0" && saveSuccessSongs) {
-                        fileWriter.write("${convertResult[i]!![7]}\n")
-                        continue
+                    for (i in 0 until convertResult.size) {
+                        if (convertResult[i] == null)
+                            continue
+                        if (convertResult[i]!![0] == "0" && saveSuccessSongs) {
+                            fileWriter.write("${convertResult[i]!![7]}\n")
+                            continue
+                        }
+                        if (convertResult[i]!![0] == "1" && saveCautionSongs) {
+                            fileWriter.write("${convertResult[i]!![7]}\n")
+                            continue
+                        }
+                        if (convertResult[i]!![0] == "2" && saveManualSongs) {
+                            fileWriter.write("${convertResult[i]!![7]}\n")
+                            continue
+                        }
                     }
-                    if (convertResult[i]!![0] == "1" && saveCautionSongs) {
-                        fileWriter.write("${convertResult[i]!![7]}\n")
-                        continue
-                    }
-                    if (convertResult[i]!![0] == "2" && saveManualSongs) {
-                        fileWriter.write("${convertResult[i]!![7]}\n")
-                        continue
-                    }
+
+                    fileWriter.close()
+                } catch (e: Exception) {
+                    showDialogProgressBar.value = false
+                    errorDialogTitle.value =
+                        context.getString(R.string.error_while_saving_result_dialog_title)
+                    errorDialogContent.value =
+                        "- ${context.getString(R.string.saving_convert_result_failed)}\n  - $e"
+                    showErrorDialog.value = true
+                    return@launch
                 }
 
-                fileWriter.close()
                 withContext(Dispatchers.Main) {
                     Toast.makeText(
                         context,

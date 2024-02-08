@@ -303,7 +303,6 @@ private fun Pages(
     if (showNewVersionAvailableDialog.value) {
         MyVibrationEffect(LocalContext.current, mainPage.enableHaptic.value).dialog()
         YesNoDialog(
-            enableHaptic = mainPage.enableHaptic.value,
             onDismiss = { showNewVersionAvailableDialog.value = false },
             onCancel = { showNewVersionAvailableDialog.value = false },
             onConfirm = {
@@ -340,54 +339,54 @@ private fun Pages(
                 }
             },
             title = stringResource(id = R.string.download_lateset_ver),
-            content = "",
-            onlyComposeView = true,
-            customContent = {
-                Column {
-                    RoundedColumn {
-                        ItemTitle(text = stringResource(id = R.string.new_version_available))
-                        ItemValue(
-                            text = "${stringResource(id = R.string.latest_version)}: ${latestVersion.value}",
-                            sub = "${stringResource(id = R.string.current_version)}: ${
-                                context.packageManager.getPackageInfo(
-                                    context.packageName,
-                                    0
-                                ).versionName
-                            }",
-                            rightSub = "${
-                                String.format(
-                                    "%.2f",
-                                    mainPage.updateFileSize.floatValue / 1024 / 1024
-                                )
-                            }MB"
-                        )
-                    }
-                    RoundedColumn {
-                        ItemTitle(text = "${latestVersion.value} ${stringResource(id = R.string.change_log)}")
-                        LazyColumn(
-                            modifier = Modifier
-                                .padding(horizontal = 16.dp)
-                                .fillMaxWidth()
-                                .heightIn(
-                                    min = 20.dp,
-                                    max = (LocalConfiguration.current.screenHeightDp / 3.5).dp
-                                )
-                                .clip(RoundedCornerShape(10.dp))
-                        ) {
-                            item {
-                                MarkdownText(
-                                    modifier = Modifier.padding(vertical = 8.dp),
-                                    markdown = latestDescription.value,
-                                    style = TextStyle(
-                                        color = SaltTheme.colors.text,
-                                        fontSize = 14.sp
-                                    ),
-                                    isTextSelectable = true,
-                                    disableLinkMovementMethod = true
-                                )
-                            }
+            content = null,
+            enableHaptic = mainPage.enableHaptic.value
+        ) {
+            Column {
+                RoundedColumn {
+                    ItemTitle(text = stringResource(id = R.string.new_version_available))
+                    ItemValue(
+                        text = "${stringResource(id = R.string.latest_version)}: ${latestVersion.value}",
+                        sub = "${stringResource(id = R.string.current_version)}: ${
+                            context.packageManager.getPackageInfo(
+                                context.packageName,
+                                0
+                            ).versionName
+                        }",
+                        rightSub = "${
+                            String.format(
+                                "%.2f",
+                                mainPage.updateFileSize.floatValue / 1024 / 1024
+                            )
+                        }MB"
+                    )
+                }
+                RoundedColumn {
+                    ItemTitle(text = "${latestVersion.value} ${stringResource(id = R.string.change_log)}")
+                    LazyColumn(
+                        modifier = Modifier
+                            .padding(horizontal = 16.dp)
+                            .fillMaxWidth()
+                            .heightIn(
+                                min = 20.dp,
+                                max = (LocalConfiguration.current.screenHeightDp / 3.5).dp
+                            )
+                            .clip(RoundedCornerShape(10.dp))
+                    ) {
+                        item {
+                            MarkdownText(
+                                modifier = Modifier.padding(vertical = 8.dp),
+                                markdown = latestDescription.value,
+                                style = TextStyle(
+                                    color = SaltTheme.colors.text,
+                                    fontSize = 14.sp
+                                ),
+                                isTextSelectable = true,
+                                disableLinkMovementMethod = true
+                            )
                         }
                     }
+                }
 //                    RoundedColumn {  //TODO 查看当前版本与最新版本的差异 https://gitlab.com/HWinZnieJ/LocalMusicHelper/-/compare/v0.9.9.1...v0.9.9.5
 //                        ItemTitle(text = "${latestVersion.value} ${stringResource(id = R.string.change_log)}")
 //                        Item(
@@ -395,9 +394,8 @@ private fun Pages(
 //                            text =
 //                        )
 //                    }
-                }
             }
-        )
+        }
     }
 
     LaunchedEffect(key1 = checkUpdate.value) {

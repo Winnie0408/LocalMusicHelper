@@ -122,11 +122,10 @@ fun AboutPageUi(
                 yesDialogOnConfirm()
             },
             title = yesDialogTitle,
-            content = yesDialogContent,
+            content = yesDialogContent.ifEmpty { null },
             fontSize = 14.sp,
             enableHaptic = enableHaptic.value,
-            customContent = yesDialogCustomContent,
-            onlyComposeView = yesDialogContent.isEmpty()
+            drawContent = yesDialogCustomContent
         )
     }
 

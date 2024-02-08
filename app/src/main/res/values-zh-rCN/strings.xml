@@ -116,7 +116,7 @@
     <string name="other_app_not_installed">未安装#</string>
     <string name="copy_success">已复制</string>
     <string name="delete_dialog_title">删除当前歌曲？</string>
-    <string name="delete_dialog_content">将从结果中删除：</string>
+    <string name="delete_dialog_content">将从结果中**删除**：</string>
     <string name="delete_success">删除成功</string>
     <string name="export_result_file_switcher_text">导出结果</string>
     <string name="export_result_file_switcher_sub_text">导出结果文件到Download目录</string>
@@ -235,4 +235,7 @@
     <string name="login_info_maybe_expired">Cookie可能过期，歌单数据可能不完整。</string>
     <string name="tips">提示</string>
     <string name="already_logged_in_click_ok">- 您已登录。#n- 请点击「确定」按钮。</string>
+    <string name="error_while_saving_result_dialog_title">保存数据时发生错误</string>
+    <string name="saving_convert_result_failed">转换结果保存失败。</string>
+    <string name="export_scan_result_failed">扫描结果导出失败。</string>
 </resources>

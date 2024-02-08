@@ -34,7 +34,7 @@
     <string name="dark_mode">어두운</string>
     <string name="database_file">데이터베이스 파일</string>
     <string name="database_file_popup">데이터베이스 .db 파일</string>
-    <string name="delete_dialog_content">"결과에서 삭제됩니다: "</string>
+    <string name="delete_dialog_content">"결과에서 **삭제**됩니다: "</string>
     <string name="delete_dialog_title">현재 노래를 삭제하시겠습니까?</string>
     <string name="delete_success">삭제 성공</string>
     <string name="details_of_results">출력 파일 경로</string>
@@ -235,4 +235,7 @@
     <string name="login_info_maybe_expired">쿠키가 만료되거나 노래 목록 데이터가 불완전할 수 있습니다.</string>
     <string name="tips">팁들</string>
     <string name="already_logged_in_click_ok">- 로그인되었습니다.#n- \"확인\" 버튼을 클릭하세요.</string>
+    <string name="error_while_saving_result_dialog_title">데이터를 저장하는 중 오류 발생</string>
+    <string name="saving_convert_result_failed">변환 결과를 저장하지 못했습니다.</string>
+    <string name="export_scan_result_failed">스캔 결과를 내보내지 못했습니다.</string>
 </resources>
