@@ -68,7 +68,7 @@
 - 若当前设备有Root权限，直接在本项目的Release中下载最新版本的**app-release.apk**文件，安装即可。
 - 若当前设备没有Root权限，在本项目的Release中下载最新版本的**app-release.apk**文件后：
     - 安装在当前设备中：
-        - **（推荐）**使用在线获取歌单数据的功能。
+        - （**推荐**）使用软件提供的在线获取歌单数据功能。（截止2024.2.8，该功能仅支持网易云音乐、QQ音乐）
         - 使用虚拟机提供的Root权限来获取歌单来源App的数据库文件，并导出到真机中。
     - 安装在虚拟机中，使用虚拟机提供的Root权限来自动获取歌单来源App的数据库文件。
         - 可选的虚拟机 **（虚拟机的系统需要Android API Level 26（Android O, 8.0）及以上）**：
@@ -457,6 +457,7 @@
 ## 🧐 访问数
 
 （统计开始于2024.2.9）
+
 ![访问数](https://profile-counter.glitch.me/HWinZnieJ_LocalMusicHelper/count.svg)
 
 ## 🌟 星标历史
