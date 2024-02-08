@@ -1259,7 +1259,7 @@ fun ConvertPageUi(
                 beyondBoundsPageCount = 1
             ) { page ->
                 when (page) {
-                    0 -> {  //TODO 使用DataStore保存上次选择的值
+                    0 -> {  //TODO 使用DataStore保存上次选择的值；在线获取歌单时，提供刷新按钮
                         Column(
                             modifier = Modifier
                                 .padding(top = 4.dp)
@@ -1269,40 +1269,6 @@ fun ConvertPageUi(
                         ) {
                             RoundedColumn {
                                 ItemTitle(text = stringResource(R.string.source_of_songlist_app))
-                                ItemPopup(
-                                    state = methodPopupMenuState,
-                                    text = stringResource(R.string.way_to_get_song_list),
-                                    selectedItem = when (selectedMethod.intValue) {
-                                        0 -> stringResource(R.string.database)
-                                        1 -> stringResource(R.string.online)
-                                        else -> ""
-                                    },
-                                    popupWidth = 165,
-                                ) {
-                                    PopupMenuItem(
-                                        onClick = {
-                                            MyVibrationEffect(context, enableHaptic.value).click()
-                                            selectedMethod.intValue = 0
-                                            methodPopupMenuState.dismiss()
-                                        },
-                                        selected = selectedMethod.intValue == 0,
-                                        text = stringResource(R.string.database),
-                                        iconPainter = painterResource(id = R.drawable.database),
-                                        iconColor = SaltTheme.colors.text
-                                    )
-                                    PopupMenuItem(
-                                        onClick = {
-                                            MyVibrationEffect(context, enableHaptic.value).click()
-                                            selectedMethod.intValue = 1
-                                            methodPopupMenuState.dismiss()
-                                        },
-                                        selected = selectedMethod.intValue == 1,
-                                        text = stringResource(R.string.online),
-                                        iconPainter = painterResource(id = R.drawable.network),
-                                        iconColor = SaltTheme.colors.text
-                                    )
-                                }
-
                                 AnimatedContent(
                                     targetState = useRootAccess.value && selectedMethod.intValue == 0,
                                     label = "",
@@ -1403,7 +1369,39 @@ fun ConvertPageUi(
                                         )
                                     }
                                 }
-
+                                ItemPopup(
+                                    state = methodPopupMenuState,
+                                    text = stringResource(R.string.way_to_get_song_list),
+                                    selectedItem = when (selectedMethod.intValue) {
+                                        0 -> stringResource(R.string.database)
+                                        1 -> stringResource(R.string.online)
+                                        else -> ""
+                                    },
+                                    popupWidth = 165,
+                                ) {
+                                    PopupMenuItem(
+                                        onClick = {
+                                            MyVibrationEffect(context, enableHaptic.value).click()
+                                            selectedMethod.intValue = 0
+                                            methodPopupMenuState.dismiss()
+                                        },
+                                        selected = selectedMethod.intValue == 0,
+                                        text = stringResource(R.string.database),
+                                        iconPainter = painterResource(id = R.drawable.database),
+                                        iconColor = SaltTheme.colors.text
+                                    )
+                                    PopupMenuItem(
+                                        onClick = {
+                                            MyVibrationEffect(context, enableHaptic.value).click()
+                                            selectedMethod.intValue = 1
+                                            methodPopupMenuState.dismiss()
+                                        },
+                                        selected = selectedMethod.intValue == 1,
+                                        text = stringResource(R.string.online),
+                                        iconPainter = painterResource(id = R.drawable.network),
+                                        iconColor = SaltTheme.colors.text
+                                    )
+                                }
                                 AnimatedVisibility(
                                     visible = (selectedSourceApp.intValue != 0) && !useRootAccess.value && (selectedMethod.intValue == 0)
                                 ) {
