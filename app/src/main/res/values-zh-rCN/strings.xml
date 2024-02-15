@@ -238,4 +238,8 @@
     <string name="error_while_saving_result_dialog_title">保存数据时发生错误</string>
     <string name="saving_convert_result_failed">转换结果保存失败。</string>
     <string name="export_scan_result_failed">扫描结果导出失败。</string>
+    <string name="playlist_song_num_not_match">获取到歌曲的数量与歌单信息不一致。</string>
+    <string name="playlist_song_num_not_match_detail">歌曲数量应为**#1**首，实际获取到**#2**首。</string>
+    <string name="solution">解决方法：</string>
+    <string name="playlist_song_num_not_match_solution">减少该歌单中的歌曲数量。</string>
 </resources>

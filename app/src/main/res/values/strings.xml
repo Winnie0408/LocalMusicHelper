@@ -242,4 +242,8 @@
     <string name="error_while_saving_result_dialog_title">Error while saving data</string>
     <string name="saving_convert_result_failed">Failed to save the conversion result.</string>
     <string name="export_scan_result_failed">Export of scan results failed.</string>
+    <string name="playlist_song_num_not_match">The number of songs fetched does not match the song list information.</string>
+    <string name="playlist_song_num_not_match_detail">The number of songs should be **#1** and **#2** were actually acquired.</string>
+    <string name="solution">Solution:</string>
+    <string name="playlist_song_num_not_match_solution">Reduce the number of songs in this song list.</string>
 </resources>

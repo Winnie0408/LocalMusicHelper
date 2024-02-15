@@ -921,7 +921,7 @@ class ConvertPage(
                         when (selectedSourceApp.intValue) {
                             1 -> {
                                 val encrypted = Tools().encryptString(
-                                    """{"id":${playlistId[firstIndex1]},"n":1000,"shareUserId":0}""",
+                                    """{"id":${playlistId[firstIndex1]},"n":5000,"shareUserId":0}""",
                                     "netease",
                                     encryptServer.value
                                 )
@@ -1136,6 +1136,27 @@ class ConvertPage(
                 null
             )
             val totalNum = cursor.count.toFloat()
+            if (totalNum != playlistSum[firstIndex1].toFloat()) {
+                errorDialogTitle.value =
+                    context.getString(R.string.error_while_getting_data_dialog_title)
+                errorDialogContent.value =
+                    "- ${context.getString(R.string.playlist_song_num_not_match)}\n  - ${
+                        context.getString(
+                            R.string.playlist_song_num_not_match_detail
+                        ).replace("#1", playlistSum[firstIndex1].toString())
+                            .replace("#2", totalNum.toString())
+                    }\n"
+                errorDialogContent.value +=
+                    "- ${context.getString(R.string.solution)}\n  - ${
+                        context.getString(
+                            R.string.playlist_song_num_not_match_solution
+                        )
+                    }\n"
+                showErrorDialog.value = true
+                showNumberProgressBar.value = false
+                showLoadingProgressBar.value = false
+                return@launch
+            }
             while (cursor.moveToNext()) {
                 val trackId =
                     cursor.getString(cursor.getColumnIndexOrThrow(sourceApp.songListSongInfoSongId))
