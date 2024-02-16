@@ -331,6 +331,17 @@ class ScanPage(
      */
     private fun scanDirectory(directory: File, isRootCall: Boolean = true) {
         val files = directory.listFiles()
+        val encryptedExtensions = setOf(
+            ".ncm",
+            ".qmc",
+            ".kgm",
+            ".kwm",
+            ".mflac",
+            ".mgg",
+            ".tkm",
+            ".tm",
+            ".bkc"
+        )
         if (files != null) {
             for (file in files) {
                 if (file.isDirectory) {
@@ -343,18 +354,13 @@ class ScanPage(
                         AudioFileIO.read(curFile)
                     } catch (e: Exception) {
                         if (!curFile.name.startsWith(".") && !curFile.name.endsWith(".lrc")) {
-                            if (curFile.name.contains(".ncm") || curFile.name.contains(".qmc") || curFile.name.contains(
-                                    ".kgm"
-                                ) || curFile.name.contains(".kwm") || curFile.name.contains(".mflac") || curFile.name.contains(
-                                    ".mgg"
-                                ) || curFile.name.contains(".tkm") || curFile.name.contains(".tm") || curFile.name.contains(
-                                    ".bkc"
-                                )
-                            ) {
+                            if (encryptedExtensions.any { curFile.name.contains(it) }) {
                                 errorLog.value += "- ${curFile.name}:\n  - **${context.getString(R.string.music_file_encrypted)}**\n"
-                            } else
+                            } else {
                                 errorLog.value += "- ${curFile.name}:\n  - ${e}\n"
+                            }
                         }
+
                         continue
                     }
                     handleFile(curFile)

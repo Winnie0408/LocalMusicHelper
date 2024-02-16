@@ -222,7 +222,7 @@
     <string name="guangxi_china">Guangxi, China</string>
     <string name="timeout">Timeout</string>
     <string name="pinging" translatable="false">Ping</string>
-    <string name="optional_servers">Optional servers</string>
+    <string name="optional_servers">Server list</string>
     <string name="get_playlist_failed">Failed to get songlist info.</string>
     <string name="get_playlist_hidden">Hidden # empty playlist(s)</string>
     <string name="switch_account_logout">Switch Account / Logout</string>

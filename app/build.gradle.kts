@@ -13,8 +13,8 @@ android {
         applicationId = "com.hwinzniej.musichelper"
         minSdk = 26
         targetSdk = 34
-        versionCode = 20
-        versionName = "1.1.3.1"
+        versionCode = 21
+        versionName = "1.1.4"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -63,7 +63,7 @@ dependencies {
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-graphics")
     implementation("androidx.compose.ui:ui-tooling-preview")
-    implementation("androidx.compose.material3:material3:1.2.0-rc01")
+    implementation("androidx.compose.material3:material3:1.2.0")
     implementation("androidx.annotation:annotation:1.7.1")
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
@@ -77,7 +77,7 @@ dependencies {
 
     // UI Tests
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
-    debugImplementation("androidx.compose.ui:ui-test-manifest:1.6.0")
+    debugImplementation("androidx.compose.ui:ui-test-manifest:1.6.1")
 
     //SaltUI
     implementation("com.github.Moriafly:SaltUI:0.1.0-dev51")
@@ -86,8 +86,8 @@ dependencies {
     implementation("org.bitbucket.ijabz:jaudiotagger:7b004a1")
 
     //Kotlin协程
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.0")
     implementation("androidx.activity:activity-ktx:1.8.2")
     implementation("androidx.fragment:fragment-ktx:1.6.2")
 
@@ -101,7 +101,7 @@ dependencies {
     implementation("com.alibaba.fastjson2:fastjson2-kotlin:2.0.46")
 
     //Navigation
-    implementation("androidx.navigation:navigation-compose:2.7.6")
+    implementation("androidx.navigation:navigation-compose:2.7.7")
 
     //DataStore
     implementation("androidx.datastore:datastore-preferences:1.0.0")

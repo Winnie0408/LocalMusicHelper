@@ -1,6 +1,5 @@
 package com.hwinzniej.musichelper.ui
 
-import android.os.Environment
 import android.webkit.CookieManager
 import android.webkit.WebView
 import android.webkit.WebViewClient
@@ -32,7 +31,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.VerticalPager
@@ -93,8 +91,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 import kotlin.math.roundToInt
 
 @OptIn(UnstableSaltApi::class, ExperimentalFoundationApi::class)
@@ -1259,7 +1255,7 @@ fun ConvertPageUi(
                 beyondBoundsPageCount = 1
             ) { page ->
                 when (page) {
-                    0 -> {  //TODO 使用DataStore保存上次选择的值；在线获取歌单时，提供刷新按钮
+                    0 -> {
                         Column(
                             modifier = Modifier
                                 .padding(top = 4.dp)
@@ -1301,6 +1297,12 @@ fun ConvertPageUi(
                                                     enableHaptic.value
                                                 ).click()
                                                 selectedSourceApp.intValue = 1
+                                                coroutine.launch {
+                                                    dataStore.edit { settings ->
+                                                        settings[DataStoreConstants.PLAYLIST_SOURCE_PLATFORM] =
+                                                            1
+                                                    }
+                                                }
                                                 sourceAppPopupMenuState.dismiss()
                                                 databaseFileName.value = ""
                                             },
@@ -1316,6 +1318,12 @@ fun ConvertPageUi(
                                                     enableHaptic.value
                                                 ).click()
                                                 selectedSourceApp.intValue = 2
+                                                coroutine.launch {
+                                                    dataStore.edit { settings ->
+                                                        settings[DataStoreConstants.PLAYLIST_SOURCE_PLATFORM] =
+                                                            2
+                                                    }
+                                                }
                                                 sourceAppPopupMenuState.dismiss()
                                                 databaseFileName.value = ""
                                             },
@@ -1332,6 +1340,12 @@ fun ConvertPageUi(
                                                     enableHaptic.value
                                                 ).click()
                                                 selectedSourceApp.intValue = 3
+                                                coroutine.launch {
+                                                    dataStore.edit { settings ->
+                                                        settings[DataStoreConstants.PLAYLIST_SOURCE_PLATFORM] =
+                                                            3
+                                                    }
+                                                }
                                                 sourceAppPopupMenuState.dismiss()
                                                 databaseFileName.value = ""
                                             },
@@ -1353,6 +1367,12 @@ fun ConvertPageUi(
                                                     enableHaptic.value
                                                 ).click()
                                                 selectedSourceApp.intValue = 4
+                                                coroutine.launch {
+                                                    dataStore.edit { settings ->
+                                                        settings[DataStoreConstants.PLAYLIST_SOURCE_PLATFORM] =
+                                                            4
+                                                    }
+                                                }
                                                 sourceAppPopupMenuState.dismiss()
                                                 databaseFileName.value = ""
                                             },
@@ -1383,6 +1403,12 @@ fun ConvertPageUi(
                                         onClick = {
                                             MyVibrationEffect(context, enableHaptic.value).click()
                                             selectedMethod.intValue = 0
+                                            coroutine.launch {
+                                                dataStore.edit { settings ->
+                                                    settings[DataStoreConstants.GET_PLAYLIST_METHOD] =
+                                                        0
+                                                }
+                                            }
                                             methodPopupMenuState.dismiss()
                                         },
                                         selected = selectedMethod.intValue == 0,
@@ -1394,6 +1420,12 @@ fun ConvertPageUi(
                                         onClick = {
                                             MyVibrationEffect(context, enableHaptic.value).click()
                                             selectedMethod.intValue = 1
+                                            coroutine.launch {
+                                                dataStore.edit { settings ->
+                                                    settings[DataStoreConstants.GET_PLAYLIST_METHOD] =
+                                                        1
+                                                }
+                                            }
                                             methodPopupMenuState.dismiss()
                                         },
                                         selected = selectedMethod.intValue == 1,
@@ -1669,12 +1701,32 @@ fun ConvertPageUi(
                                     }
                                 }) {
                                 ItemContainer {
-                                    TextButton(
-                                        onClick = { convertPage.checkSongListSelection() },
-                                        text = stringResource(R.string.next_step_text),
-                                        enabled = !it,
-                                        enableHaptic = enableHaptic.value
-                                    )
+                                    Row {
+                                        if (selectedMethod.intValue == 1) {
+                                            BasicButton(
+                                                modifier = Modifier
+                                                    .padding(end = 16.dp),
+                                                enabled = !it,
+                                                onClick = { convertPage.getOnlinePlaylist() },
+                                                backgroundColor = SaltTheme.colors.subBackground,
+                                                enableHaptic = enableHaptic.value
+                                            ) {
+                                                Icon(
+                                                    modifier = Modifier
+                                                        .size(22.dp),
+                                                    painter = painterResource(id = R.drawable.refresh),
+                                                    contentDescription = null,
+                                                    tint = if (it) Color.Gray else SaltTheme.colors.text
+                                                )
+                                            }
+                                        }
+                                        TextButton(
+                                            onClick = { convertPage.checkSongListSelection() },
+                                            text = stringResource(R.string.next_step_text),
+                                            enabled = !it,
+                                            enableHaptic = enableHaptic.value
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -2347,40 +2399,23 @@ fun ConvertPageUi(
                             }
                             RoundedColumn {
                                 ItemTitle(text = stringResource(id = R.string.details_of_results))
-                                val condition: (Int) -> Boolean = { it1 -> it1 == 2 }
-                                val indices =
-                                    playlistEnabled.withIndex().filter { condition(it.value) }
-                                        .map { it.index }
-                                LazyColumn(
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .heightIn(max = (LocalConfiguration.current.screenHeightDp / 2.2).dp)
-                                        .clip(RoundedCornerShape(10.dp))
-                                ) {
-                                    items(indices) { index ->
-                                        if (playlistEnabled[index] == 2) {
+                                ItemContainer {
+                                    LazyColumn(
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .heightIn(max = (LocalConfiguration.current.screenHeightDp / 2.2).dp)
+                                            .clip(RoundedCornerShape(10.dp))
+                                            .background(color = SaltTheme.colors.background)
+                                    ) {
+                                        items(convertPage.resultFileLocation.size) { index ->
                                             ItemText(
-                                                text = "${
-                                                    Environment.getExternalStoragePublicDirectory(
-                                                        Environment.DIRECTORY_DOWNLOADS
-                                                    )
-                                                }/${context.getString(R.string.app_name)}/${
-                                                    LocalDate.now()
-                                                        .format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
-                                                }/${playlistName[index]}${
-                                                    when (selectedTargetApp) {
-                                                        0 -> ".txt"
-                                                        1 -> ".m3u"
-                                                        2 -> ".m3u8"
-                                                        else -> ""
-                                                    }
-                                                }",
-                                                fontSize = 15.sp
+                                                text = convertPage.resultFileLocation[index],
+                                                fontSize = 15.sp,
+                                                verticalPadding = 4.dp
                                             )
                                         }
                                     }
                                 }
-                                Spacer(modifier = Modifier.height(8.dp))
                             }
                             AnimatedVisibility(visible = userLoggedIn) {
                                 RoundedColumn {

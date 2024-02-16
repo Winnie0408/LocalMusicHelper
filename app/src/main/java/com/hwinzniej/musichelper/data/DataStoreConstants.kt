@@ -16,4 +16,6 @@ object DataStoreConstants {
     val KEY_ENCRYPT_SERVER = stringPreferencesKey("encrypt_server")
     val LAST_LOGIN_TIMESTAMP = longPreferencesKey("last_login_timestamp")
     val NETEASE_USER_ID = stringPreferencesKey("netease_user_id")
+    val PLAYLIST_SOURCE_PLATFORM = intPreferencesKey("playlist_source_platform")
+    val GET_PLAYLIST_METHOD = intPreferencesKey("get_playlist_method")
 }

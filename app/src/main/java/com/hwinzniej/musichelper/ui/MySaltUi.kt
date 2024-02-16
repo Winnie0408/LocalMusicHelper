@@ -70,6 +70,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.TextUnit
@@ -348,12 +349,16 @@ fun YesDialog(
 fun ItemText(
     text: String,
     fontSize: TextUnit = 12.sp,
+    verticalPadding: Dp = 0.dp
 ) {
     Text(
         text = text,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = SaltTheme.dimens.innerHorizontalPadding),
+            .padding(
+                horizontal = SaltTheme.dimens.innerHorizontalPadding,
+                vertical = verticalPadding
+            ),
         style = TextStyle(
             fontSize = fontSize,
             color = SaltTheme.colors.subText

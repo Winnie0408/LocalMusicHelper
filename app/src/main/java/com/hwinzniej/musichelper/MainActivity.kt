@@ -201,7 +201,7 @@ class MainActivity : ComponentActivity() {
             }
         }
         lifecycleScope.launch {
-            delay(2000L)
+            delay(1500L)
             if (settingsPage.enableAutoCheckUpdate.value) {
                 checkUpdate.value = true
             }
@@ -282,6 +282,10 @@ private fun Pages(
             preferences[DataStoreConstants.NETEASE_USER_ID] ?: ""
         convertPage.lastLoginTimestamp.longValue =
             preferences[DataStoreConstants.LAST_LOGIN_TIMESTAMP] ?: 0L
+        convertPage.selectedMethod.intValue =
+            preferences[DataStoreConstants.GET_PLAYLIST_METHOD] ?: 0
+        convertPage.selectedSourceApp.intValue =
+            preferences[DataStoreConstants.PLAYLIST_SOURCE_PLATFORM] ?: 0
     }
 
     LaunchedEffect(key1 = mainPage.language.value) {

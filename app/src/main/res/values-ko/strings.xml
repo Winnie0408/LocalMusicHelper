@@ -218,7 +218,7 @@
     <string name="select_encrypt_server">암호화 서버</string>
     <string name="guangxi_china">중국 광시 성</string>
     <string name="timeout">타임아웃</string>
-    <string name="optional_servers">추가 서버</string>
+    <string name="optional_servers">서버 목록</string>
     <string name="get_playlist_failed">목록 정보를 가져오는 중 실패함</string>
     <string name="get_playlist_hidden">#개의 빈 목록을 숨겼습니다</string>
     <string name="switch_account_logout">계정 전환 / 로그아웃</string>

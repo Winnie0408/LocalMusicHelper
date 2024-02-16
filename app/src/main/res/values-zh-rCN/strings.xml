@@ -218,7 +218,7 @@
     <string name="select_encrypt_server">加密服务器</string>
     <string name="guangxi_china">中国广西</string>
     <string name="timeout">超时</string>
-    <string name="optional_servers">可选服务器</string>
+    <string name="optional_servers">服务器列表</string>
     <string name="get_playlist_failed">获取歌单信息失败</string>
     <string name="get_playlist_hidden">已隐藏#个空歌单</string>
     <string name="switch_account_logout">切换账号 / 退出登录</string>

@@ -288,6 +288,7 @@ class ConvertPage(
                                 R.string.please_select_result_file
                             )
                         }\n"
+                    errorDialogCustomAction.value = {}
                     showErrorDialog.value = true
                     loadingProgressSema.release()
                     haveError = true
@@ -313,6 +314,7 @@ class ConvertPage(
                                 R.string.read_failed
                             )
                         }:\n  - ${e}\n"
+                    errorDialogCustomAction.value = {}
                     showErrorDialog.value = true
                     haveError = true
                 } finally {
@@ -332,6 +334,7 @@ class ConvertPage(
                                     R.string.read_failed
                                 )
                             }:\n  - ${context.getString(R.string.use_scan_fun_first)}\n"
+                        errorDialogCustomAction.value = {}
                         showErrorDialog.value = true
                         haveError = true
                     }
@@ -344,6 +347,7 @@ class ConvertPage(
                                 R.string.read_failed
                             )
                         }:\n  - ${context.getString(R.string.use_scan_fun_first)}\n"
+                    errorDialogCustomAction.value = {}
                     showErrorDialog.value = true
                     haveError = true
                 } finally {
@@ -380,6 +384,7 @@ class ConvertPage(
                             R.string.read_failed
                         )
                     }:\n  - $copyResult\n"
+                errorDialogCustomAction.value = {}
                 showErrorDialog.value = true
                 haveError = true
                 loadingProgressSema.release()
@@ -416,6 +421,7 @@ class ConvertPage(
                                 R.string.read_failed
                             )
                         }:\n  - $copyResult\n"
+                    errorDialogCustomAction.value = {}
                     showErrorDialog.value = true
                     haveError = true
                     loadingProgressSema.release()
@@ -449,6 +455,7 @@ class ConvertPage(
                 }:\n  - ${
                     context.getString(R.string.app_not_installed).replace("#", sourceAppText.value)
                 }\n"
+            errorDialogCustomAction.value = {}
             showErrorDialog.value = true
             haveError = true
             loadingProgressSema.release()
@@ -471,6 +478,7 @@ class ConvertPage(
                                 R.string.please_select_source_app
                             )
                         }\n"
+                    errorDialogCustomAction.value = {}
                     showErrorDialog.value = true
                     loadingProgressSema.release()
                     haveError = true
@@ -500,6 +508,7 @@ class ConvertPage(
                                         R.string.please_select_database_file
                                     )
                                 }\n"
+                            errorDialogCustomAction.value = {}
                             showErrorDialog.value = true
                             loadingProgressSema.release()
                             haveError = true
@@ -525,6 +534,7 @@ class ConvertPage(
                                         R.string.read_failed
                                     )
                                 }:\n  - ${e}\n"
+                            errorDialogCustomAction.value = {}
                             showErrorDialog.value = true
                             haveError = true
                         } finally {
@@ -546,6 +556,7 @@ class ConvertPage(
                                 R.string.please_select_source_app
                             )
                         }\n"
+                    errorDialogCustomAction.value = {}
                     showErrorDialog.value = true
                     haveError = true
                     loadingProgressSema.release()
@@ -572,6 +583,12 @@ class ConvertPage(
     fun getOnlinePlaylist() {
         lifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
             currentPage.intValue = 1
+            if (playlistId.size != 0) {
+                playlistId.clear()
+                playlistName.clear()
+                playlistEnabled.clear()
+                playlistSum.clear()
+            }
             showLoadingProgressBar.value = true
 
             try {
@@ -684,6 +701,7 @@ class ConvertPage(
                                 errorDialogTitle.value = context.getString(R.string.tips)
                                 errorDialogContent.value =
                                     "- ${context.getString(R.string.login_info_maybe_expired)}\n"
+                                errorDialogCustomAction.value = {}
                                 showErrorDialog.value = true
                             }
                         }
@@ -767,6 +785,7 @@ class ConvertPage(
                                 errorDialogTitle.value = context.getString(R.string.tips)
                                 errorDialogContent.value =
                                     "- ${context.getString(R.string.login_info_maybe_expired)}\n"
+                                errorDialogCustomAction.value = {}
                                 showErrorDialog.value = true
                             }
                         }
@@ -808,6 +827,7 @@ class ConvertPage(
                     context.getString(R.string.error_while_getting_data_dialog_title)
                 errorDialogContent.value =
                     "- ${context.getString(R.string.get_playlist_failed)}\n  - $e\n"
+                errorDialogCustomAction.value = {}
                 showErrorDialog.value = true
             }
         }
@@ -875,6 +895,7 @@ class ConvertPage(
                 context.getString(R.string.error)
             errorDialogContent.value =
                 "- ${context.getString(R.string.please_select_at_least_one_playlist)}\n"
+            errorDialogCustomAction.value = {}
             showErrorDialog.value = true
             return
         }
@@ -921,7 +942,10 @@ class ConvertPage(
                         when (selectedSourceApp.intValue) {
                             1 -> {
                                 val encrypted = Tools().encryptString(
-                                    """{"id":${playlistId[firstIndex1]},"n":5000,"shareUserId":0}""",
+                                    """{"id":${playlistId[firstIndex1]},"n":1000,"shareUserId":0,"csrf_token":"${
+                                        "__csrf=\\w+".toRegex()
+                                            .find(cookie.value)?.value?.substring(7)
+                                    }"}""",
                                     "netease",
                                     encryptServer.value
                                 )
@@ -1083,6 +1107,7 @@ class ConvertPage(
                             context.getString(R.string.error_while_getting_data_dialog_title)
                         errorDialogContent.value =
                             "- ${context.getString(R.string.get_playlist_failed)}\n  - $e\n"
+                        errorDialogCustomAction.value = {}
                         showErrorDialog.value = true
                         showLoadingProgressBar.value = false
                         return@launch
@@ -1135,8 +1160,42 @@ class ConvertPage(
                 "SELECT ${sourceApp.songListSongInfoSongId} FROM ${sourceApp.songListSongInfoTableName} WHERE ${sourceApp.songListSongInfoPlaylistId} = '${playlistId[firstIndex1]}' ORDER BY ${sourceApp.sortField}",
                 null
             )
-            val totalNum = cursor.count.toFloat()
-            if (totalNum != playlistSum[firstIndex1].toFloat()) {
+            val totalNum = cursor.count
+            if (totalNum != playlistSum[firstIndex1]) {
+                if (totalNum == 0) {
+                    errorDialogTitle.value =
+                        context.getString(R.string.error)
+                    errorDialogContent.value =
+                        "- ${playlistName[firstIndex1]}:\n  - ${
+                            context.getString(R.string.no_song_in_playlist).replace(
+                                "#",
+                                when (selectedSourceApp.intValue) {
+                                    1 -> context.getString(R.string.source_netease_cloud_music)
+                                    2 -> context.getString(R.string.source_qq_music)
+                                    3 -> context.getString(R.string.source_kugou_music)
+                                    4 -> context.getString(R.string.source_kuwo_music)
+                                    else -> ""
+                                }
+                            )
+                        }**${context.getString(R.string.will_skip_this_playlist)}**\n"
+                    errorDialogCustomAction.value = {
+                        saveCurrentConvertResult(
+                            saveSuccessSongs = false,
+                            saveCautionSongs = false,
+                            saveManualSongs = true,
+                            fileName = ""
+                        )
+                        Toast.makeText(
+                            context,
+                            context.getString(R.string.skipped),
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                    showErrorDialog.value = true
+                    showNumberProgressBar.value = false
+                    showLoadingProgressBar.value = false
+                    return@launch
+                }
                 errorDialogTitle.value =
                     context.getString(R.string.error_while_getting_data_dialog_title)
                 errorDialogContent.value =
@@ -1145,13 +1204,26 @@ class ConvertPage(
                             R.string.playlist_song_num_not_match_detail
                         ).replace("#1", playlistSum[firstIndex1].toString())
                             .replace("#2", totalNum.toString())
-                    }\n"
+                    }**${context.getString(R.string.will_skip_this_playlist)}**\n"
                 errorDialogContent.value +=
                     "- ${context.getString(R.string.solution)}\n  - ${
                         context.getString(
                             R.string.playlist_song_num_not_match_solution
                         )
                     }\n"
+                errorDialogCustomAction.value = {
+                    saveCurrentConvertResult(
+                        saveSuccessSongs = false,
+                        saveCautionSongs = false,
+                        saveManualSongs = true,
+                        fileName = ""
+                    )
+                    Toast.makeText(
+                        context,
+                        context.getString(R.string.skipped),
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
                 showErrorDialog.value = true
                 showNumberProgressBar.value = false
                 showLoadingProgressBar.value = false
@@ -1360,44 +1432,12 @@ class ConvertPage(
                 }
                 songInfoCursor.close()
                 if (num % 10 == 0)
-                    numberProgress.floatValue = num / totalNum
+                    numberProgress.floatValue = num / totalNum.toFloat()
             }
             cursor.close()
             db.close()
             numberProgress.floatValue = 1.0f
-            if (convertResultMap.isEmpty()) {
-                errorDialogTitle.value =
-                    context.getString(R.string.error)
-                errorDialogContent.value =
-                    "- ${playlistName[firstIndex1]}:\n  - ${
-                        context.getString(R.string.no_song_in_playlist).replace(
-                            "#",
-                            when (selectedSourceApp.intValue) {
-                                1 -> context.getString(R.string.source_netease_cloud_music)
-                                2 -> context.getString(R.string.source_qq_music)
-                                3 -> context.getString(R.string.source_kugou_music)
-                                4 -> context.getString(R.string.source_kuwo_music)
-                                else -> ""
-                            }
-                        )
-                    }\n\n${context.getString(R.string.will_skip_this_playlist)}\n"
-                errorDialogCustomAction.value = {
-                    saveCurrentConvertResult(
-                        saveSuccessSongs = false,
-                        saveCautionSongs = false,
-                        saveManualSongs = true,
-                        fileName = ""
-                    )
-                    Toast.makeText(
-                        context,
-                        context.getString(R.string.skipped),
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
-                showErrorDialog.value = true
-            } else {
-                convertResult.putAll(convertResultMap)
-            }
+            convertResult.putAll(convertResultMap)
             lifecycleOwner.lifecycleScope.launch {
                 delay(650L)
                 showNumberProgressBar.value = false
@@ -1521,6 +1561,7 @@ class ConvertPage(
     }
 
     var showSaveDialog = mutableStateOf(false)
+    var resultFileLocation = mutableStateListOf<String>()
     fun saveCurrentConvertResult(
         saveSuccessSongs: Boolean,
         saveCautionSongs: Boolean,
@@ -1576,14 +1617,50 @@ class ConvertPage(
                     }
 
                     fileWriter.close()
+                    resultFileLocation.add(file.absolutePath)
                 } catch (e: Exception) {
-                    showDialogProgressBar.value = false
-                    errorDialogTitle.value =
-                        context.getString(R.string.error_while_saving_result_dialog_title)
-                    errorDialogContent.value =
-                        "- ${context.getString(R.string.saving_convert_result_failed)}\n  - $e"
-                    showErrorDialog.value = true
-                    return@launch
+                    try {
+                        val file = File(
+                            "${Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)}",
+                            "${context.getString(R.string.app_name)}_${context.getString(R.string.convert_result)}_${
+                                fileName.substring(0, fileName.indexOf("."))
+                            }_${
+                                LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+                            }${fileName.substring(fileName.indexOf("."))}"
+                        )
+                        if (file.exists())
+                            file.delete()
+                        val fileWriter = FileWriter(file, true)
+
+                        for (i in 0 until convertResult.size) {
+                            if (convertResult[i] == null)
+                                continue
+                            if (convertResult[i]!![0] == "0" && saveSuccessSongs) {
+                                fileWriter.write("${convertResult[i]!![7]}\n")
+                                continue
+                            }
+                            if (convertResult[i]!![0] == "1" && saveCautionSongs) {
+                                fileWriter.write("${convertResult[i]!![7]}\n")
+                                continue
+                            }
+                            if (convertResult[i]!![0] == "2" && saveManualSongs) {
+                                fileWriter.write("${convertResult[i]!![7]}\n")
+                                continue
+                            }
+                        }
+
+                        fileWriter.close()
+                        resultFileLocation.add(file.absolutePath)
+                    } catch (e: Exception) {
+                        showDialogProgressBar.value = false
+                        errorDialogTitle.value =
+                            context.getString(R.string.error_while_saving_result_dialog_title)
+                        errorDialogContent.value =
+                            "- ${context.getString(R.string.saving_convert_result_failed)}\n  - $e"
+                        errorDialogCustomAction.value = {}
+                        showErrorDialog.value = true
+                        return@launch
+                    }
                 }
 
                 withContext(Dispatchers.Main) {

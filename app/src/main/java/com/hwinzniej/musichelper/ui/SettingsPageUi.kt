@@ -6,13 +6,16 @@ import android.widget.Toast
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableIntState
@@ -27,6 +30,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
@@ -93,40 +97,51 @@ fun SettingsPageUi(
             content = null,
             enableHaptic = enableHaptic.value
         ) {
-            RoundedColumn {
-                ItemTitle(text = stringResource(R.string.optional_servers))
-                ItemCheck(
-                    state = selectedEncryptServer == "cf",
-                    onChange = {
-                        selectedEncryptServer = "cf"
-                    },
-                    text = "Cloudflare",
-                    sub = settingsPage.serverPing[0],
-                    iconAtLeft = false,
-                    enableHaptic = enableHaptic.value
-                )
-                ItemCheck(
-                    enabled = false,
-                    state = selectedEncryptServer == "gx1",
-                    onChange = {
-                        selectedEncryptServer = "gx1"
-                    },
-                    text = "${context.getString(R.string.guangxi_china)} 1${stringResource(id = R.string.not_yet_deployed)}",
-                    sub = settingsPage.serverPing[1],
-                    iconAtLeft = false,
-                    enableHaptic = enableHaptic.value
-                )
-                ItemCheck(
-                    enabled = false,
-                    state = selectedEncryptServer == "gx2",
-                    onChange = {
-                        selectedEncryptServer = "gx2"
-                    },
-                    text = "${context.getString(R.string.guangxi_china)} 2${stringResource(id = R.string.not_yet_deployed)}",
-                    sub = settingsPage.serverPing[2],
-                    iconAtLeft = false,
-                    enableHaptic = enableHaptic.value
-                )
+            Box {
+                if (settingsPage.showDialogProgressBar.value) {
+                    LinearProgressIndicator(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .zIndex(1f),
+                        color = SaltTheme.colors.highlight,
+                        trackColor = SaltTheme.colors.background
+                    )
+                }
+                RoundedColumn {
+                    ItemTitle(text = stringResource(R.string.optional_servers))
+                    ItemCheck(
+                        state = selectedEncryptServer == "cf",
+                        onChange = {
+                            selectedEncryptServer = "cf"
+                        },
+                        text = "Cloudflare",
+                        sub = settingsPage.serverPing[0],
+                        iconAtLeft = false,
+                        enableHaptic = enableHaptic.value
+                    )
+                    ItemCheck(
+                        enabled = false,
+                        state = selectedEncryptServer == "gx1",
+                        onChange = {
+                            selectedEncryptServer = "gx1"
+                        },
+                        text = "${context.getString(R.string.guangxi_china)} 1${stringResource(id = R.string.not_yet_deployed)}",
+                        sub = settingsPage.serverPing[1],
+                        iconAtLeft = false,
+                        enableHaptic = enableHaptic.value
+                    )
+                    ItemCheck(
+                        enabled = false,
+                        state = selectedEncryptServer == "gx2",
+                        onChange = {
+                            selectedEncryptServer = "gx2"
+                        },
+                        text = "${context.getString(R.string.guangxi_china)} 2${stringResource(id = R.string.not_yet_deployed)}",
+                        sub = settingsPage.serverPing[2],
+                        iconAtLeft = false,
+                        enableHaptic = enableHaptic.value
+                    )
+                }
             }
         }
     }
