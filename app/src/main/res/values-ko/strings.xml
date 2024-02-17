@@ -242,4 +242,5 @@
     <string name="playlist_song_num_not_match_detail">노래 수는 **#1**곡이어야 하는데 실제로는 **#2**곡을 획득했습니다.</string>
     <string name="solution">솔루션:</string>
     <string name="playlist_song_num_not_match_solution">해당 노래 목록의 노래 수를 줄입니다.</string>
+    <string name="playlist_song_num_not_match_solution2">음악 플랫폼에서 노래 목록과 관련된 개인정보 보호 설정을 사용하도록 설정했는지 확인하세요.</string>
 </resources>

@@ -246,4 +246,5 @@
     <string name="playlist_song_num_not_match_detail">The number of songs should be **#1** and **#2** were actually acquired.</string>
     <string name="solution">Solution:</string>
     <string name="playlist_song_num_not_match_solution">Reduce the number of songs in this song list.</string>
+    <string name="playlist_song_num_not_match_solution2">Check if the music platform has enabled the privacy settings related to the song list.</string>
 </resources>

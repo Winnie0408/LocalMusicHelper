@@ -1206,11 +1206,19 @@ class ConvertPage(
                             .replace("#2", totalNum.toString())
                     }**${context.getString(R.string.will_skip_this_playlist)}**\n"
                 errorDialogContent.value +=
-                    "- ${context.getString(R.string.solution)}\n  - ${
-                        context.getString(
-                            R.string.playlist_song_num_not_match_solution
-                        )
-                    }\n"
+                    if (totalNum > 1000) {
+                        "- ${context.getString(R.string.solution)}\n  - ${
+                            context.getString(
+                                R.string.playlist_song_num_not_match_solution
+                            )
+                        }\n"
+                    } else {
+                        "- ${context.getString(R.string.solution)}\n  - ${
+                            context.getString(
+                                R.string.playlist_song_num_not_match_solution2
+                            )
+                        }\n"
+                    }
                 errorDialogCustomAction.value = {
                     saveCurrentConvertResult(
                         saveSuccessSongs = false,
@@ -1583,6 +1591,11 @@ class ConvertPage(
                 }
                 showDialogProgressBar.value = true
                 try {
+                    val invalidChars = arrayOf("\"", "*", "<", ">", "?", "\\", "/", "|", ":")
+                    var correctFileName = fileName
+                    invalidChars.forEach { ch ->
+                        correctFileName = correctFileName.replace(ch, "")
+                    }
                     val file = File(
                         "${Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)}/${
                             context.getString(
@@ -1591,7 +1604,7 @@ class ConvertPage(
                         }/${
                             LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
                         }",
-                        fileName
+                        correctFileName
                     )
                     if (file.exists())
                         file.delete()
@@ -1619,48 +1632,14 @@ class ConvertPage(
                     fileWriter.close()
                     resultFileLocation.add(file.absolutePath)
                 } catch (e: Exception) {
-                    try {
-                        val file = File(
-                            "${Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)}",
-                            "${context.getString(R.string.app_name)}_${context.getString(R.string.convert_result)}_${
-                                fileName.substring(0, fileName.indexOf("."))
-                            }_${
-                                LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
-                            }${fileName.substring(fileName.indexOf("."))}"
-                        )
-                        if (file.exists())
-                            file.delete()
-                        val fileWriter = FileWriter(file, true)
-
-                        for (i in 0 until convertResult.size) {
-                            if (convertResult[i] == null)
-                                continue
-                            if (convertResult[i]!![0] == "0" && saveSuccessSongs) {
-                                fileWriter.write("${convertResult[i]!![7]}\n")
-                                continue
-                            }
-                            if (convertResult[i]!![0] == "1" && saveCautionSongs) {
-                                fileWriter.write("${convertResult[i]!![7]}\n")
-                                continue
-                            }
-                            if (convertResult[i]!![0] == "2" && saveManualSongs) {
-                                fileWriter.write("${convertResult[i]!![7]}\n")
-                                continue
-                            }
-                        }
-
-                        fileWriter.close()
-                        resultFileLocation.add(file.absolutePath)
-                    } catch (e: Exception) {
-                        showDialogProgressBar.value = false
-                        errorDialogTitle.value =
-                            context.getString(R.string.error_while_saving_result_dialog_title)
-                        errorDialogContent.value =
-                            "- ${context.getString(R.string.saving_convert_result_failed)}\n  - $e"
-                        errorDialogCustomAction.value = {}
-                        showErrorDialog.value = true
-                        return@launch
-                    }
+                    showDialogProgressBar.value = false
+                    errorDialogTitle.value =
+                        context.getString(R.string.error_while_saving_result_dialog_title)
+                    errorDialogContent.value =
+                        "- ${context.getString(R.string.saving_convert_result_failed)}\n  - $e"
+                    errorDialogCustomAction.value = {}
+                    showErrorDialog.value = true
+                    return@launch
                 }
 
                 withContext(Dispatchers.Main) {
