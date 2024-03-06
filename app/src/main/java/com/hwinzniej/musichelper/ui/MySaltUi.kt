@@ -635,16 +635,13 @@ fun ItemValue(
 
 @Composable
 fun ItemEdit(
+    modifier: Modifier = Modifier,
     text: String,
     onChange: (String) -> Unit,
     backgroundColor: Color = SaltTheme.colors.subText.copy(alpha = 0.1f),
     hint: String? = null,
     hintColor: Color = SaltTheme.colors.subText,
     readOnly: Boolean = false,
-    paddingValues: PaddingValues = PaddingValues(
-        horizontal = SaltTheme.dimens.innerHorizontalPadding,
-        vertical = SaltTheme.dimens.innerVerticalPadding
-    ),
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
     visualTransformation: VisualTransformation = VisualTransformation.None,
@@ -657,8 +654,11 @@ fun ItemEdit(
     BasicTextField(
         value = text,
         onValueChange = onChange,
-        modifier = Modifier
-            .padding(paddingValues),
+        modifier = modifier
+            .padding(
+                horizontal = SaltTheme.dimens.innerHorizontalPadding,
+                vertical = SaltTheme.dimens.innerVerticalPadding
+            ),
         readOnly = readOnly,
         keyboardOptions = keyboardOptions,
         keyboardActions = keyboardActions,
