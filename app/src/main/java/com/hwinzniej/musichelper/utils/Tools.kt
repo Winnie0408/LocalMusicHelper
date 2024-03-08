@@ -1,9 +1,12 @@
 package com.hwinzniej.musichelper.utils
 
 import android.content.Context
+import android.graphics.Bitmap
 import android.net.Uri
 import com.alibaba.fastjson2.JSON
 import com.alibaba.fastjson2.JSONObject
+import com.google.zxing.BarcodeFormat
+import com.google.zxing.qrcode.QRCodeWriter
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.io.BufferedReader
@@ -15,6 +18,9 @@ import java.io.InputStream
 import java.io.InputStreamReader
 import java.io.OutputStream
 import java.io.RandomAccessFile
+import java.security.MessageDigest
+import java.util.Locale
+import kotlin.random.Random
 
 class Tools {
     fun uriToAbsolutePath(uri: Uri): String {
@@ -386,5 +392,76 @@ class Tools {
         } else {
             temp - popupWidth + 65
         }
+    }
+
+    fun generateRandomString(
+        length: Int,
+        includeLowerCase: Boolean = false,
+        includeUpperCase: Boolean = false,
+        includeDigits: Boolean = false,
+        includePunctuation: Boolean = false
+    ): String {
+        val lowerCaseLetters = "abcdefghijklmnopqrstuvwxyz"
+        val upperCaseLetters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        val digits = "0123456789"
+        val punctuation = "!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~"
+
+        var allowedChars = ""
+        if (includeLowerCase) allowedChars += lowerCaseLetters
+        if (includeUpperCase) allowedChars += upperCaseLetters
+        if (includeDigits) allowedChars += digits
+        if (includePunctuation) allowedChars += punctuation
+
+        return (1..length)
+            .map { allowedChars.random(Random) }
+            .joinToString("")
+    }
+
+    fun md5(input: String, length: Int = 32, toUpperCase: Boolean = false): String {
+        val md = MessageDigest.getInstance("MD5")
+        val digest = md.digest(input.toByteArray())
+        val md5String = digest.joinToString("") {
+            String.format("%02x", it)
+        }
+
+        val result = when (length) {
+            16 -> md5String.substring(8, 24)
+            else -> md5String
+        }
+
+        return if (toUpperCase) result.uppercase(Locale.ROOT) else result
+    }
+
+    fun generateQRCode(content: String, width: Int = 450, height: Int = 450): Bitmap {
+        val writer = QRCodeWriter()
+        val bitMatrix = writer.encode(content, BarcodeFormat.QR_CODE, width, height)
+        val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565)
+        for (x in 0 until width) {
+            for (y in 0 until height) {
+                bitmap.setPixel(
+                    x,
+                    y,
+                    if (bitMatrix[x, y]) android.graphics.Color.BLACK else android.graphics.Color.WHITE
+                )
+            }
+        }
+        return bitmap
+    }
+
+    fun getCurrentIp(): String {
+        val client = OkHttpClient()
+        var request = Request.Builder()
+        request = request.url("https://myip.ipip.net/s").get()
+        var currentIp =
+            client.newCall(request.build()).execute().body?.string()?.replace("\n", "")
+        if (currentIp == null) {
+            request = Request.Builder()
+            request = request.url("https://ip.3322.net").get()
+            currentIp =
+                client.newCall(request.build()).execute().body?.string()?.replace("\n", "")
+            if (currentIp == null)
+                currentIp = "1.180.115.20"
+        }
+        return currentIp
     }
 }

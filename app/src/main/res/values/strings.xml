@@ -247,4 +247,8 @@
     <string name="solution">Solution:</string>
     <string name="playlist_song_num_not_match_solution">Reduce the number of songs in this song list.</string>
     <string name="playlist_song_num_not_match_solution2">Check if the music platform has enabled the privacy settings related to the song list.</string>
+    <string name="kugou_app_qr_code">Kugou QR code</string>
+    <string name="kugou_wechat_qr_code">WeChat QR code</string>
+    <string name="getting_login_QR_code">Getting login QR code…</string>
+    <string name="failed_get_login_qr_code">Failed to get login QR code</string>
 </resources>

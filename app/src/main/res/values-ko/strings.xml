@@ -243,4 +243,8 @@
     <string name="solution">솔루션:</string>
     <string name="playlist_song_num_not_match_solution">해당 노래 목록의 노래 수를 줄입니다.</string>
     <string name="playlist_song_num_not_match_solution2">음악 플랫폼에서 노래 목록과 관련된 개인정보 보호 설정을 사용하도록 설정했는지 확인하세요.</string>
+    <string name="kugou_app_qr_code">Kugou QR코드</string>
+    <string name="kugou_wechat_qr_code">위챗 QR코드</string>
+    <string name="getting_login_QR_code">로그인 QR코드를 얻으십시오…</string>
+    <string name="failed_get_login_qr_code">로그인 QR코드를 가져올 수 없습니다</string>
 </resources>

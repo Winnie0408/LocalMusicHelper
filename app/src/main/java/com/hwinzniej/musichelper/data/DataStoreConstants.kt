@@ -18,4 +18,6 @@ object DataStoreConstants {
     val NETEASE_USER_ID = stringPreferencesKey("netease_user_id")
     val PLAYLIST_SOURCE_PLATFORM = intPreferencesKey("playlist_source_platform")
     val GET_PLAYLIST_METHOD = intPreferencesKey("get_playlist_method")
+    val KUGOU_TOKEN = stringPreferencesKey("kugou_token")
+    val KUGOU_USER_ID = stringPreferencesKey("kugou_user_id")
 }

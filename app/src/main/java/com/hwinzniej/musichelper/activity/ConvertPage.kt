@@ -26,6 +26,7 @@ import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.datastore.core.DataStore
@@ -562,7 +563,7 @@ class ConvertPage(
                     loadingProgressSema.release()
                 }
             } else {
-                if (selectedSourceApp.intValue == 3 || selectedSourceApp.intValue == 4) {
+                if (selectedSourceApp.intValue == 4) {
                     withContext(Dispatchers.Main) {
                         Toast.makeText(
                             context,
@@ -1710,8 +1711,14 @@ class ConvertPage(
     }
 
     fun autoFillCookie(): String {
-        if (System.currentTimeMillis() - lastLoginTimestamp.longValue > 259200000) {
-            return ""
+        if (selectedSourceApp.intValue != 3) {
+            if (System.currentTimeMillis() - lastLoginTimestamp.longValue > 259200000) {
+                return ""
+            }
+        } else {
+            if (System.currentTimeMillis() - lastLoginTimestamp.longValue > 15120000000) {
+                return ""
+            }
         }
         if (selectedLoginMethod.intValue == 2) {
             val temp = when (selectedSourceApp.intValue) {
@@ -1720,7 +1727,7 @@ class ConvertPage(
                 }; uid=${loginUserId.value}"
 
                 2 -> CookieManager.getInstance().getCookie("y.qq.com")
-                3 -> CookieManager.getInstance().getCookie("www.kugou.com")
+                3 -> "KUGOU"
                 4 -> CookieManager.getInstance().getCookie("kuwo.cn")
                 else -> ""
             }
@@ -1742,12 +1749,13 @@ class ConvertPage(
                             temp.contains("\\bqm_keyst=\\w+".toRegex())
                 }
 
-                3 -> false //TODO 待填写
+                3 -> true
                 4 -> false //TODO 待填写
                 else -> false
             }
             if (cookieValid) {
-                selectedLoginMethod.intValue = 1
+                if (selectedSourceApp.intValue != 3)
+                    selectedLoginMethod.intValue = 1
                 Toast.makeText(
                     context,
                     context.getString(R.string.use_last_login_info),
@@ -1757,6 +1765,199 @@ class ConvertPage(
             }
         }
         return ""
+    }
+
+    suspend fun kugouActiveDevice(currentIp: String): String {
+        showDialogProgressBar.value = true
+        val deviceId = Tools().md5(
+            input = Settings.System.getString(
+                context.contentResolver, Settings.Secure.ANDROID_ID
+            )
+        )
+        val nonce =
+            Tools().generateRandomString(
+                length = 32,
+                includeLowerCase = true,
+                includeDigits = true
+            )
+        val time = System.currentTimeMillis() / 1000
+        val url = "https://thirdsso.kugou.com/v2/device/activation"
+        val client = OkHttpClient()
+        val json =
+            """{"device_id":"${deviceId}","client_ver":"133-62b8ece-20240223165034","pid":"203051","client_ip":"${currentIp}","apk_ver":"9845","nonce":"${nonce}","sp":"KG","userid":"anonymous","timestamp":${time},"token":"password"}"""
+        val requestBody =
+            json.toRequestBody("application/json; charset=utf-8".toMediaType())
+        val request = Request.Builder()
+            .url(url)
+            .addHeader(
+                "User-Agent",
+                "Android13-androidCar-133-62b8ece-203051-0-UltimateSdk-wifi"
+            )
+            .addHeader(
+                "signature",
+                Tools().md5(input = json + "9046ad4ecae74a70aa750c1bb2307ae6")
+            )
+            .addHeader("Content-Type", "application/json; charset=UTF-8")
+            .addHeader("Host", "thirdsso.kugou.com")
+            .addHeader("Connection", "Keep-Alive")
+            .addHeader("Accept-Encoding", "gzip")
+            .post(requestBody)
+        val response = JSON.parseObject(
+            client.newCall(request.build()).execute().body?.string()
+        )
+        try {
+            if (response == null || response.getInteger("error_code") != 0)
+                throw Exception(context.getString(R.string.failed_get_login_qr_code))
+        } catch (e: Exception) {
+            showDialogProgressBar.value = false
+            showLoginDialog.value = false
+            withContext(Dispatchers.Main) {
+                Toast.makeText(
+                    context,
+                    e.message,
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+            return ""
+        }
+        return deviceId
+    }
+
+    suspend fun kugouGetLoginQrCodeUrl(
+        type: Int,
+        deviceId: String,
+        currentIp: String
+    ): SnapshotStateMap<String, String> {
+        val result = SnapshotStateMap<String, String>()
+        val url = when (type) {
+            0 -> "https://thirdsso.kugou.com/v2/user/qrcode/get"
+            1 -> "https://thirdsso.kugou.com/v2/user/gzh/qrcode/get"
+            else -> ""
+        }
+        val nonce =
+            Tools().generateRandomString(
+                length = 32,
+                includeLowerCase = true,
+                includeDigits = true
+            )
+        val time = System.currentTimeMillis() / 1000
+        val client = OkHttpClient()
+        val json =
+            """{"device_id":"${deviceId}","client_ver":"133-62b8ece-20240223165034","pid":"203051","client_ip":"${currentIp}","apk_ver":"9845","nonce":"${nonce}","sp":"KG","userid":"anonymous","timestamp":${time},"token":"password"}"""
+        val requestBody =
+            json.toRequestBody("application/json; charset=utf-8".toMediaType())
+        val request = Request.Builder()
+            .url(url)
+            .addHeader(
+                "User-Agent",
+                "Android13-androidCar-133-62b8ece-203051-0-UltimateSdk-wifi"
+            )
+            .addHeader("Content-Type", "application/json; charset=UTF-8")
+            .addHeader("Host", "thirdsso.kugou.com")
+            .addHeader("Connection", "Keep-Alive")
+            .addHeader("Accept-Encoding", "gzip")
+            .addHeader(
+                "signature",
+                Tools().md5(input = json + "9046ad4ecae74a70aa750c1bb2307ae6")
+            )
+            .post(requestBody)
+        val response = JSON.parseObject(
+            client.newCall(request.build()).execute().body?.string()
+        )
+        try {
+            if (response == null || response.getInteger("error_code") != 0)
+                throw Exception(context.getString(R.string.failed_get_login_qr_code))
+            val qrCodeUrl = response.getJSONObject("data").getString("qrcode")
+            val ticket = response.getJSONObject("data").getString("ticket")
+            result["qrCodeUrl"] = qrCodeUrl
+            result["ticket"] = ticket
+            showDialogProgressBar.value = false
+        } catch (e: Exception) {
+            showDialogProgressBar.value = false
+            showLoginDialog.value = false
+            withContext(Dispatchers.Main) {
+                Toast.makeText(
+                    context,
+                    e.message,
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
+        return result
+    }
+
+    var cancelLogin = mutableStateOf(false)
+    fun stopGetLoginStatus() {
+        cancelLogin.value = true
+    }
+
+    suspend fun kugouGetLoginStatus(
+        type: Int,
+        deviceId: String,
+        ticket: String,
+        currentIp: String
+    ): SnapshotStateMap<String, String> {
+        val result = SnapshotStateMap<String, String>()
+        val url = when (type) {
+            0 -> "https://thirdsso.kugou.com/v2/user/qrcode/auth"
+            1 -> "https://thirdsso.kugou.com/v2/user/gzh/qrcode/auth"
+            else -> ""
+        }
+        delay(2250L)
+        cancelLogin.value = false
+        while (!cancelLogin.value) {
+            val nonce =
+                Tools().generateRandomString(
+                    length = 32,
+                    includeLowerCase = true,
+                    includeDigits = true
+                )
+            val time = System.currentTimeMillis() / 1000
+            val client = OkHttpClient()
+            val json = when (type) {
+                0 -> """{"ticket":"${ticket}","device_id":"${deviceId}","client_ver":"133-62b8ece-20240223165034","pid":"203051","client_ip":"${currentIp}","apk_ver":"9845","nonce":"${nonce}","sp":"KG","userid":"anonymous","timestamp":${time},"token":"password"}"""
+                1 -> """{"ticket":"${ticket}","device_id":"${deviceId}","client_ver":"133-62b8ece-20240223165034","refresh":0,"pid":"203051","client_ip":"${currentIp}","apk_ver":"9845","nonce":"${nonce}","sp":"KG","userid":"anonymous","timestamp":${time},"token":"password"}"""
+                else -> ""
+            }
+            val requestBody =
+                json.toRequestBody("application/json; charset=utf-8".toMediaType())
+            val request = Request.Builder()
+                .url(url)
+                .addHeader(
+                    "User-Agent",
+                    "Android13-androidCar-133-62b8ece-203051-0-UltimateSdk-wifi"
+                )
+                .addHeader("Content-Type", "application/json; charset=UTF-8")
+                .addHeader("Host", "thirdsso.kugou.com")
+                .addHeader("Connection", "Keep-Alive")
+                .addHeader("Accept-Encoding", "gzip")
+                .addHeader(
+                    "signature",
+                    Tools().md5(input = json + "9046ad4ecae74a70aa750c1bb2307ae6")
+                )
+                .post(requestBody)
+            val response = JSON.parseObject(
+                client.newCall(request.build()).execute().body?.string()
+            )
+            try {
+                val token = response.getJSONObject("data").getString("token")
+                val userId = response.getJSONObject("data").getString("userid")
+                if (token != null && token.isNotBlank() && userId != null && userId.isNotBlank()) {
+                    lastLoginTimestamp.longValue =
+                        System.currentTimeMillis()
+                    dataStore.edit { settings ->
+                        settings[DataStoreConstants.LAST_LOGIN_TIMESTAMP] =
+                            System.currentTimeMillis()
+                    }
+                    result["token"] = token
+                    result["userId"] = userId
+                    return result
+                }
+            } catch (_: Exception) {
+            }
+            delay(1000L)
+        }
+        return result
     }
 }
 

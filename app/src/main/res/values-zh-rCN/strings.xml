@@ -243,4 +243,8 @@
     <string name="solution">解决方法：</string>
     <string name="playlist_song_num_not_match_solution">减少该歌单中的歌曲数量。</string>
     <string name="playlist_song_num_not_match_solution2">检查音乐平台是否启用了歌单的相关隐私设置。</string>
+    <string name="kugou_app_qr_code">酷狗扫码</string>
+    <string name="kugou_wechat_qr_code">微信扫码</string>
+    <string name="getting_login_QR_code">获取登录二维码…</string>
+    <string name="failed_get_login_qr_code">获取登录二维码失败</string>
 </resources>
