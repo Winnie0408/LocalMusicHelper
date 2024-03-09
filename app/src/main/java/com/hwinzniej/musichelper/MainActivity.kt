@@ -527,6 +527,7 @@ private fun Pages(
                         selectedLoginMethod = convertPage.selectedLoginMethod,
                         showLoginDialog = convertPage.showLoginDialog,
                         dataStore = mainPage.dataStore,
+                        showSongNumMismatchDialog = convertPage.showSongNumMismatchDialog,
                     )
                 }
 

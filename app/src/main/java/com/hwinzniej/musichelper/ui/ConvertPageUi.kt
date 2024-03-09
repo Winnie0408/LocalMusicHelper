@@ -137,6 +137,7 @@ fun ConvertPageUi(
     selectedLoginMethod: MutableIntState,
     showLoginDialog: MutableState<Boolean>,
     dataStore: DataStore<Preferences>,
+    showSongNumMismatchDialog: MutableState<Boolean>,
 ) {
     val sourceAppPopupMenuState = rememberPopupState()
     val methodPopupMenuState = rememberPopupState()
@@ -162,8 +163,8 @@ fun ConvertPageUi(
     val targetAppPopupMenuState = rememberPopupState()
     var selectedMultiSourceApp by remember { mutableIntStateOf(-1) }
     var userLoggedIn by remember { mutableStateOf(false) }
-    var kugouDeviceId by remember { mutableStateOf("") }
-    var kugouLoginQrCodeRelated = remember { mutableStateMapOf<String, String>() }
+    var kugouDeviceId by remember { mutableStateOf(false) }
+    var kugouDeviceRelated = remember { mutableStateMapOf<String, String>() }
     var kugouLoginQrCode by remember { mutableStateOf<Bitmap?>(null) }
     var kugouCurrentIp by remember { mutableStateOf("") }
     var kugouUserRelated = remember { mutableStateMapOf<String, String>() }
@@ -548,19 +549,17 @@ fun ConvertPageUi(
     }
 
     LaunchedEffect(key1 = kugouDeviceId) {
-        if (kugouDeviceId.isNotEmpty()) {
+        if (kugouDeviceId) {
             coroutine.launch(Dispatchers.IO) {
-                kugouLoginQrCodeRelated = convertPage.kugouGetLoginQrCodeUrl(
+                kugouDeviceRelated = convertPage.kugouGetLoginQrCodeUrl(
                     type = selectedLoginMethod.intValue,
-                    deviceId = kugouDeviceId,
                     currentIp = kugouCurrentIp
                 )
                 kugouLoginQrCode =
-                    kugouLoginQrCodeRelated["qrCodeUrl"]?.let { Tools().generateQRCode(content = it) }
-                kugouLoginQrCodeRelated["ticket"]?.let {
+                    kugouDeviceRelated["qrCodeUrl"]?.let { Tools().generateQRCode(content = it) }
+                kugouDeviceRelated["ticket"]?.let {
                     kugouUserRelated = convertPage.kugouGetLoginStatus(
                         type = selectedLoginMethod.intValue,
-                        deviceId = kugouDeviceId,
                         ticket = it,
                         currentIp = kugouCurrentIp
                     )
@@ -706,6 +705,10 @@ fun ConvertPageUi(
     LaunchedEffect(key1 = showLoginDialog.value) {
         if (showLoginDialog.value) {
             userInput = ""
+            if (selectedSourceApp.intValue == 3)
+                coroutine.launch(Dispatchers.IO) {
+                    kugouCurrentIp = Tools().getCurrentIp()
+                }
             delay(300L)
             userInput = convertPage.autoFillCookie()
             if (userInput != "") {
@@ -721,9 +724,6 @@ fun ConvertPageUi(
     }
 
     if (showLoginDialog.value) {
-        // TODO 酷狗选择登录方式后，再选择另一方式，只会发送激活设备的请求，不会获取二维码；
-        //  切换登录方式后，仍有概率无法停止上一次的轮询登录请求。
-        //  下一步：酷狗音乐getOnlinePlaylist
         val loginMethodPopupState = rememberPopupState()
         val webViewState = remember { mutableStateOf<WebView?>(null) }
 
@@ -756,8 +756,14 @@ fun ConvertPageUi(
             },
             onConfirm = {
                 if (selectedLoginMethod.intValue == 2) {
-                    if (selectedSourceApp.intValue == 3 && userLoggedIn)
-                        convertPage.getOnlinePlaylist()
+                    if (selectedSourceApp.intValue == 3 && userLoggedIn) {
+                        destoryWebview()
+                        showLoginDialog.value = false
+                        convertPage.getOnlinePlaylist(
+                            kugouUserRelated = kugouUserRelated,
+                            kugouCurrentIp = kugouCurrentIp
+                        )
+                    }
                     return@YesNoDialog
                 }
                 if (selectedLoginMethod.intValue == 0) {
@@ -799,13 +805,16 @@ fun ConvertPageUi(
                         } else {
                             destoryWebview()
                             showLoginDialog.value = false
-                            convertPage.getOnlinePlaylist()
+                            convertPage.getOnlinePlaylist(
+                                kugouUserRelated = kugouUserRelated,
+                                kugouCurrentIp = kugouCurrentIp
+                            )
                         }
                     } else {
                         convertPage.cookie.value = ""
                         Toast.makeText(
                             context,
-                            context.getString(R.string.no_valid_cookies_found),
+                            context.getString(R.string.no_valid_login_params_found),
                             Toast.LENGTH_SHORT
                         ).show()
                         return@YesNoDialog
@@ -835,12 +844,15 @@ fun ConvertPageUi(
                         convertPage.cookie.value = userInput
                         destoryWebview()
                         showLoginDialog.value = false
-                        convertPage.getOnlinePlaylist()
+                        convertPage.getOnlinePlaylist(
+                            kugouUserRelated = kugouUserRelated,
+                            kugouCurrentIp = kugouCurrentIp
+                        )
                     } else {
                         convertPage.cookie.value = ""
                         Toast.makeText(
                             context,
-                            context.getString(R.string.cookie_input_error),
+                            context.getString(R.string.no_valid_login_params_found),
                             Toast.LENGTH_SHORT
                         ).show()
                         return@YesNoDialog
@@ -905,9 +917,9 @@ fun ConvertPageUi(
                                         coroutine.launch(Dispatchers.IO) {
                                             kugouLoginQrCode = null
                                             convertPage.stopGetLoginStatus()
-                                            kugouLoginQrCodeRelated.clear()
+                                            kugouDeviceId = false
+                                            kugouDeviceRelated.clear()
                                             kugouUserRelated.clear()
-                                            kugouCurrentIp = Tools().getCurrentIp()
                                             kugouDeviceId =
                                                 convertPage.kugouActiveDevice(currentIp = kugouCurrentIp)
                                         }
@@ -942,9 +954,9 @@ fun ConvertPageUi(
                                         coroutine.launch(Dispatchers.IO) {
                                             kugouLoginQrCode = null
                                             convertPage.stopGetLoginStatus()
-                                            kugouLoginQrCodeRelated.clear()
+                                            kugouDeviceId = false
+                                            kugouDeviceRelated.clear()
                                             kugouUserRelated.clear()
-                                            kugouCurrentIp = Tools().getCurrentIp()
                                             kugouDeviceId =
                                                 convertPage.kugouActiveDevice(currentIp = kugouCurrentIp)
                                         }
@@ -1357,8 +1369,8 @@ fun ConvertPageUi(
                                         3 -> {
                                             kugouLoginQrCode = null
                                             convertPage.stopGetLoginStatus()
-                                            kugouDeviceId = ""
-                                            kugouLoginQrCodeRelated.clear()
+                                            kugouDeviceId = false
+                                            kugouDeviceRelated.clear()
                                             kugouUserRelated.clear()
                                             kugouCurrentIp = ""
                                         }
@@ -1373,6 +1385,62 @@ fun ConvertPageUi(
                                 enableHaptic = enableHaptic.value
                             )
                         }
+                    }
+                }
+            }
+        }
+    }
+
+    if (showSongNumMismatchDialog.value) {
+        YesNoDialog(
+            onDismiss = { showSongNumMismatchDialog.value = false },
+            onCancel = {
+                showSongNumMismatchDialog.value = false
+                convertPage.saveCurrentConvertResult(
+                    saveSuccessSongs = false,
+                    saveCautionSongs = false,
+                    saveManualSongs = true,
+                    fileName = ""
+                )
+                Toast.makeText(
+                    context,
+                    context.getString(R.string.skipped),
+                    Toast.LENGTH_SHORT
+                ).show()
+            },
+            onConfirm = {
+                showSongNumMismatchDialog.value = false
+                convertPage.previewResult(directlyStart = true)
+            },
+            title = stringResource(id = R.string.error_while_getting_data_dialog_title),
+            content = null,
+            enableHaptic = enableHaptic.value,
+            confirmText = stringResource(id = R.string.continue_button_name),
+            cancelText = stringResource(id = R.string.skip_button_name)
+        ) {
+            RoundedColumn {
+                ItemTitle(text = stringResource(id = R.string.error_details))
+                LazyColumn(
+                    modifier = Modifier
+                        .padding(horizontal = 16.dp)
+                        .fillMaxWidth()
+                        .heightIn(
+                            min = 20.dp,
+                            max = (LocalConfiguration.current.screenHeightDp / 2.5).dp
+                        )
+                        .clip(RoundedCornerShape(10.dp))
+                ) {
+                    item {
+                        MarkdownText(
+                            modifier = Modifier.padding(bottom = 8.dp),
+                            markdown = errorDialogContent.value,
+                            style = TextStyle(
+                                color = SaltTheme.colors.text,
+                                fontSize = 14.sp
+                            ),
+                            isTextSelectable = true,
+                            disableLinkMovementMethod = true
+                        )
                     }
                 }
             }
@@ -1906,7 +1974,12 @@ fun ConvertPageUi(
                                                 modifier = Modifier
                                                     .padding(end = 16.dp),
                                                 enabled = !it,
-                                                onClick = { convertPage.getOnlinePlaylist() },
+                                                onClick = {
+                                                    convertPage.getOnlinePlaylist(
+                                                        kugouUserRelated = kugouUserRelated,
+                                                        kugouCurrentIp = kugouCurrentIp
+                                                    )
+                                                },
                                                 backgroundColor = SaltTheme.colors.subBackground,
                                                 enableHaptic = enableHaptic.value
                                             ) {
@@ -2649,8 +2722,8 @@ fun ConvertPageUi(
                                                 }
                                                 kugouLoginQrCode = null
                                                 convertPage.stopGetLoginStatus()
-                                                kugouDeviceId = ""
-                                                kugouLoginQrCodeRelated.clear()
+                                                kugouDeviceId = false
+                                                kugouDeviceRelated.clear()
                                                 kugouUserRelated.clear()
                                                 kugouCurrentIp = ""
                                                 Toast.makeText(

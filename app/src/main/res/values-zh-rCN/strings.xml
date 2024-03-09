@@ -213,7 +213,7 @@
     <string name="cookie_login">Cookie</string>
     <string name="please_input_cookie">输入Cookie…</string>
     <string name="cookie_input_error">Cookie格式不正确</string>
-    <string name="no_valid_cookies_found">没有找到有效的Cookie</string>
+    <string name="no_valid_login_params_found">未找到有效的登录信息</string>
     <string name="select_encrypt_server_title">选择加密服务器</string>
     <string name="select_encrypt_server">加密服务器</string>
     <string name="guangxi_china">中国广西</string>
@@ -231,7 +231,7 @@
     <string name="logout">退出登录</string>
     <string name="logged_out">已退出登录</string>
     <string name="account">#账号</string>
-    <string name="use_last_login_info">已使用之前的登录信息自动填写</string>
+    <string name="use_last_login_info">已使用之前的登录信息</string>
     <string name="login_info_maybe_expired">Cookie可能过期，歌单数据可能不完整。</string>
     <string name="tips">提示</string>
     <string name="already_logged_in_click_ok">- 您已登录。#n- 请点击「确定」按钮。</string>
@@ -239,7 +239,7 @@
     <string name="saving_convert_result_failed">转换结果保存失败。</string>
     <string name="export_scan_result_failed">扫描结果导出失败。</string>
     <string name="playlist_song_num_not_match">获取的歌曲数量与歌单信息不一致。</string>
-    <string name="playlist_song_num_not_match_detail">歌曲数量应为**#1**首，实际获取到**#2**首。</string>
+    <string name="playlist_song_num_not_match_detail">歌曲数量应为**#1**首，#n#b#b-#b实际获取到**#2**首。</string>
     <string name="solution">解决方法：</string>
     <string name="playlist_song_num_not_match_solution">减少该歌单中的歌曲数量。</string>
     <string name="playlist_song_num_not_match_solution2">检查音乐平台是否启用了歌单的相关隐私设置。</string>
@@ -247,4 +247,9 @@
     <string name="kugou_wechat_qr_code">微信扫码</string>
     <string name="getting_login_QR_code">获取登录二维码…</string>
     <string name="failed_get_login_qr_code">获取登录二维码失败</string>
+    <string name="optional_operation">可选操作：</string>
+    <string name="skip_operation_detail">跳过：跳过当前歌单的转换操作。</string>
+    <string name="continue_operation_detail">继续：使用实际获取到的歌曲进行转换操作。</string>
+    <string name="continue_button_name">继续</string>
+    <string name="skip_button_name">跳过</string>
 </resources>

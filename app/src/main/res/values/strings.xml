@@ -216,7 +216,7 @@
     <string name="cookie_login">Cookie</string>
     <string name="please_input_cookie">Enter Cookie…</string>
     <string name="cookie_input_error">Wrong Cookie format</string>
-    <string name="no_valid_cookies_found">No valid Cookie found</string>
+    <string name="no_valid_login_params_found">No valid login params found</string>
     <string name="select_encrypt_server_title">Select encryption server</string>
     <string name="select_encrypt_server">Encryption server</string>
     <string name="guangxi_china">Guangxi, China</string>
@@ -243,7 +243,7 @@
     <string name="saving_convert_result_failed">Failed to save the conversion result.</string>
     <string name="export_scan_result_failed">Export of scan results failed.</string>
     <string name="playlist_song_num_not_match">The number of songs fetched does not match the song list information.</string>
-    <string name="playlist_song_num_not_match_detail">The number of songs should be **#1** and **#2** were actually acquired.</string>
+    <string name="playlist_song_num_not_match_detail">The number of songs should be **#1** ,#n#b#b-#b**#2** were actually acquired.</string>
     <string name="solution">Solution:</string>
     <string name="playlist_song_num_not_match_solution">Reduce the number of songs in this song list.</string>
     <string name="playlist_song_num_not_match_solution2">Check if the music platform has enabled the privacy settings related to the song list.</string>
@@ -251,4 +251,9 @@
     <string name="kugou_wechat_qr_code">WeChat QR code</string>
     <string name="getting_login_QR_code">Getting login QR code…</string>
     <string name="failed_get_login_qr_code">Failed to get login QR code</string>
+    <string name="optional_operation">"Optional Operation: "</string>
+    <string name="skip_operation_detail">Skip: Skip the conversion operation of the current song list.</string>
+    <string name="continue_operation_detail">Continue: Conversion operation using the actual acquired song.</string>
+    <string name="skip_button_name">Skip</string>
+    <string name="continue_button_name">Continue</string>
 </resources>

@@ -39,6 +39,7 @@ import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
@@ -106,8 +107,10 @@ fun YesNoDialog(
     enableConfirmButton: Boolean = true,
     drawContent: @Composable() (() -> Unit)? = null,
 ) {
-//    if (drawContent!=null)
-    MyVibrationEffect(LocalContext.current, enableHaptic).dialog()
+    val context = LocalContext.current
+    LaunchedEffect(Unit) {
+        MyVibrationEffect(context, enableHaptic).dialog()
+    }
     BasicDialog(
         onDismissRequest = onDismiss,
         properties = properties,
@@ -316,7 +319,10 @@ fun YesDialog(
     enableHaptic: Boolean = false,
     drawContent: @Composable() (() -> Unit)? = null
 ) {
-    MyVibrationEffect(LocalContext.current, enableHaptic).dialog()
+    val context = LocalContext.current
+    LaunchedEffect(Unit) {
+        MyVibrationEffect(context, enableHaptic).dialog()
+    }
     BasicDialog(
         onDismissRequest = onDismissRequest,
         properties = properties
