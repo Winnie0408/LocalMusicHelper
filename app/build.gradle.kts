@@ -79,7 +79,7 @@ dependencies {
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     debugImplementation("androidx.compose.ui:ui-test-manifest:1.6.1")
 
-    //SaltUI TODO 更新license.html
+    //SaltUI
     implementation("com.github.Moriafly:SaltUI:0.1.0-dev52")
 
     //JAudioTagger
@@ -112,7 +112,7 @@ dependencies {
     //Markdown渲染器
     implementation("com.github.jeziellago:compose-markdown:0.3.7")  //TODO 使用高于此版本会出现问题，已提Issue。
 
-    //Google ZXing二维码生成 TODO 添加到license.html中
+    //Google ZXing二维码生成
     implementation("com.google.zxing:core:3.5.3")
 
     //拖拽排序-可注释
