@@ -252,4 +252,5 @@
     <string name="continue_operation_detail">继续：使用实际获取到的歌曲进行转换操作。</string>
     <string name="continue_button_name">继续</string>
     <string name="skip_button_name">跳过</string>
+    <string name="kuwo_no_login_click_ok_button">请在加载完成后，直接点击确定按钮</string>
 </resources>

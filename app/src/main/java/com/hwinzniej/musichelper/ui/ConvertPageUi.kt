@@ -790,7 +790,7 @@ fun ConvertPageUi(
                         }
 
                         3 -> userLoggedIn
-                        4 -> false //TODO 待填写
+                        4 -> convertPage.cookie.value.contains("\\bHm_Iuvt.*=\\w+".toRegex())
                         else -> false
                     }
 
@@ -836,7 +836,7 @@ fun ConvertPageUi(
                         }
 
                         3 -> userLoggedIn
-                        4 -> false //TODO 待填写
+                        4 -> userInput.contains("\\bHm_Iuvt.*=\\w+".toRegex())
                         else -> false
                     }
 
@@ -923,6 +923,13 @@ fun ConvertPageUi(
                                             kugouDeviceId =
                                                 convertPage.kugouActiveDevice(currentIp = kugouCurrentIp)
                                         }
+                                    }
+                                    if (selectedSourceApp.intValue == 4) {
+                                        Toast.makeText(
+                                            context,
+                                            context.getString(R.string.kuwo_no_login_click_ok_button),
+                                            Toast.LENGTH_LONG
+                                        ).show()
                                     }
                                 },
                                 selected = selectedLoginMethod.intValue == 0,
@@ -1027,7 +1034,7 @@ fun ConvertPageUi(
                                                 coroutine.launch(Dispatchers.Main) {
                                                     delay(1000L)
                                                     when (selectedSourceApp.intValue) {
-                                                        1 -> {
+                                                        1 -> {  // TODO 自动判断是否登录成功，并显示登录成功的信息
                                                             view.evaluateJavascript(
                                                                 """
                                                         var xpath = '/html/body/div[1]/div[1]/div/div[1]/a';
@@ -1119,47 +1126,7 @@ fun ConvertPageUi(
 
                                                         3 -> {}
 
-                                                        4 -> {
-                                                            view.evaluateJavascript(
-                                                                """
-                                                        var ad = '/html/body/div/div/div/div[7]/div/div[1]/i';
-                                                        var adResult = document.evaluate(ad, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
-                                                        if (adResult.singleNodeValue) {
-                                                            setTimeout(() => {
-                                                                adResult.singleNodeValue.click();
-                                                            }, 1000);
-                                                        }
-                                                          
-                                                        var xpath = '/html/body/div/div/div/div[1]/div/div/div[2]/div[2]/span[1]';
-                                                        var result = document.evaluate(xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
-                                                        var element =  result.singleNodeValue;
-                                                        if (element) {
-                                                            if (element.innerText.includes('登录')) {
-                                                                element.click();
-                                                                true;
-                                                            } else {
-                                                                'logged';
-                                                            }
-                                                        } else {
-                                                            false;
-                                                        }
-                                                        """.trimIndent()
-                                                            ) { result ->
-                                                                if (result == "\"logged\"") {
-                                                                    view.pauseTimers()
-                                                                    view.onPause()
-                                                                    userLoggedIn = true
-                                                                    convertPage.lastLoginTimestamp.longValue =
-                                                                        System.currentTimeMillis()
-                                                                    coroutine.launch {
-                                                                        dataStore.edit { settings ->
-                                                                            settings[DataStoreConstants.LAST_LOGIN_TIMESTAMP] =
-                                                                                System.currentTimeMillis()
-                                                                        }
-                                                                    }
-                                                                }
-                                                            }
-                                                        }
+                                                        4 -> {}
                                                     }
 //                                                view.scrollTo(800, 950)
                                                     showDialogProgressBar.value = false
@@ -1222,7 +1189,7 @@ fun ConvertPageUi(
                                     .fillMaxWidth()
                                     .heightIn(max = (LocalConfiguration.current.screenHeightDp / 4).dp)
                             ) {
-                                AnimatedVisibility(visible = userLoggedIn) {
+                                AnimatedVisibility(visible = userLoggedIn && selectedSourceApp.intValue == 3) {
                                     ItemContainer {
                                         MarkdownText(
                                             modifier = Modifier
@@ -1257,7 +1224,7 @@ fun ConvertPageUi(
                                             1 -> "MUSIC_U=xxx; __csrf=xxx; uid=xxx"
                                             2 -> "(wx)uin=xxx; qm_keyst=xxx"
                                             3 -> ""
-                                            4 -> ""
+                                            4 -> "Hm_Iuvtxxx=xxx"
                                             else -> ""
                                         },
                                         onChange = {

@@ -252,4 +252,5 @@
     <string name="continue_operation_detail">계속: 실제로 획득한 노래를 사용하여 변환 작업을 수행합니다.</string>
     <string name="continue_button_name">계속</string>
     <string name="skip_button_name">뛰어넘다</string>
+    <string name="kuwo_no_login_click_ok_button">로딩이 완료되면 바로 확인 버튼을 클릭하세요.</string>
 </resources>

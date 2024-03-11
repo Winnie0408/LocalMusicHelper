@@ -564,18 +564,18 @@ class ConvertPage(
                     loadingProgressSema.release()
                 }
             } else {
-                if (selectedSourceApp.intValue == 4) {
-                    withContext(Dispatchers.Main) {
-                        Toast.makeText(
-                            context,
-                            context.getString(R.string.developing),
-                            Toast.LENGTH_SHORT
-                        ).show()
-                    }
-                    haveError = true
-                    loadingProgressSema.release()
-                    return@launch
-                }
+//                if (selectedSourceApp.intValue == 4) {
+//                    withContext(Dispatchers.Main) {
+//                        Toast.makeText(
+//                            context,
+//                            context.getString(R.string.developing),
+//                            Toast.LENGTH_SHORT
+//                        ).show()
+//                    }
+//                    haveError = true
+//                    loadingProgressSema.release()
+//                    return@launch
+//                }
                 selectedLoginMethod.intValue = 2
                 loadingProgressSema.release()
             }
@@ -2031,7 +2031,7 @@ class ConvertPage(
                 }
 
                 3 -> true
-                4 -> false //TODO 待填写
+                4 -> temp.contains("\\bHm_Iuvt.*=\\w+".toRegex())
                 else -> false
             }
             if (cookieValid) {

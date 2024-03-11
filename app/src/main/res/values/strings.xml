@@ -256,4 +256,5 @@
     <string name="continue_operation_detail">Continue: Conversion operation using the actual acquired song.</string>
     <string name="skip_button_name">Skip</string>
     <string name="continue_button_name">Continue</string>
+    <string name="kuwo_no_login_click_ok_button">Please click the OK button directly after loading is complete.</string>
 </resources>
