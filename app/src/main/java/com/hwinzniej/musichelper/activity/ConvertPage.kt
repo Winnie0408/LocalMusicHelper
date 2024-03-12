@@ -527,6 +527,18 @@ class ConvertPage(
                                 "SELECT ${sourceApp.songListId}, ${sourceApp.songListName} FROM ${sourceApp.songListTableName} LIMIT 1",
                                 null
                             ).close()
+                            val playlistNum = db.rawQuery(
+                                "SELECT COUNT(*) FROM ${sourceApp.songListTableName}",
+                                null
+                            )
+                            playlistNum.moveToFirst()
+                            if (playlistNum.getInt(0) == 0) {
+                                throw Exception(
+                                    context.getString(R.string.no_info_in_playlist)
+                                        .replace("#", sourceApp.sourceEng)
+                                )
+                            }
+                            playlistNum.close()
                         } catch (e: Exception) {
                             errorDialogTitle.value =
                                 context.getString(R.string.error_while_getting_data_dialog_title)
@@ -588,6 +600,16 @@ class ConvertPage(
     ) {
         lifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
             currentPage.intValue = 1
+            if (selectedSourceApp.intValue == 4) {
+                showLoadingProgressBar.value = false
+                errorDialogTitle.value =
+                    context.getString(R.string.tips)
+                errorDialogContent.value =
+                    context.getString(R.string.kuwo_cannot_read_online_playlist)
+                errorDialogCustomAction.value = {}
+                showErrorDialog.value = true
+                return@launch
+            }
             if (playlistId.size != 0) {
                 playlistId.clear()
                 playlistName.clear()
@@ -681,9 +703,7 @@ class ConvertPage(
                             .post(requestBody)
                     }
 
-                    4 -> {
-
-                    }
+                    4 -> {}
                 }
 
                 var response =
@@ -848,6 +868,10 @@ class ConvertPage(
                             while (true) {
                                 val playlistInfo =
                                     response.getJSONObject("data").getJSONArray("playlists")
+                                if (playlistInfo.size == 0) {
+                                    db.close()
+                                    break
+                                }
                                 playlistInfo.forEach {
                                     val playlist = it as JSONObject
                                     if (playlist.getInteger("total") == 0) {
@@ -919,9 +943,13 @@ class ConvertPage(
                             }
                         }
 
-                        4 -> {
-
-                        }
+                        4 -> {}
+                    }
+                    if (innerPlaylistId.size == 0) {
+                        throw Exception(
+                            context.getString(R.string.online_server_response_null)
+                                .replace("#", sourceApp.sourceEng)
+                        )
                     }
                     playlistId.addAll(innerPlaylistId)
                     playlistName.addAll(innerPlaylistName)
@@ -943,7 +971,10 @@ class ConvertPage(
                         }
                     }
                 } else {
-                    throw Exception("${sourceApp.sourceEng} server's response was null.")
+                    throw Exception(
+                        context.getString(R.string.online_server_response_null)
+                            .replace("#", sourceApp.sourceEng)
+                    )
                 }
             } catch (e: Exception) {
                 showLoadingProgressBar.value = false
@@ -1045,6 +1076,7 @@ class ConvertPage(
 
             if (!directlyStart) {
                 if (selectedMethod.intValue == 1) {
+                    var kuwoSecret: String? = null
                     val testDb = SQLiteDatabase.openDatabase(
                         databaseFilePath.value,
                         null,
@@ -1062,7 +1094,7 @@ class ConvertPage(
                                 1 -> "https://interface.music.163.com/weapi/v6/playlist/detail"
                                 2 -> "https://u.y.qq.com/cgi-bin/musicu.fcg"
                                 3 -> "https://gateway.kugou.com/pubsongs/v4/get_other_list_file"
-                                4 -> ""
+                                4 -> "https://kuwo.cn/api/www/playlist/playListInfo"
                                 else -> ""
                             }
                             val client = OkHttpClient()
@@ -1139,7 +1171,33 @@ class ConvertPage(
                                 }
 
                                 4 -> {
-
+                                    val getParams =
+                                        """pid=${playlistId[firstIndex1]}&pn=1&rn=50&httpsStatus=1&plat=web_www"""
+                                    kuwoSecret = Tools().encryptString(
+                                        cookie.value,
+                                        "kuwo",
+                                        encryptServer.value
+                                    )?.getString("Secret")
+                                    kuwoSecret?.let {
+                                        request = request
+                                            .url("${url}?${getParams}")
+                                            .addHeader("Cookie", cookie.value)
+                                            .addHeader(
+                                                "Referer",
+                                                "https://kuwo.cn/playlist_detail/${playlistId[firstIndex1]}"
+                                            )
+                                            .addHeader("Secret", it)
+                                            .addHeader(
+                                                "User-Agent",
+                                                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36 Edg/122.0.0.0"
+                                            )
+                                            .addHeader("Connection", "Keep-Alive")
+                                            .addHeader(
+                                                "Accept",
+                                                "application/json, text/plain, */*"
+                                            )
+                                            .get()
+                                    }
                                 }
                             }
 
@@ -1260,7 +1318,7 @@ class ConvertPage(
                                         db.close()
                                     }
 
-                                    3 -> {
+                                    3 -> {  // TODO 该接口只能获取歌单中未失效（变灰）的歌曲
                                         val db = SQLiteDatabase.openDatabase(
                                             databaseFilePath.value,
                                             null,
@@ -1274,6 +1332,16 @@ class ConvertPage(
                                         var times = 1
 
                                         while (true) {
+                                            try {
+                                                if (response.getJSONObject("data")
+                                                        .getJSONObject("info").size == 0
+                                                ) {
+                                                    db.close()
+                                                    break
+                                                }
+                                            } catch (_: Exception) {
+                                            }
+
                                             val playListDetailInfo =
                                                 response.getJSONObject("data").getJSONArray("info")
                                             playListDetailInfo.forEachIndexed { index, it ->
@@ -1322,7 +1390,7 @@ class ConvertPage(
                                             )
                                             cursor.moveToFirst()
                                             val dbPlaylistSongNum = cursor.getInt(0)
-                                            if ((dbPlaylistSongNum) ==
+                                            if (dbPlaylistSongNum ==
                                                 response.getJSONObject("data").getInteger("count")
                                             ) {
                                                 cursor.close()
@@ -1367,14 +1435,105 @@ class ConvertPage(
                                     }
 
                                     4 -> {
+                                        val db = SQLiteDatabase.openDatabase(
+                                            databaseFilePath.value,
+                                            null,
+                                            SQLiteDatabase.OPEN_READWRITE
+                                        )
+                                        db.execSQL("DELETE FROM ${sourceApp.songListSongInfoTableName}")
+                                        db.execSQL("DELETE FROM ${sourceApp.songInfoTableName}")
+                                        db.execSQL("DELETE FROM sqlite_sequence WHERE name = '${sourceApp.songListSongInfoTableName}'")
+                                        db.execSQL("DELETE FROM sqlite_sequence WHERE name = '${sourceApp.songInfoTableName}'")
+                                        db.execSQL("VACUUM")
+                                        var times = 1
 
+                                        while (true) {
+                                            val playListDetailInfo =
+                                                response.getJSONObject("data")
+                                                    .getJSONArray("musicList")
+                                            if (playListDetailInfo.size == 0) {
+                                                db.close()
+                                                break
+                                            }
+                                            playListDetailInfo.forEachIndexed { index, it ->
+                                                val song = it as JSONObject
+                                                val playlistId =
+                                                    response.getJSONObject("data").getString("id")
+                                                val songId = song.getString("rid")
+                                                val songName = song.getString("name")
+                                                val songArtists =
+                                                    song.getString("artist").replace("&", "/")
+                                                val songAlbum = song.getString("album")
+                                                db.execSQL(
+                                                    "INSERT INTO ${sourceApp.songListSongInfoTableName} (${sourceApp.songListSongInfoPlaylistId}, ${sourceApp.songListSongInfoSongId}, ${sourceApp.sortField}) VALUES (?, ?, ?)",
+                                                    arrayOf(
+                                                        playlistId,
+                                                        songId,
+                                                        index
+                                                    )
+                                                )
+                                                db.execSQL(
+                                                    "INSERT INTO ${sourceApp.songInfoTableName} (${sourceApp.songInfoSongId}, ${sourceApp.songInfoSongName}, ${sourceApp.songInfoSongArtist}, ${sourceApp.songInfoSongAlbum}) VALUES (?, ?, ?, ?)",
+                                                    arrayOf(
+                                                        songId,
+                                                        songName,
+                                                        songArtists,
+                                                        songAlbum
+                                                    )
+                                                )
+                                            }
+                                            val cursor = db.rawQuery(
+                                                "SELECT COUNT(*) FROM ${sourceApp.songListSongInfoTableName} WHERE ${sourceApp.songListSongInfoPlaylistId} = ?",
+                                                arrayOf(playlistId[firstIndex1])
+                                            )
+                                            cursor.moveToFirst()
+                                            val dbPlaylistSongNum = cursor.getInt(0)
+                                            if (dbPlaylistSongNum ==
+                                                response.getJSONObject("data").getInteger("total")
+                                            ) {
+                                                cursor.close()
+                                                db.close()
+                                                break
+                                            } else {
+                                                cursor.close()
+                                                val getParams =
+                                                    """pid=${playlistId[firstIndex1]}&pn=${++times}&rn=50&httpsStatus=1&plat=web_www"""
+                                                kuwoSecret?.let {
+                                                    request = Request.Builder()
+                                                        .url("${url}?${getParams}")
+                                                        .addHeader("Cookie", cookie.value)
+                                                        .addHeader(
+                                                            "Referer",
+                                                            "https://kuwo.cn/playlist_detail/${playlistId[firstIndex1]}"
+                                                        )
+                                                        .addHeader("Secret", it)
+                                                        .addHeader(
+                                                            "User-Agent",
+                                                            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36 Edg/122.0.0.0"
+                                                        )
+                                                        .addHeader("Connection", "Keep-Alive")
+                                                        .addHeader(
+                                                            "Accept",
+                                                            "application/json, text/plain, */*"
+                                                        )
+                                                        .get()
+                                                    response = JSON.parseObject(
+                                                        client.newCall(request.build())
+                                                            .execute().body?.string()
+                                                    )
+                                                }
+                                            }
+                                        }
                                     }
                                 }
                                 delay(500L)
                                 showNumberProgressBar.value = true
                                 showLoadingProgressBar.value = false
                             } else {
-                                throw Exception("${sourceApp.sourceEng} server's response was null.")
+                                throw Exception(
+                                    context.getString(R.string.online_server_response_null)
+                                        .replace("#", sourceApp.sourceEng)
+                                )
                             }
                         } catch (e: Exception) {
                             errorDialogTitle.value =

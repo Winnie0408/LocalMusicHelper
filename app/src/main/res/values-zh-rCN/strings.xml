@@ -253,4 +253,7 @@
     <string name="continue_button_name">继续</string>
     <string name="skip_button_name">跳过</string>
     <string name="kuwo_no_login_click_ok_button">请在加载完成后，直接点击确定按钮</string>
+    <string name="kuwo_cannot_read_online_playlist">由于暂未找到酷我音乐可用的获取歌单的接口，故目前需要手动输入歌单链接或歌单编号。</string>
+    <string name="online_server_response_null">#服务器的返回数据为空。</string>
+    <string name="no_info_in_playlist">数据库为空，请在#中重新加载。</string>
 </resources>

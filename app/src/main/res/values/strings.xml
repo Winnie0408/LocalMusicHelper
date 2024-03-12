@@ -257,4 +257,7 @@
     <string name="skip_button_name">Skip</string>
     <string name="continue_button_name">Continue</string>
     <string name="kuwo_no_login_click_ok_button">Please click the OK button directly after loading is complete.</string>
+    <string name="kuwo_cannot_read_online_playlist">Since we haven\'t found an interface to get the song list from KuwoMusic yet, we need to manually enter the song list link or the song list number.</string>
+    <string name="online_server_response_null"># server\'s response was null.</string>
+    <string name="no_info_in_playlist">The database is empty, please reload it in #.</string>
 </resources>

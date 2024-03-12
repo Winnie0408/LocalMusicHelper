@@ -253,4 +253,7 @@
     <string name="continue_button_name">계속</string>
     <string name="skip_button_name">뛰어넘다</string>
     <string name="kuwo_no_login_click_ok_button">로딩이 완료되면 바로 확인 버튼을 클릭하세요.</string>
+    <string name="kuwo_cannot_read_online_playlist">KuwoMusic에서 노래 목록을 가져오는 인터페이스를 찾지 못했기 때문에 노래 목록 링크 또는 노래 목록 번호를 수동으로 입력해야 합니다.</string>
+    <string name="online_server_response_null">#서버에서 반환되는 데이터는 null입니다.</string>
+    <string name="no_info_in_playlist">데이터베이스가 비어 있습니다, #에서 다시 로드하세요.</string>
 </resources>
