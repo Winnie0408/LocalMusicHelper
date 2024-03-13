@@ -62,6 +62,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalConfiguration
@@ -943,12 +945,7 @@ fun ConvertPageUi(
                                 else
                                     painterResource(id = R.drawable.kugou),
                                 iconColor = SaltTheme.colors.text,
-                                iconPaddingValues = PaddingValues(
-                                    start = 1.dp,
-                                    end = 1.dp,
-                                    top = 1.dp,
-                                    bottom = 1.dp
-                                )
+                                iconPaddingValues = PaddingValues(all = 1.dp)
                             )
                             PopupMenuItem(
                                 onClick = {
@@ -1414,6 +1411,62 @@ fun ConvertPageUi(
         }
     }
 
+    if (convertPage.showCustomPlaylistDialog.value) {
+        YesNoDialog(
+            onCancel = {
+                convertPage.showCustomPlaylistDialog.value = false
+                convertPage.customPlaylistInput.value = ""
+            },
+            onDismiss = {
+                convertPage.showCustomPlaylistDialog.value = false
+                convertPage.customPlaylistInput.value = ""
+            },
+            onConfirm = {
+                convertPage.getCustomPlaylist()
+            },
+            title = stringResource(id = R.string.add_extra_playlist),
+            enableHaptic = enableHaptic.value,
+            enableConfirmButton = !showDialogProgressBar.value,
+            content = null
+        ) {
+            Box {
+                if (showDialogProgressBar.value) {
+                    LinearProgressIndicator(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .zIndex(1f),
+                        color = SaltTheme.colors.highlight,
+                        trackColor = SaltTheme.colors.background
+                    )
+                }
+                val focusRequester = remember { FocusRequester() }
+                ItemEdit(
+                    text = convertPage.customPlaylistInput.value,
+                    onChange = {
+                        convertPage.customPlaylistInput.value = it
+                    },
+                    hint = when (selectedSourceApp.intValue) {
+                        3 -> stringResource(id = R.string.hint_add_extra_playlist2)
+                        else -> stringResource(id = R.string.hint_add_extra_playlist1)
+                    },
+                    modifier = Modifier
+                        .focusRequester(focusRequester),
+                    paddingValues = PaddingValues(
+                        start = SaltTheme.dimens.outerHorizontalPadding,
+                        end = SaltTheme.dimens.outerHorizontalPadding,
+                        top = 14.dp,
+                        bottom = 8.dp
+                    ),
+                    showClearButton = true,
+                    onClear = { convertPage.customPlaylistInput.value = "" },
+                )
+                LaunchedEffect(Unit) {
+                    focusRequester.requestFocus()
+                }
+            }
+        }
+    }
+
     LaunchedEffect(key1 = currentPage.intValue) {
         pageState.animateScrollToPage(currentPage.intValue, animationSpec = spring(2f))
     }
@@ -1587,12 +1640,7 @@ fun ConvertPageUi(
                                             text = stringResource(R.string.source_kugou_music),
                                             iconPainter = painterResource(id = R.drawable.kugou),
                                             iconColor = SaltTheme.colors.text,
-                                            iconPaddingValues = PaddingValues(
-                                                start = 1.5.dp,
-                                                end = 1.5.dp,
-                                                top = 1.5.dp,
-                                                bottom = 1.5.dp
-                                            )
+                                            iconPaddingValues = PaddingValues(all = 1.5.dp)
                                         )
                                         PopupMenuItem(
                                             onClick = {
@@ -1614,12 +1662,7 @@ fun ConvertPageUi(
                                             text = stringResource(R.string.source_kuwo_music),
                                             iconPainter = painterResource(id = R.drawable.kuwo),
                                             iconColor = SaltTheme.colors.text,
-                                            iconPaddingValues = PaddingValues(
-                                                start = 1.5.dp,
-                                                end = 1.5.dp,
-                                                top = 1.5.dp,
-                                                bottom = 1.5.dp
-                                            )
+                                            iconPaddingValues = PaddingValues(all = 1.5.dp)
                                         )
                                     }
                                 }
@@ -1802,12 +1845,7 @@ fun ConvertPageUi(
                                         text = "APlayer",
                                         iconPainter = painterResource(id = R.drawable.aplayer),
                                         iconColor = SaltTheme.colors.text,
-                                        iconPaddingValues = PaddingValues(
-                                            start = 1.dp,
-                                            end = 1.dp,
-                                            top = 1.dp,
-                                            bottom = 1.dp
-                                        )
+                                        iconPaddingValues = PaddingValues(all = 1.dp)
                                     )
                                     PopupMenuItem(
                                         onClick = {
@@ -1819,12 +1857,7 @@ fun ConvertPageUi(
                                         text = "Poweramp",
                                         iconPainter = painterResource(id = R.drawable.poweramp),
                                         iconColor = SaltTheme.colors.text,
-                                        iconPaddingValues = PaddingValues(
-                                            start = 2.dp,
-                                            end = 2.dp,
-                                            top = 2.dp,
-                                            bottom = 2.dp
-                                        )
+                                        iconPaddingValues = PaddingValues(all = 1.dp)
                                     )
                                 }
                             }
@@ -1854,7 +1887,7 @@ fun ConvertPageUi(
                         }
                     }
 
-                    1 -> {
+                    1 -> {  // TODO 歌单列表变化时的动画
                         Column(
                             modifier = Modifier
                                 .padding(top = 4.dp)
@@ -1960,11 +1993,34 @@ fun ConvertPageUi(
                                             }
                                         }
                                         TextButton(
+                                            modifier = Modifier.weight(1f),
                                             onClick = { convertPage.checkSongListSelection() },
                                             text = stringResource(R.string.next_step_text),
                                             enabled = !it,
                                             enableHaptic = enableHaptic.value
                                         )
+                                        if (selectedMethod.intValue == 1) {
+                                            BasicButton(
+                                                modifier = Modifier
+                                                    .padding(start = 16.dp),
+                                                enabled = !it,
+                                                onClick = {
+                                                    convertPage.showCustomPlaylistDialog.value =
+                                                        true
+                                                },
+                                                backgroundColor = SaltTheme.colors.subBackground,
+                                                enableHaptic = enableHaptic.value
+                                            ) {
+                                                Icon(
+                                                    modifier = Modifier
+                                                        .size(22.dp)
+                                                        .padding(all = 1.dp),
+                                                    painter = painterResource(id = R.drawable.plus),
+                                                    contentDescription = null,
+                                                    tint = if (it) Color.Gray else SaltTheme.colors.text
+                                                )
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -2180,12 +2236,7 @@ fun ConvertPageUi(
                                                         else -> painterResource(id = R.drawable.android)
                                                     },
                                                     iconColor = SaltTheme.colors.text,
-                                                    iconPaddingValues = PaddingValues(
-                                                        start = 2.dp,
-                                                        end = 2.dp,
-                                                        top = 2.dp,
-                                                        bottom = 2.dp
-                                                    )
+                                                    iconPaddingValues = PaddingValues(all = 2.dp)
                                                 )
                                                 PopupMenuItem(
                                                     onClick = {
@@ -2200,12 +2251,7 @@ fun ConvertPageUi(
                                                     selected = showOriginalSonglist == 1,
                                                     iconPainter = painterResource(id = R.drawable.result),
                                                     iconColor = SaltTheme.colors.text,
-                                                    iconPaddingValues = PaddingValues(
-                                                        start = 1.5.dp,
-                                                        end = 1.5.dp,
-                                                        top = 1.5.dp,
-                                                        bottom = 1.5.dp
-                                                    )
+                                                    iconPaddingValues = PaddingValues(all = 1.5.dp)
                                                 )
                                             }
                                             ItemPopup(
@@ -2248,12 +2294,7 @@ fun ConvertPageUi(
                                                     selected = selectedFilterIndex == 0,
                                                     iconPainter = painterResource(id = R.drawable.all),
                                                     iconColor = SaltTheme.colors.text,
-                                                    iconPaddingValues = PaddingValues(
-                                                        start = 2.dp,
-                                                        end = 2.dp,
-                                                        top = 2.dp,
-                                                        bottom = 2.dp
-                                                    )
+                                                    iconPaddingValues = PaddingValues(all = 2.dp)
                                                 )
                                                 PopupMenuItem(
                                                     onClick = {
@@ -2272,12 +2313,7 @@ fun ConvertPageUi(
                                                     selected = selectedFilterIndex == 1,
                                                     iconPainter = painterResource(id = R.drawable.success),
                                                     iconColor = SaltTheme.colors.text,
-                                                    iconPaddingValues = PaddingValues(
-                                                        start = 2.dp,
-                                                        end = 2.dp,
-                                                        top = 2.dp,
-                                                        bottom = 2.dp
-                                                    )
+                                                    iconPaddingValues = PaddingValues(all = 2.dp)
                                                 )
                                                 PopupMenuItem(
                                                     onClick = {
@@ -2318,255 +2354,266 @@ fun ConvertPageUi(
                                             }
                                         }
 
-                                        RoundedColumn {
-                                            ItemTitle(
-                                                text = when (showOriginalSonglist) {
-                                                    0 -> stringResource(id = R.string.original_songlist).replace(
-                                                        "#",
-                                                        when (selectedSourceApp.intValue) {
-                                                            1 -> stringResource(R.string.source_netease_cloud_music)
-                                                            2 -> stringResource(R.string.source_qq_music)
-                                                            3 -> stringResource(R.string.source_kugou_music)
-                                                            4 -> stringResource(R.string.source_kuwo_music)
-                                                            else -> ""
-                                                        }
-                                                    )
-
-                                                    1 -> stringResource(R.string.convert_result)
-                                                    else -> ""
+                                        AnimatedContent(
+                                            targetState = showOriginalSonglist,
+                                            label = "",
+                                            transitionSpec = {
+                                                if (targetState != initialState) {
+                                                    fadeIn() + slideInVertically() togetherWith fadeOut() + slideOutVertically()
+                                                } else {
+                                                    fadeIn() + slideInVertically() togetherWith fadeOut() + slideOutVertically()
                                                 }
-                                            )
-                                            ItemContainer {
-                                                Column(
-                                                    modifier = Modifier
-                                                        .clip(RoundedCornerShape(10.dp))
-                                                        .heightIn(max = (LocalConfiguration.current.screenHeightDp / 2.1).dp)
-                                                        .background(color = SaltTheme.colors.subBackground)
-                                                ) {
-                                                    AnimatedContent(
-                                                        targetState = selectedFilterIndex,
-                                                        label = "",
-                                                        transitionSpec = {
-                                                            if (targetState != initialState) {
-                                                                fadeIn() + slideInVertically() togetherWith fadeOut() + slideOutVertically()
-                                                            } else {
-                                                                fadeIn() + slideInVertically() togetherWith fadeOut() + slideOutVertically()
+                                            }) { it1 ->
+                                            RoundedColumn {
+                                                ItemTitle(
+                                                    text = when (it1) {
+                                                        0 -> stringResource(id = R.string.original_songlist).replace(
+                                                            "#",
+                                                            when (selectedSourceApp.intValue) {
+                                                                1 -> stringResource(R.string.source_netease_cloud_music)
+                                                                2 -> stringResource(R.string.source_qq_music)
+                                                                3 -> stringResource(R.string.source_kugou_music)
+                                                                4 -> stringResource(R.string.source_kuwo_music)
+                                                                else -> ""
                                                             }
-                                                        }) {
-                                                        LazyColumn(
-                                                            modifier = Modifier.weight(1f)
-                                                        ) {
-                                                            when (it) {
-                                                                0 -> items(convertResult.size) { index ->
-                                                                    if (convertResult[index] != null)
-                                                                        Item(
-                                                                            onClick = {
-                                                                                selectedSongIndex =
-                                                                                    index
-                                                                                showSelectedSongInfoDialog =
-                                                                                    true
-                                                                            },
-                                                                            text = convertResult[index]!![2 - showOriginalSonglist],
-                                                                            sub = "${
-                                                                                stringResource(
-                                                                                    R.string.singer
-                                                                                )
-                                                                            }${convertResult[index]!![4 - showOriginalSonglist]}\n${
-                                                                                stringResource(R.string.album)
-                                                                            }${convertResult[index]!![6 - showOriginalSonglist]}",
-                                                                            rightSub = when (convertResult[index]!![0]) {
-                                                                                "0" -> stringResource(
-                                                                                    R.string.match_success
-                                                                                )
+                                                        )
 
-                                                                                "1" -> stringResource(
-                                                                                    R.string.match_caution
-                                                                                )
-
-                                                                                "2" -> stringResource(
-                                                                                    R.string.match_manual
-                                                                                )
-
-                                                                                else -> ""
-                                                                            },
-                                                                            rightSubColor = when (convertResult[index]!![0]) {
-                                                                                "0" -> colorResource(
-                                                                                    id = R.color.matched
-                                                                                )
-
-                                                                                "1" -> colorResource(
-                                                                                    id = R.color.unmatched
-                                                                                )
-
-                                                                                "2" -> colorResource(
-                                                                                    R.color.manual
-                                                                                )
-
-                                                                                else -> SaltTheme.colors.text
-                                                                            },
-                                                                        )
+                                                        1 -> stringResource(R.string.convert_result)
+                                                        else -> ""
+                                                    }
+                                                )
+                                                ItemContainer {
+                                                    Column(
+                                                        modifier = Modifier
+                                                            .clip(RoundedCornerShape(10.dp))
+                                                            .heightIn(max = (LocalConfiguration.current.screenHeightDp / 2.1).dp)
+                                                            .background(color = SaltTheme.colors.subBackground)
+                                                    ) {
+                                                        AnimatedContent(
+                                                            targetState = selectedFilterIndex,
+                                                            label = "",
+                                                            transitionSpec = {
+                                                                if (targetState != initialState) {
+                                                                    fadeIn() + slideInVertically() togetherWith fadeOut() + slideOutVertically()
+                                                                } else {
+                                                                    fadeIn() + slideInVertically() togetherWith fadeOut() + slideOutVertically()
                                                                 }
+                                                            }) {
+                                                            LazyColumn(
+                                                                modifier = Modifier.weight(1f)
+                                                            ) {
+                                                                when (it) {
+                                                                    0 -> items(convertResult.size) { index ->
+                                                                        if (convertResult[index] != null)
+                                                                            Item(
+                                                                                onClick = {
+                                                                                    selectedSongIndex =
+                                                                                        index
+                                                                                    showSelectedSongInfoDialog =
+                                                                                        true
+                                                                                },
+                                                                                text = convertResult[index]!![2 - showOriginalSonglist],
+                                                                                sub = "${
+                                                                                    stringResource(
+                                                                                        R.string.singer
+                                                                                    )
+                                                                                }${convertResult[index]!![4 - showOriginalSonglist]}\n${
+                                                                                    stringResource(R.string.album)
+                                                                                }${convertResult[index]!![6 - showOriginalSonglist]}",
+                                                                                rightSub = when (convertResult[index]!![0]) {
+                                                                                    "0" -> stringResource(
+                                                                                        R.string.match_success
+                                                                                    )
 
-                                                                1 -> items(convertResult.size) { index ->
-                                                                    if (convertResult[index] != null && convertResult[index]!![0] == "0"
-                                                                    )
-                                                                        Item(
-                                                                            onClick = {
-                                                                                selectedSongIndex =
-                                                                                    index
-                                                                                showSelectedSongInfoDialog =
-                                                                                    true
-                                                                            },
-                                                                            text = convertResult[index]!![2 - showOriginalSonglist],
-                                                                            sub = "${
-                                                                                stringResource(
-                                                                                    R.string.singer
-                                                                                )
-                                                                            }${convertResult[index]!![4 - showOriginalSonglist]}\n${
-                                                                                stringResource(R.string.album)
-                                                                            }${convertResult[index]!![6 - showOriginalSonglist]}",
-                                                                            rightSub = when (convertResult[index]!![0]) {
-                                                                                "0" -> stringResource(
-                                                                                    R.string.match_success
-                                                                                )
+                                                                                    "1" -> stringResource(
+                                                                                        R.string.match_caution
+                                                                                    )
 
-                                                                                "1" -> stringResource(
-                                                                                    R.string.match_caution
-                                                                                )
+                                                                                    "2" -> stringResource(
+                                                                                        R.string.match_manual
+                                                                                    )
 
-                                                                                "2" -> stringResource(
-                                                                                    R.string.match_manual
-                                                                                )
+                                                                                    else -> ""
+                                                                                },
+                                                                                rightSubColor = when (convertResult[index]!![0]) {
+                                                                                    "0" -> colorResource(
+                                                                                        id = R.color.matched
+                                                                                    )
 
-                                                                                else -> ""
-                                                                            },
-                                                                            rightSubColor = when (convertResult[index]!![0]) {
-                                                                                "0" -> colorResource(
-                                                                                    id = R.color.matched
-                                                                                )
+                                                                                    "1" -> colorResource(
+                                                                                        id = R.color.unmatched
+                                                                                    )
 
-                                                                                "1" -> colorResource(
-                                                                                    id = R.color.unmatched
-                                                                                )
+                                                                                    "2" -> colorResource(
+                                                                                        R.color.manual
+                                                                                    )
 
-                                                                                "2" -> colorResource(
-                                                                                    R.color.manual
-                                                                                )
+                                                                                    else -> SaltTheme.colors.text
+                                                                                },
+                                                                            )
+                                                                    }
 
-                                                                                else -> SaltTheme.colors.text
-                                                                            },
+                                                                    1 -> items(convertResult.size) { index ->
+                                                                        if (convertResult[index] != null && convertResult[index]!![0] == "0"
                                                                         )
-                                                                }
+                                                                            Item(
+                                                                                onClick = {
+                                                                                    selectedSongIndex =
+                                                                                        index
+                                                                                    showSelectedSongInfoDialog =
+                                                                                        true
+                                                                                },
+                                                                                text = convertResult[index]!![2 - showOriginalSonglist],
+                                                                                sub = "${
+                                                                                    stringResource(
+                                                                                        R.string.singer
+                                                                                    )
+                                                                                }${convertResult[index]!![4 - showOriginalSonglist]}\n${
+                                                                                    stringResource(R.string.album)
+                                                                                }${convertResult[index]!![6 - showOriginalSonglist]}",
+                                                                                rightSub = when (convertResult[index]!![0]) {
+                                                                                    "0" -> stringResource(
+                                                                                        R.string.match_success
+                                                                                    )
 
-                                                                2 -> items(convertResult.size) { index ->
-                                                                    if (convertResult[index] != null && convertResult[index]!![0] == "1"
-                                                                    )
-                                                                        Item(
-                                                                            onClick = {
-                                                                                selectedSongIndex =
-                                                                                    index
-                                                                                showSelectedSongInfoDialog =
-                                                                                    true
-                                                                            },
-                                                                            text = convertResult[index]!![2 - showOriginalSonglist],
-                                                                            sub = "${
-                                                                                stringResource(
-                                                                                    R.string.singer
-                                                                                )
-                                                                            }${convertResult[index]!![4 - showOriginalSonglist]}\n${
-                                                                                stringResource(R.string.album)
-                                                                            }${convertResult[index]!![6 - showOriginalSonglist]}",
-                                                                            rightSub = when (convertResult[index]!![0]) {
-                                                                                "0" -> stringResource(
-                                                                                    R.string.match_success
-                                                                                )
+                                                                                    "1" -> stringResource(
+                                                                                        R.string.match_caution
+                                                                                    )
 
-                                                                                "1" -> stringResource(
-                                                                                    R.string.match_caution
-                                                                                )
+                                                                                    "2" -> stringResource(
+                                                                                        R.string.match_manual
+                                                                                    )
 
-                                                                                "2" -> stringResource(
-                                                                                    R.string.match_manual
-                                                                                )
+                                                                                    else -> ""
+                                                                                },
+                                                                                rightSubColor = when (convertResult[index]!![0]) {
+                                                                                    "0" -> colorResource(
+                                                                                        id = R.color.matched
+                                                                                    )
 
-                                                                                else -> ""
-                                                                            },
-                                                                            rightSubColor = when (convertResult[index]!![0]) {
-                                                                                "0" -> colorResource(
-                                                                                    id = R.color.matched
-                                                                                )
+                                                                                    "1" -> colorResource(
+                                                                                        id = R.color.unmatched
+                                                                                    )
 
-                                                                                "1" -> colorResource(
-                                                                                    id = R.color.unmatched
-                                                                                )
+                                                                                    "2" -> colorResource(
+                                                                                        R.color.manual
+                                                                                    )
 
-                                                                                "2" -> colorResource(
-                                                                                    R.color.manual
-                                                                                )
+                                                                                    else -> SaltTheme.colors.text
+                                                                                },
+                                                                            )
+                                                                    }
 
-                                                                                else -> SaltTheme.colors.text
-                                                                            },
+                                                                    2 -> items(convertResult.size) { index ->
+                                                                        if (convertResult[index] != null && convertResult[index]!![0] == "1"
                                                                         )
-                                                                }
+                                                                            Item(
+                                                                                onClick = {
+                                                                                    selectedSongIndex =
+                                                                                        index
+                                                                                    showSelectedSongInfoDialog =
+                                                                                        true
+                                                                                },
+                                                                                text = convertResult[index]!![2 - showOriginalSonglist],
+                                                                                sub = "${
+                                                                                    stringResource(
+                                                                                        R.string.singer
+                                                                                    )
+                                                                                }${convertResult[index]!![4 - showOriginalSonglist]}\n${
+                                                                                    stringResource(R.string.album)
+                                                                                }${convertResult[index]!![6 - showOriginalSonglist]}",
+                                                                                rightSub = when (convertResult[index]!![0]) {
+                                                                                    "0" -> stringResource(
+                                                                                        R.string.match_success
+                                                                                    )
 
-                                                                3 -> items(convertResult.size) { index ->
-                                                                    if (convertResult[index] != null && convertResult[index]!![0] == "2"
-                                                                    )
-                                                                        Item(
-                                                                            onClick = {
-                                                                                selectedSongIndex =
-                                                                                    index
-                                                                                showSelectedSongInfoDialog =
-                                                                                    true
-                                                                            },
-                                                                            text = convertResult[index]!![2 - showOriginalSonglist],
-                                                                            sub = "${
-                                                                                stringResource(
-                                                                                    R.string.singer
-                                                                                )
-                                                                            }${convertResult[index]!![4 - showOriginalSonglist]}\n${
-                                                                                stringResource(R.string.album)
-                                                                            }${convertResult[index]!![6 - showOriginalSonglist]}",
-                                                                            rightSub = when (convertResult[index]!![0]) {
-                                                                                "0" -> stringResource(
-                                                                                    R.string.match_success
-                                                                                )
+                                                                                    "1" -> stringResource(
+                                                                                        R.string.match_caution
+                                                                                    )
 
-                                                                                "1" -> stringResource(
-                                                                                    R.string.match_caution
-                                                                                )
+                                                                                    "2" -> stringResource(
+                                                                                        R.string.match_manual
+                                                                                    )
 
-                                                                                "2" -> stringResource(
-                                                                                    R.string.match_manual
-                                                                                )
+                                                                                    else -> ""
+                                                                                },
+                                                                                rightSubColor = when (convertResult[index]!![0]) {
+                                                                                    "0" -> colorResource(
+                                                                                        id = R.color.matched
+                                                                                    )
 
-                                                                                else -> ""
-                                                                            },
-                                                                            rightSubColor = when (convertResult[index]!![0]) {
-                                                                                "0" -> colorResource(
-                                                                                    id = R.color.matched
-                                                                                )
+                                                                                    "1" -> colorResource(
+                                                                                        id = R.color.unmatched
+                                                                                    )
 
-                                                                                "1" -> colorResource(
-                                                                                    id = R.color.unmatched
-                                                                                )
+                                                                                    "2" -> colorResource(
+                                                                                        R.color.manual
+                                                                                    )
 
-                                                                                "2" -> colorResource(
-                                                                                    R.color.manual
-                                                                                )
+                                                                                    else -> SaltTheme.colors.text
+                                                                                },
+                                                                            )
+                                                                    }
 
-                                                                                else -> SaltTheme.colors.text
-                                                                            },
+                                                                    3 -> items(convertResult.size) { index ->
+                                                                        if (convertResult[index] != null && convertResult[index]!![0] == "2"
                                                                         )
+                                                                            Item(
+                                                                                onClick = {
+                                                                                    selectedSongIndex =
+                                                                                        index
+                                                                                    showSelectedSongInfoDialog =
+                                                                                        true
+                                                                                },
+                                                                                text = convertResult[index]!![2 - showOriginalSonglist],
+                                                                                sub = "${
+                                                                                    stringResource(
+                                                                                        R.string.singer
+                                                                                    )
+                                                                                }${convertResult[index]!![4 - showOriginalSonglist]}\n${
+                                                                                    stringResource(R.string.album)
+                                                                                }${convertResult[index]!![6 - showOriginalSonglist]}",
+                                                                                rightSub = when (convertResult[index]!![0]) {
+                                                                                    "0" -> stringResource(
+                                                                                        R.string.match_success
+                                                                                    )
+
+                                                                                    "1" -> stringResource(
+                                                                                        R.string.match_caution
+                                                                                    )
+
+                                                                                    "2" -> stringResource(
+                                                                                        R.string.match_manual
+                                                                                    )
+
+                                                                                    else -> ""
+                                                                                },
+                                                                                rightSubColor = when (convertResult[index]!![0]) {
+                                                                                    "0" -> colorResource(
+                                                                                        id = R.color.matched
+                                                                                    )
+
+                                                                                    "1" -> colorResource(
+                                                                                        id = R.color.unmatched
+                                                                                    )
+
+                                                                                    "2" -> colorResource(
+                                                                                        R.color.manual
+                                                                                    )
+
+                                                                                    else -> SaltTheme.colors.text
+                                                                                },
+                                                                            )
+                                                                    }
                                                                 }
                                                             }
                                                         }
-                                                    }
 //                                        Spacer(modifier = Modifier.height(5.dp))
 //                                        ItemValue(
 //                                            text = "${stringResource(R.string.in_total)}${playlistEnabled.size}",
 //                                            sub = "${stringResource(R.string.selected)}${playlistEnabled.count { it }}"
 //                                        )
+                                                    }
                                                 }
                                             }
                                         }

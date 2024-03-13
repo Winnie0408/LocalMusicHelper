@@ -231,7 +231,7 @@
     <string name="logout">退出登录</string>
     <string name="logged_out">已退出登录</string>
     <string name="account">#账号</string>
-    <string name="use_last_login_info">已使用之前的登录信息</string>
+    <string name="use_last_login_info">使用之前的登录信息</string>
     <string name="login_info_maybe_expired">Cookie可能过期，歌单数据可能不完整。</string>
     <string name="tips">提示</string>
     <string name="already_logged_in_click_ok">- 您已登录。#n- 请点击「确定」按钮。</string>
@@ -256,4 +256,10 @@
     <string name="kuwo_cannot_read_online_playlist">由于暂未找到酷我音乐可用的获取歌单的接口，故目前需要手动输入歌单链接或歌单编号。</string>
     <string name="online_server_response_null">#服务器的返回数据为空。</string>
     <string name="no_info_in_playlist">数据库为空，请在#中重新加载。</string>
+    <string name="add_extra_playlist">添加额外的歌单</string>
+    <string name="hint_add_extra_playlist1">纯数字，或歌单分享链接</string>
+    <string name="hint_add_extra_playlist2">歌单分享链接</string>
+    <string name="please_input_playlist_id">请输入数据</string>
+    <string name="wrong_input_playlist_data">歌单信息输入错误，请检查</string>
+    <string name="playlist_already_exists">输入的歌单已存在</string>
 </resources>

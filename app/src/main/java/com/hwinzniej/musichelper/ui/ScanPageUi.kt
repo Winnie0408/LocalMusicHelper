@@ -167,12 +167,7 @@ fun ScanPageUi(
                                 selected = selectedExportFormat.intValue == 0,
                                 iconPainter = painterResource(id = R.drawable.database),
                                 iconColor = SaltTheme.colors.text,
-                                iconPaddingValues = PaddingValues(
-                                    start = 1.dp,
-                                    end = 1.dp,
-                                    top = 1.dp,
-                                    bottom = 1.dp
-                                )
+                                iconPaddingValues = PaddingValues(all = 1.dp)
                             )
                             PopupMenuItem(
                                 onClick = {
@@ -184,12 +179,7 @@ fun ScanPageUi(
                                 selected = selectedExportFormat.intValue == 1,
                                 iconPainter = painterResource(id = R.drawable.text),
                                 iconColor = SaltTheme.colors.text,
-                                iconPaddingValues = PaddingValues(
-                                    start = 2.dp,
-                                    end = 2.dp,
-                                    top = 2.dp,
-                                    bottom = 2.dp
-                                )
+                                iconPaddingValues = PaddingValues(all = 2.dp)
                             )
                         }
                     }

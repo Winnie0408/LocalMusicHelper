@@ -256,4 +256,10 @@
     <string name="kuwo_cannot_read_online_playlist">KuwoMusic에서 노래 목록을 가져오는 인터페이스를 찾지 못했기 때문에 노래 목록 링크 또는 노래 목록 번호를 수동으로 입력해야 합니다.</string>
     <string name="online_server_response_null">#서버에서 반환되는 데이터는 null입니다.</string>
     <string name="no_info_in_playlist">데이터베이스가 비어 있습니다, #에서 다시 로드하세요.</string>
+    <string name="add_extra_playlist">노래 시트를 추가합니다</string>
+    <string name="hint_add_extra_playlist1">순수 숫자 또는 노래 목록 공유 링크</string>
+    <string name="hint_add_extra_playlist2">노래 목록 공유 링크</string>
+    <string name="please_input_playlist_id">데이터를 입력하세요</string>
+    <string name="wrong_input_playlist_data">노래 목록 정보를 잘못 입력했습니다.</string>
+    <string name="playlist_already_exists">입력한 노래 목록이 이미 존재합니다</string>
 </resources>

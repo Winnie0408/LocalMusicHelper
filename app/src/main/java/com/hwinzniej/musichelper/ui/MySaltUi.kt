@@ -645,6 +645,10 @@ fun ItemEdit(
     text: String,
     onChange: (String) -> Unit,
     backgroundColor: Color = SaltTheme.colors.subText.copy(alpha = 0.1f),
+    paddingValues: PaddingValues = PaddingValues(
+        horizontal = SaltTheme.dimens.innerHorizontalPadding,
+        vertical = SaltTheme.dimens.innerVerticalPadding
+    ),
     hint: String? = null,
     hintColor: Color = SaltTheme.colors.subText,
     readOnly: Boolean = false,
@@ -660,11 +664,7 @@ fun ItemEdit(
     BasicTextField(
         value = text,
         onValueChange = onChange,
-        modifier = modifier
-            .padding(
-                horizontal = SaltTheme.dimens.innerHorizontalPadding,
-                vertical = SaltTheme.dimens.innerVerticalPadding
-            ),
+        modifier = modifier.padding(paddingValues),
         readOnly = readOnly,
         keyboardOptions = keyboardOptions,
         keyboardActions = keyboardActions,

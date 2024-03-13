@@ -338,12 +338,7 @@ fun AboutPageUi(
                         text = stringResource(id = R.string.check_for_updates),
                         iconPainter = painterResource(id = R.drawable.check_update),
                         iconColor = SaltTheme.colors.text,
-                        iconPaddingValues = PaddingValues(
-                            start = 1.5.dp,
-                            end = 1.5.dp,
-                            top = 1.5.dp,
-                            bottom = 1.5.dp
-                        )
+                        iconPaddingValues = PaddingValues(all = 1.5.dp)
                     )
                     Item(
                         onClick = {
@@ -569,12 +564,7 @@ fun AboutPageUi(
                         text = stringResource(id = R.string.buy_me_a_coffee),
                         iconPainter = painterResource(id = R.drawable.coffee),
                         iconColor = SaltTheme.colors.text,
-                        iconPaddingValues = PaddingValues(
-                            start = 0.5.dp,
-                            end = 0.5.dp,
-                            top = 0.5.dp,
-                            bottom = 0.5.dp
-                        )
+                        iconPaddingValues = PaddingValues(all = 0.5.dp)
                     )
                 }
 
@@ -622,12 +612,7 @@ fun AboutPageUi(
                         },
                         text = stringResource(id = R.string.join_qq_group),
                         iconPainter = painterResource(id = R.drawable.qq_group),
-                        iconPaddingValues = PaddingValues(
-                            start = 1.dp,
-                            end = 1.dp,
-                            top = 1.dp,
-                            bottom = 1.dp
-                        )
+                        iconPaddingValues = PaddingValues(all = 1.dp)
                     )
                     Item(
                         onClick = {
@@ -723,12 +708,7 @@ fun AboutPageUi(
                         },
                         text = stringResource(id = R.string.follow_on_bilibili),
                         iconPainter = painterResource(id = R.drawable.bilibili),
-                        iconPaddingValues = PaddingValues(
-                            start = 1.dp,
-                            end = 1.dp,
-                            top = 1.dp,
-                            bottom = 1.dp
-                        )
+                        iconPaddingValues = PaddingValues(all = 1.dp)
                     )
                     Item(
                         onClick = {
@@ -764,12 +744,7 @@ fun AboutPageUi(
                         text = stringResource(id = R.string.open_source_gitlab),
                         sub = stringResource(id = R.string.open_source_sub),
                         iconPainter = painterResource(id = R.drawable.gitlab),
-                        iconPaddingValues = PaddingValues(
-                            start = 1.dp,
-                            end = 1.dp,
-                            top = 1.dp,
-                            bottom = 1.dp
-                        ),
+                        iconPaddingValues = PaddingValues(all = 1.dp)
                     )
                     Item(
                         onClick = {
@@ -787,12 +762,7 @@ fun AboutPageUi(
                         text = stringResource(id = R.string.open_source_gitee),
                         sub = "${stringResource(id = R.string.open_source_sub)}\n${stringResource(id = R.string.temporarily_unavailable)}",
                         iconPainter = painterResource(id = R.drawable.gitee),
-                        iconPaddingValues = PaddingValues(
-                            start = 1.dp,
-                            end = 1.dp,
-                            top = 1.dp,
-                            bottom = 1.dp
-                        ),
+                        iconPaddingValues = PaddingValues(all = 1.dp),
                         enabled = false
                     )
                 }

@@ -106,6 +106,8 @@ class ConvertPage(
     var errorDialogCustomAction = mutableStateOf({})
     var lastLoginTimestamp = mutableLongStateOf(0L)
     var showSongNumMismatchDialog = mutableStateOf(false)
+    var showCustomPlaylistDialog = mutableStateOf(false)
+    var customPlaylistInput = mutableStateOf("")
 
     /**
      * 请求存储权限
@@ -605,7 +607,7 @@ class ConvertPage(
                 errorDialogTitle.value =
                     context.getString(R.string.tips)
                 errorDialogContent.value =
-                    context.getString(R.string.kuwo_cannot_read_online_playlist)
+                    "- ${context.getString(R.string.kuwo_cannot_read_online_playlist)}"
                 errorDialogCustomAction.value = {}
                 showErrorDialog.value = true
                 return@launch
@@ -989,6 +991,383 @@ class ConvertPage(
         }
     }
 
+    fun getCustomPlaylist() {
+        lifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+            if (customPlaylistInput.value.isBlank()) {
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(
+                        context,
+                        context.getString(R.string.please_input_playlist_id),
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+                return@launch
+            }
+            showDialogProgressBar.value = true
+            var customPlaylistId: String?
+            customPlaylistId =
+                if (customPlaylistInput.value.contains("http"))
+                    "https://.*\\b".toRegex().find(customPlaylistInput.value)?.value
+                else
+                    customPlaylistInput.value
+            if (customPlaylistId != null) {
+                val url = when (selectedSourceApp.intValue) {
+                    1 -> "https://interface.music.163.com/weapi/v6/playlist/detail"
+                    2 -> "https://u.y.qq.com/cgi-bin/musicu.fcg"
+                    3 -> ""
+                    4 -> "https://kuwo.cn/api/www/playlist/playListInfo"
+                    else -> ""
+                }
+                val client = OkHttpClient()
+                var request = Request.Builder()
+                try {
+                    when (selectedSourceApp.intValue) {
+                        1 -> {
+                            if (customPlaylistInput.value.contains("http"))
+                                customPlaylistId =
+                                    "\\bid=\\d*".toRegex().find(customPlaylistId)?.value?.substring(
+                                        3
+                                    )
+                            val encrypted = Tools().encryptString(
+                                """{"id":${customPlaylistId},"n":3,"shareUserId":0,"csrf_token":"${
+                                    "__csrf=\\w+".toRegex()
+                                        .find(cookie.value)?.value?.substring(7)
+                                }"}""",
+                                "netease",
+                                encryptServer.value
+                            )
+                            val formBody = encrypted?.let {
+                                FormBody.Builder()
+                                    .add("params", it.getString("encText"))
+                                    .add("encSecKey", it.getString("encSecKey"))
+                                    .build()
+                            }
+                            formBody?.let {
+                                request = request.url(
+                                    "${url}?csrf_token=${
+                                        "__csrf=\\w+".toRegex()
+                                            .find(cookie.value)?.value?.substring(7)
+                                    }"
+                                ).addHeader("Cookie", cookie.value)
+                                    .post(it)
+                            }
+                            val response = JSON.parseObject(
+                                client.newCall(request.build()).execute().body?.string()
+                            )
+                            if (response?.getInteger("code") == 200) {
+                                if (playlistId.size == 0) {
+                                    Tools().copyFileToExternalFilesDir(
+                                        context,
+                                        "cloudmusic.db"
+                                    )
+                                }
+                                val databaseFile =
+                                    File(context.getExternalFilesDir(null), "cloudmusic.db")
+                                val db = SQLiteDatabase.openDatabase(
+                                    databaseFile.absolutePath,
+                                    null,
+                                    SQLiteDatabase.OPEN_READWRITE
+                                )
+                                databaseFilePath.value = databaseFile.absolutePath
+                                val playlistInfo = response.getJSONObject("playlist")
+                                val cursor = db.rawQuery(
+                                    "SELECT COUNT(*) FROM ${sourceApp.songListTableName} WHERE ${sourceApp.songListId} = ?",
+                                    arrayOf(customPlaylistId)
+                                )
+                                cursor.moveToFirst()
+                                if (cursor.getInt(0) != 0) {
+                                    cursor.close()
+                                    db.close()
+                                    throw IllegalStateException(context.getString(R.string.playlist_already_exists))
+                                }
+                                cursor.close()
+                                db.execSQL(
+                                    "INSERT INTO ${sourceApp.songListTableName} (${sourceApp.songListId}, ${sourceApp.songListName}, ${sourceApp.musicNum}) VALUES (?, ?, ?)",
+                                    arrayOf(
+                                        playlistInfo.getString("id"),
+                                        playlistInfo.getString("name"),
+                                        playlistInfo.getInteger("trackCount")
+                                    )
+                                )
+                                db.close()
+                                playlistId.add(0, playlistInfo.getString("id"))
+                                playlistName.add(0, playlistInfo.getString("name"))
+                                playlistEnabled.add(0, 0)
+                                playlistSum.add(0, playlistInfo.getInteger("trackCount"))
+                                showCustomPlaylistDialog.value = false
+                                showDialogProgressBar.value = false
+                                MyVibrationEffect(
+                                    context,
+                                    (context as MainActivity).enableHaptic.value
+                                ).done()
+                                customPlaylistInput.value = ""
+                            } else {
+                                throw IllegalStateException(context.getString(R.string.wrong_input_playlist_data))
+                            }
+                        }
+
+                        2 -> {
+                            if (customPlaylistInput.value.contains("http"))
+                                customPlaylistId = "(\\bid=|st/)\\d*".toRegex()
+                                    .find(customPlaylistId)?.value?.substring(3)
+                            val json =
+                                """{"comm":{"ct":"1","cv":"10080511","v":"10080511"},"GetPlayList":{"module":"music.srfDissInfo.DissInfo","method":"CgiGetDiss","param":{"disstid":${customPlaylistId},"song_num":3}}}"""
+                            val requestBody =
+                                json.toRequestBody("application/json; charset=utf-8".toMediaType())
+                            request = request
+                                .url(url)
+                                .addHeader("Cookie", cookie.value)
+                                .addHeader("Referer", "https://y.qq.com/")
+                                .addHeader("Accept", "application/json")
+                                .post(requestBody)
+                            val response = JSON.parseObject(
+                                client.newCall(request.build()).execute().body?.string()
+                            )
+                            if (response?.getJSONObject("GetPlayList")?.getJSONObject("data")
+                                    ?.getInteger("code") == 0
+                            ) {
+                                if (playlistId.size == 0) {
+                                    Tools().copyFileToExternalFilesDir(
+                                        context,
+                                        "QQMusic"
+                                    )
+                                }
+                                val databaseFile =
+                                    File(context.getExternalFilesDir(null), "QQMusic")
+                                val db = SQLiteDatabase.openDatabase(
+                                    databaseFile.absolutePath,
+                                    null,
+                                    SQLiteDatabase.OPEN_READWRITE
+                                )
+                                databaseFilePath.value = databaseFile.absolutePath
+                                val playlistInfo = response.getJSONObject("GetPlayList")
+                                    .getJSONObject("data").getJSONObject("dirinfo")
+                                val cursor = db.rawQuery(
+                                    "SELECT COUNT(*) FROM ${sourceApp.songListTableName} WHERE ${sourceApp.songListId} = ?",
+                                    arrayOf(customPlaylistId)
+                                )
+                                cursor.moveToFirst()
+                                if (cursor.getInt(0) != 0) {
+                                    cursor.close()
+                                    db.close()
+                                    throw IllegalStateException(context.getString(R.string.playlist_already_exists))
+                                }
+                                cursor.close()
+                                db.execSQL(
+                                    "INSERT INTO ${sourceApp.songListTableName} (${sourceApp.songListId}, ${sourceApp.songListName}, ${sourceApp.musicNum}) VALUES (?, ?, ?)",
+                                    arrayOf(
+                                        playlistInfo.getString("id"),
+                                        playlistInfo.getString("title"),
+                                        playlistInfo.getInteger("songnum")
+                                    )
+                                )
+                                db.close()
+                                playlistId.add(0, playlistInfo.getString("id"))
+                                playlistName.add(0, playlistInfo.getString("title"))
+                                playlistEnabled.add(0, 0)
+                                playlistSum.add(0, playlistInfo.getInteger("songnum"))
+                                showCustomPlaylistDialog.value = false
+                                showDialogProgressBar.value = false
+                                MyVibrationEffect(
+                                    context,
+                                    (context as MainActivity).enableHaptic.value
+                                ).done()
+                                customPlaylistInput.value = ""
+                            } else {
+                                throw IllegalStateException(context.getString(R.string.wrong_input_playlist_data))
+                            }
+                        }
+
+                        3 -> {
+                            val response = client.newCall(
+                                Request.Builder()
+                                    .url(customPlaylistId.replace("www.kugou.com", "m.kugou.com"))
+                                    .addHeader(
+                                        "User-Agent",
+                                        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36 Edg/122.0.0.0"
+                                    ).get().build()
+                            ).execute().body?.string()
+                            if (response != null) {
+                                if (playlistId.size == 0) {
+                                    Tools().copyFileToExternalFilesDir(
+                                        context,
+                                        "kugou_music_phone_v7.db"
+                                    )
+                                }
+                                val databaseFile =
+                                    File(
+                                        context.getExternalFilesDir(null),
+                                        "kugou_music_phone_v7.db"
+                                    )
+                                val db = SQLiteDatabase.openDatabase(
+                                    databaseFile.absolutePath,
+                                    null,
+                                    SQLiteDatabase.OPEN_READWRITE
+                                )
+                                databaseFilePath.value = databaseFile.absolutePath
+                                customPlaylistId =
+                                    "\"global_collection_id\":\"\\w*".toRegex().find(
+                                        response
+                                    )?.value?.substring(24)
+                                val playlistInfo = JSONObject.parseObject(
+                                    response.substring(
+                                        response.indexOf("var nData=") + 10,
+                                        response.indexOf("}]};") + 3
+                                    )
+                                ).getJSONObject("listinfo")
+                                val cursor = db.rawQuery(
+                                    "SELECT COUNT(*) FROM ${sourceApp.songListTableName} WHERE ${sourceApp.songListId} = ?",
+                                    arrayOf(customPlaylistId)
+                                )
+                                cursor.moveToFirst()
+                                if (cursor.getInt(0) != 0) {
+                                    cursor.close()
+                                    db.close()
+                                    throw IllegalStateException(context.getString(R.string.playlist_already_exists))
+                                }
+                                cursor.close()
+                                db.execSQL(
+                                    "INSERT INTO ${sourceApp.songListTableName} (${sourceApp.songListId}, ${sourceApp.songListName}, ${sourceApp.musicNum}) VALUES (?, ?, ?)",
+                                    arrayOf(
+                                        customPlaylistId,
+                                        playlistInfo.getString("name"),
+                                        playlistInfo.getInteger("count")
+                                    )
+                                )
+                                db.close()
+                                customPlaylistId?.let { playlistId.add(0, it) }
+                                playlistName.add(0, playlistInfo.getString("name"))
+                                playlistEnabled.add(0, 0)
+                                playlistSum.add(0, playlistInfo.getInteger("count"))
+                                showCustomPlaylistDialog.value = false
+                                showDialogProgressBar.value = false
+                                MyVibrationEffect(
+                                    context,
+                                    (context as MainActivity).enableHaptic.value
+                                ).done()
+                                customPlaylistInput.value = ""
+                            } else {
+                                throw IllegalStateException(context.getString(R.string.wrong_input_playlist_data))
+                            }
+
+                        }
+
+                        4 -> {
+                            if (customPlaylistInput.value.contains("http"))
+                                customPlaylistId = "\\bplaylist_detail/\\d*".toRegex()
+                                    .find(customPlaylistId)?.value?.substring(16)
+                            val getParams =
+                                """pid=${customPlaylistId}&pn=1&rn=3&httpsStatus=1&plat=web_www"""
+                            val kuwoSecret = Tools().encryptString(
+                                cookie.value,
+                                "kuwo",
+                                encryptServer.value
+                            )?.getString("Secret")
+                            kuwoSecret?.let {
+                                request = request
+                                    .url("${url}?${getParams}")
+                                    .addHeader("Cookie", cookie.value)
+                                    .addHeader(
+                                        "Referer",
+                                        "https://kuwo.cn/playlist_detail/${customPlaylistId}"
+                                    )
+                                    .addHeader("Secret", it)
+                                    .addHeader(
+                                        "User-Agent",
+                                        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36 Edg/122.0.0.0"
+                                    )
+                                    .addHeader("Connection", "Keep-Alive")
+                                    .addHeader(
+                                        "Accept",
+                                        "application/json, text/plain, */*"
+                                    )
+                                    .get()
+                                val response = JSON.parseObject(
+                                    client.newCall(request.build()).execute().body?.string()
+                                )
+                                if (response?.getInteger("code") == 200) {
+                                    if (playlistId.size == 0) {
+                                        Tools().copyFileToExternalFilesDir(
+                                            context,
+                                            "kwplayer.db"
+                                        )
+                                    }
+                                    val databaseFile =
+                                        File(context.getExternalFilesDir(null), "kwplayer.db")
+                                    val db = SQLiteDatabase.openDatabase(
+                                        databaseFile.absolutePath,
+                                        null,
+                                        SQLiteDatabase.OPEN_READWRITE
+                                    )
+                                    databaseFilePath.value = databaseFile.absolutePath
+                                    val playlistInfo = response.getJSONObject("data")
+                                    val cursor = db.rawQuery(
+                                        "SELECT COUNT(*) FROM ${sourceApp.songListTableName} WHERE ${sourceApp.songListId} = ?",
+                                        arrayOf(customPlaylistId)
+                                    )
+                                    cursor.moveToFirst()
+                                    if (cursor.getInt(0) != 0) {
+                                        cursor.close()
+                                        db.close()
+                                        throw IllegalStateException(context.getString(R.string.playlist_already_exists))
+                                    }
+                                    cursor.close()
+                                    db.execSQL(
+                                        "INSERT INTO ${sourceApp.songListTableName} (${sourceApp.songListId}, ${sourceApp.songListName}, ${sourceApp.musicNum}) VALUES (?, ?, ?)",
+                                        arrayOf(
+                                            playlistInfo.getString("id"),
+                                            playlistInfo.getString("name"),
+                                            playlistInfo.getInteger("total")
+                                        )
+                                    )
+                                    db.close()
+                                    playlistId.add(0, playlistInfo.getString("id"))
+                                    playlistName.add(0, playlistInfo.getString("name"))
+                                    playlistEnabled.add(0, 0)
+                                    playlistSum.add(0, playlistInfo.getInteger("total"))
+                                    showCustomPlaylistDialog.value = false
+                                    showDialogProgressBar.value = false
+                                    MyVibrationEffect(
+                                        context,
+                                        (context as MainActivity).enableHaptic.value
+                                    ).done()
+                                    customPlaylistInput.value = ""
+                                } else {
+                                    throw IllegalStateException(context.getString(R.string.wrong_input_playlist_data))
+                                }
+                            }
+                        }
+                    }
+                } catch (e: IllegalStateException) {
+                    showDialogProgressBar.value = false
+                    MyVibrationEffect(
+                        context,
+                        (context as MainActivity).enableHaptic.value
+                    ).done()
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(
+                            context,
+                            e.message,
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                } catch (e: Exception) {
+                    MyVibrationEffect(
+                        context,
+                        (context as MainActivity).enableHaptic.value
+                    ).done()
+                    showDialogProgressBar.value = false
+                    errorDialogTitle.value =
+                        context.getString(R.string.error_while_getting_data_dialog_title)
+                    errorDialogContent.value =
+                        "- ${context.getString(R.string.get_playlist_failed)}\n  - $e\n"
+                    errorDialogCustomAction.value = {}
+                    showErrorDialog.value = true
+                }
+            }
+        }
+    }
+
     private fun databaseSummary() {
         lifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
             showLoadingProgressBar.value = true
@@ -1216,8 +1595,11 @@ class ConvertPage(
                                         )
                                         db.execSQL("DELETE FROM ${sourceApp.songListSongInfoTableName}")
                                         db.execSQL("DELETE FROM ${sourceApp.songInfoTableName}")
-                                        db.execSQL("DELETE FROM sqlite_sequence WHERE name = '${sourceApp.songListSongInfoTableName}'")
-                                        db.execSQL("DELETE FROM sqlite_sequence WHERE name = '${sourceApp.songInfoTableName}'")
+                                        try {
+                                            db.execSQL("DELETE FROM sqlite_sequence WHERE name = '${sourceApp.songListSongInfoTableName}'")
+                                            db.execSQL("DELETE FROM sqlite_sequence WHERE name = '${sourceApp.songInfoTableName}'")
+                                        } catch (_: Exception) {
+                                        }
                                         db.execSQL("VACUUM")
 
                                         val playListDetailInfo =
@@ -1268,8 +1650,11 @@ class ConvertPage(
                                         )
                                         db.execSQL("DELETE FROM ${sourceApp.songListSongInfoTableName}")
                                         db.execSQL("DELETE FROM ${sourceApp.songInfoTableName}")
-                                        db.execSQL("DELETE FROM sqlite_sequence WHERE name = '${sourceApp.songListSongInfoTableName}'")
-                                        db.execSQL("DELETE FROM sqlite_sequence WHERE name = '${sourceApp.songInfoTableName}'")
+                                        try {
+                                            db.execSQL("DELETE FROM sqlite_sequence WHERE name = '${sourceApp.songListSongInfoTableName}'")
+                                            db.execSQL("DELETE FROM sqlite_sequence WHERE name = '${sourceApp.songInfoTableName}'")
+                                        } catch (_: Exception) {
+                                        }
                                         db.execSQL("VACUUM")
 
                                         val playListDetailInfo =
@@ -1326,8 +1711,11 @@ class ConvertPage(
                                         )
                                         db.execSQL("DELETE FROM ${sourceApp.songListSongInfoTableName}")
                                         db.execSQL("DELETE FROM ${sourceApp.songInfoTableName}")
-                                        db.execSQL("DELETE FROM sqlite_sequence WHERE name = '${sourceApp.songListSongInfoTableName}'")
-                                        db.execSQL("DELETE FROM sqlite_sequence WHERE name = '${sourceApp.songInfoTableName}'")
+                                        try {
+                                            db.execSQL("DELETE FROM sqlite_sequence WHERE name = '${sourceApp.songListSongInfoTableName}'")
+                                            db.execSQL("DELETE FROM sqlite_sequence WHERE name = '${sourceApp.songInfoTableName}'")
+                                        } catch (_: Exception) {
+                                        }
                                         db.execSQL("VACUUM")
                                         var times = 1
 
@@ -1371,7 +1759,7 @@ class ConvertPage(
                                                     arrayOf(
                                                         playlistId,
                                                         songId,
-                                                        index
+                                                        (times - 1) * 300 + index
                                                     )
                                                 )
                                                 db.execSQL(
@@ -1440,10 +1828,11 @@ class ConvertPage(
                                             null,
                                             SQLiteDatabase.OPEN_READWRITE
                                         )
-                                        db.execSQL("DELETE FROM ${sourceApp.songListSongInfoTableName}")
                                         db.execSQL("DELETE FROM ${sourceApp.songInfoTableName}")
-                                        db.execSQL("DELETE FROM sqlite_sequence WHERE name = '${sourceApp.songListSongInfoTableName}'")
-                                        db.execSQL("DELETE FROM sqlite_sequence WHERE name = '${sourceApp.songInfoTableName}'")
+                                        try {
+                                            db.execSQL("DELETE FROM sqlite_sequence WHERE name = '${sourceApp.songInfoTableName}'")
+                                        } catch (_: Exception) {
+                                        }
                                         db.execSQL("VACUUM")
                                         var times = 1
 
@@ -1465,17 +1854,11 @@ class ConvertPage(
                                                     song.getString("artist").replace("&", "/")
                                                 val songAlbum = song.getString("album")
                                                 db.execSQL(
-                                                    "INSERT INTO ${sourceApp.songListSongInfoTableName} (${sourceApp.songListSongInfoPlaylistId}, ${sourceApp.songListSongInfoSongId}, ${sourceApp.sortField}) VALUES (?, ?, ?)",
+                                                    "INSERT INTO ${sourceApp.songListSongInfoTableName} (${sourceApp.songListSongInfoSongId}, ${sourceApp.songListSongInfoPlaylistId}, ${sourceApp.sortField}, ${sourceApp.songInfoSongName}, ${sourceApp.songInfoSongArtist}, ${sourceApp.songInfoSongAlbum}) VALUES (?, ?, ?, ?, ?, ?)",
                                                     arrayOf(
+                                                        songId,
                                                         playlistId,
-                                                        songId,
-                                                        index
-                                                    )
-                                                )
-                                                db.execSQL(
-                                                    "INSERT INTO ${sourceApp.songInfoTableName} (${sourceApp.songInfoSongId}, ${sourceApp.songInfoSongName}, ${sourceApp.songInfoSongArtist}, ${sourceApp.songInfoSongAlbum}) VALUES (?, ?, ?, ?)",
-                                                    arrayOf(
-                                                        songId,
+                                                        (times - 1) * 50 + index,
                                                         songName,
                                                         songArtists,
                                                         songAlbum

@@ -192,12 +192,7 @@ fun SettingsPageUi(
                 ItemPopup(
                     state = themeModePopupMenuState,
                     iconPainter = painterResource(id = R.drawable.app_theme),
-                    iconPaddingValues = PaddingValues(
-                        start = 2.dp,
-                        end = 2.dp,
-                        top = 2.dp,
-                        bottom = 2.dp
-                    ),
+                    iconPaddingValues = PaddingValues(all = 2.dp),
                     iconColor = SaltTheme.colors.text,
                     text = stringResource(R.string.theme_mode_switcher_text),
                     selectedItem = when (selectedThemeMode.intValue) {
@@ -252,12 +247,7 @@ fun SettingsPageUi(
                         text = stringResource(R.string.dark_mode),
                         iconPainter = painterResource(id = R.drawable.dark_color),
                         iconColor = SaltTheme.colors.text,
-                        iconPaddingValues = PaddingValues(
-                            start = 1.dp,
-                            end = 1.dp,
-                            top = 1.dp,
-                            bottom = 1.dp
-                        )
+                        iconPaddingValues = PaddingValues(all = 1.dp)
                     )
                 }
             }
@@ -341,12 +331,7 @@ fun SettingsPageUi(
                 ItemPopup(
                     state = languagePopupMenuState,
                     iconPainter = painterResource(id = R.drawable.language),
-                    iconPaddingValues = PaddingValues(
-                        start = 1.dp,
-                        end = 1.dp,
-                        top = 1.dp,
-                        bottom = 1.dp
-                    ),
+                    iconPaddingValues = PaddingValues(all = 1.dp),
                     iconColor = SaltTheme.colors.text,
                     text = stringResource(R.string.app_language),
                     selectedItem = when (selectedLanguage.value) {
@@ -417,12 +402,7 @@ fun SettingsPageUi(
                         text = stringResource(R.string.korean),
                         iconPainter = painterResource(id = R.drawable.korean),
                         iconColor = SaltTheme.colors.text,
-                        iconPaddingValues = PaddingValues(
-                            start = 1.5.dp,
-                            end = 1.5.dp,
-                            top = 1.5.dp,
-                            bottom = 1.5.dp
-                        )
+                        iconPaddingValues = PaddingValues(all = 1.5.dp)
                     )
                 }
             }
@@ -467,12 +447,7 @@ fun SettingsPageUi(
                     enableHaptic = enableHaptic.value,
                     iconPainter = painterResource(id = R.drawable.auto_check_update),
                     iconColor = SaltTheme.colors.text,
-                    iconPaddingValues = PaddingValues(
-                        start = 1.5.dp,
-                        end = 1.5.dp,
-                        top = 1.5.dp,
-                        bottom = 1.5.dp
-                    )
+                    iconPaddingValues = PaddingValues(all = 1.5.dp)
                 )
             }
 
@@ -494,12 +469,7 @@ fun SettingsPageUi(
                     ).versionName,
                     iconPainter = painterResource(id = R.drawable.about),
                     iconColor = SaltTheme.colors.text,
-                    iconPaddingValues = PaddingValues(
-                        start = 1.5.dp,
-                        end = 1.5.dp,
-                        top = 1.5.dp,
-                        bottom = 1.5.dp
-                    )
+                    iconPaddingValues = PaddingValues(all = 1.5.dp)
                 )
             }
         }
