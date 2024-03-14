@@ -95,6 +95,7 @@ class ConvertPage(
     var playlistName = mutableStateListOf<String>()
     var playlistEnabled = mutableStateListOf<Int>()
     var playlistSum = mutableStateListOf<Int>()
+    var playlistShow = mutableStateListOf<Boolean>()
     var showSelectSourceDialog = mutableStateOf(false)
     var multiSource = mutableStateListOf<Array<String>>()
     var showNumberProgressBar = mutableStateOf(false)
@@ -244,6 +245,7 @@ class ConvertPage(
             playlistId.clear()
             playlistName.clear()
             playlistSum.clear()
+            playlistShow.clear()
             errorDialogTitle.value = ""
             errorDialogContent.value = ""
             loadingProgressSema.acquire()
@@ -617,6 +619,7 @@ class ConvertPage(
                 playlistName.clear()
                 playlistEnabled.clear()
                 playlistSum.clear()
+                playlistShow.clear()
             }
             showLoadingProgressBar.value = true
 
@@ -716,6 +719,7 @@ class ConvertPage(
                     val innerPlaylistName = MutableList(0) { "" }
                     val innerPlaylistEnabled = MutableList(0) { 0 }
                     val innerPlaylistSum = MutableList(0) { 0 }
+                    val innerPlaylistShow = MutableList(0) { true }
                     var emptyPlaylistNum = 0
 
                     when (selectedSourceApp.intValue) {
@@ -744,6 +748,7 @@ class ConvertPage(
                                 innerPlaylistName.add(playlist.getString("name"))
                                 innerPlaylistSum.add(playlist.getInteger("trackCount"))
                                 innerPlaylistEnabled.add(0)
+                                innerPlaylistShow.add(true)
                                 db.execSQL(
                                     "INSERT INTO ${sourceApp.songListTableName} (${sourceApp.songListId}, ${sourceApp.songListName}, ${sourceApp.musicNum}) VALUES (?, ?, ?)",
                                     arrayOf(
@@ -793,6 +798,7 @@ class ConvertPage(
                                 innerPlaylistName.add(playlist.getString("diss_name"))
                                 innerPlaylistSum.add(playlist.getInteger("song_cnt"))
                                 innerPlaylistEnabled.add(0)
+                                innerPlaylistShow.add(true)
                                 db.execSQL(
                                     "INSERT INTO ${sourceApp.songListTableName} (${sourceApp.songListId}, ${sourceApp.songListName}, ${sourceApp.musicNum}) VALUES (?, ?, ?)",
                                     arrayOf(
@@ -828,6 +834,7 @@ class ConvertPage(
                                 innerPlaylistName.add(playlist.getString("dissname"))
                                 innerPlaylistSum.add(playlist.getInteger("songnum"))
                                 innerPlaylistEnabled.add(0)
+                                innerPlaylistShow.add(true)
                                 db.execSQL(
                                     "INSERT INTO ${sourceApp.songListTableName} (${sourceApp.songListId}, ${sourceApp.songListName}, ${sourceApp.musicNum}) VALUES (?, ?, ?)",
                                     arrayOf(
@@ -884,6 +891,7 @@ class ConvertPage(
                                     innerPlaylistName.add(playlist.getString("playlist_name"))
                                     innerPlaylistSum.add(playlist.getInteger("total"))
                                     innerPlaylistEnabled.add(0)
+                                    innerPlaylistShow.add(true)
                                     db.execSQL(
                                         "INSERT INTO ${sourceApp.songListTableName} (${sourceApp.songListId}, ${sourceApp.songListName}, ${sourceApp.musicNum}) VALUES (?, ?, ?)",
                                         arrayOf(
@@ -957,6 +965,7 @@ class ConvertPage(
                     playlistName.addAll(innerPlaylistName)
                     playlistEnabled.addAll(innerPlaylistEnabled)
                     playlistSum.addAll(innerPlaylistSum)
+                    playlistShow.addAll(innerPlaylistShow)
                     showLoadingProgressBar.value = false
                     MyVibrationEffect(
                         context,
@@ -1090,6 +1099,7 @@ class ConvertPage(
                                     )
                                 )
                                 db.close()
+                                playlistShow.add(0, false)
                                 playlistId.add(0, playlistInfo.getString("id"))
                                 playlistName.add(0, playlistInfo.getString("name"))
                                 playlistEnabled.add(0, 0)
@@ -1162,6 +1172,7 @@ class ConvertPage(
                                     )
                                 )
                                 db.close()
+                                playlistShow.add(0, false)
                                 playlistId.add(0, playlistInfo.getString("id"))
                                 playlistName.add(0, playlistInfo.getString("title"))
                                 playlistEnabled.add(0, 0)
@@ -1235,6 +1246,7 @@ class ConvertPage(
                                     )
                                 )
                                 db.close()
+                                playlistShow.add(0, false)
                                 customPlaylistId?.let { playlistId.add(0, it) }
                                 playlistName.add(0, playlistInfo.getString("name"))
                                 playlistEnabled.add(0, 0)
@@ -1321,6 +1333,7 @@ class ConvertPage(
                                         )
                                     )
                                     db.close()
+                                    playlistShow.add(0, false)
                                     playlistId.add(0, playlistInfo.getString("id"))
                                     playlistName.add(0, playlistInfo.getString("name"))
                                     playlistEnabled.add(0, 0)
@@ -1338,6 +1351,8 @@ class ConvertPage(
                             }
                         }
                     }
+                    delay(250L)
+                    playlistShow[0] = true
                 } catch (e: IllegalStateException) {
                     showDialogProgressBar.value = false
                     MyVibrationEffect(
@@ -1375,6 +1390,7 @@ class ConvertPage(
             val innerPlaylistName = MutableList(0) { "" }
             val innerPlaylistEnabled = MutableList(0) { 0 }
             val innerPlaylistSum = MutableList(0) { 0 }
+            val innerPlaylistShow = MutableList(0) { true }
 
             val db = SQLiteDatabase.openOrCreateDatabase(File(databaseFilePath.value), null)
 
@@ -1409,6 +1425,7 @@ class ConvertPage(
                 innerPlaylistId.add(songListId)
                 innerPlaylistName.add(songListName)
                 innerPlaylistEnabled.add(0)
+                innerPlaylistShow.add(true)
             }
             cursor.close()
             db.close()
@@ -1416,6 +1433,7 @@ class ConvertPage(
             playlistName.addAll(innerPlaylistName)
             playlistEnabled.addAll(innerPlaylistEnabled)
             playlistSum.addAll(innerPlaylistSum)
+            playlistShow.addAll(innerPlaylistShow)
             showLoadingProgressBar.value = false
             MyVibrationEffect(
                 context,

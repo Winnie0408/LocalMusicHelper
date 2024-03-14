@@ -181,6 +181,7 @@ fun ConvertPageUi(
             playlistName.clear()
             playlistEnabled.clear()
             playlistSum.clear()
+            convertPage.playlistShow.clear()
             selectedMatchingMode.intValue = 1
             enableBracketRemoval.value = false
             enableArtistNameMatch.value = true
@@ -1887,7 +1888,7 @@ fun ConvertPageUi(
                         }
                     }
 
-                    1 -> {  // TODO 歌单列表变化时的动画
+                    1 -> {
                         Column(
                             modifier = Modifier
                                 .padding(top = 4.dp)
@@ -1924,21 +1925,25 @@ fun ConvertPageUi(
                                                 )
                                             ) {
                                                 items(playlistEnabled.size) { index ->
-                                                    ItemCheck(
-                                                        state = playlistEnabled[index] != 0,
-                                                        onChange = {
-                                                            if (it)
-                                                                playlistEnabled[index] = 1
-                                                            else
-                                                                playlistEnabled[index] = 0
-                                                        },
-                                                        text = playlistName[index],
-                                                        sub = stringResource(R.string.total).replace(
-                                                            "#",
-                                                            playlistSum[index].toString()
-                                                        ),
-                                                        enableHaptic = enableHaptic.value
-                                                    )
+                                                    AnimatedVisibility(
+                                                        visible = convertPage.playlistShow[index]
+                                                    ) {
+                                                        ItemCheck(
+                                                            state = playlistEnabled[index] != 0,
+                                                            onChange = {
+                                                                if (it)
+                                                                    playlistEnabled[index] = 1
+                                                                else
+                                                                    playlistEnabled[index] = 0
+                                                            },
+                                                            text = playlistName[index],
+                                                            sub = stringResource(R.string.total).replace(
+                                                                "#",
+                                                                playlistSum[index].toString()
+                                                            ),
+                                                            enableHaptic = enableHaptic.value
+                                                        )
+                                                    }
                                                 }
                                             }
 
