@@ -1351,7 +1351,8 @@ class ConvertPage(
                             }
                         }
                     }
-                    delay(250L)
+                    if (playlistShow.size > 1)
+                        delay(250L)
                     playlistShow[0] = true
                 } catch (e: IllegalStateException) {
                     showDialogProgressBar.value = false

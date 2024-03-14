@@ -315,8 +315,8 @@ class Tools {
                 "https://${
                     when (server) {
                         "cf" -> "plnb-cf.hwinzniej.top"
-                        "gx1" -> "dns.hwinzniej.top"
-                        "gx2" -> "mom.hwinzniej.top"
+                        "gx1" -> "plnb1.hwinzniej.top:8443"
+                        "gx2" -> "plnb2.hwinzniej.top:5862"
                         else -> "plnb-cf.hwinzniej.top"
                     }
                 }/?textString=${text}&type=${type}"

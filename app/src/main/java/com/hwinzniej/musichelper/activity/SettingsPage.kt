@@ -38,7 +38,7 @@ class SettingsPage(
                     serverPing[0] = context.getString(R.string.timeout)
             }
             val t2 = async {
-                val text = Tools().execShellCmd("ping -c 1 -q -W 3 'dc.hwinzniej.top'", true)
+                val text = Tools().execShellCmd("ping -c 1 -q -W 3 'plnb1.hwinzniej.top'", true)
                 delay(300L)
                 if (text.contains("1 received"))
                     serverPing[1] = "${regex.findAll(text).toList()[3].value} ms"
@@ -46,7 +46,7 @@ class SettingsPage(
                     serverPing[1] = context.getString(R.string.timeout)
             }
             val t3 = async {
-                val text = Tools().execShellCmd("ping -c 1 -q -W 3 'mom.hwinzniej.top'", true)
+                val text = Tools().execShellCmd("ping -c 1 -q -W 3 'plnb2.hwinzniej.top'", true)
                 delay(300L)
                 if (text.contains("1 received"))
                     serverPing[2] = "${regex.findAll(text).toList()[3].value} ms"

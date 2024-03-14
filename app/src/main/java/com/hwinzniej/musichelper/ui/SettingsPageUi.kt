@@ -120,23 +120,21 @@ fun SettingsPageUi(
                         enableHaptic = enableHaptic.value
                     )
                     ItemCheck(
-                        enabled = false,
                         state = selectedEncryptServer == "gx1",
                         onChange = {
                             selectedEncryptServer = "gx1"
                         },
-                        text = "${context.getString(R.string.guangxi_china)} 1${stringResource(id = R.string.not_yet_deployed)}",
+                        text = "${context.getString(R.string.guangxi_china)} 1",
                         sub = settingsPage.serverPing[1],
                         iconAtLeft = false,
                         enableHaptic = enableHaptic.value
                     )
                     ItemCheck(
-                        enabled = false,
                         state = selectedEncryptServer == "gx2",
                         onChange = {
                             selectedEncryptServer = "gx2"
                         },
-                        text = "${context.getString(R.string.guangxi_china)} 2${stringResource(id = R.string.not_yet_deployed)}",
+                        text = "${context.getString(R.string.guangxi_china)} 2",
                         sub = settingsPage.serverPing[2],
                         iconAtLeft = false,
                         enableHaptic = enableHaptic.value
@@ -313,8 +311,8 @@ fun SettingsPageUi(
                     text = stringResource(id = R.string.select_encrypt_server),
                     rightSub = when (encryptServer.value) {
                         "cf" -> "Cloudflare"
-                        "gl1" -> "${context.getString(R.string.guangxi_china)} 1"
-                        "gl2" -> "${context.getString(R.string.guangxi_china)} 2"
+                        "gx1" -> "${context.getString(R.string.guangxi_china)} 1"
+                        "gx2" -> "${context.getString(R.string.guangxi_china)} 2"
                         else -> ""
                     },
                     iconPainter = painterResource(id = R.drawable.server),
