@@ -8,6 +8,7 @@ import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
@@ -66,6 +67,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
@@ -166,10 +168,10 @@ fun ConvertPageUi(
     var selectedMultiSourceApp by remember { mutableIntStateOf(-1) }
     var userLoggedIn by remember { mutableStateOf(false) }
     var kugouDeviceId by remember { mutableStateOf(false) }
-    var kugouDeviceRelated = remember { mutableStateMapOf<String, String>() }
+    val kugouDeviceRelated = remember { mutableStateMapOf<String, String>() }
     var kugouLoginQrCode by remember { mutableStateOf<Bitmap?>(null) }
     var kugouCurrentIp by remember { mutableStateOf("") }
-    var kugouUserRelated = remember { mutableStateMapOf<String, String>() }
+    val kugouUserRelated = remember { mutableStateMapOf<String, String>() }
 
     fun init() {
         coroutine.launch {
@@ -326,7 +328,7 @@ fun ConvertPageUi(
         }
     }
 
-    if (showSetSimilarityDialog) {
+    if (showSetSimilarityDialog) { //TODO 相似度分成3段，每段的颜色不同，失败、可能成功、成功？
         var slideSimilarity by remember { mutableFloatStateOf(similarity.floatValue) }
         LaunchedEffect(key1 = slideSimilarity) {
             MyVibrationEffect(context, enableHaptic.value).dragMove()
@@ -554,17 +556,21 @@ fun ConvertPageUi(
     LaunchedEffect(key1 = kugouDeviceId) {
         if (kugouDeviceId) {
             coroutine.launch(Dispatchers.IO) {
-                kugouDeviceRelated = convertPage.kugouGetLoginQrCodeUrl(
-                    type = selectedLoginMethod.intValue,
-                    currentIp = kugouCurrentIp
+                kugouDeviceRelated.putAll(
+                    convertPage.kugouGetLoginQrCodeUrl(
+                        type = selectedLoginMethod.intValue,
+                        currentIp = kugouCurrentIp
+                    )
                 )
                 kugouLoginQrCode =
                     kugouDeviceRelated["qrCodeUrl"]?.let { Tools().generateQRCode(content = it) }
                 kugouDeviceRelated["ticket"]?.let {
-                    kugouUserRelated = convertPage.kugouGetLoginStatus(
-                        type = selectedLoginMethod.intValue,
-                        ticket = it,
-                        currentIp = kugouCurrentIp
+                    kugouUserRelated.putAll(
+                        convertPage.kugouGetLoginStatus(
+                            type = selectedLoginMethod.intValue,
+                            ticket = it,
+                            currentIp = kugouCurrentIp
+                        )
                     )
                     userLoggedIn = kugouUserRelated.size != 0
                     if (userLoggedIn) {
@@ -618,7 +624,7 @@ fun ConvertPageUi(
                         trackColor = SaltTheme.colors.background
                     )
                 }
-                Column {
+                RoundedColumn {
                     ItemTitle(text = stringResource(R.string.state_of_the_song_to_be_saved))
 //                        ItemText(text = stringResource(R.string.state_of_the_song_to_be_saved))
                     ItemSwitcher(
@@ -681,23 +687,25 @@ fun ConvertPageUi(
             confirmButtonColor = colorResource(id = R.color.unmatched),
             enableHaptic = enableHaptic.value,
         ) {
-            ItemContainer {
-                MarkdownText(
-                    modifier = Modifier.padding(vertical = 8.dp),
-                    markdown = "${stringResource(id = R.string.delete_dialog_content)}\n- ${
-                        convertResult[selectedSongIndex]!![2]
-                    }\n  - ${
-                        stringResource(R.string.singer)
-                    }${convertResult[selectedSongIndex]!![4]}\n  - ${
-                        stringResource(R.string.album)
-                    }${convertResult[selectedSongIndex]!![6]}",
-                    style = TextStyle(
-                        color = SaltTheme.colors.text,
-                        fontSize = 14.sp
-                    ),
-                    isTextSelectable = true,
-                    disableLinkMovementMethod = true
-                )
+            RoundedColumn {
+                ItemContainer {
+                    MarkdownText(
+                        modifier = Modifier.padding(vertical = 8.dp),
+                        markdown = "${stringResource(id = R.string.delete_dialog_content)}\n- ${
+                            convertResult[selectedSongIndex]!![2]
+                        }\n  - ${
+                            stringResource(R.string.singer)
+                        }${convertResult[selectedSongIndex]!![4]}\n  - ${
+                            stringResource(R.string.album)
+                        }${convertResult[selectedSongIndex]!![6]}",
+                        style = TextStyle(
+                            color = SaltTheme.colors.text,
+                            fontSize = 14.sp
+                        ),
+                        isTextSelectable = true,
+                        disableLinkMovementMethod = true
+                    )
+                }
             }
         }
     }
@@ -1173,7 +1181,8 @@ fun ConvertPageUi(
                                             kugouLoginQrCode?.let {
                                                 Image(
                                                     bitmap = it.asImageBitmap(),
-                                                    contentDescription = "Kugou Login QR Code"
+                                                    contentDescription = "Kugou Login QR Code",
+                                                    contentScale = ContentScale.Fit
                                                 )
                                             }
                                         }
@@ -1257,7 +1266,8 @@ fun ConvertPageUi(
                                             kugouLoginQrCode?.let {
                                                 Image(
                                                     bitmap = it.asImageBitmap(),
-                                                    contentDescription = "Kugou Login QR Code"
+                                                    contentDescription = "Kugou Login QR Code",
+                                                    contentScale = ContentScale.Fit
                                                 )
                                             }
                                         }
@@ -1337,7 +1347,9 @@ fun ConvertPageUi(
                                             kugouDeviceId = false
                                             kugouDeviceRelated.clear()
                                             kugouUserRelated.clear()
-                                            kugouCurrentIp = ""
+                                            coroutine.launch(Dispatchers.IO) {
+                                                kugouCurrentIp = Tools().getCurrentIp()
+                                            }
                                         }
 
                                         4 -> {
@@ -1926,7 +1938,8 @@ fun ConvertPageUi(
                                             ) {
                                                 items(playlistEnabled.size) { index ->
                                                     AnimatedVisibility(
-                                                        visible = convertPage.playlistShow[index]
+                                                        visible = convertPage.playlistShow[index],
+                                                        exit = ExitTransition.None
                                                     ) {
                                                         ItemCheck(
                                                             state = playlistEnabled[index] != 0,
@@ -1936,12 +1949,15 @@ fun ConvertPageUi(
                                                                 else
                                                                     playlistEnabled[index] = 0
                                                             },
-                                                            text = playlistName[index],
-                                                            sub = stringResource(R.string.total).replace(
-                                                                "#",
-                                                                playlistSum[index].toString()
-                                                            ),
-                                                            enableHaptic = enableHaptic.value
+                                                            text = if (convertPage.playlistShow[index]) playlistName[index] else "",
+                                                            sub = if (convertPage.playlistShow[index])
+                                                                stringResource(R.string.total).replace(
+                                                                    "#",
+                                                                    playlistSum[index].toString()
+                                                                ) else "",
+                                                            enableHaptic = enableHaptic.value,
+                                                            minHeightIn = if (convertPage.playlistShow[index])
+                                                                50.dp else 0.dp
                                                         )
                                                     }
                                                 }
@@ -2417,14 +2433,14 @@ fun ConvertPageUi(
                                                                                     showSelectedSongInfoDialog =
                                                                                         true
                                                                                 },
-                                                                                text = convertResult[index]!![2 - showOriginalSonglist],
+                                                                                text = convertResult[index]!![2 - it1],
                                                                                 sub = "${
                                                                                     stringResource(
                                                                                         R.string.singer
                                                                                     )
-                                                                                }${convertResult[index]!![4 - showOriginalSonglist]}\n${
+                                                                                }${convertResult[index]!![4 - it1]}\n${
                                                                                     stringResource(R.string.album)
-                                                                                }${convertResult[index]!![6 - showOriginalSonglist]}",
+                                                                                }${convertResult[index]!![6 - it1]}",
                                                                                 rightSub = when (convertResult[index]!![0]) {
                                                                                     "0" -> stringResource(
                                                                                         R.string.match_success
@@ -2468,14 +2484,14 @@ fun ConvertPageUi(
                                                                                     showSelectedSongInfoDialog =
                                                                                         true
                                                                                 },
-                                                                                text = convertResult[index]!![2 - showOriginalSonglist],
+                                                                                text = convertResult[index]!![2 - it1],
                                                                                 sub = "${
                                                                                     stringResource(
                                                                                         R.string.singer
                                                                                     )
-                                                                                }${convertResult[index]!![4 - showOriginalSonglist]}\n${
+                                                                                }${convertResult[index]!![4 - it1]}\n${
                                                                                     stringResource(R.string.album)
-                                                                                }${convertResult[index]!![6 - showOriginalSonglist]}",
+                                                                                }${convertResult[index]!![6 - it1]}",
                                                                                 rightSub = when (convertResult[index]!![0]) {
                                                                                     "0" -> stringResource(
                                                                                         R.string.match_success
@@ -2519,14 +2535,14 @@ fun ConvertPageUi(
                                                                                     showSelectedSongInfoDialog =
                                                                                         true
                                                                                 },
-                                                                                text = convertResult[index]!![2 - showOriginalSonglist],
+                                                                                text = convertResult[index]!![2 - it1],
                                                                                 sub = "${
                                                                                     stringResource(
                                                                                         R.string.singer
                                                                                     )
-                                                                                }${convertResult[index]!![4 - showOriginalSonglist]}\n${
+                                                                                }${convertResult[index]!![4 - it1]}\n${
                                                                                     stringResource(R.string.album)
-                                                                                }${convertResult[index]!![6 - showOriginalSonglist]}",
+                                                                                }${convertResult[index]!![6 - it1]}",
                                                                                 rightSub = when (convertResult[index]!![0]) {
                                                                                     "0" -> stringResource(
                                                                                         R.string.match_success
@@ -2570,14 +2586,14 @@ fun ConvertPageUi(
                                                                                     showSelectedSongInfoDialog =
                                                                                         true
                                                                                 },
-                                                                                text = convertResult[index]!![2 - showOriginalSonglist],
+                                                                                text = convertResult[index]!![2 - it1],
                                                                                 sub = "${
                                                                                     stringResource(
                                                                                         R.string.singer
                                                                                     )
-                                                                                }${convertResult[index]!![4 - showOriginalSonglist]}\n${
+                                                                                }${convertResult[index]!![4 - it1]}\n${
                                                                                     stringResource(R.string.album)
-                                                                                }${convertResult[index]!![6 - showOriginalSonglist]}",
+                                                                                }${convertResult[index]!![6 - it1]}",
                                                                                 rightSub = when (convertResult[index]!![0]) {
                                                                                     "0" -> stringResource(
                                                                                         R.string.match_success

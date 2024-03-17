@@ -317,6 +317,10 @@ fun SettingsPageUi(
                     },
                     iconPainter = painterResource(id = R.drawable.server),
                     iconColor = SaltTheme.colors.text,
+                    sub = stringResource(id = R.string.choose_string_encrypt_server).replace(
+                        "#n",
+                        "\n"
+                    ),
                 )
             }
 

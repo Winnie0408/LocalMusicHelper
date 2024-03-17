@@ -605,6 +605,7 @@ class ConvertPage(
         lifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
             currentPage.intValue = 1
             if (selectedSourceApp.intValue == 4) {
+                delay(300L)
                 showLoadingProgressBar.value = false
                 errorDialogTitle.value =
                     context.getString(R.string.tips)
@@ -1100,9 +1101,9 @@ class ConvertPage(
                                 )
                                 db.close()
                                 playlistShow.add(0, false)
+                                playlistEnabled.add(0, 0)
                                 playlistId.add(0, playlistInfo.getString("id"))
                                 playlistName.add(0, playlistInfo.getString("name"))
-                                playlistEnabled.add(0, 0)
                                 playlistSum.add(0, playlistInfo.getInteger("trackCount"))
                                 showCustomPlaylistDialog.value = false
                                 showDialogProgressBar.value = false
@@ -1173,9 +1174,9 @@ class ConvertPage(
                                 )
                                 db.close()
                                 playlistShow.add(0, false)
+                                playlistEnabled.add(0, 0)
                                 playlistId.add(0, playlistInfo.getString("id"))
                                 playlistName.add(0, playlistInfo.getString("title"))
-                                playlistEnabled.add(0, 0)
                                 playlistSum.add(0, playlistInfo.getInteger("songnum"))
                                 showCustomPlaylistDialog.value = false
                                 showDialogProgressBar.value = false
@@ -1247,9 +1248,9 @@ class ConvertPage(
                                 )
                                 db.close()
                                 playlistShow.add(0, false)
+                                playlistEnabled.add(0, 0)
                                 customPlaylistId?.let { playlistId.add(0, it) }
                                 playlistName.add(0, playlistInfo.getString("name"))
-                                playlistEnabled.add(0, 0)
                                 playlistSum.add(0, playlistInfo.getInteger("count"))
                                 showCustomPlaylistDialog.value = false
                                 showDialogProgressBar.value = false
@@ -1334,9 +1335,9 @@ class ConvertPage(
                                     )
                                     db.close()
                                     playlistShow.add(0, false)
+                                    playlistEnabled.add(0, 0)
                                     playlistId.add(0, playlistInfo.getString("id"))
                                     playlistName.add(0, playlistInfo.getString("name"))
-                                    playlistEnabled.add(0, 0)
                                     playlistSum.add(0, playlistInfo.getInteger("total"))
                                     showCustomPlaylistDialog.value = false
                                     showDialogProgressBar.value = false
@@ -2653,6 +2654,7 @@ class ConvertPage(
         } catch (e: Exception) {
             showDialogProgressBar.value = false
             showLoginDialog.value = false
+            selectedLoginMethod.intValue = 2
             withContext(Dispatchers.Main) {
                 Toast.makeText(
                     context,
@@ -2721,6 +2723,7 @@ class ConvertPage(
         } catch (e: Exception) {
             showDialogProgressBar.value = false
             showLoginDialog.value = false
+            selectedLoginMethod.intValue = 2
             withContext(Dispatchers.Main) {
                 Toast.makeText(
                     context,

@@ -424,137 +424,140 @@ fun AboutPageUi(
                         onClick = {
                             yesDialogContent = ""
                             yesDialogCustomContent = {
-                                Column(
-                                    modifier = Modifier
-                                        .heightIn(
-                                            min = 0.1.dp,
-                                            max = (LocalConfiguration.current.screenHeightDp / 1.5).dp
+                                RoundedColumn {
+                                    Column(
+                                        modifier = Modifier
+                                            .heightIn(
+                                                min = 0.1.dp,
+                                                max = (LocalConfiguration.current.screenHeightDp / 1.5).dp
+                                            )
+                                            .align(Alignment.CenterHorizontally)
+                                            .padding(vertical = 8.dp)
+                                    ) {
+                                        Text(
+                                            modifier = Modifier.align(Alignment.CenterHorizontally),
+                                            text = stringResource(id = R.string.thank_you_very_much),
+                                            color = SaltTheme.colors.text,
+                                            fontSize = 15.sp
                                         )
-                                        .align(Alignment.CenterHorizontally)
-                                ) {
-                                    Text(
-                                        modifier = Modifier.align(Alignment.CenterHorizontally),
-                                        text = stringResource(id = R.string.thank_you_very_much),
-                                        color = SaltTheme.colors.text,
-                                        fontSize = 15.sp
-                                    )
-                                    Spacer(modifier = Modifier.height(12.dp))
-                                    Image(
-                                        modifier = Modifier
-                                            .clip(RoundedCornerShape(10.dp))
-                                            .size(200.dp)
-                                            .clickable {
-                                                val bitmap = BitmapFactory.decodeResource(
-                                                    context.resources,
-                                                    R.drawable.alipay
-                                                )
-                                                try {
-                                                    val path =
-                                                        Environment.getExternalStoragePublicDirectory(
-                                                            Environment.DIRECTORY_PICTURES
-                                                        ).absolutePath
-                                                    val directory = File(path)
-                                                    if (!directory.exists()) {
-                                                        directory.mkdir()
+                                        Spacer(modifier = Modifier.height(12.dp))
+                                        Image(
+                                            modifier = Modifier
+                                                .clip(RoundedCornerShape(10.dp))
+                                                .size(200.dp)
+                                                .clickable {
+                                                    val bitmap = BitmapFactory.decodeResource(
+                                                        context.resources,
+                                                        R.drawable.alipay
+                                                    )
+                                                    try {
+                                                        val path =
+                                                            Environment.getExternalStoragePublicDirectory(
+                                                                Environment.DIRECTORY_PICTURES
+                                                            ).absolutePath
+                                                        val directory = File(path)
+                                                        if (!directory.exists()) {
+                                                            directory.mkdir()
+                                                        }
+                                                        val file =
+                                                            File(directory, "hwinzniej_alipay.jpg")
+                                                        val out = file.outputStream()
+                                                        bitmap.compress(
+                                                            Bitmap.CompressFormat.JPEG,
+                                                            100,
+                                                            out
+                                                        )
+                                                        out.flush()
+                                                        out.close()
+                                                        context.sendBroadcast(
+                                                            Intent(
+                                                                Intent.ACTION_MEDIA_SCANNER_SCAN_FILE,
+                                                                Uri.fromFile(file)
+                                                            )
+                                                        )
+                                                        Toast
+                                                            .makeText(
+                                                                context,
+                                                                context.getString(R.string.save_success),
+                                                                Toast.LENGTH_SHORT
+                                                            )
+                                                            .show()
+                                                    } catch (_: Exception) {
+                                                        Toast
+                                                            .makeText(
+                                                                context,
+                                                                context.getString(R.string.save_failed),
+                                                                Toast.LENGTH_SHORT
+                                                            )
+                                                            .show()
                                                     }
-                                                    val file =
-                                                        File(directory, "hwinzniej_alipay.jpg")
-                                                    val out = file.outputStream()
-                                                    bitmap.compress(
-                                                        Bitmap.CompressFormat.JPEG,
-                                                        100,
-                                                        out
+                                                },
+                                            painter = painterResource(id = R.drawable.alipay),
+                                            contentDescription = ""
+                                        )
+                                        Spacer(modifier = Modifier.height(12.dp))
+                                        Image(
+                                            modifier = Modifier
+                                                .clip(RoundedCornerShape(10.dp))
+                                                .size(200.dp)
+                                                .clickable {
+                                                    val bitmap = BitmapFactory.decodeResource(
+                                                        context.resources,
+                                                        R.drawable.wechat
                                                     )
-                                                    out.flush()
-                                                    out.close()
-                                                    context.sendBroadcast(
-                                                        Intent(
-                                                            Intent.ACTION_MEDIA_SCANNER_SCAN_FILE,
-                                                            Uri.fromFile(file)
+                                                    try {
+                                                        val path =
+                                                            Environment.getExternalStoragePublicDirectory(
+                                                                Environment.DIRECTORY_PICTURES
+                                                            ).absolutePath
+                                                        val directory = File(path)
+                                                        if (!directory.exists()) {
+                                                            directory.mkdir()
+                                                        }
+                                                        val file =
+                                                            File(directory, "hwinzniej_wechat.png")
+                                                        val out = file.outputStream()
+                                                        bitmap.compress(
+                                                            Bitmap.CompressFormat.PNG,
+                                                            100,
+                                                            out
                                                         )
-                                                    )
-                                                    Toast
-                                                        .makeText(
-                                                            context,
-                                                            context.getString(R.string.save_success),
-                                                            Toast.LENGTH_SHORT
+                                                        out.flush()
+                                                        out.close()
+                                                        context.sendBroadcast(
+                                                            Intent(
+                                                                Intent.ACTION_MEDIA_SCANNER_SCAN_FILE,
+                                                                Uri.fromFile(file)
+                                                            )
                                                         )
-                                                        .show()
-                                                } catch (_: Exception) {
-                                                    Toast
-                                                        .makeText(
-                                                            context,
-                                                            context.getString(R.string.save_failed),
-                                                            Toast.LENGTH_SHORT
-                                                        )
-                                                        .show()
-                                                }
-                                            },
-                                        painter = painterResource(id = R.drawable.alipay),
-                                        contentDescription = ""
-                                    )
-                                    Spacer(modifier = Modifier.height(12.dp))
-                                    Image(
-                                        modifier = Modifier
-                                            .clip(RoundedCornerShape(10.dp))
-                                            .size(200.dp)
-                                            .clickable {
-                                                val bitmap = BitmapFactory.decodeResource(
-                                                    context.resources,
-                                                    R.drawable.wechat
-                                                )
-                                                try {
-                                                    val path =
-                                                        Environment.getExternalStoragePublicDirectory(
-                                                            Environment.DIRECTORY_PICTURES
-                                                        ).absolutePath
-                                                    val directory = File(path)
-                                                    if (!directory.exists()) {
-                                                        directory.mkdir()
+                                                        Toast
+                                                            .makeText(
+                                                                context,
+                                                                context.getString(R.string.save_success),
+                                                                Toast.LENGTH_SHORT
+                                                            )
+                                                            .show()
+                                                    } catch (_: Exception) {
+                                                        Toast
+                                                            .makeText(
+                                                                context,
+                                                                context.getString(R.string.save_failed),
+                                                                Toast.LENGTH_SHORT
+                                                            )
+                                                            .show()
                                                     }
-                                                    val file =
-                                                        File(directory, "hwinzniej_wechat.png")
-                                                    val out = file.outputStream()
-                                                    bitmap.compress(
-                                                        Bitmap.CompressFormat.PNG,
-                                                        100,
-                                                        out
-                                                    )
-                                                    out.flush()
-                                                    out.close()
-                                                    context.sendBroadcast(
-                                                        Intent(
-                                                            Intent.ACTION_MEDIA_SCANNER_SCAN_FILE,
-                                                            Uri.fromFile(file)
-                                                        )
-                                                    )
-                                                    Toast
-                                                        .makeText(
-                                                            context,
-                                                            context.getString(R.string.save_success),
-                                                            Toast.LENGTH_SHORT
-                                                        )
-                                                        .show()
-                                                } catch (_: Exception) {
-                                                    Toast
-                                                        .makeText(
-                                                            context,
-                                                            context.getString(R.string.save_failed),
-                                                            Toast.LENGTH_SHORT
-                                                        )
-                                                        .show()
-                                                }
-                                            },
-                                        painter = painterResource(id = R.drawable.wechat),
-                                        contentDescription = ""
-                                    )
-                                    Spacer(modifier = Modifier.height(12.dp))
-                                    Text(
-                                        modifier = Modifier.align(Alignment.CenterHorizontally),
-                                        text = stringResource(id = R.string.save_image),
-                                        color = SaltTheme.colors.text,
-                                        fontSize = 12.sp
-                                    )
+                                                },
+                                            painter = painterResource(id = R.drawable.wechat),
+                                            contentDescription = ""
+                                        )
+                                        Spacer(modifier = Modifier.height(12.dp))
+                                        Text(
+                                            modifier = Modifier.align(Alignment.CenterHorizontally),
+                                            text = stringResource(id = R.string.save_image),
+                                            color = SaltTheme.colors.text,
+                                            fontSize = 12.sp
+                                        )
+                                    }
                                 }
                             }
                             yesDialogTitle = context.getString(R.string.buy_me_a_coffee)

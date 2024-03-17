@@ -250,7 +250,7 @@
     <string name="kugou_app_qr_code">Kugou QR code</string>
     <string name="kugou_wechat_qr_code">WeChat QR code</string>
     <string name="getting_login_QR_code">Getting login QR code…</string>
-    <string name="failed_get_login_qr_code">Failed to get login QR code</string>
+    <string name="failed_get_login_qr_code">Failed to get login QR code, please try again</string>
     <string name="optional_operation">"Optional Operation: "</string>
     <string name="skip_operation_detail">Skip: Skip the conversion operation of the current song list.</string>
     <string name="continue_operation_detail">Continue: Conversion operation using the actual acquired song.</string>
@@ -266,4 +266,5 @@
     <string name="please_input_playlist_id">Please input data</string>
     <string name="wrong_input_playlist_data">Playlist info input error</string>
     <string name="playlist_already_exists">Inputted playlist already exists</string>
+    <string name="choose_string_encrypt_server">Encrypted server for request strings#nOnly used when selecting NetEase Cloud Music or Kuwo Music</string>
 </resources>

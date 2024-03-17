@@ -246,7 +246,7 @@
     <string name="kugou_app_qr_code">酷狗扫码</string>
     <string name="kugou_wechat_qr_code">微信扫码</string>
     <string name="getting_login_QR_code">获取登录二维码…</string>
-    <string name="failed_get_login_qr_code">获取登录二维码失败</string>
+    <string name="failed_get_login_qr_code">获取登录二维码失败，请重试</string>
     <string name="optional_operation">可选操作：</string>
     <string name="skip_operation_detail">跳过：跳过当前歌单的转换操作。</string>
     <string name="continue_operation_detail">继续：使用实际获取到的歌曲进行转换操作。</string>
@@ -262,4 +262,5 @@
     <string name="please_input_playlist_id">请输入数据</string>
     <string name="wrong_input_playlist_data">歌单信息输入错误，请检查</string>
     <string name="playlist_already_exists">输入的歌单已存在</string>
+    <string name="choose_string_encrypt_server">请求字符串的加密服务器#n仅在歌单来源为网易云音乐或酷我音乐时使用</string>
 </resources>

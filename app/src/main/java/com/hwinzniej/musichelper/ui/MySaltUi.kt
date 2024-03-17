@@ -382,13 +382,14 @@ fun ItemCheck(
     iconAtLeft: Boolean = false,
     sub: String? = null,
     hideIcon: Boolean = false,
-    enableHaptic: Boolean = false
+    enableHaptic: Boolean = false,
+    minHeightIn: Dp = 50.dp
 ) {
     val context = LocalContext.current
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .heightIn(min = 50.dp)
+            .heightIn(min = minHeightIn)
             .alpha(if (enabled) 1f else 0.5f)
             .clickable(enabled = enabled) {
                 MyVibrationEffect(context, enableHaptic).click()
