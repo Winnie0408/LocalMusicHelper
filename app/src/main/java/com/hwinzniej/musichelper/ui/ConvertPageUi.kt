@@ -322,12 +322,6 @@ fun ConvertPageUi(
         }
     }
 
-    LaunchedEffect(key1 = showSetSimilarityDialog) {
-        if (showSetSimilarityDialog) {
-            MyVibrationEffect(context, enableHaptic.value).dialog()
-        }
-    }
-
     if (showSetSimilarityDialog) { //TODO 相似度分成3段，每段的颜色不同，失败、可能成功、成功？
         var slideSimilarity by remember { mutableFloatStateOf(similarity.floatValue) }
         LaunchedEffect(key1 = slideSimilarity) {
@@ -396,12 +390,6 @@ fun ConvertPageUi(
                     )
                 )
             }
-        }
-    }
-
-    LaunchedEffect(key1 = showSelectedSongInfoDialog) {
-        if (showSelectedSongInfoDialog) {
-            MyVibrationEffect(context, enableHaptic.value).dialog()
         }
     }
 
@@ -544,12 +532,6 @@ fun ConvertPageUi(
                     }
                 }
             }
-        }
-    }
-
-    LaunchedEffect(key1 = showSaveDialog.value) {
-        if (showSaveDialog.value) {
-            MyVibrationEffect(context, enableHaptic.value).dialog()
         }
     }
 

@@ -305,7 +305,6 @@ private fun Pages(
 
 
     if (showNewVersionAvailableDialog.value) {
-        MyVibrationEffect(LocalContext.current, mainPage.enableHaptic.value).dialog()
         YesNoDialog(
             onDismiss = { showNewVersionAvailableDialog.value = false },
             onCancel = { showNewVersionAvailableDialog.value = false },
