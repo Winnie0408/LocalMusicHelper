@@ -269,4 +269,11 @@
     <string name="choose_string_encrypt_server">Encrypted server for request strings#nOnly used when selecting NetEase Cloud Music or Kuwo Music</string>
     <string name="unknown">Unknown</string>
     <string name="playlist_song_num_not_match_solution1">Find the current song list in Netease Cloud Music, select all the songs and add them to the song list you created and start the conversion operation from the beginning.</string>
+    <string name="unlock_function_name">Unlock</string>
+    <string name="unlock_options">Unlock options</string>
+    <string name="select_the_directory_for_encrypted_files">Select the input path for encrypted musics</string>
+    <string name="select_the_directory_for_decrypted_files">Select the output path for decrypted musics</string>
+    <string name="input_path">Selected input path</string>
+    <string name="output_path">Selected output path</string>
+    <string name="unlocking_result">Unlocking result</string>
 </resources>

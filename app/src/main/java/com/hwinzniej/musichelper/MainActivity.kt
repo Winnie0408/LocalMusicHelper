@@ -62,6 +62,7 @@ import com.alibaba.fastjson2.JSON
 import com.hwinzniej.musichelper.activity.ConvertPage
 import com.hwinzniej.musichelper.activity.ScanPage
 import com.hwinzniej.musichelper.activity.SettingsPage
+import com.hwinzniej.musichelper.activity.UnlockPage
 import com.hwinzniej.musichelper.data.DataStoreConstants
 import com.hwinzniej.musichelper.data.database.MusicDatabase
 import com.hwinzniej.musichelper.ui.AboutPageUi
@@ -69,6 +70,7 @@ import com.hwinzniej.musichelper.ui.ConvertPageUi
 import com.hwinzniej.musichelper.ui.ItemValue
 import com.hwinzniej.musichelper.ui.ScanPageUi
 import com.hwinzniej.musichelper.ui.SettingsPageUi
+import com.hwinzniej.musichelper.ui.UnlockPageUi
 import com.hwinzniej.musichelper.ui.YesNoDialog
 import com.hwinzniej.musichelper.utils.MyDataStore
 import com.hwinzniej.musichelper.utils.MyVibrationEffect
@@ -97,6 +99,8 @@ import java.util.Locale
 class MainActivity : ComponentActivity() {
 
     private lateinit var openDirectoryLauncher: ActivityResultLauncher<Uri?>
+    private lateinit var openEncryptDirectoryLauncher: ActivityResultLauncher<Uri?>
+    private lateinit var openDecryptDirectoryLauncher: ActivityResultLauncher<Uri?>
     private lateinit var openMusicPlatformSqlFileLauncher: ActivityResultLauncher<Array<String>>
     private lateinit var openResultSqlFileLauncher: ActivityResultLauncher<Array<String>>
     private lateinit var scanPage: ScanPage
@@ -104,6 +108,7 @@ class MainActivity : ComponentActivity() {
     //    private lateinit var processPage: ProcessPage
     private lateinit var convertPage: ConvertPage
     private lateinit var settingsPage: SettingsPage
+    private lateinit var unlockPage: UnlockPage
     lateinit var db: MusicDatabase
     lateinit var dataStore: DataStore<Preferences>
     var enableDynamicColor = mutableStateOf(false)
@@ -129,6 +134,14 @@ class MainActivity : ComponentActivity() {
         openDirectoryLauncher =
             registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
                 scanPage.handleUri(uri)
+            }
+        openEncryptDirectoryLauncher =
+            registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
+                unlockPage.handleSelectedEncryptedPath(uri)
+            }
+        openDecryptDirectoryLauncher =
+            registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
+                unlockPage.handleSelectedDecryptedPath(uri)
             }
         openMusicPlatformSqlFileLauncher =
             registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
@@ -164,6 +177,13 @@ class MainActivity : ComponentActivity() {
                 encryptServer = settingsPage.encryptServer,
                 dataStore = dataStore
             )
+
+        unlockPage =
+            UnlockPage(
+                context = this,
+                lifecycleOwner = this,
+                componentActivity = this
+            )
         enableEdgeToEdge()
         setContent {
             val colors = when (selectedThemeMode.intValue) {
@@ -196,7 +216,14 @@ class MainActivity : ComponentActivity() {
                     colors = colors
                 ) {
                     TransparentSystemBars(dark = isSystemInDarkTheme() || (selectedThemeMode.intValue == 1))
-                    Pages(this, scanPage, convertPage, settingsPage, checkUpdate)
+                    Pages(
+                        mainPage = this,
+                        scanPage = scanPage,
+                        convertPage = convertPage,
+                        unlockPage = unlockPage,
+                        settingsPage = settingsPage,
+                        checkUpdate = checkUpdate
+                    )
                 }
             }
         }
@@ -250,10 +277,11 @@ private fun Pages(
     scanPage: ScanPage,
 //    processPage: ProcessPage,
     convertPage: ConvertPage,
+    unlockPage: UnlockPage,
     settingsPage: SettingsPage,
     checkUpdate: MutableState<Boolean>
 ) {
-    val pages = listOf("0", "1", "2")
+    val pages = listOf("0", "1", "2", "3")
     val pageState = rememberPagerState(pageCount = { pages.size })
     val coroutineScope = rememberCoroutineScope()
     val settingsPages = listOf("0", "1")
@@ -530,6 +558,13 @@ private fun Pages(
                     )
                 }
 
+                2 -> {
+                    UnlockPageUi(
+                        unlockPage = unlockPage,
+                        enableHaptic = mainPage.enableHaptic,
+                    )
+                }
+
 //                2 -> {
 //                    ProcessPageUi(
 //                        processPage = processPage,
@@ -548,7 +583,7 @@ private fun Pages(
 //                    )
 //                }
 
-                2 -> {
+                3 -> {
                     HorizontalPager(
                         state = settingsPageState,
                         modifier = Modifier
@@ -586,45 +621,6 @@ private fun Pages(
                             }
                         }
                     }
-//                    NavHost(
-//                        navController = navController,
-//                        startDestination = "SettingsPageUi",
-//                        enterTransition = {
-//                            slideInHorizontally(
-//                                animationSpec = spring(2f),
-//                                initialOffsetX = { 1080 })
-//                        },
-//                        exitTransition = {
-//                            slideOutHorizontally(
-//                                animationSpec = spring(2f),
-//                                targetOffsetX = { -1080 })
-//                        },
-//                        popEnterTransition = {
-//                            slideInHorizontally(
-//                                animationSpec = spring(2f),
-//                                initialOffsetX = { -1080 })
-//                        },
-//                        popExitTransition = {
-//                            slideOutHorizontally(
-//                                animationSpec = spring(2f),
-//                                targetOffsetX = { 1080 })
-//                        },
-//                    ) {
-//                        composable("SettingsPageUi") {
-//                            SettingsPageUi(
-//                                settingsPage = settingsPage,
-//                                enableDynamicColor = settingsPage.enableDynamicColor,
-//                                selectedThemeMode = settingsPage.selectedThemeMode,
-//                                selectedLanguage = settingsPage.selectedLanguage,
-//                                useRootAccess = convertPage.useRootAccess,
-//                                enableAutoCheckUpdate = settingsPage.enableAutoCheckUpdate,
-//                                navController = navController,
-//                            )
-//                        }
-//                        composable("AboutPageUi") {
-//                            AboutPageUi(navController = navController)
-//                        }
-//                    }
                 }
             }
 
@@ -687,6 +683,23 @@ private fun Pages(
                 onClick = {
                     MyVibrationEffect(context, mainPage.enableHaptic.value).click()
                     coroutineScope.launch {
+                        settingsPageState.scrollToPage(0)
+                    }
+                    coroutineScope.launch {
+                        pageState.animateScrollToPage(
+                            2,
+                            animationSpec = spring(2f)
+                        )
+                    }
+                },
+                painter = painterResource(id = R.drawable.unlock),
+                text = stringResource(R.string.unlock_function_name)
+            )
+            BottomBarItem(
+                state = pageState.currentPage == 3,
+                onClick = {
+                    MyVibrationEffect(context, mainPage.enableHaptic.value).click()
+                    coroutineScope.launch {
                         settingsPageState.animateScrollToPage(
                             0,
                             animationSpec = spring(2f)
@@ -694,7 +707,7 @@ private fun Pages(
                     }
                     coroutineScope.launch {
                         pageState.animateScrollToPage(
-                            2,
+                            3,
                             animationSpec = spring(2f)
                         )
                     }

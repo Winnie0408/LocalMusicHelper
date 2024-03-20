@@ -265,4 +265,11 @@
     <string name="choose_string_encrypt_server">请求字符串的加密服务器#n仅在歌单来源为网易云音乐或酷我音乐时使用</string>
     <string name="unknown">未知</string>
     <string name="playlist_song_num_not_match_solution1">在网易云音乐中找到当前歌单，全选歌曲并添加到自己创建的歌单中，重新开始转换操作。</string>
+    <string name="unlock_function_name">解锁</string>
+    <string name="unlock_options">解锁选项</string>
+    <string name="select_the_directory_for_encrypted_files">选择加密音乐的输入目录</string>
+    <string name="select_the_directory_for_decrypted_files">选择解密音乐的输出目录</string>
+    <string name="input_path">选择的输入目录</string>
+    <string name="output_path">选择的输出目录</string>
+    <string name="unlocking_result">解锁结果</string>
 </resources>
