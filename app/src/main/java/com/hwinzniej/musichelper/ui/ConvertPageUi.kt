@@ -34,6 +34,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.VerticalPager
@@ -101,6 +102,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlin.math.roundToInt
 
 @OptIn(UnstableSaltApi::class, ExperimentalFoundationApi::class)
@@ -1263,7 +1265,7 @@ fun ConvertPageUi(
                                     .fillMaxWidth()
                                     .heightIn(max = (LocalConfiguration.current.screenHeightDp / 4).dp)
                             ) {
-                                AnimatedVisibility(visible = userLoggedIn) {
+                                AnimatedVisibility(visible = userLoggedIn && selectedSourceApp.intValue == 3) {
                                     ItemContainer {
                                         MarkdownText(
                                             modifier = Modifier
@@ -1406,6 +1408,8 @@ fun ConvertPageUi(
         }
     }
 
+    val lazyListState1 = rememberLazyListState()
+
     if (convertPage.showCustomPlaylistDialog.value) {
         YesNoDialog(
             onCancel = {
@@ -1417,7 +1421,14 @@ fun ConvertPageUi(
                 convertPage.customPlaylistInput.value = ""
             },
             onConfirm = {
-                convertPage.getCustomPlaylist()
+                coroutine.launch(Dispatchers.IO) {
+                    convertPage.getCustomPlaylist()
+                    if (playlistEnabled.size > 1) {
+                        withContext(Dispatchers.Main) {
+                            lazyListState1.animateScrollToItem(0)
+                        }
+                    }
+                }
             },
             title = stringResource(id = R.string.add_extra_playlist),
             enableHaptic = enableHaptic.value,
@@ -1914,6 +1925,7 @@ fun ConvertPageUi(
                                                 enableHaptic = enableHaptic.value
                                             )
                                             LazyColumn(
+                                                state = lazyListState1,
                                                 modifier = Modifier.heightIn(
                                                     max = (LocalConfiguration.current.screenHeightDp / 1.9).dp
                                                 )
@@ -2179,6 +2191,7 @@ fun ConvertPageUi(
                                 }
 
                                 1 -> {
+                                    val lazyListState = rememberLazyListState()
                                     Column(
                                         modifier = Modifier
                                             .padding(top = 4.dp)
@@ -2362,9 +2375,9 @@ fun ConvertPageUi(
                                             label = "",
                                             transitionSpec = {
                                                 if (targetState != initialState) {
-                                                    fadeIn() + slideInVertically() togetherWith fadeOut() + slideOutVertically()
+                                                    fadeIn() togetherWith fadeOut()
                                                 } else {
-                                                    fadeIn() + slideInVertically() togetherWith fadeOut() + slideOutVertically()
+                                                    fadeIn() togetherWith fadeOut()
                                                 }
                                             }) { it1 ->
                                             RoundedColumn {
@@ -2403,6 +2416,7 @@ fun ConvertPageUi(
                                                                 }
                                                             }) {
                                                             LazyColumn(
+                                                                state = lazyListState,
                                                                 modifier = Modifier.weight(1f)
                                                             ) {
                                                                 when (it) {

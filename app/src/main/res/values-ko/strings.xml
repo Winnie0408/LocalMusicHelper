@@ -263,4 +263,6 @@
     <string name="wrong_input_playlist_data">노래 목록 정보를 잘못 입력했습니다.</string>
     <string name="playlist_already_exists">입력한 노래 목록이 이미 존재합니다</string>
     <string name="choose_string_encrypt_server">요청 문자열을 위한 암호화된 서버#n넷이즈 클라우드 뮤직 또는 구워뮤직을 선택할 때만 사용됩니다</string>
+    <string name="unknown">알 수 없다</string>
+    <string name="playlist_song_num_not_match_solution1">넷이즈 클라우드 뮤직에서 현재 노래 목록을 찾아 모든 노래를 선택하고 생성한 노래 목록에 추가한 후 변환 작업을 다시 시작하세요.</string>
 </resources>

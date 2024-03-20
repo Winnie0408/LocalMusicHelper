@@ -263,4 +263,6 @@
     <string name="wrong_input_playlist_data">歌单信息输入错误，请检查</string>
     <string name="playlist_already_exists">输入的歌单已存在</string>
     <string name="choose_string_encrypt_server">请求字符串的加密服务器#n仅在歌单来源为网易云音乐或酷我音乐时使用</string>
+    <string name="unknown">未知</string>
+    <string name="playlist_song_num_not_match_solution1">在网易云音乐中找到当前歌单，全选歌曲并添加到自己创建的歌单中，重新开始转换操作。</string>
 </resources>
