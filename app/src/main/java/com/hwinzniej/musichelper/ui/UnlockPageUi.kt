@@ -19,6 +19,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -35,6 +36,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import com.hwinzniej.musichelper.R
+import com.hwinzniej.musichelper.activity.SettingsPage
 import com.hwinzniej.musichelper.activity.UnlockPage
 import com.moriafly.salt.ui.ItemContainer
 import com.moriafly.salt.ui.ItemTitle
@@ -48,12 +50,28 @@ import com.moriafly.salt.ui.UnstableSaltApi
 fun UnlockPageUi(
     unlockPage: UnlockPage,
     enableHaptic: MutableState<Boolean> = mutableStateOf(true),
+    settingsPage: SettingsPage
 ) {
     val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
     var showLoadingProgressBar by remember { mutableStateOf(false) }
     var inputPath by remember { mutableStateOf("") }
     var outputPath by remember { mutableStateOf("") }
+    var deleteEncryptedFile by remember { mutableStateOf(false) }
+    var overwriteOutputFile by remember { mutableStateOf(true) }
+    var umSupportOverWrite by remember { mutableStateOf(false) }
+
+    LaunchedEffect(key1 = settingsPage.umSupportOverWrite.value) {
+        umSupportOverWrite = settingsPage.umSupportOverWrite.value
+    }
+
+    LaunchedEffect(key1 = unlockPage.selectedEncryptedPath.value) {
+        inputPath = unlockPage.selectedEncryptedPath.value
+    }
+
+    LaunchedEffect(key1 = unlockPage.selectedDecryptedPath.value) {
+        outputPath = unlockPage.selectedDecryptedPath.value
+    }
 
     Column(
         modifier = Modifier
@@ -82,11 +100,11 @@ fun UnlockPageUi(
                     .verticalScroll(rememberScrollState())
             ) {
                 RoundedColumn {
-                    ItemTitle(text = stringResource(id = R.string.unlock_options))
+                    ItemTitle(text = stringResource(id = R.string.input_options))
                     Item(
                         text = stringResource(id = R.string.select_the_directory_for_encrypted_files),
                         onClick = {
-                            inputPath = unlockPage.selectedEncryptedPath.value
+                            unlockPage.selectInputDir()
                         }
                     )
                     AnimatedVisibility(
@@ -97,10 +115,20 @@ fun UnlockPageUi(
                             rightSub = inputPath
                         )
                     }
+                    ItemSwitcher(
+                        state = deleteEncryptedFile,
+                        onChange = { deleteEncryptedFile = !deleteEncryptedFile },
+                        text = stringResource(id = R.string.delete_encrypted_file),
+                        sub = stringResource(id = R.string.delete_encrypted_file_sub),
+                        enableHaptic = enableHaptic.value
+                    )
+                }
+                RoundedColumn {
+                    ItemTitle(text = stringResource(id = R.string.output_options))
                     Item(
                         text = stringResource(id = R.string.select_the_directory_for_decrypted_files),
                         onClick = {
-                            outputPath = unlockPage.selectedDecryptedPath.value
+                            unlockPage.selectOutputDir()
                         }
                     )
                     AnimatedVisibility(
@@ -111,16 +139,20 @@ fun UnlockPageUi(
                             rightSub = outputPath
                         )
                     }
+                    ItemSwitcher(
+                        enabled = umSupportOverWrite,
+                        state = overwriteOutputFile && umSupportOverWrite,
+                        onChange = { overwriteOutputFile = !overwriteOutputFile },
+                        text = stringResource(id = R.string.overwrite_output_file),
+                        sub = stringResource(id = R.string.overwrite_output_file_sub),
+                        enableHaptic = enableHaptic.value
+                    )
                 }
                 AnimatedContent(
                     targetState = showLoadingProgressBar,
                     label = "",
                     transitionSpec = {
-                        if (targetState != initialState) {
-                            fadeIn() togetherWith fadeOut()
-                        } else {
-                            fadeIn() togetherWith fadeOut()
-                        }
+                        fadeIn() togetherWith fadeOut()
                     }) {
                     ItemContainer {
                         TextButton(

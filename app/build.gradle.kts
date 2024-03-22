@@ -12,6 +12,7 @@ android {
     defaultConfig {
         applicationId = "com.hwinzniej.musichelper"
         minSdk = 26
+//        targetSdk = 28
         targetSdk = 34
         versionCode = 33
         versionName = "1.1.7.2"

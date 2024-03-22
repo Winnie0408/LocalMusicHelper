@@ -145,11 +145,7 @@ fun YesNoDialog(
                 targetState = enableConfirmButton,
                 label = "",
                 transitionSpec = {
-                    if (targetState != initialState) {
-                        fadeIn() togetherWith fadeOut()
-                    } else {
-                        fadeIn() togetherWith fadeOut()
-                    }
+                    fadeIn() togetherWith fadeOut()
                 }) {
                 TextButton(
                     onClick = {

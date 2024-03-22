@@ -188,11 +188,7 @@ fun ScanPageUi(
                     targetState = showLoadingProgressBar.value,
                     label = "",
                     transitionSpec = {
-                        if (targetState != initialState) {
-                            fadeIn() togetherWith fadeOut()
-                        } else {
-                            fadeIn() togetherWith fadeOut()
-                        }
+                        fadeIn() togetherWith fadeOut()
                     }) {
                     ItemContainer {
                         TextButton(

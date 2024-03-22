@@ -265,11 +265,24 @@
     <string name="choose_string_encrypt_server">요청 문자열을 위한 암호화된 서버#n넷이즈 클라우드 뮤직 또는 구워뮤직을 선택할 때만 사용됩니다</string>
     <string name="unknown">알 수 없다</string>
     <string name="playlist_song_num_not_match_solution1">넷이즈 클라우드 뮤직에서 현재 노래 목록을 찾아 모든 노래를 선택하고 생성한 노래 목록에 추가한 후 변환 작업을 다시 시작하세요.</string>
-    <string name="unlock_function_name">릴리스</string>
     <string name="unlock_options">잠금 해제 옵션</string>
     <string name="select_the_directory_for_encrypted_files">암호화된 음악의 디렉터리 선택</string>
     <string name="select_the_directory_for_decrypted_files">복호화된 음악 출력 디렉터리 선택</string>
     <string name="input_path">선택한 입력 디렉터리</string>
     <string name="output_path">선택한 출력 디렉터리</string>
     <string name="unlocking_result">결과 잠금 풀기</string>
+    <string name="delete_encrypted_file">암호화된 파일 삭제</string>
+    <string name="overwrite_output_file">복호화된 파일 덮어쓰기</string>
+    <string name="delete_encrypted_file_sub">잠금 해제 완료 후 원래 암호화된 파일을 삭제합니다</string>
+    <string name="overwrite_output_file_sub">출력 디렉터리에 같은 이름의 파일이 이미 있다면 묻지 않고 덮어쓰기</string>
+    <string name="input_options">입력 옵션</string>
+    <string name="output_options">출력 설정</string>
+    <string name="select_um_executable_file">UM 실행 파일 가져오기</string>
+    <string name="cant_provide_um_file">죄송하지만 어떤 사정으로 UM은 직접 제공해드릴 수 없고, 직접 다운로드 또는 컴파일하셔서 가져오셔야만 사용하실 수 있습니다</string>
+    <string name="um_imported">가져오기</string>
+    <string name="um_not_imported">가져오지 않음</string>
+    <string name="invalid_um_file">불법 UM 실행 파일</string>
+    <string name="valid_um_file">가져오기 성공</string>
+    <string name="can_use_um_now">이제 UM에서 제공하는 기능을 사용할 수 있으며, 다시 가져오려면 클릭하세요</string>
+    <string name="current_um_not_support_this_fun">" 가져온 UM이 이 작업을 지원하지 않음"</string>
 </resources>

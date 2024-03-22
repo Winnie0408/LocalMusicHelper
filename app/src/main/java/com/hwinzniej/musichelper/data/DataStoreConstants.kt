@@ -20,4 +20,6 @@ object DataStoreConstants {
     val GET_PLAYLIST_METHOD = intPreferencesKey("get_playlist_method")
     val KUGOU_TOKEN = stringPreferencesKey("kugou_token")
     val KUGOU_USER_ID = stringPreferencesKey("kugou_user_id")
+    val UM_FILE_LEGAL = booleanPreferencesKey("um_file_legal")
+    val UM_SUPPORT_OVERWRITE = booleanPreferencesKey("um_support_overwrite")
 }

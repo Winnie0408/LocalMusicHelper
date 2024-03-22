@@ -2061,13 +2061,13 @@ class ConvertPage(
                 }
                 if (directlyStart) {
                     playlistSum[firstIndex1] = totalNum
-                    withContext(Dispatchers.Main) {
-                        Toast.makeText(
-                            context,
-                            "${context.getString(R.string.continue_button_name)}…",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                    }
+//                    withContext(Dispatchers.Main) {
+//                        Toast.makeText(
+//                            context,
+//                            "${context.getString(R.string.continue_button_name)}…",
+//                            Toast.LENGTH_SHORT
+//                        ).show()
+//                    }
                 } else {
                     errorDialogContent.value =
                         "- ${context.getString(R.string.playlist_song_num_not_match)}\n  - ${

@@ -1562,11 +1562,7 @@ fun ConvertPageUi(
                                     targetState = useRootAccess.value && selectedMethod.intValue == 0,
                                     label = "",
                                     transitionSpec = {
-                                        if (targetState != initialState) {
-                                            fadeIn() togetherWith fadeOut()
-                                        } else {
-                                            fadeIn() togetherWith fadeOut()
-                                        }
+                                        fadeIn() togetherWith fadeOut()
                                     }) {
                                     ItemPopup(
                                         state = sourceAppPopupMenuState,
@@ -1872,11 +1868,7 @@ fun ConvertPageUi(
                                 targetState = showLoadingProgressBar.value,
                                 label = "",
                                 transitionSpec = {
-                                    if (targetState != initialState) {
-                                        fadeIn() togetherWith fadeOut()
-                                    } else {
-                                        fadeIn() togetherWith fadeOut()
-                                    }
+                                    fadeIn() togetherWith fadeOut()
                                 }) {
                                 ItemContainer {
                                     TextButton(
@@ -1976,11 +1968,7 @@ fun ConvertPageUi(
                                 targetState = showLoadingProgressBar.value,
                                 label = "",
                                 transitionSpec = {
-                                    if (targetState != initialState) {
-                                        fadeIn() togetherWith fadeOut()
-                                    } else {
-                                        fadeIn() togetherWith fadeOut()
-                                    }
+                                    fadeIn() togetherWith fadeOut()
                                 }) {
                                 ItemContainer {
                                     Row {
@@ -2169,11 +2157,7 @@ fun ConvertPageUi(
                                             targetState = showNumberProgressBar.value || showLoadingProgressBar.value,
                                             label = "",
                                             transitionSpec = {
-                                                if (targetState != initialState) {
-                                                    fadeIn() togetherWith fadeOut()
-                                                } else {
-                                                    fadeIn() togetherWith fadeOut()
-                                                }
+                                                fadeIn() togetherWith fadeOut()
                                             }) {
                                             ItemContainer {
                                                 TextButton(
@@ -2374,11 +2358,8 @@ fun ConvertPageUi(
                                             targetState = showOriginalSonglist,
                                             label = "",
                                             transitionSpec = {
-                                                if (targetState != initialState) {
-                                                    fadeIn() togetherWith fadeOut()
-                                                } else {
-                                                    fadeIn() togetherWith fadeOut()
-                                                }
+                                                fadeIn() togetherWith fadeOut()
+
                                             }) { it1 ->
                                             RoundedColumn {
                                                 ItemTitle(
@@ -2409,11 +2390,7 @@ fun ConvertPageUi(
                                                             targetState = selectedFilterIndex,
                                                             label = "",
                                                             transitionSpec = {
-                                                                if (targetState != initialState) {
-                                                                    fadeIn() + slideInVertically() togetherWith fadeOut() + slideOutVertically()
-                                                                } else {
-                                                                    fadeIn() + slideInVertically() togetherWith fadeOut() + slideOutVertically()
-                                                                }
+                                                                fadeIn() + slideInVertically() togetherWith fadeOut() + slideOutVertically()
                                                             }) {
                                                             LazyColumn(
                                                                 state = lazyListState,

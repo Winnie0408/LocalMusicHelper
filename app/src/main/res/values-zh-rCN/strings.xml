@@ -127,7 +127,7 @@
     <string name="settings_function_name">设置</string>
     <string name="user_interface">用户界面</string>
     <string name="dynamic_color_switcher_text">动态取色</string>
-    <string name="dynamic_color_switcher_sub">使用Android 12+ 提供的莫奈取色功能</string>
+    <string name="dynamic_color_switcher_sub">使用 Android 12+ 提供的莫奈取色功能</string>
     <string name="theme_mode_switcher_text">主题模式</string>
     <string name="light_mode">浅色</string>
     <string name="dark_mode">深色</string>
@@ -148,7 +148,7 @@
     <string name="pc_salt_converter">Salt Converter 电脑版</string>
     <string name="buy_me_a_coffee">赞赏</string>
     <string name="join_qq_group">加入QQ群</string>
-    <string name="follow_on_bilibili">关注BiliBili</string>
+    <string name="follow_on_bilibili">关注哔哩哔哩</string>
     <string name="open_source_github">在Github上查看本项目</string>
     <string name="open_source_sub">点个Star ⭐ 就更好啦~</string>
     <string name="open_source_gitlab">在GitLab上查看本项目</string>
@@ -223,7 +223,7 @@
     <string name="get_playlist_hidden">已隐藏#个空歌单</string>
     <string name="switch_account_logout">切换账号 / 退出登录</string>
     <string name="not_yet_deployed">（暂未启用）</string>
-    <string name="unable_start_documentsui">“文件”启动失败</string>
+    <string name="unable_start_documentsui">「文件」启动失败</string>
     <string name="music_file_encrypted">似乎已被加密，请先解密。</string>
     <string name="no_song_in_playlist">歌单为空，请在#中重新加载。</string>
     <string name="will_skip_this_playlist">将跳过当前歌单。</string>
@@ -265,11 +265,24 @@
     <string name="choose_string_encrypt_server">请求字符串的加密服务器#n仅在歌单来源为网易云音乐或酷我音乐时使用</string>
     <string name="unknown">未知</string>
     <string name="playlist_song_num_not_match_solution1">在网易云音乐中找到当前歌单，全选歌曲并添加到自己创建的歌单中，重新开始转换操作。</string>
-    <string name="unlock_function_name">解锁</string>
     <string name="unlock_options">解锁选项</string>
     <string name="select_the_directory_for_encrypted_files">选择加密音乐的输入目录</string>
     <string name="select_the_directory_for_decrypted_files">选择解密音乐的输出目录</string>
     <string name="input_path">选择的输入目录</string>
     <string name="output_path">选择的输出目录</string>
     <string name="unlocking_result">解锁结果</string>
+    <string name="delete_encrypted_file">删除原加密的文件</string>
+    <string name="overwrite_output_file">覆盖解密的文件</string>
+    <string name="delete_encrypted_file_sub">解锁成功后，删除原加密的文件</string>
+    <string name="overwrite_output_file_sub">若输出目录中已存在同名文件，直接覆盖而不询问</string>
+    <string name="input_options">输入选项</string>
+    <string name="output_options">输出选项</string>
+    <string name="select_um_executable_file">导入UM的可执行文件</string>
+    <string name="cant_provide_um_file">抱歉，由于某些原因，我们不能直接提供UM，需要您自行下载或编译，并导入后才能使用</string>
+    <string name="um_imported">已导入</string>
+    <string name="um_not_imported">未导入</string>
+    <string name="invalid_um_file">不正确的UM可执行文件</string>
+    <string name="valid_um_file">导入成功</string>
+    <string name="can_use_um_now">现在您可使用UM提供的功能；点击可重新导入</string>
+    <string name="current_um_not_support_this_fun">导入的UM不支持本操作</string>
 </resources>

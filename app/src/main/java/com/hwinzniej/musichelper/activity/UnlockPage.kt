@@ -11,6 +11,7 @@ import android.os.Environment
 import android.provider.Settings
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.mutableStateListOf
@@ -24,7 +25,9 @@ import com.hwinzniej.musichelper.utils.Tools
 class UnlockPage(
     val context: Context,
     private val lifecycleOwner: LifecycleOwner,
-    componentActivity: ComponentActivity
+    componentActivity: ComponentActivity,
+    val openEncryptDirectoryLauncher: ActivityResultLauncher<Uri?>,
+    val openDecryptDirectoryLauncher: ActivityResultLauncher<Uri?>
 ) : PermissionResultHandler {
     var unlockResult = mutableStateListOf<Map<String, Boolean>>()
     var selectedEncryptedPath = mutableStateOf("")
@@ -108,6 +111,30 @@ class UnlockPage(
         }
     }
 //==================== Android 10- 使用====================
+
+    fun selectInputDir() {
+        try {
+            openEncryptDirectoryLauncher.launch(null)
+        } catch (_: Exception) {
+            Toast.makeText(
+                context,
+                context.getString(R.string.unable_start_documentsui),
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+    }
+
+    fun selectOutputDir() {
+        try {
+            openDecryptDirectoryLauncher.launch(null)
+        } catch (_: Exception) {
+            Toast.makeText(
+                context,
+                context.getString(R.string.unable_start_documentsui),
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+    }
 
     fun handleSelectedEncryptedPath(uri: Uri?) {
         if (uri == null) {

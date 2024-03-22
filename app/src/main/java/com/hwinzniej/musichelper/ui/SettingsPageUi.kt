@@ -3,7 +3,11 @@ package com.hwinzniej.musichelper.ui
 import android.content.res.Resources
 import android.os.Build
 import android.widget.Toast
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -68,6 +72,7 @@ fun SettingsPageUi(
     val languagePopupMenuState = rememberPopupState()
     val coroutineScope = rememberCoroutineScope()
     var showSelectEncryptServerDialog by remember { mutableStateOf(false) }
+    var umFileLegal by remember { mutableStateOf(false) }
 
     LaunchedEffect(key1 = showSelectEncryptServerDialog) {
         if (showSelectEncryptServerDialog) {
@@ -76,6 +81,10 @@ fun SettingsPageUi(
             }
             settingsPage.checkServerPing()
         }
+    }
+
+    LaunchedEffect(key1 = settingsPage.umFileLegal.value) {
+        umFileLegal = settingsPage.umFileLegal.value
     }
 
     if (showSelectEncryptServerDialog) {
@@ -322,6 +331,36 @@ fun SettingsPageUi(
                         "\n"
                     ),
                 )
+            }
+
+            if (context.packageManager.getApplicationInfo(
+                    context.packageName,
+                    0
+                ).targetSdkVersion == 28
+            ) {
+                RoundedColumn {
+                    ItemTitle(text = stringResource(R.string.music_unlock))
+                    AnimatedContent(
+                        targetState = umFileLegal,
+                        label = "",
+                        transitionSpec = {
+                            fadeIn() togetherWith fadeOut()
+                        }
+                    ) {
+                        Item(
+                            onClick = { settingsPage.selectUmFile() },
+                            text = stringResource(id = R.string.select_um_executable_file),
+                            sub = if (it)
+                                stringResource(id = R.string.can_use_um_now)
+                            else
+                                stringResource(id = R.string.cant_provide_um_file),
+                            rightSub = if (it)
+                                stringResource(id = R.string.um_imported)
+                            else
+                                stringResource(id = R.string.um_not_imported),
+                        )
+                    }
+                }
             }
 
             RoundedColumn {
