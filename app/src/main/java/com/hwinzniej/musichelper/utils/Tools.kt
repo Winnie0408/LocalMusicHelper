@@ -298,10 +298,10 @@ class Tools {
         val result = StringBuilder()
         var line: String?
         while (inputStream.readLine().also { line = it } != null) {
-            result.append(line)
+            result.append(line + "\n")
         }
         while (errorStream.readLine().also { line = it } != null) {
-            result.append(line)
+            result.append(line + "\n")
         }
         process.waitFor()
         process.destroy()

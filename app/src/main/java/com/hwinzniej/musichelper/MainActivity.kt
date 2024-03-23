@@ -194,7 +194,8 @@ class MainActivity : ComponentActivity() {
                 lifecycleOwner = this,
                 componentActivity = this,
                 openEncryptDirectoryLauncher = openEncryptDirectoryLauncher,
-                openDecryptDirectoryLauncher = openDecryptDirectoryLauncher
+                openDecryptDirectoryLauncher = openDecryptDirectoryLauncher,
+                settingsPage = settingsPage
             )
         enableEdgeToEdge()
         setContent {

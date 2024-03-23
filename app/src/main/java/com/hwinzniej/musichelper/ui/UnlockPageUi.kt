@@ -30,6 +30,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
@@ -54,7 +55,6 @@ fun UnlockPageUi(
 ) {
     val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
-    var showLoadingProgressBar by remember { mutableStateOf(false) }
     var inputPath by remember { mutableStateOf("") }
     var outputPath by remember { mutableStateOf("") }
     var deleteEncryptedFile by remember { mutableStateOf(false) }
@@ -73,6 +73,45 @@ fun UnlockPageUi(
         outputPath = unlockPage.selectedDecryptedPath.value
     }
 
+    if (unlockPage.showUmStdoutDialog.value) {
+        YesDialog(
+            onDismissRequest = { unlockPage.showUmStdoutDialog.value = false },
+            title = stringResource(id = R.string.um_stdout),
+            content = null,
+            enableHaptic = enableHaptic.value
+        ) {
+            ItemContainer {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(
+                            min = 25.dp,
+                            max = (LocalConfiguration.current.screenHeightDp / 2.55).dp
+                        )
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(color = SaltTheme.colors.subBackground)
+                ) {
+                    items(unlockPage.unlockResult.size) { index ->
+                        Text(
+                            modifier = Modifier.padding(
+                                horizontal = 16.dp,
+                                vertical = 4.dp
+                            ),
+                            text = unlockPage.unlockResult[index].keys.first(),
+                            fontSize = 14.sp,
+                            style = TextStyle(
+                                color = if (unlockPage.unlockResult[index].values.first())
+                                    SaltTheme.colors.subText
+                                else
+                                    colorResource(id = R.color.unmatched)
+                            ),
+                        )
+                    }
+                }
+            }
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -80,11 +119,14 @@ fun UnlockPageUi(
     ) {
         TitleBar(
             onBack = {},
-            text = stringResource(id = R.string.unlock_function_name),
+            text = stringResource(id = R.string.unlock_function_name) + if (settingsPage.umFileLegal.value)
+                ""
+            else
+                stringResource(id = R.string.unavailable),
             showBackBtn = false
         )
         Box {
-            if (showLoadingProgressBar) {
+            if (unlockPage.showLoadingProgressBar.value) {
                 LinearProgressIndicator(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -102,7 +144,8 @@ fun UnlockPageUi(
                 RoundedColumn {
                     ItemTitle(text = stringResource(id = R.string.input_options))
                     Item(
-                        text = stringResource(id = R.string.select_the_directory_for_encrypted_files),
+                        enabled = settingsPage.umFileLegal.value,
+                        text = stringResource(id = R.string.select_the_directory_for_input_files),
                         onClick = {
                             unlockPage.selectInputDir()
                         }
@@ -111,22 +154,27 @@ fun UnlockPageUi(
                         visible = inputPath != ""
                     ) {
                         ItemValue(
-                            text = stringResource(R.string.input_path),
+                            text = stringResource(R.string.you_have_selected),
                             rightSub = inputPath
                         )
                     }
                     ItemSwitcher(
+                        enabled = settingsPage.umFileLegal.value,
                         state = deleteEncryptedFile,
-                        onChange = { deleteEncryptedFile = !deleteEncryptedFile },
-                        text = stringResource(id = R.string.delete_encrypted_file),
-                        sub = stringResource(id = R.string.delete_encrypted_file_sub),
+                        onChange = {
+                            deleteEncryptedFile = it
+                            unlockPage.deleteEncryptedFile.value = it
+                        },
+                        text = stringResource(id = R.string.delete_input_file),
+                        sub = stringResource(id = R.string.delete_input_file_sub),
                         enableHaptic = enableHaptic.value
                     )
                 }
                 RoundedColumn {
                     ItemTitle(text = stringResource(id = R.string.output_options))
                     Item(
-                        text = stringResource(id = R.string.select_the_directory_for_decrypted_files),
+                        enabled = settingsPage.umFileLegal.value,
+                        text = stringResource(id = R.string.select_the_directory_for_output_files),
                         onClick = {
                             unlockPage.selectOutputDir()
                         }
@@ -135,21 +183,26 @@ fun UnlockPageUi(
                         visible = outputPath != ""
                     ) {
                         ItemValue(
-                            text = stringResource(R.string.output_path),
+                            text = stringResource(R.string.you_have_selected),
                             rightSub = outputPath
                         )
                     }
                     ItemSwitcher(
-                        enabled = umSupportOverWrite,
+                        enabled = umSupportOverWrite && settingsPage.umFileLegal.value,
                         state = overwriteOutputFile && umSupportOverWrite,
-                        onChange = { overwriteOutputFile = !overwriteOutputFile },
+                        onChange = {
+                            overwriteOutputFile = it
+                            unlockPage.overwriteOutputFile.value = it
+                        },
                         text = stringResource(id = R.string.overwrite_output_file),
-                        sub = stringResource(id = R.string.overwrite_output_file_sub),
+                        sub = if (umSupportOverWrite) stringResource(id = R.string.overwrite_output_file_sub)
+                        else stringResource(id = R.string.current_um_not_support_this_fun) + "\n" +
+                                stringResource(id = R.string.overwrite_output_file_sub),
                         enableHaptic = enableHaptic.value
                     )
                 }
                 AnimatedContent(
-                    targetState = showLoadingProgressBar,
+                    targetState = unlockPage.showLoadingProgressBar.value,
                     label = "",
                     transitionSpec = {
                         fadeIn() togetherWith fadeOut()
@@ -159,42 +212,9 @@ fun UnlockPageUi(
                             onClick = {
                                 unlockPage.requestPermission()
                             }, text = stringResource(R.string.start_text),
-                            enabled = !it,
+                            enabled = !it && settingsPage.umFileLegal.value,
                             enableHaptic = enableHaptic.value
                         )
-                    }
-                }
-                AnimatedVisibility(
-                    visible = false,// TODO
-                ) {
-                    RoundedColumn {
-                        ItemTitle(text = stringResource(R.string.unlocking_result))
-                        ItemContainer {
-                            LazyColumn(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .heightIn(
-                                        min = 25.dp,
-                                        max = (LocalConfiguration.current.screenHeightDp / 2.55).dp
-                                    )
-                                    .clip(RoundedCornerShape(10.dp))
-                                    .background(color = SaltTheme.colors.background)
-                            ) {
-                                items(unlockPage.unlockResult.size) { index ->
-                                    Text(
-                                        modifier = Modifier.padding(
-                                            horizontal = 16.dp,
-                                            vertical = 4.dp
-                                        ),
-                                        text = unlockPage.unlockResult[index].keys.first(),
-                                        fontSize = 16.sp,
-                                        style = TextStyle(
-                                            color = SaltTheme.colors.subText
-                                        ),
-                                    )
-                                }
-                            }
-                        }
                     }
                 }
             }

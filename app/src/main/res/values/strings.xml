@@ -271,15 +271,14 @@
     <string name="playlist_song_num_not_match_solution1">Find the current song list in Netease Cloud Music, select all the songs and add them to the song list you created and start the conversion operation from the beginning.</string>
     <string name="unlock_function_name" translatable="false">UM</string>
     <string name="unlock_options">Unlock options</string>
-    <string name="select_the_directory_for_encrypted_files">Select the input path for encrypted musics</string>
-    <string name="select_the_directory_for_decrypted_files">Select the output path for decrypted musics</string>
+    <string name="select_the_directory_for_input_files">Select the input path</string>
+    <string name="select_the_directory_for_output_files">Select the output path</string>
     <string name="input_path">Selected input path</string>
     <string name="output_path">Selected output path</string>
-    <string name="unlocking_result">Unlocking result</string>
-    <string name="delete_encrypted_file">Delete the original encrypted files</string>
-    <string name="overwrite_output_file">Overwrite decrypted files</string>
-    <string name="delete_encrypted_file_sub">Delete the original encrypted files after successful unlocking</string>
-    <string name="overwrite_output_file_sub">If a file with the same name already exists in the output directory, it is overwritten directly without asking</string>
+    <string name="delete_input_file">Delete the original files</string>
+    <string name="overwrite_output_file">Overwrite files</string>
+    <string name="delete_input_file_sub">Delete the original file automatically after successful operation</string>
+    <string name="overwrite_output_file_sub">If a file with the same name already exists in the output directory, will overwritten it directly</string>
     <string name="input_options">Input options</string>
     <string name="output_options">Output options</string>
     <string name="music_unlock" translatable="false">UM</string>
@@ -291,4 +290,8 @@
     <string name="valid_um_file">Import success</string>
     <string name="can_use_um_now">You can now use the functions provided by UM, click to re-import it</string>
     <string name="current_um_not_support_this_fun">" Imported UM not support this"</string>
+    <string name="um_stdout">UM result</string>
+    <string name="um_file_not_found">UM file not found</string>
+    <string name="error_while_um_convert">Error occurred during UM operation</string>
+    <string name="unavailable">(Unavailable)</string>
 </resources>
