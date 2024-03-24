@@ -294,4 +294,13 @@
     <string name="um_file_not_found">UM file not found</string>
     <string name="error_while_um_convert">Error occurred during UM operation</string>
     <string name="unavailable">(Unavailable)</string>
+    <string name="input_output_path_cant_same">The input and output paths cannot be the same.</string>
+    <string name="tag_function_name">Tag</string>
+    <string name="song_list">Song list</string>
+    <string name="no_music">No music</string>
+    <string name="song_info">Song info</string>
+    <string name="atrist">Artist</string>
+    <string name="album1">Album</string>
+    <string name="text_null">Null</string>
+    <string name="input_and_output_path_cant_null">The input and output directories cannot be empty.</string>
 </resources>

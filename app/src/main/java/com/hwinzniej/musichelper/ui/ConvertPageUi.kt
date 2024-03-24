@@ -90,7 +90,6 @@ import com.hwinzniej.musichelper.data.DataStoreConstants
 import com.hwinzniej.musichelper.utils.MyVibrationEffect
 import com.hwinzniej.musichelper.utils.Tools
 import com.moriafly.salt.ui.ItemContainer
-import com.moriafly.salt.ui.ItemTitle
 import com.moriafly.salt.ui.RoundedColumn
 import com.moriafly.salt.ui.SaltTheme
 import com.moriafly.salt.ui.TitleBar
@@ -253,7 +252,7 @@ fun ConvertPageUi(
                             min = 20.dp,
                             max = (LocalConfiguration.current.screenHeightDp / 2.5).dp
                         )
-                        .clip(RoundedCornerShape(10.dp))
+                        .clip(RoundedCornerShape(12.dp))
                 ) {
                     item {
                         MarkdownText(
@@ -1389,7 +1388,7 @@ fun ConvertPageUi(
                             min = 20.dp,
                             max = (LocalConfiguration.current.screenHeightDp / 2.5).dp
                         )
-                        .clip(RoundedCornerShape(10.dp))
+                        .clip(RoundedCornerShape(12.dp))
                 ) {
                     item {
                         MarkdownText(
@@ -1901,7 +1900,7 @@ fun ConvertPageUi(
                                     ItemContainer {
                                         Column(
                                             modifier = Modifier
-                                                .clip(RoundedCornerShape(10.dp))
+                                                .clip(RoundedCornerShape(12.dp))
                                                 .background(color = SaltTheme.colors.subBackground)
                                         ) {
                                             ItemCheck(
@@ -2382,7 +2381,7 @@ fun ConvertPageUi(
                                                 ItemContainer {
                                                     Column(
                                                         modifier = Modifier
-                                                            .clip(RoundedCornerShape(10.dp))
+                                                            .clip(RoundedCornerShape(12.dp))
                                                             .heightIn(max = (LocalConfiguration.current.screenHeightDp / 2.1).dp)
                                                             .background(color = SaltTheme.colors.subBackground)
                                                     ) {
@@ -2684,7 +2683,7 @@ fun ConvertPageUi(
                                         modifier = Modifier
                                             .fillMaxSize()
                                             .heightIn(max = (LocalConfiguration.current.screenHeightDp / 2.2).dp)
-                                            .clip(RoundedCornerShape(10.dp))
+                                            .clip(RoundedCornerShape(12.dp))
                                             .background(color = SaltTheme.colors.background)
                                     ) {
                                         items(convertPage.resultFileLocation.size) { index ->

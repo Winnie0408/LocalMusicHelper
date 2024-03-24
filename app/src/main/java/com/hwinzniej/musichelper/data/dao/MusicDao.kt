@@ -35,6 +35,21 @@ interface MusicDao {
     @Query("SELECT song, artist, album, absolutePath, id FROM music WHERE id = :id")
     fun getMusicById(id: Int): MusicInfo
 
+    @Query("SELECT song, artist, album, absolutePath, id, albumArtist, genre, trackNumber, releaseYear FROM music WHERE id = :id")
+    fun getMusicAllInfo(id: Int): MusicInfo
+
+    @Query("UPDATE music SET song = :song, artist = :artist, album = :album, albumArtist = :albumArtist, genre = :genre, trackNumber = :trackNumber, releaseYear = :releaseYear WHERE id = :id")
+    fun updateMusicInfo(
+        id: Int,
+        song: String,
+        artist: String,
+        album: String,
+        albumArtist: String?,
+        genre: String?,
+        trackNumber: String?,
+        releaseYear: String?
+    )
+
 //    @Insert
 //    fun updateMusicInfo(musicInfo: MusicInfo)
 }

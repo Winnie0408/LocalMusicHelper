@@ -67,6 +67,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.toggleableState
 import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -655,7 +656,7 @@ fun ItemEdit(
     actionContent: (@Composable () -> Unit)? = null,
     showClearButton: Boolean = false,
     onClear: () -> Unit = {},
-    enableHaptic: Boolean = false
+    enableHaptic: Boolean = false,
 ) {
     val context = LocalContext.current
     BasicTextField(
@@ -891,6 +892,25 @@ fun PopupMenuItem(
             )
         }
     }
+}
+
+@Composable
+fun ItemTitle(
+    text: String,
+    paddingValues: PaddingValues = PaddingValues(
+        horizontal = SaltTheme.dimens.innerHorizontalPadding,
+        vertical = SaltTheme.dimens.innerVerticalPadding
+    )
+) {
+    Text(
+        text = text,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(paddingValues),
+        color = SaltTheme.colors.highlight,
+        fontWeight = FontWeight.Bold,
+        style = SaltTheme.textStyles.sub
+    )
 }
 
 @Preview

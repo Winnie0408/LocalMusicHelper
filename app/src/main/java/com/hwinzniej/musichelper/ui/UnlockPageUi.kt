@@ -40,7 +40,6 @@ import com.hwinzniej.musichelper.R
 import com.hwinzniej.musichelper.activity.SettingsPage
 import com.hwinzniej.musichelper.activity.UnlockPage
 import com.moriafly.salt.ui.ItemContainer
-import com.moriafly.salt.ui.ItemTitle
 import com.moriafly.salt.ui.RoundedColumn
 import com.moriafly.salt.ui.SaltTheme
 import com.moriafly.salt.ui.TitleBar
@@ -50,7 +49,7 @@ import com.moriafly.salt.ui.UnstableSaltApi
 @Composable
 fun UnlockPageUi(
     unlockPage: UnlockPage,
-    enableHaptic: MutableState<Boolean> = mutableStateOf(true),
+    enableHaptic: MutableState<Boolean>,
     settingsPage: SettingsPage
 ) {
     val coroutineScope = rememberCoroutineScope()
@@ -60,6 +59,7 @@ fun UnlockPageUi(
     var deleteEncryptedFile by remember { mutableStateOf(false) }
     var overwriteOutputFile by remember { mutableStateOf(true) }
     var umSupportOverWrite by remember { mutableStateOf(false) }
+    var showInputOutputPathNotSameDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(key1 = settingsPage.umSupportOverWrite.value) {
         umSupportOverWrite = settingsPage.umSupportOverWrite.value
@@ -88,7 +88,7 @@ fun UnlockPageUi(
                             min = 25.dp,
                             max = (LocalConfiguration.current.screenHeightDp / 2.55).dp
                         )
-                        .clip(RoundedCornerShape(10.dp))
+                        .clip(RoundedCornerShape(12.dp))
                         .background(color = SaltTheme.colors.subBackground)
                 ) {
                     items(unlockPage.unlockResult.size) { index ->
@@ -110,6 +110,21 @@ fun UnlockPageUi(
                 }
             }
         }
+    }
+
+    if (showInputOutputPathNotSameDialog) {
+        YesDialog(
+            onDismissRequest = {
+                showInputOutputPathNotSameDialog = false
+            },
+            title = stringResource(id = R.string.error),
+            content = if (inputPath.isBlank() || outputPath.isBlank())
+                stringResource(id = R.string.input_and_output_path_cant_null)
+            else
+                stringResource(id = R.string.input_output_path_cant_same),
+            fontSize = 14.sp,
+            enableHaptic = enableHaptic.value,
+        )
     }
 
     Column(
@@ -210,7 +225,11 @@ fun UnlockPageUi(
                     ItemContainer {
                         TextButton(
                             onClick = {
-                                unlockPage.requestPermission()
+                                if ((inputPath == outputPath) || (inputPath.isBlank() || outputPath.isBlank())) {
+                                    showInputOutputPathNotSameDialog = true
+                                } else {
+                                    unlockPage.requestPermission()
+                                }
                             }, text = stringResource(R.string.start_text),
                             enabled = !it && settingsPage.umFileLegal.value,
                             enableHaptic = enableHaptic.value

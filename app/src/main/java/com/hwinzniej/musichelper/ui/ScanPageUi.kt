@@ -36,7 +36,6 @@ import com.hwinzniej.musichelper.R
 import com.hwinzniej.musichelper.activity.ScanPage
 import com.hwinzniej.musichelper.utils.MyVibrationEffect
 import com.moriafly.salt.ui.ItemContainer
-import com.moriafly.salt.ui.ItemTitle
 import com.moriafly.salt.ui.RoundedColumn
 import com.moriafly.salt.ui.SaltTheme
 import com.moriafly.salt.ui.TitleBar
@@ -87,7 +86,7 @@ fun ScanPageUi(
                             min = 20.dp,
                             max = (LocalConfiguration.current.screenHeightDp / 2.5).dp
                         )
-                        .clip(RoundedCornerShape(10.dp))
+                        .clip(RoundedCornerShape(12.dp))
                 ) {
                     item {
                         MarkdownText(
@@ -244,7 +243,7 @@ fun ScanPageUi(
                                         min = 25.dp,
                                         max = (LocalConfiguration.current.screenHeightDp / 2.55).dp
                                     )
-                                    .clip(RoundedCornerShape(10.dp))
+                                    .clip(RoundedCornerShape(12.dp))
                                     .background(color = SaltTheme.colors.background)
                             ) {
                                 items(scanResult.size) { index ->

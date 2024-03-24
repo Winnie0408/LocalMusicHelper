@@ -288,4 +288,13 @@
     <string name="um_file_not_found">找不到UM文件</string>
     <string name="error_while_um_convert">UM操作时发生错误</string>
     <string name="unavailable">（不可用）</string>
+    <string name="input_output_path_cant_same">输入输出路径不能相同。</string>
+    <string name="tag_function_name">标签</string>
+    <string name="song_list">歌曲列表</string>
+    <string name="no_music">暂无音乐</string>
+    <string name="song_info">歌曲信息</string>
+    <string name="atrist">艺术家</string>
+    <string name="album1">专辑</string>
+    <string name="text_null">空</string>
+    <string name="input_and_output_path_cant_null">输入与输出目录不能为空。</string>
 </resources>

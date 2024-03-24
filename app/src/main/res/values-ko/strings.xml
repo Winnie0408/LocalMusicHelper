@@ -288,4 +288,13 @@
     <string name="um_file_not_found">UM 파일을 찾을 수 없습니다</string>
     <string name="error_while_um_convert">UM 작업 중 오류가 발생했습니다</string>
     <string name="unavailable">" (사용 불가)"</string>
+    <string name="input_output_path_cant_same">입력 경로와 출력 경로는 동일할 수 없습니다.</string>
+    <string name="tag_function_name">태그</string>
+    <string name="song_list">노래 목록</string>
+    <string name="no_music">음악 없음</string>
+    <string name="song_info">노래 정보</string>
+    <string name="atrist">아티스트</string>
+    <string name="album1">앨범</string>
+    <string name="text_null">널</string>
+    <string name="input_and_output_path_cant_null">입력 및 출력 디렉토리는 비워둘 수 없습니다.</string>
 </resources>

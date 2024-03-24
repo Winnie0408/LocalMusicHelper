@@ -54,7 +54,6 @@ import com.alibaba.fastjson2.JSON
 import com.hwinzniej.musichelper.R
 import com.hwinzniej.musichelper.utils.MyVibrationEffect
 import com.hwinzniej.musichelper.utils.Tools
-import com.moriafly.salt.ui.ItemTitle
 import com.moriafly.salt.ui.RoundedColumn
 import com.moriafly.salt.ui.SaltTheme
 import com.moriafly.salt.ui.TitleBar
@@ -168,7 +167,7 @@ fun AboutPageUi(
                     Image(
                         modifier = Modifier
                             .size(125.dp)
-                            .clip(RoundedCornerShape(10.dp)),
+                            .clip(RoundedCornerShape(12.dp)),
                         painter = painterResource(id = R.mipmap.ic_launcher_foreground),
                         contentDescription = null
                     )
@@ -443,7 +442,7 @@ fun AboutPageUi(
                                         Spacer(modifier = Modifier.height(12.dp))
                                         Image(
                                             modifier = Modifier
-                                                .clip(RoundedCornerShape(10.dp))
+                                                .clip(RoundedCornerShape(12.dp))
                                                 .size(200.dp)
                                                 .clickable {
                                                     val bitmap = BitmapFactory.decodeResource(
@@ -498,7 +497,7 @@ fun AboutPageUi(
                                         Spacer(modifier = Modifier.height(12.dp))
                                         Image(
                                             modifier = Modifier
-                                                .clip(RoundedCornerShape(10.dp))
+                                                .clip(RoundedCornerShape(12.dp))
                                                 .size(200.dp)
                                                 .clickable {
                                                     val bitmap = BitmapFactory.decodeResource(
