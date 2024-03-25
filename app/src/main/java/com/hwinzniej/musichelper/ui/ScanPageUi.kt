@@ -201,6 +201,8 @@ fun ScanPageUi(
                 }
                 AnimatedVisibility(
                     visible = progressPercent.value != -1,
+                    enter = fadeIn(),
+                    exit = fadeOut()
                 ) {
                     RoundedColumn {
                         ItemTitle(text = stringResource(R.string.scanning_result))

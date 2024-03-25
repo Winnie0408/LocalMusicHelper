@@ -657,6 +657,10 @@ fun ItemEdit(
     showClearButton: Boolean = false,
     onClear: () -> Unit = {},
     enableHaptic: Boolean = false,
+    iconPainter: Painter? = null,
+    iconPaddingValues: PaddingValues = PaddingValues(0.dp),
+    iconColor: Color? = null,
+    singleLine: Boolean = false
 ) {
     val context = LocalContext.current
     BasicTextField(
@@ -669,6 +673,7 @@ fun ItemEdit(
         textStyle = SaltTheme.textStyles.main,
         visualTransformation = visualTransformation,
         cursorBrush = SolidColor(SaltTheme.colors.highlight),
+        singleLine = singleLine,
         decorationBox = { innerTextField ->
             Row(
                 modifier = Modifier
@@ -678,6 +683,17 @@ fun ItemEdit(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Spacer(modifier = Modifier.width(SaltTheme.dimens.contentPadding))
+                iconPainter?.let {
+                    Image(
+                        modifier = Modifier
+                            .size(24.dp)
+                            .padding(iconPaddingValues),
+                        painter = iconPainter,
+                        contentDescription = null,
+                        colorFilter = iconColor?.let { ColorFilter.tint(iconColor) }
+                    )
+                    Spacer(modifier = Modifier.width(SaltTheme.dimens.contentPadding))
+                }
                 Box(
                     modifier = Modifier
                         .weight(1f)
@@ -692,7 +708,7 @@ fun ItemEdit(
                         )
                     }
                 }
-                if (showClearButton) {
+                if (text.isNotBlank() && showClearButton) {
                     Icon(
                         modifier = Modifier
                             .size(20.dp)

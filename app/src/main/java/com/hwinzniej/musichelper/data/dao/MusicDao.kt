@@ -32,6 +32,9 @@ interface MusicDao {
     @Query("SELECT song, artist, album, absolutePath, id FROM music WHERE song LIKE :keyword OR artist LIKE :keyword OR album LIKE :keyword LIMIT 3")
     fun searchMusic(keyword: String): List<MusicInfo>
 
+    @Query("SELECT song, artist, album, absolutePath, id FROM music WHERE song LIKE :keyword OR artist LIKE :keyword OR album LIKE :keyword OR absolutePath LIKE :keyword")
+    fun searchMusicAll(keyword: String): List<MusicInfo>
+
     @Query("SELECT song, artist, album, absolutePath, id FROM music WHERE id = :id")
     fun getMusicById(id: Int): MusicInfo
 

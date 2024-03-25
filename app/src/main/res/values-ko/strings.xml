@@ -297,4 +297,7 @@
     <string name="album1">앨범</string>
     <string name="text_null">널</string>
     <string name="input_and_output_path_cant_null">입력 및 출력 디렉토리는 비워둘 수 없습니다.</string>
+    <string name="cover_pic">커버</string>
+    <string name="cover_image_not_support">잘못된 이미지 형식</string>
+    <string name="delete_cover_image">"표지 이미지를 삭제하시겠습니까? "</string>
 </resources>

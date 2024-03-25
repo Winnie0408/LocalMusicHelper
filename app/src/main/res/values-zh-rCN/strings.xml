@@ -297,4 +297,7 @@
     <string name="album1">专辑</string>
     <string name="text_null">空</string>
     <string name="input_and_output_path_cant_null">输入与输出目录不能为空。</string>
+    <string name="cover_pic">专辑图</string>
+    <string name="cover_image_not_support">图片格式不正确</string>
+    <string name="delete_cover_image">删除专辑图片吗？</string>
 </resources>

@@ -303,4 +303,7 @@
     <string name="album1">Album</string>
     <string name="text_null">Null</string>
     <string name="input_and_output_path_cant_null">The input and output directories cannot be empty.</string>
+    <string name="cover_pic">Cover</string>
+    <string name="cover_image_not_support">Incorrect image format</string>
+    <string name="delete_cover_image">Delete cover image?</string>
 </resources>

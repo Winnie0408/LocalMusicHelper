@@ -1,10 +1,21 @@
 package com.hwinzniej.musichelper.ui
 
+import android.graphics.BitmapFactory
+import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -15,8 +26,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
@@ -29,10 +42,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import com.hwinzniej.musichelper.R
 import com.hwinzniej.musichelper.activity.TagPage
@@ -41,9 +59,11 @@ import com.moriafly.salt.ui.SaltTheme
 import com.moriafly.salt.ui.TitleBar
 import com.moriafly.salt.ui.UnstableSaltApi
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-@OptIn(UnstableSaltApi::class)
+@OptIn(UnstableSaltApi::class, ExperimentalFoundationApi::class)
 @Composable
 fun TagPageUi(
     tagPage: TagPage,
@@ -54,14 +74,35 @@ fun TagPageUi(
     val coroutineScope = rememberCoroutineScope()
     val musicInfo = remember { mutableStateOf<Map<String, String?>>(emptyMap()) }
     var showSongInfoDialog by remember { mutableStateOf(false) }
+    val coverImage = remember { mutableStateOf<ByteArray?>(null) }
+    var showSearchInput by remember { mutableStateOf(false) }
+    var searchInput by remember { mutableStateOf("") }
+    var job by remember { mutableStateOf<Job?>(null) }
+    var showConfirmGoBackDialog by remember { mutableStateOf(false) }
+    var showConfirmDeleteCoverDialog by remember { mutableStateOf(false) }
+    val searchResult = remember { mutableStateMapOf<Int, Array<String>>() }
+    var searching by remember { mutableStateOf(false) }
+
+    BackHandler(enabled = showSearchInput) {
+        showSearchInput = false
+        searchInput = ""
+    }
 
     LaunchedEffect(Unit) {
-        if (songList.isEmpty()) {  // TODO 刷新操作
+        if (songList.isEmpty()) {
             coroutineScope.launch(Dispatchers.IO) {
                 showLoadingProgressBar = true
                 tagPage.getMusicList(songList)
                 showLoadingProgressBar = false
             }
+        }
+    }
+
+    LaunchedEffect(key1 = tagPage.coverImage.value) {
+        if (tagPage.coverImage.value != null) {
+            delay(150L)
+            coverImage.value = tagPage.coverImage.value
+            tagPage.coverImage.value = null
         }
     }
 
@@ -71,14 +112,58 @@ fun TagPageUi(
         }
     }
 
+    LaunchedEffect(key1 = searchInput) {
+        job?.cancel()
+        job = coroutineScope.launch(Dispatchers.IO) {
+            if (searchInput.isBlank()) {
+                searchResult.clear()
+                return@launch
+            }
+            searching = true
+            delay(500L)
+            showLoadingProgressBar = true
+            delay(500L)
+            tagPage.searchSong(searchInput, searchResult)
+            showLoadingProgressBar = false
+            searching = false
+        }
+    }
+
+    if (showConfirmDeleteCoverDialog) {
+        YesNoDialog(
+            onDismiss = { showConfirmDeleteCoverDialog = false },
+            onCancel = { showConfirmDeleteCoverDialog = false },
+            onConfirm = {
+                showConfirmDeleteCoverDialog = false
+                coverImage.value = null
+            },
+            title = stringResource(id = R.string.delete_cover_image),
+            content = null,
+            confirmButtonColor = colorResource(id = R.color.unmatched),
+            enableHaptic = enableHaptic.value,
+        )
+    }
+
     if (showSongInfoDialog) {
         YesNoDialog(
-            onDismiss = { showSongInfoDialog = false },
-            onCancel = { showSongInfoDialog = false },
+            onDismiss = {
+                showConfirmGoBackDialog = true
+//                showSongInfoDialog = false
+//                musicInfo.value = emptyMap()
+            },
+            onCancel = {
+                showSongInfoDialog = false
+                musicInfo.value = emptyMap()
+            },
             onConfirm = {
                 coroutineScope.launch(Dispatchers.IO) {
-                    if (tagPage.saveSongInfo(musicInfo.value))
+                    if (tagPage.saveSongInfo(musicInfo.value, coverImage)) {
                         showSongInfoDialog = false
+                        musicInfo.value = emptyMap()
+                        showLoadingProgressBar = true
+                        tagPage.getMusicList(songList)
+                        showLoadingProgressBar = false
+                    }
                 }
             },
             title = stringResource(id = R.string.song_info),
@@ -91,6 +176,55 @@ fun TagPageUi(
             ) {
                 RoundedColumn {
                     Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                        ItemTitle(
+                            text = stringResource(id = R.string.cover_pic),
+                            paddingValues = PaddingValues(
+                                start = SaltTheme.dimens.innerHorizontalPadding,
+                                end = SaltTheme.dimens.innerHorizontalPadding,
+                                top = SaltTheme.dimens.innerVerticalPadding,
+                                bottom = 4.dp
+                            )
+                        )
+                        AnimatedContent(
+                            targetState = coverImage.value,
+                            label = "",
+                            transitionSpec = {
+                                fadeIn() togetherWith fadeOut()
+                            }
+                        ) {
+                            if (it != null) {
+                                val bitmap = BitmapFactory.decodeByteArray(it, 0, it.size)
+                                Image(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = SaltTheme.dimens.innerHorizontalPadding)
+                                        .clip(RoundedCornerShape(12.dp))
+                                        .combinedClickable(
+                                            onClick = { tagPage.selectCoverImage() },
+                                            onLongClick = { showConfirmDeleteCoverDialog = true }
+                                        ),
+                                    bitmap = bitmap.asImageBitmap(),
+                                    contentDescription = stringResource(id = R.string.cover_pic),
+                                )
+                            } else {
+                                BasicButton(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = SaltTheme.dimens.innerHorizontalPadding),
+                                    onClick = { tagPage.selectCoverImage() },
+                                    backgroundColor = SaltTheme.colors.subText.copy(alpha = 0.1f),
+                                ) {
+                                    Icon(
+                                        modifier = Modifier
+                                            .size(16.dp)
+                                            .align(Alignment.Center),
+                                        painter = painterResource(id = R.drawable.plus_no_circle),
+                                        contentDescription = null,
+                                        tint = SaltTheme.colors.text
+                                    )
+                                }
+                            }
+                        }
                         ItemTitle(
                             text = stringResource(id = R.string.song_name),
                             paddingValues = PaddingValues(
@@ -227,16 +361,92 @@ fun TagPageUi(
         }
     }
 
+    if (showConfirmGoBackDialog) {
+        YesNoDialog(
+            onDismiss = { showConfirmGoBackDialog = false },
+            onCancel = { showConfirmGoBackDialog = false },
+            onConfirm = {
+                showConfirmGoBackDialog = false
+                showSongInfoDialog = false
+                musicInfo.value = emptyMap()
+            },
+            title = stringResource(id = R.string.go_back_confirm_dialog_title),
+            content = stringResource(id = R.string.go_back_confirm_dialog_content),
+            enableHaptic = enableHaptic.value
+        )
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(color = SaltTheme.colors.background)
     ) {
-        TitleBar(
-            onBack = {},
-            text = stringResource(id = R.string.tag_function_name),
-            showBackBtn = false
-        )
+        Box {
+            Column {
+                AnimatedContent(targetState = showSearchInput, label = "") {
+                    if (it) {
+                        Row(
+                            modifier = Modifier
+                                .height(56.dp)
+                                .align(Alignment.CenterHorizontally),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            val focusRequester = remember { FocusRequester() }
+                            ItemEdit(
+                                modifier = Modifier
+                                    .focusRequester(focusRequester)
+                                    .weight(1f),
+                                text = searchInput,
+                                onChange = { searchInput = it },
+                                paddingValues = PaddingValues(
+                                    start = 16.dp,
+                                    end = 4.dp,
+                                    top = 6.dp,
+                                    bottom = 6.dp
+                                ),
+                                showClearButton = true,
+                                onClear = {
+                                    searchInput = ""
+                                },
+                                hint = stringResource(id = R.string.search_song_library),
+                                iconPainter = painterResource(id = R.drawable.search),
+                                iconColor = SaltTheme.colors.subText,
+                                iconPaddingValues = PaddingValues(all = 3.5.dp),
+                                singleLine = true,
+                            )
+                            LaunchedEffect(Unit) {
+                                delay(300L)
+                                focusRequester.requestFocus()
+                            }
+
+                            androidx.compose.material3.TextButton(
+                                modifier = Modifier
+                                    .padding(end = 8.dp)
+                                    .size(52.dp),
+                                onClick = {
+                                    showSearchInput = false
+                                    searchInput = ""
+                                },
+                                colors = ButtonDefaults.textButtonColors(
+                                    contentColor = SaltTheme.colors.highlight
+                                ),
+                            ) {
+                                Text(
+                                    stringResource(id = R.string.cancel_button_text),
+                                    fontSize = 14.sp
+                                )
+                            }
+                        }
+                    } else {
+                        TitleBar(
+                            onBack = {},
+                            text = stringResource(id = R.string.tag_function_name),
+                            showBackBtn = false
+                        )
+                    }
+                }
+            }
+        }
         Box {
             if (showLoadingProgressBar) {
                 LinearProgressIndicator(
@@ -247,46 +457,178 @@ fun TagPageUi(
                     trackColor = SaltTheme.colors.background
                 )
             }
-            if (songList.isNotEmpty()) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(start = 16.dp, end = 16.dp, bottom = 16.dp, top = 12.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(color = SaltTheme.colors.background)
-                ) {
-                    LazyColumn(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(color = SaltTheme.colors.subBackground)
-                    ) {
-                        items(songList.size) {
-                            Item(
-                                onClick = {
-                                    coroutineScope.launch(Dispatchers.IO) {
-                                        musicInfo.value = tagPage.getSongInfo(it)
+            AnimatedContent(
+                targetState = when {
+                    searchResult.isNotEmpty() -> "searchResult"
+                    songList.isNotEmpty() && searchResult.isEmpty() && searchInput.isBlank() -> "songList"
+                    songList.isEmpty() -> "emptyList"
+                    searchResult.isEmpty() && searchInput.isNotBlank() && !searching -> "emptyResult"
+                    else -> ""
+                },
+                label = "",
+                transitionSpec = {
+                    fadeIn() togetherWith fadeOut()
+                }
+            ) { targetState ->
+                when (targetState) {
+                    "searchResult" -> {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(
+                                    start = 16.dp,
+                                    end = 16.dp,
+                                    bottom = 16.dp,
+                                    top = 12.dp
+                                )
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(color = SaltTheme.colors.background)
+                        ) {
+                            LazyColumn(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .background(color = SaltTheme.colors.subBackground)
+                            ) {
+                                items(searchResult.size) {
+                                    AnimatedContent(
+                                        targetState = searchResult[it],
+                                        label = "",
+                                    ) { it1 ->
+                                        Item(
+                                            onClick = {
+                                                coroutineScope.launch(Dispatchers.IO) {
+                                                    musicInfo.value =
+                                                        tagPage.getSongInfo(
+                                                            it1!![3].toInt(),
+                                                            coverImage
+                                                        )
+                                                }
+                                            },
+                                            text = it1!![0],
+                                            sub = "${it1[1].ifBlank { "?" }} - ${it1[2].ifBlank { "?" }}",
+                                        )
                                     }
-                                },
-                                text = songList[it]!![0],
-                                sub = "${songList[it]!![1].ifBlank { "?" }} - ${songList[it]!![2].ifBlank { "?" }}",
+                                }
+                            }
+                        }
+                    }
+
+                    "songList" -> {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(
+                                    start = 16.dp,
+                                    end = 16.dp,
+                                    bottom = 16.dp,
+                                    top = 12.dp
+                                )
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(color = SaltTheme.colors.background)
+                        ) {
+                            LazyColumn(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .background(color = SaltTheme.colors.subBackground)
+                            ) {
+                                items(songList.size) {
+                                    if (songList[it] != null)
+                                        Item(
+                                            onClick = {
+                                                coroutineScope.launch(Dispatchers.IO) {
+                                                    musicInfo.value =
+                                                        tagPage.getSongInfo(
+                                                            songList[it]!![3].toInt(),
+                                                            coverImage
+                                                        )
+                                                }
+                                            },
+                                            text = songList[it]!![0],
+                                            sub = "${songList[it]!![1].ifBlank { "?" }} - ${songList[it]!![2].ifBlank { "?" }}",
+                                        )
+                                }
+                            }
+                        }
+                    }
+
+                    "emptyList" -> {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(
+                                    start = 16.dp,
+                                    end = 16.dp,
+                                    bottom = 16.dp,
+                                    top = 12.dp
+                                )
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(color = SaltTheme.colors.background),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
+                        ) {
+                            Image(
+                                modifier = Modifier.size(96.dp),
+                                painter = painterResource(id = R.drawable.no_items),
+                                contentDescription = stringResource(id = R.string.no_music)
+                            )
+                            Spacer(modifier = Modifier.height(24.dp))
+                            Text(
+                                text = stringResource(id = R.string.no_music),
+                                fontSize = 16.sp, color = SaltTheme.colors.subText
                             )
                         }
                     }
-                }
-            } else { // TODO 界面需要优化
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(100.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    ItemText(
-                        text = stringResource(id = R.string.no_music),
-                    )
+
+                    "emptyResult" -> {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(
+                                    start = 16.dp,
+                                    end = 16.dp,
+                                    bottom = 16.dp,
+                                    top = 12.dp
+                                )
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(color = SaltTheme.colors.background),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
+                        ) {
+                            Image(
+                                modifier = Modifier.size(96.dp),
+                                painter = painterResource(id = R.drawable.no_items),
+                                contentDescription = stringResource(id = R.string.no_music)
+                            )
+                            Spacer(modifier = Modifier.height(24.dp))
+                            Text(
+                                text = stringResource(id = R.string.no_search_result),
+                                fontSize = 16.sp, color = SaltTheme.colors.subText
+                            )
+                        }
+                    }
+
+                    else -> {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(
+                                    start = 16.dp,
+                                    end = 16.dp,
+                                    bottom = 16.dp,
+                                    top = 12.dp
+                                )
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(color = SaltTheme.colors.background),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
+                        ) {
+
+                        }
+                    }
                 }
             }
-            if (songList.isNotEmpty()) {
+
+            if ((songList.isNotEmpty() || searchResult.isNotEmpty()) && !searching) {  // TODO 按钮有时展示不正常
                 Column(
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
@@ -295,7 +637,7 @@ fun TagPageUi(
                     BasicButton(
                         modifier = Modifier
                             .padding(bottom = 16.dp),
-                        onClick = { /*TODO*/ },
+                        onClick = { showSearchInput = !showSearchInput },
                         enableHaptic = enableHaptic.value,
                     ) {
                         Icon(

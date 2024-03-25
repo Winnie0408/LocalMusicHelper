@@ -14,8 +14,8 @@ android {
         minSdk = 26
 //        targetSdk = 28
         targetSdk = 34
-        versionCode = 35
-        versionName = "1.1.7.5"
+        versionCode = 36
+        versionName = "1.1.7.6"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -84,7 +84,8 @@ dependencies {
     implementation("com.github.Moriafly:SaltUI:0.1.0-dev53")
 
     //JAudioTagger
-    implementation("org.bitbucket.ijabz:jaudiotagger:7b004a1")
+//    implementation("org.bitbucket.ijabz:jaudiotagger:7b004a1")
+    implementation ("com.github.maxbruecken:jaudiotagger-android:master")
 
     //Kotlin协程
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.0")

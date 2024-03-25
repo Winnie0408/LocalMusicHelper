@@ -106,6 +106,7 @@ class MainActivity : ComponentActivity() {
     private lateinit var openMusicPlatformSqlFileLauncher: ActivityResultLauncher<Array<String>>
     private lateinit var openResultSqlFileLauncher: ActivityResultLauncher<Array<String>>
     private lateinit var openUmExecutableFileLauncher: ActivityResultLauncher<Array<String>>
+    private lateinit var openMusicCoverLauncher: ActivityResultLauncher<Array<String>>
 
     private lateinit var scanPage: ScanPage
 
@@ -161,6 +162,10 @@ class MainActivity : ComponentActivity() {
             registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
                 settingsPage.checkUmFile(uri)
             }
+        openMusicCoverLauncher =
+            registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+                tagPage.handleSelectedCoverUri(uri)
+            }
 
         db = Room.databaseBuilder(
             applicationContext, MusicDatabase::class.java, "music"
@@ -207,6 +212,7 @@ class MainActivity : ComponentActivity() {
             context = this,
             lifecycleOwner = this,
             db = db,
+            openMusicCoverLauncher = openMusicCoverLauncher
         )
         enableEdgeToEdge()
         setContent {
@@ -539,7 +545,7 @@ private fun Pages(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(bottom = 56.dp),
-            beyondBoundsPageCount = 1
+            beyondBoundsPageCount = 2
         ) { page ->
             when (page) {
                 0 -> {
