@@ -14,8 +14,8 @@ android {
         minSdk = 26
 //        targetSdk = 28
         targetSdk = 34
-        versionCode = 36
-        versionName = "1.1.7.6"
+        versionCode = 37
+        versionName = "1.1.7.7"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -116,6 +116,9 @@ dependencies {
 
     //Google ZXing二维码生成
     implementation("com.google.zxing:core:3.5.3")
+
+    //下拉刷新 TODO 待添加HTML
+    implementation("com.google.accompanist:accompanist-swiperefresh:0.34.0")
 
     //拖拽排序-可注释
 //    implementation("org.burnoutcrew.composereorderable:reorderable:0.9.6")

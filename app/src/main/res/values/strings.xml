@@ -308,4 +308,13 @@
     <string name="delete_cover_image">Delete cover image?</string>
     <string name="search">Search</string>
     <string name="complete">Complete</string>
+    <string name="choose_need_complete_type">Content to be completed</string>
+    <string name="tag_type">Tag type</string>
+    <string name="total_album_artist_null_count_in_song_list">There are **#** songs in the library with \"Album Artist\" tagged as empty.</string>
+    <string name="no_album_artist_null_count_in_song_list">There are **NO** songs in the library with an empty \"Album Artist\" tag.</string>
+    <string name="overwrite_original_album_artist_tag_sub">Overrides the existing \"Album Artist\" tag</string>
+    <string name="click_ok_to_start">Click the \"OK\" button to start completing.</string>
+    <string name="modify_album_artist_success">**Success**: modified the album artist for the song **\"#1\"** to **#2**.</string>
+    <string name="modify_album_artist_failed">**FAILED**: modified the album artist for the song **\"#1\"** to **#2**.</string>
+    <string name="refresh_success">Refresh success</string>
 </resources>

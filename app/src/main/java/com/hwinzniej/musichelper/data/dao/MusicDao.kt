@@ -9,7 +9,7 @@ import com.hwinzniej.musichelper.data.model.MusicInfo
 @Dao
 interface MusicDao {
     @Query("SELECT * FROM music")
-    fun getAll(): List<Music>
+    fun getAll(): List<MusicInfo>
 
     @Insert
     fun insertAll(vararg music: Music)
@@ -52,6 +52,48 @@ interface MusicDao {
         trackNumber: String?,
         releaseYear: String?
     )
+
+    @Query(
+        """
+        SELECT *
+        FROM music
+        WHERE album IN (
+            SELECT album 
+            FROM music
+            GROUP BY album
+            HAVING COUNT(*) >= 2
+        )
+    """
+    )
+    fun searchDuplicateAlbum(): List<MusicInfo>
+
+    //    @Query(
+//        """
+//        SELECT *
+//        FROM music
+//        WHERE album IN (
+//            SELECT album
+//            FROM music
+//            WHERE albumArtist IS NULL OR albumArtist = ''
+//            GROUP BY album
+//            HAVING COUNT(*) >= 2
+//        ) AND (albumArtist IS NULL OR albumArtist = '')
+//    """
+//    )
+    @Query("SELECT * FROM music WHERE albumArtist IS NULL OR albumArtist = ''")
+    fun searchDuplicateAlbumNoOverwrite(): List<MusicInfo>
+
+    @Query("SELECT DISTINCT artist FROM music WHERE album = :album")
+    fun getDuplicateAlbumArtistList(album: String): List<String>
+
+    @Query("UPDATE music SET albumArtist = :albumArtist WHERE id = :id")
+    fun updateAlbumArtist(
+        id: Int,
+        albumArtist: String?,
+    )
+
+    @Query("SELECT COUNT(*) FROM music WHERE albumArtist IS NULL OR albumArtist = ''")
+    fun countNullAlbumArtist(): Int
 
 //    @Insert
 //    fun updateMusicInfo(musicInfo: MusicInfo)

@@ -11,6 +11,7 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import com.hwinzniej.musichelper.R
 import com.hwinzniej.musichelper.data.database.MusicDatabase
+import com.hwinzniej.musichelper.data.model.MusicInfo
 import com.hwinzniej.musichelper.utils.Tools
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -74,7 +75,7 @@ class TagPage(
                     Toast.makeText(
                         context,
                         context.getString(R.string.cover_image_not_support),
-                        Toast.LENGTH_LONG
+                        Toast.LENGTH_SHORT
                     ).show()
                 }
                 return false
@@ -102,7 +103,7 @@ class TagPage(
             AudioFileIO.write(audioFile)
         } catch (e: Exception) {
             withContext(Dispatchers.Main) {
-                Toast.makeText(context, context.getString(R.string.save_failed), Toast.LENGTH_LONG)
+                Toast.makeText(context, context.getString(R.string.save_failed), Toast.LENGTH_SHORT)
                     .show()
             }
             return false
@@ -126,7 +127,7 @@ class TagPage(
             musicInfo.releaseYear,
         )
         withContext(Dispatchers.Main) {
-            Toast.makeText(context, context.getString(R.string.save_success), Toast.LENGTH_LONG)
+            Toast.makeText(context, context.getString(R.string.save_success), Toast.LENGTH_SHORT)
                 .show()
         }
         return true
@@ -156,7 +157,7 @@ class TagPage(
                     Toast.makeText(
                         context,
                         context.getString(R.string.cover_image_not_support),
-                        Toast.LENGTH_LONG
+                        Toast.LENGTH_SHORT
                     ).show()
                 }
                 return@launch
@@ -181,5 +182,64 @@ class TagPage(
                 )
             }, it.artist, it.album, it.id.toString())
         }
+    }
+
+    suspend fun searchDuplicateAlbum(markdown: MutableState<String>) {
+        val nullAlbumArtistCount = db.musicDao().countNullAlbumArtist()
+        if (nullAlbumArtistCount == 0) {
+            markdown.value =
+                context.getString(R.string.no_album_artist_null_count_in_song_list) + "\n"
+            return
+        }
+        markdown.value = context.getString(R.string.total_album_artist_null_count_in_song_list)
+            .replace("#", nullAlbumArtistCount.toString()) + "\n"
+        markdown.value += context.getString(R.string.click_ok_to_start) + "\n"
+    }
+
+    suspend fun handleDuplicateAlbum(
+        overwrite: Boolean,
+        markdown: MutableState<String>
+    ) {
+        val searchResult: List<MusicInfo> = if (overwrite) {
+            db.musicDao().getAll()
+        } else {
+            db.musicDao().searchDuplicateAlbumNoOverwrite()
+        }
+        var lastAlbumArtist = ""
+        var lastAlbum = ""
+        searchResult.forEach {
+            if (it.album.isBlank()) {
+                return@forEach
+            }
+            if (lastAlbum != it.album) {
+                val tempAlbumArtist = StringBuilder()
+                db.musicDao().getDuplicateAlbumArtistList(it.album).forEach { it1 ->
+                    if (it1.isNotBlank())
+                        tempAlbumArtist.append(it1).append("/")
+                }
+                tempAlbumArtist.deleteCharAt(tempAlbumArtist.length - 1)
+                lastAlbumArtist = tempAlbumArtist.toString()
+            }
+            lastAlbum = it.album
+            val audioFile: AudioFile
+            try {
+                audioFile = AudioFileIO.read(File(it.absolutePath))
+                audioFile.tag.setField(FieldKey.ALBUM_ARTIST, lastAlbumArtist)
+                AudioFileIO.write(audioFile)
+            } catch (e: Exception) {
+                markdown.value += "${
+                    context.getString(R.string.modify_album_artist_failed)
+                        .replace("#1", it.song)
+                        .replace("#2", lastAlbumArtist)
+                }\n"
+                return@forEach
+            }
+            db.musicDao().updateAlbumArtist(it.id, lastAlbumArtist)
+            markdown.value += "${
+                context.getString(R.string.modify_album_artist_success).replace("#1", it.song)
+                    .replace("#2", lastAlbumArtist)
+            }\n"
+        }
+        markdown.value += context.getString(R.string.all_done)
     }
 }

@@ -12,6 +12,7 @@ import androidx.compose.animation.core.updateTransition
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.Indication
 import androidx.compose.foundation.background
@@ -43,6 +44,8 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.ripple.rememberRipple
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardColors
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -974,7 +977,12 @@ fun FloatingActionButton(
     val background by transition.animateColor(
         transitionSpec = { spring(stiffness = 600f) },
         label = "background"
-    ) { if (it.value) backgroundColorExpand else backgroundColorFold }
+    ) { if (it.value) Color.Transparent else backgroundColorFold }
+
+    val backgroundColor by transition.animateColor(
+        transitionSpec = { spring(stiffness = 600f) },
+        label = "backgroundColor"
+    ) { if (it.value) backgroundColorExpand else Color.Transparent }
 
     Box(
         modifier = Modifier
@@ -994,9 +1002,15 @@ fun FloatingActionButton(
                 label = ""
             ) { isExpanded ->
                 if (isExpanded.value) {
-                    Column(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(12.dp))
+                    Card(
+                        shape = RoundedCornerShape(12.dp),
+                        colors = CardColors(
+                            containerColor = backgroundColor,
+                            contentColor = backgroundColor,
+                            disabledContainerColor = backgroundColor,
+                            disabledContentColor = backgroundColor
+                        ),
+                        border = BorderStroke(1.dp, SaltTheme.colors.subText.copy(alpha = 0.075f)),
                     ) {
                         drawContent.invoke()
                     }

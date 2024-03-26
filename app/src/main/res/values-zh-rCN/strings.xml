@@ -302,4 +302,13 @@
     <string name="delete_cover_image">删除专辑图片吗？</string>
     <string name="search">搜索</string>
     <string name="complete">补全</string>
+    <string name="choose_need_complete_type">要补全的标签</string>
+    <string name="tag_type">标签类型</string>
+    <string name="total_album_artist_null_count_in_song_list">曲库中共有 **#** 首歌曲的“专辑艺术家”标签为空。</string>
+    <string name="no_album_artist_null_count_in_song_list">曲库中**没有**“专辑艺术家”标签为空的歌曲。</string>
+    <string name="overwrite_original_album_artist_tag_sub">覆盖已有的“专辑艺术家”标签</string>
+    <string name="click_ok_to_start">点击“确定”按钮以开始补全。</string>
+    <string name="modify_album_artist_success">**成功**：修改歌曲**《#1》**的专辑艺术家为**#2**。</string>
+    <string name="modify_album_artist_failed">**失败**：修改歌曲**《#1》**的专辑艺术家为**#2**。</string>
+    <string name="refresh_success">刷新成功</string>
 </resources>
