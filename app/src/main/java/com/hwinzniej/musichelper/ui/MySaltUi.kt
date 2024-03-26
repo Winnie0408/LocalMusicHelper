@@ -1,13 +1,19 @@
 package com.hwinzniej.musichelper.ui
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.animateColor
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateDp
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.updateTransition
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.Indication
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -22,6 +28,7 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -40,6 +47,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
@@ -106,7 +114,7 @@ fun YesNoDialog(
     confirmButtonColor: Color = SaltTheme.colors.highlight,
     enableHaptic: Boolean = false,
     enableConfirmButton: Boolean = true,
-    drawContent: @Composable() (() -> Unit)? = null,
+    drawContent: @Composable (() -> Unit)? = null,
 ) {
     val context = LocalContext.current
     LaunchedEffect(Unit) {
@@ -314,7 +322,7 @@ fun YesDialog(
     confirmText: String = stringResource(id = R.string.ok_button_text),
     fontSize: TextUnit = 13.sp,
     enableHaptic: Boolean = false,
-    drawContent: @Composable() (() -> Unit)? = null
+    drawContent: @Composable (() -> Unit)? = null
 ) {
     val context = LocalContext.current
     LaunchedEffect(Unit) {
@@ -458,16 +466,22 @@ fun Item(
     sub: String? = null,
     subColor: Color = SaltTheme.colors.subText,
     rightSub: String? = null,
-    rightSubColor: Color? = null
+    rightSubColor: Color? = null,
+    indication: Indication? = rememberRipple()
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .heightIn(min = 56.dp)
             .alpha(if (enabled) 1f else 0.5f)
-            .clickable(enabled = enabled) {
-                onClick()
-            }
+            .clickable(
+                enabled = enabled,
+                onClick = { onClick() },
+                indication = indication,
+                interactionSource = remember {
+                    MutableInteractionSource()
+                }
+            )
             .padding(
                 horizontal = SaltTheme.dimens.innerHorizontalPadding,
                 vertical = SaltTheme.dimens.innerVerticalPadding
@@ -927,6 +941,85 @@ fun ItemTitle(
         fontWeight = FontWeight.Bold,
         style = SaltTheme.textStyles.sub
     )
+}
+
+@Composable
+fun FloatingActionButton(
+    expanded: MutableState<Boolean>,
+    heightFold: Dp = 50.dp,
+    heightExpand: Dp = 200.dp,
+    widthFold: Dp = 50.dp,
+    widthExpand: Dp = 200.dp,
+    backgroundColorFold: Color = SaltTheme.colors.highlight,
+    backgroundColorExpand: Color = SaltTheme.colors.background,
+    paddingValues: PaddingValues = PaddingValues(bottom = 32.dp, end = 24.dp),
+    iconSize: Dp = 20.dp,
+    iconPainter: Painter = painterResource(id = R.drawable.plus_no_circle),
+    iconTintColor: Color = SaltTheme.colors.subBackground,
+    enableHaptic: Boolean = false,
+    drawContent: @Composable (() -> Unit)
+) {
+    val transition = updateTransition(targetState = expanded, label = "transition")
+
+    val height by transition.animateDp(
+        transitionSpec = { spring(stiffness = 600f) },
+        label = "height"
+    ) { if (it.value) heightExpand else heightFold }
+
+    val width by transition.animateDp(
+        transitionSpec = { spring(stiffness = 600f) },
+        label = "width"
+    ) { if (it.value) widthExpand else widthFold }
+
+    val background by transition.animateColor(
+        transitionSpec = { spring(stiffness = 600f) },
+        label = "background"
+    ) { if (it.value) backgroundColorExpand else backgroundColorFold }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(paddingValues)
+    ) {
+        Box(
+            modifier = Modifier
+                .height(height)
+                .width(width)
+                .clip(RoundedCornerShape(12.dp))
+                .background(background)
+                .align(Alignment.BottomEnd),
+        ) {
+            Crossfade(
+                targetState = expanded, animationSpec = tween(durationMillis = 250),
+                label = ""
+            ) { isExpanded ->
+                if (isExpanded.value) {
+                    Column(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(12.dp))
+                    ) {
+                        drawContent.invoke()
+                    }
+                } else {
+                    BasicButton(
+                        modifier = Modifier
+                            .fillMaxSize(),
+                        onClick = { expanded.value = true },
+                        enableHaptic = enableHaptic,
+                    ) {
+                        Icon(
+                            modifier = Modifier
+                                .size(iconSize)
+                                .align(Alignment.Center),
+                            painter = iconPainter,
+                            contentDescription = null,
+                            tint = iconTintColor
+                        )
+                    }
+                }
+            }
+        }
+    }
 }
 
 @Preview

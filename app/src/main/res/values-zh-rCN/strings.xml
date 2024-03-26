@@ -300,4 +300,6 @@
     <string name="cover_pic">专辑图</string>
     <string name="cover_image_not_support">图片格式不正确</string>
     <string name="delete_cover_image">删除专辑图片吗？</string>
+    <string name="search">搜索</string>
+    <string name="complete">补全</string>
 </resources>

@@ -300,4 +300,6 @@
     <string name="cover_pic">커버</string>
     <string name="cover_image_not_support">잘못된 이미지 형식</string>
     <string name="delete_cover_image">"표지 이미지를 삭제하시겠습니까? "</string>
+    <string name="search">검색하다</string>
+    <string name="complete">완성</string>
 </resources>

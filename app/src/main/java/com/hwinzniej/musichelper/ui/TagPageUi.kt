@@ -26,6 +26,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
@@ -46,6 +47,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -54,6 +56,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import com.hwinzniej.musichelper.R
 import com.hwinzniej.musichelper.activity.TagPage
+import com.hwinzniej.musichelper.utils.MyVibrationEffect
 import com.moriafly.salt.ui.RoundedColumn
 import com.moriafly.salt.ui.SaltTheme
 import com.moriafly.salt.ui.TitleBar
@@ -69,6 +72,7 @@ fun TagPageUi(
     tagPage: TagPage,
     enableHaptic: MutableState<Boolean>,
 ) {
+    val context = LocalContext.current
     val songList = remember { mutableStateMapOf<Int, Array<String>>() }
     var showLoadingProgressBar by remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
@@ -82,6 +86,7 @@ fun TagPageUi(
     var showConfirmDeleteCoverDialog by remember { mutableStateOf(false) }
     val searchResult = remember { mutableStateMapOf<Int, Array<String>>() }
     var searching by remember { mutableStateOf(false) }
+    val showFab = remember { mutableStateOf(false) }
 
     BackHandler(enabled = showSearchInput) {
         showSearchInput = false
@@ -474,7 +479,6 @@ fun TagPageUi(
                     "searchResult" -> {
                         Column(
                             modifier = Modifier
-                                .fillMaxSize()
                                 .padding(
                                     start = 16.dp,
                                     end = 16.dp,
@@ -486,7 +490,6 @@ fun TagPageUi(
                         ) {
                             LazyColumn(
                                 modifier = Modifier
-                                    .fillMaxSize()
                                     .background(color = SaltTheme.colors.subBackground)
                             ) {
                                 items(searchResult.size) {
@@ -496,16 +499,20 @@ fun TagPageUi(
                                     ) { it1 ->
                                         Item(
                                             onClick = {
-                                                coroutineScope.launch(Dispatchers.IO) {
-                                                    musicInfo.value =
-                                                        tagPage.getSongInfo(
-                                                            it1!![3].toInt(),
-                                                            coverImage
-                                                        )
-                                                }
+                                                if (showFab.value)
+                                                    showFab.value = false
+                                                else
+                                                    coroutineScope.launch(Dispatchers.IO) {
+                                                        musicInfo.value =
+                                                            tagPage.getSongInfo(
+                                                                it1!![3].toInt(),
+                                                                coverImage
+                                                            )
+                                                    }
                                             },
                                             text = it1!![0],
                                             sub = "${it1[1].ifBlank { "?" }} - ${it1[2].ifBlank { "?" }}",
+                                            indication = if (showFab.value) null else rememberRipple()
                                         )
                                     }
                                 }
@@ -516,7 +523,6 @@ fun TagPageUi(
                     "songList" -> {
                         Column(
                             modifier = Modifier
-                                .fillMaxSize()
                                 .padding(
                                     start = 16.dp,
                                     end = 16.dp,
@@ -528,23 +534,26 @@ fun TagPageUi(
                         ) {
                             LazyColumn(
                                 modifier = Modifier
-                                    .fillMaxSize()
                                     .background(color = SaltTheme.colors.subBackground)
                             ) {
                                 items(songList.size) {
                                     if (songList[it] != null)
                                         Item(
                                             onClick = {
-                                                coroutineScope.launch(Dispatchers.IO) {
-                                                    musicInfo.value =
-                                                        tagPage.getSongInfo(
-                                                            songList[it]!![3].toInt(),
-                                                            coverImage
-                                                        )
-                                                }
+                                                if (showFab.value)
+                                                    showFab.value = false
+                                                else
+                                                    coroutineScope.launch(Dispatchers.IO) {
+                                                        musicInfo.value =
+                                                            tagPage.getSongInfo(
+                                                                songList[it]!![3].toInt(),
+                                                                coverImage
+                                                            )
+                                                    }
                                             },
                                             text = songList[it]!![0],
                                             sub = "${songList[it]!![1].ifBlank { "?" }} - ${songList[it]!![2].ifBlank { "?" }}",
+                                            indication = if (showFab.value) null else rememberRipple()
                                         )
                                 }
                             }
@@ -628,44 +637,33 @@ fun TagPageUi(
                 }
             }
 
-            if ((songList.isNotEmpty() || searchResult.isNotEmpty()) && !searching) {  // TODO 按钮有时展示不正常
-                Column(
-                    modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .padding(end = 26.dp, bottom = 32.dp)
-                ) {
-                    BasicButton(
-                        modifier = Modifier
-                            .padding(bottom = 16.dp),
-                        onClick = { showSearchInput = !showSearchInput },
-                        enableHaptic = enableHaptic.value,
-                    ) {
-                        Icon(
-                            modifier = Modifier
-                                .size(24.dp)
-                                .padding(all = 2.dp),
-                            painter = painterResource(id = R.drawable.search),
-                            contentDescription = null,
-                            tint = SaltTheme.colors.subBackground
-                        )
-                    }
-
-                    BasicButton(
-                        modifier = Modifier
-                            .padding(bottom = 16.dp),
-                        onClick = { /*TODO*/ },
-                        enableHaptic = enableHaptic.value,
-                    ) {
-                        Icon(
-                            modifier = Modifier
-                                .size(24.dp)
-                                .padding(all = 3.dp),
-                            painter = painterResource(id = R.drawable.plus_no_circle),
-                            contentDescription = null,
-                            tint = SaltTheme.colors.subBackground
-                        )
-                    }
-                }
+            FloatingActionButton(
+                expanded = showFab,
+                heightExpand = 100.dp,
+                widthExpand = 160.dp,
+                enableHaptic = enableHaptic.value,
+            ) {
+                PopupMenuItem(
+                    onClick = {
+                        MyVibrationEffect(context, enableHaptic.value).click()
+                        showFab.value = false
+                        showSearchInput = !showSearchInput
+                    },
+                    text = stringResource(id = R.string.search),
+                    iconPainter = painterResource(id = R.drawable.search),
+                    iconColor = SaltTheme.colors.text,
+                    iconPaddingValues = PaddingValues(all = 2.5.dp)
+                )
+                PopupMenuItem(
+                    onClick = {
+                        MyVibrationEffect(context, enableHaptic.value).click()
+                        showFab.value = false
+                    },
+                    text = stringResource(id = R.string.complete),
+                    iconPainter = painterResource(id = R.drawable.complete),
+                    iconColor = SaltTheme.colors.text,
+                    iconPaddingValues = PaddingValues(all = 3.dp)
+                )
             }
         }
     }

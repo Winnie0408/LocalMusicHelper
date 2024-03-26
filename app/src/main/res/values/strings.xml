@@ -306,4 +306,6 @@
     <string name="cover_pic">Cover</string>
     <string name="cover_image_not_support">Incorrect image format</string>
     <string name="delete_cover_image">Delete cover image?</string>
+    <string name="search">Search</string>
+    <string name="complete">Complete</string>
 </resources>
