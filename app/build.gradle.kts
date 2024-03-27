@@ -14,8 +14,8 @@ android {
         minSdk = 26
 //        targetSdk = 28
         targetSdk = 34
-        versionCode = 37
-        versionName = "1.1.7.7"
+        versionCode = 38
+        versionName = "1.2.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -46,7 +46,7 @@ android {
         compose = true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.6"
+        kotlinCompilerExtensionVersion = "1.5.11"
     }
     packaging {
         resources {
@@ -64,6 +64,7 @@ dependencies {
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-graphics")
     implementation("androidx.compose.ui:ui-tooling-preview")
+    implementation("androidx.compose.material:material")
     implementation("androidx.compose.material3:material3")
     implementation("androidx.annotation:annotation:1.7.1")
     testImplementation("junit:junit:4.13.2")
@@ -100,7 +101,7 @@ dependencies {
     ksp("androidx.room:room-compiler:$roomVersion")
 
     //FastJson
-    implementation("com.alibaba.fastjson2:fastjson2-kotlin:2.0.47")
+    implementation("com.alibaba.fastjson2:fastjson2-kotlin:2.0.48")
 
     //Navigation
     implementation("androidx.navigation:navigation-compose:2.7.7")
@@ -116,9 +117,6 @@ dependencies {
 
     //Google ZXing二维码生成
     implementation("com.google.zxing:core:3.5.3")
-
-    //下拉刷新 TODO 待添加HTML
-    implementation("com.google.accompanist:accompanist-swiperefresh:0.34.0")
 
     //拖拽排序-可注释
 //    implementation("org.burnoutcrew.composereorderable:reorderable:0.9.6")

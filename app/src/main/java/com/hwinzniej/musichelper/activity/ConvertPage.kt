@@ -2767,7 +2767,7 @@ class ConvertPage(
         return result
     }
 
-    var cancelLogin = mutableStateOf(false)
+    private var cancelLogin = mutableStateOf(false)
     fun stopGetLoginStatus() {
         cancelLogin.value = true
     }

@@ -304,11 +304,12 @@
     <string name="complete">완성</string>
     <string name="choose_need_complete_type">완료할 레이블</string>
     <string name="tag_type">라벨 유형</string>
-    <string name="total_album_artist_null_count_in_song_list">라이브러리에는 \'앨범 아티스트\' 태그가 비어 있는 **#**곡의 노래가 있습니다.</string>
-    <string name="no_album_artist_null_count_in_song_list">라이브러리에 \'앨범 아티스트\' 태그가 비어 있는 노래가 **없습니다**.</string>
-    <string name="overwrite_original_album_artist_tag_sub">기존 \'앨범 아티스트\' 태그를 재정의합니다.</string>
+    <string name="total_album_artist_null_count_in_song_list">라이브러리에는 \'앨범 아티스트\' 태그가 비어 있는 #곡의 노래가 있습니다.</string>
+    <string name="no_album_artist_null_count_in_song_list">라이브러리에 \'앨범 아티스트\' 태그가 비어 있는 노래가 없습니다.</string>
+    <string name="overwrite_original_album_artist_tag_sub_on">라이브러리에 있는 모든 노래 처리</string>
     <string name="click_ok_to_start">확인 버튼을 클릭하여 완료를 시작합니다.</string>
-    <string name="modify_album_artist_success">**성공**: 노래 **\"AAA\"**의 앨범 아티스트를 **BBB**로 수정했습니다.</string>
-    <string name="modify_album_artist_failed">**실패**: 노래 **\"AAA\"**의 앨범 아티스트를 **BBB**로 수정했습니다.</string>
+    <string name="modify_album_artist_success">성공 노래 \"#1\"의 앨범 아티스트를 #2로 수정했습니다.</string>
+    <string name="modify_album_artist_failed">실패 노래 \"#1\"의 앨범 아티스트를 #2로 수정했습니다.</string>
     <string name="refresh_success">새로 고침 성공</string>
+    <string name="overwrite_original_album_artist_tag_sub_off">\"앨범 아티스트\"가 비어 있는 곡만 처리합니다</string>
 </resources>

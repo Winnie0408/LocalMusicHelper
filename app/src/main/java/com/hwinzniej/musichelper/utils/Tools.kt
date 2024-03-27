@@ -479,7 +479,7 @@ class Tools {
     }
 
     private fun ByteArray.startsWith(signature: ByteArray): Boolean {
-        return this.size >= signature.size && this.sliceArray(0 until signature.size)
+        return this.size >= signature.size && this.sliceArray(signature.indices)
             .contentEquals(signature)
     }
 

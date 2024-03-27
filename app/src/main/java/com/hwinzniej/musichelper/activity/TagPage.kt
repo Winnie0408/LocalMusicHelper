@@ -184,21 +184,24 @@ class TagPage(
         }
     }
 
-    suspend fun searchDuplicateAlbum(markdown: MutableState<String>) {
+    suspend fun searchDuplicateAlbum(completeResult: MutableList<Map<String, Int>>) {
         val nullAlbumArtistCount = db.musicDao().countNullAlbumArtist()
         if (nullAlbumArtistCount == 0) {
-            markdown.value =
-                context.getString(R.string.no_album_artist_null_count_in_song_list) + "\n"
+            completeResult.add(mapOf(context.getString(R.string.no_album_artist_null_count_in_song_list) to 2))
             return
         }
-        markdown.value = context.getString(R.string.total_album_artist_null_count_in_song_list)
-            .replace("#", nullAlbumArtistCount.toString()) + "\n"
-        markdown.value += context.getString(R.string.click_ok_to_start) + "\n"
+        completeResult.add(
+            mapOf(
+                context.getString(R.string.total_album_artist_null_count_in_song_list)
+                    .replace("#", nullAlbumArtistCount.toString()) to 2
+            )
+        )
+        completeResult.add(mapOf(context.getString(R.string.click_ok_to_start) to 2))
     }
 
     suspend fun handleDuplicateAlbum(
         overwrite: Boolean,
-        markdown: MutableState<String>
+        completeResult: MutableList<Map<String, Int>>
     ) {
         val searchResult: List<MusicInfo> = if (overwrite) {
             db.musicDao().getAll()
@@ -207,18 +210,22 @@ class TagPage(
         }
         var lastAlbumArtist = ""
         var lastAlbum = ""
+        var haveError = false
         searchResult.forEach {
             if (it.album.isBlank()) {
                 return@forEach
             }
             if (lastAlbum != it.album) {
-                val tempAlbumArtist = StringBuilder()
+                val tempAlbumArtistList = mutableSetOf<String>()
                 db.musicDao().getDuplicateAlbumArtistList(it.album).forEach { it1 ->
-                    if (it1.isNotBlank())
-                        tempAlbumArtist.append(it1).append("/")
+                    if (it1.isNotBlank()) {
+                        if (it1.contains("/"))
+                            tempAlbumArtistList.addAll(it1.split("/"))
+                        else
+                            tempAlbumArtistList.add(it1)
+                    }
                 }
-                tempAlbumArtist.deleteCharAt(tempAlbumArtist.length - 1)
-                lastAlbumArtist = tempAlbumArtist.toString()
+                lastAlbumArtist = tempAlbumArtistList.sorted().joinToString("/")
             }
             lastAlbum = it.album
             val audioFile: AudioFile
@@ -227,19 +234,30 @@ class TagPage(
                 audioFile.tag.setField(FieldKey.ALBUM_ARTIST, lastAlbumArtist)
                 AudioFileIO.write(audioFile)
             } catch (e: Exception) {
-                markdown.value += "${
-                    context.getString(R.string.modify_album_artist_failed)
-                        .replace("#1", it.song)
-                        .replace("#2", lastAlbumArtist)
-                }\n"
+                completeResult.add(
+                    0,
+                    mapOf(
+                        context.getString(R.string.modify_album_artist_failed)
+                            .replace("#1", it.song)
+                            .replace("#2", lastAlbumArtist) to 0
+                    )
+                )
+                haveError = true
                 return@forEach
             }
             db.musicDao().updateAlbumArtist(it.id, lastAlbumArtist)
-            markdown.value += "${
-                context.getString(R.string.modify_album_artist_success).replace("#1", it.song)
-                    .replace("#2", lastAlbumArtist)
-            }\n"
+            completeResult.add(
+                0,
+                mapOf(
+                    context.getString(R.string.modify_album_artist_success)
+                        .replace("#1", it.song)
+                        .replace("#2", lastAlbumArtist) to 1
+                )
+            )
         }
-        markdown.value += context.getString(R.string.all_done)
+        if (haveError) {
+            completeResult.sortBy { it.values.first() }
+        }
+        completeResult.add(0, mapOf(context.getString(R.string.all_done) to 2))
     }
 }

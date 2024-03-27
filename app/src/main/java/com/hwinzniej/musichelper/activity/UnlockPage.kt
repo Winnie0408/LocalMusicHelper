@@ -38,7 +38,7 @@ class UnlockPage(
     val settingsPage: SettingsPage
 ) : PermissionResultHandler {
     var unlockResult = mutableStateListOf<Map<String, Boolean>>()
-    var unlockResultString = mutableStateOf("")
+    private var unlockResultString = mutableStateOf("")
     var selectedEncryptedPath = mutableStateOf("")
     var selectedDecryptedPath = mutableStateOf("")
     var deleteEncryptedFile = mutableStateOf(false)

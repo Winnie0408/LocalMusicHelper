@@ -28,6 +28,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.pullrefresh.PullRefreshIndicator
+import androidx.compose.material.pullrefresh.pullRefresh
+import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -38,6 +42,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -58,25 +63,21 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
-import com.google.accompanist.swiperefresh.SwipeRefresh
-import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import com.hwinzniej.musichelper.R
 import com.hwinzniej.musichelper.activity.TagPage
 import com.hwinzniej.musichelper.utils.MyVibrationEffect
-import com.moriafly.salt.ui.ItemContainer
 import com.moriafly.salt.ui.RoundedColumn
 import com.moriafly.salt.ui.SaltTheme
 import com.moriafly.salt.ui.TitleBar
 import com.moriafly.salt.ui.UnstableSaltApi
 import com.moriafly.salt.ui.popup.rememberPopupState
-import dev.jeziellago.compose.markdowntext.MarkdownText
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-@OptIn(UnstableSaltApi::class, ExperimentalFoundationApi::class)
+@OptIn(UnstableSaltApi::class, ExperimentalFoundationApi::class, ExperimentalMaterialApi::class)
 @Composable
 fun TagPageUi(
     tagPage: TagPage,
@@ -99,7 +100,29 @@ fun TagPageUi(
     val showFab = remember { mutableStateOf(false) }
     var showCompleteDialog by remember { mutableStateOf(false) }
     var showDialogProgressBar by remember { mutableStateOf(false) }
-    val markdownText = remember { mutableStateOf("") }
+    val completeResult =
+        remember { mutableStateListOf<Map<String, Int>>() } // Int: 0: 失败 1: 成功 2: 提示
+    val pullRefreshState = rememberPullRefreshState(
+        refreshing = songList.size == 0,
+        onRefresh = {
+            coroutineScope.launch(Dispatchers.IO) {
+                tagPage.getMusicList(songList)
+                MyVibrationEffect(
+                    context,
+                    enableHaptic.value
+                ).done()
+                withContext(Dispatchers.Main) {
+                    Toast
+                        .makeText(
+                            context,
+                            context.getString(R.string.refresh_success),
+                            Toast.LENGTH_SHORT
+                        )
+                        .show()
+                }
+            }
+        }
+    )
 
     BackHandler(enabled = showSearchInput) {
         showSearchInput = false
@@ -401,29 +424,30 @@ fun TagPageUi(
         YesNoDialog(
             onDismiss = {
                 showCompleteDialog = false
-                markdownText.value = ""
+                completeResult.clear()
             },
             onCancel = {
                 showCompleteDialog = false
-                markdownText.value = ""
+                completeResult.clear()
             },
             onConfirm = {
-                if (markdownText.value.isBlank() ||
-                    markdownText.value.endsWith(context.getString(R.string.all_done)) ||
-                    markdownText.value.startsWith(context.getString(R.string.no_album_artist_null_count_in_song_list))
+                if (completeResult.size == 0 ||
+                    completeResult.first().keys.first()
+                        .contains(context.getString(R.string.all_done)) ||
+                    (completeResult.first().keys.first()
+                        .contains(context.getString(R.string.no_album_artist_null_count_in_song_list)) && !switchState)
                 ) {
                     showCompleteDialog = false
-                    markdownText.value = ""
+                    completeResult.clear()
                     return@YesNoDialog
-                }
-                if (markdownText.value.contains("\\d+".toRegex())) {
+                } else {
                     when (selectedItem) {
                         0 -> {
                             coroutineScope.launch(Dispatchers.IO) {
                                 showDialogProgressBar = true
                                 tagPage.handleDuplicateAlbum(
                                     overwrite = switchState,
-                                    markdown = markdownText
+                                    completeResult = completeResult
                                 )
                                 tagPage.getMusicList(songList)
                                 showDialogProgressBar = false
@@ -467,7 +491,7 @@ fun TagPageUi(
                                         popupState.dismiss()
                                         showDialogProgressBar = true
                                         delay(300L)
-                                        tagPage.searchDuplicateAlbum(markdownText)
+                                        tagPage.searchDuplicateAlbum(completeResult)
                                         showDialogProgressBar = false
                                     }
                                 },
@@ -476,30 +500,49 @@ fun TagPageUi(
                             )
                         }
                         AnimatedVisibility(visible = selectedItem == 0) {
-                            ItemSwitcher(
-                                state = switchState,
-                                onChange = { switchState = it },
-                                text = stringResource(id = R.string.file_conflict_dialog_yes_text),
-                                sub = stringResource(id = R.string.overwrite_original_album_artist_tag_sub),
-                                enableHaptic = enableHaptic.value
-                            )
+                            AnimatedContent(
+                                targetState = switchState,
+                                label = "",
+                                transitionSpec = {
+                                    fadeIn() togetherWith fadeOut()
+                                }) {
+                                ItemSwitcher(
+                                    state = switchState,
+                                    onChange = { it1 -> switchState = it1 },
+                                    text = stringResource(id = R.string.file_conflict_dialog_yes_text),
+                                    sub = if (it)
+                                        stringResource(id = R.string.overwrite_original_album_artist_tag_sub_on)
+                                    else
+                                        stringResource(id = R.string.overwrite_original_album_artist_tag_sub_off),
+                                    enableHaptic = enableHaptic.value
+                                )
+                            }
                         }
                     }
-                    AnimatedVisibility(visible = markdownText.value.isNotBlank()) {
-                        RoundedColumn(
-                            modifier = Modifier.verticalScroll(rememberScrollState())
-                        ) {
-                            ItemContainer {
-                                MarkdownText( // TODO 动画待优化
-                                    modifier = Modifier.padding(vertical = 8.dp),
-                                    markdown = markdownText.value,
-                                    style = TextStyle(
-                                        color = SaltTheme.colors.text,
-                                        fontSize = 14.sp
-                                    ),
-                                    isTextSelectable = true,
-                                    disableLinkMovementMethod = true
-                                )
+                    AnimatedVisibility(visible = completeResult.size != 0) {
+                        RoundedColumn {
+                            LazyColumn(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                            ) {
+                                items(completeResult.size) { index ->
+                                    Text(
+                                        modifier = Modifier.padding(
+                                            horizontal = 16.dp,
+                                            vertical = 4.dp
+                                        ),
+                                        text = completeResult[index].keys.first(),
+                                        fontSize = 14.sp,
+                                        style = TextStyle(
+                                            color = if (completeResult[index].values.first() == 1)
+                                                SaltTheme.colors.subText
+                                            else if (completeResult[index].values.first() == 2)
+                                                colorResource(id = R.color.manual)
+                                            else
+                                                colorResource(id = R.color.unmatched)
+                                        ),
+                                    )
+                                }
                             }
                         }
                     }
@@ -529,7 +572,7 @@ fun TagPageUi(
                                     .focusRequester(focusRequester)
                                     .weight(1f),
                                 text = searchInput,
-                                onChange = { searchInput = it },
+                                onChange = { it1 -> searchInput = it1 },
                                 paddingValues = PaddingValues(
                                     start = 16.dp,
                                     end = 4.dp,
@@ -556,6 +599,7 @@ fun TagPageUi(
                                     .padding(end = 8.dp)
                                     .size(52.dp),
                                 onClick = {
+                                    MyVibrationEffect(context, enableHaptic.value).click()
                                     showSearchInput = false
                                     searchInput = ""
                                 },
@@ -648,32 +692,19 @@ fun TagPageUi(
                     }
 
                     "songList" -> {
-                        Column(
-                            modifier = Modifier
-                                .padding(
-                                    start = 16.dp,
-                                    end = 16.dp,
-                                    bottom = 16.dp,
-                                    top = 12.dp
-                                )
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(color = SaltTheme.colors.background)
+                        Box(
+                            modifier = Modifier.pullRefresh(pullRefreshState)
                         ) {
-                            SwipeRefresh(
-                                state = rememberSwipeRefreshState(isRefreshing = songList.size == 0),
-                                onRefresh = {
-                                    coroutineScope.launch(Dispatchers.IO) {
-                                        tagPage.getMusicList(songList)
-                                        MyVibrationEffect(context, enableHaptic.value).done()
-                                        withContext(Dispatchers.Main) {
-                                            Toast.makeText(
-                                                context,
-                                                context.getString(R.string.refresh_success),
-                                                Toast.LENGTH_SHORT
-                                            ).show()
-                                        }
-                                    }
-                                }
+                            Column(
+                                modifier = Modifier
+                                    .padding(
+                                        start = 16.dp,
+                                        end = 16.dp,
+                                        bottom = 16.dp,
+                                        top = 12.dp
+                                    )
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(color = SaltTheme.colors.background)
                             ) {
                                 LazyColumn(
                                     modifier = Modifier
@@ -701,6 +732,11 @@ fun TagPageUi(
                                     }
                                 }
                             }
+                            PullRefreshIndicator(
+                                modifier = Modifier.align(Alignment.TopCenter),
+                                refreshing = songList.size == 0,
+                                state = pullRefreshState
+                            )
                         }
                     }
 
