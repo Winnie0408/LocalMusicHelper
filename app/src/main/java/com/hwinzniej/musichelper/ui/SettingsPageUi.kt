@@ -64,11 +64,13 @@ fun SettingsPageUi(
     settingsPageState: PagerState,
     enableHaptic: MutableState<Boolean>,
     dataStore: DataStore<Preferences>,
-    encryptServer: MutableState<String>
+    encryptServer: MutableState<String>,
+    hapticStrength: MutableIntState
 ) {
     val context = LocalContext.current
     val themeModePopupMenuState = rememberPopupState()
     val languagePopupMenuState = rememberPopupState()
+    val hapticStrengthPopupMenuState = rememberPopupState()
     val coroutineScope = rememberCoroutineScope()
     var showSelectEncryptServerDialog by remember { mutableStateOf(false) }
     var umFileLegal by remember { mutableStateOf(false) }
@@ -103,7 +105,8 @@ fun SettingsPageUi(
             },
             title = stringResource(id = R.string.select_encrypt_server_title),
             content = null,
-            enableHaptic = enableHaptic.value
+            enableHaptic = enableHaptic.value,
+            hapticStrength = hapticStrength.intValue
         ) {
             Box {
                 if (settingsPage.showDialogProgressBar.value) {
@@ -125,7 +128,8 @@ fun SettingsPageUi(
                         text = "Cloudflare",
                         sub = settingsPage.serverPing[0],
                         iconAtLeft = false,
-                        enableHaptic = enableHaptic.value
+                        enableHaptic = enableHaptic.value,
+                        hapticStrength = hapticStrength.intValue
                     )
                     ItemCheck(
                         state = selectedEncryptServer == "gx1",
@@ -135,7 +139,8 @@ fun SettingsPageUi(
                         text = "${context.getString(R.string.guangxi_china)} 1",
                         sub = settingsPage.serverPing[1],
                         iconAtLeft = false,
-                        enableHaptic = enableHaptic.value
+                        enableHaptic = enableHaptic.value,
+                        hapticStrength = hapticStrength.intValue
                     )
                     ItemCheck(
                         state = selectedEncryptServer == "gx2",
@@ -145,7 +150,8 @@ fun SettingsPageUi(
                         text = "${context.getString(R.string.guangxi_china)} 2",
                         sub = settingsPage.serverPing[2],
                         iconAtLeft = false,
-                        enableHaptic = enableHaptic.value
+                        enableHaptic = enableHaptic.value,
+                        hapticStrength = hapticStrength.intValue
                     )
                 }
             }
@@ -193,7 +199,8 @@ fun SettingsPageUi(
                     sub = stringResource(R.string.dynamic_color_switcher_sub),
                     enableHaptic = enableHaptic.value,
                     iconPainter = painterResource(id = R.drawable.color),
-                    iconColor = SaltTheme.colors.text
+                    iconColor = SaltTheme.colors.text,
+                    hapticStrength = hapticStrength.intValue
                 )
                 ItemPopup(
                     state = themeModePopupMenuState,
@@ -211,7 +218,11 @@ fun SettingsPageUi(
                 ) {
                     PopupMenuItem(
                         onClick = {
-                            MyVibrationEffect(context, enableHaptic.value).click()
+                            MyVibrationEffect(
+                                context,
+                                enableHaptic.value,
+                                hapticStrength.intValue
+                            ).click()
                             coroutineScope.launch {
                                 dataStore.edit { settings ->
                                     settings[DataStoreConstants.KEY_THEME_MODE] = 2
@@ -226,7 +237,11 @@ fun SettingsPageUi(
                     )
                     PopupMenuItem(
                         onClick = {
-                            MyVibrationEffect(context, enableHaptic.value).click()
+                            MyVibrationEffect(
+                                context,
+                                enableHaptic.value,
+                                hapticStrength.intValue
+                            ).click()
                             coroutineScope.launch {
                                 dataStore.edit { settings ->
                                     settings[DataStoreConstants.KEY_THEME_MODE] = 0
@@ -241,7 +256,11 @@ fun SettingsPageUi(
                     )
                     PopupMenuItem(
                         onClick = {
-                            MyVibrationEffect(context, enableHaptic.value).click()
+                            MyVibrationEffect(
+                                context,
+                                enableHaptic.value,
+                                hapticStrength.intValue
+                            ).click()
                             coroutineScope.launch {
                                 dataStore.edit { settings ->
                                     settings[DataStoreConstants.KEY_THEME_MODE] = 1
@@ -284,7 +303,8 @@ fun SettingsPageUi(
                                         if (enableHaptic.value) {
                                             MyVibrationEffect(
                                                 context,
-                                                enableHaptic.value
+                                                enableHaptic.value,
+                                                hapticStrength.intValue
                                             ).turnOn()
                                         }
                                     }
@@ -303,7 +323,11 @@ fun SettingsPageUi(
                                         false
                                 }
                                 if (enableHaptic.value) {
-                                    MyVibrationEffect(context, enableHaptic.value).turnOff()
+                                    MyVibrationEffect(
+                                        context,
+                                        enableHaptic.value,
+                                        hapticStrength.intValue
+                                    ).turnOff()
                                 }
                             }
                         }
@@ -313,6 +337,7 @@ fun SettingsPageUi(
                     enableHaptic = false,
                     iconPainter = painterResource(id = R.drawable.root_access),
                     iconColor = SaltTheme.colors.text,
+                    hapticStrength = hapticStrength.intValue
                 )
                 Item(
                     onClick = { showSelectEncryptServerDialog = true },
@@ -385,7 +410,11 @@ fun SettingsPageUi(
                 ) {
                     PopupMenuItem(
                         onClick = {
-                            MyVibrationEffect(context, enableHaptic.value).click()
+                            MyVibrationEffect(
+                                context,
+                                enableHaptic.value,
+                                hapticStrength.intValue
+                            ).click()
                             coroutineScope.launch {
                                 dataStore.edit { settings ->
                                     settings[DataStoreConstants.KEY_LANGUAGE] = "system"
@@ -400,7 +429,11 @@ fun SettingsPageUi(
                     )
                     PopupMenuItem(
                         onClick = {
-                            MyVibrationEffect(context, enableHaptic.value).click()
+                            MyVibrationEffect(
+                                context,
+                                enableHaptic.value,
+                                hapticStrength.intValue
+                            ).click()
                             coroutineScope.launch {
                                 dataStore.edit { settings ->
                                     settings[DataStoreConstants.KEY_LANGUAGE] = "zh"
@@ -415,7 +448,11 @@ fun SettingsPageUi(
                     )
                     PopupMenuItem(
                         onClick = {
-                            MyVibrationEffect(context, enableHaptic.value).click()
+                            MyVibrationEffect(
+                                context,
+                                enableHaptic.value,
+                                hapticStrength.intValue
+                            ).click()
                             coroutineScope.launch {
                                 dataStore.edit { settings ->
                                     settings[DataStoreConstants.KEY_LANGUAGE] = "en"
@@ -430,7 +467,11 @@ fun SettingsPageUi(
                     )
                     PopupMenuItem(
                         onClick = {
-                            MyVibrationEffect(context, enableHaptic.value).click()
+                            MyVibrationEffect(
+                                context,
+                                enableHaptic.value,
+                                hapticStrength.intValue
+                            ).click()
                             coroutineScope.launch {
                                 dataStore.edit { settings ->
                                     settings[DataStoreConstants.KEY_LANGUAGE] = "ko"
@@ -468,8 +509,108 @@ fun SettingsPageUi(
                         end = 2.dp,
                         top = 1.5.dp,
                         bottom = 1.5.dp
-                    )
+                    ),
+                    hapticStrength = hapticStrength.intValue
                 )
+                ItemPopup(
+                    state = hapticStrengthPopupMenuState,
+                    text = stringResource(id = R.string.haptic_strength),
+                    selectedItem = when (hapticStrength.intValue) {
+                        1 -> stringResource(R.string.weak)
+                        2 -> stringResource(R.string.normal_weak)
+                        3 -> stringResource(R.string.normal)
+                        4 -> stringResource(R.string.normal_strong)
+                        5 -> stringResource(R.string.strong)
+                        else -> ""
+                    },
+                    popupWidth = 130,
+                ) {
+                    PopupMenuItem(
+                        onClick = {
+                            MyVibrationEffect(
+                                context,
+                                enableHaptic.value,
+                                1
+                            ).click()
+                            coroutineScope.launch {
+                                dataStore.edit { settings ->
+                                    settings[DataStoreConstants.HAPTIC_STRENGTH] = 1
+                                }
+                            }
+                            hapticStrengthPopupMenuState.dismiss()
+                        },
+                        text = stringResource(R.string.weak),
+                        selected = hapticStrength.intValue == 1
+                    )
+                    PopupMenuItem(
+                        onClick = {
+                            MyVibrationEffect(
+                                context,
+                                enableHaptic.value,
+                                2
+                            ).click()
+                            coroutineScope.launch {
+                                dataStore.edit { settings ->
+                                    settings[DataStoreConstants.HAPTIC_STRENGTH] = 2
+                                }
+                            }
+                            hapticStrengthPopupMenuState.dismiss()
+                        },
+                        text = stringResource(R.string.normal_weak),
+                        selected = hapticStrength.intValue == 2
+                    )
+                    PopupMenuItem(
+                        onClick = {
+                            MyVibrationEffect(
+                                context,
+                                enableHaptic.value,
+                                3
+                            ).click()
+                            coroutineScope.launch {
+                                dataStore.edit { settings ->
+                                    settings[DataStoreConstants.HAPTIC_STRENGTH] = 3
+                                }
+                            }
+                            hapticStrengthPopupMenuState.dismiss()
+                        },
+                        text = stringResource(R.string.normal),
+                        selected = hapticStrength.intValue == 3
+                    )
+                    PopupMenuItem(
+                        onClick = {
+                            MyVibrationEffect(
+                                context,
+                                enableHaptic.value,
+                                4
+                            ).click()
+                            coroutineScope.launch {
+                                dataStore.edit { settings ->
+                                    settings[DataStoreConstants.HAPTIC_STRENGTH] = 4
+                                }
+                            }
+                            hapticStrengthPopupMenuState.dismiss()
+                        },
+                        text = stringResource(R.string.normal_strong),
+                        selected = hapticStrength.intValue == 4
+                    )
+                    PopupMenuItem(
+                        onClick = {
+                            MyVibrationEffect(
+                                context,
+                                enableHaptic.value,
+                                5
+                            ).click()
+                            coroutineScope.launch {
+                                dataStore.edit { settings ->
+                                    settings[DataStoreConstants.HAPTIC_STRENGTH] = 5
+                                }
+                            }
+                            hapticStrengthPopupMenuState.dismiss()
+                        },
+                        text = stringResource(R.string.strong),
+                        selected = hapticStrength.intValue == 5
+                    )
+                }
             }
 
             RoundedColumn {
@@ -487,7 +628,8 @@ fun SettingsPageUi(
                     enableHaptic = enableHaptic.value,
                     iconPainter = painterResource(id = R.drawable.auto_check_update),
                     iconColor = SaltTheme.colors.text,
-                    iconPaddingValues = PaddingValues(all = 1.5.dp)
+                    iconPaddingValues = PaddingValues(all = 1.5.dp),
+                    hapticStrength = hapticStrength.intValue
                 )
             }
 

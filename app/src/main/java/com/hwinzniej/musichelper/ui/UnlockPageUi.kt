@@ -20,6 +20,7 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableIntState
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -50,7 +51,8 @@ import com.moriafly.salt.ui.UnstableSaltApi
 fun UnlockPageUi(
     unlockPage: UnlockPage,
     enableHaptic: MutableState<Boolean>,
-    settingsPage: SettingsPage
+    settingsPage: SettingsPage,
+    hapticStrength: MutableIntState
 ) {
     val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
@@ -78,7 +80,8 @@ fun UnlockPageUi(
             onDismissRequest = { unlockPage.showUmStdoutDialog.value = false },
             title = stringResource(id = R.string.um_stdout),
             content = null,
-            enableHaptic = enableHaptic.value
+            enableHaptic = enableHaptic.value,
+            hapticStrength = hapticStrength.intValue
         ) {
             ItemContainer {
                 LazyColumn(
@@ -124,6 +127,7 @@ fun UnlockPageUi(
                 stringResource(id = R.string.input_output_path_cant_same),
             fontSize = 14.sp,
             enableHaptic = enableHaptic.value,
+            hapticStrength = hapticStrength.intValue
         )
     }
 
@@ -182,7 +186,8 @@ fun UnlockPageUi(
                         },
                         text = stringResource(id = R.string.delete_input_file),
                         sub = stringResource(id = R.string.delete_input_file_sub),
-                        enableHaptic = enableHaptic.value
+                        enableHaptic = enableHaptic.value,
+                        hapticStrength = hapticStrength.intValue
                     )
                 }
                 RoundedColumn {
@@ -213,7 +218,8 @@ fun UnlockPageUi(
                         sub = if (umSupportOverWrite) stringResource(id = R.string.overwrite_output_file_sub)
                         else stringResource(id = R.string.current_um_not_support_this_fun) + "\n" +
                                 stringResource(id = R.string.overwrite_output_file_sub),
-                        enableHaptic = enableHaptic.value
+                        enableHaptic = enableHaptic.value,
+                        hapticStrength = hapticStrength.intValue
                     )
                 }
                 AnimatedContent(
@@ -232,7 +238,8 @@ fun UnlockPageUi(
                                 }
                             }, text = stringResource(R.string.start_text),
                             enabled = !it && settingsPage.umFileLegal.value,
-                            enableHaptic = enableHaptic.value
+                            enableHaptic = enableHaptic.value,
+                            hapticStrength = hapticStrength.intValue
                         )
                     }
                 }

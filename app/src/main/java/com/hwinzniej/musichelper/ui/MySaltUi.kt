@@ -117,11 +117,12 @@ fun YesNoDialog(
     confirmButtonColor: Color = SaltTheme.colors.highlight,
     enableHaptic: Boolean = false,
     enableConfirmButton: Boolean = true,
-    drawContent: @Composable (() -> Unit)? = null,
+    hapticStrength: Int,
+    drawContent: @Composable (() -> Unit)? = null
 ) {
     val context = LocalContext.current
     LaunchedEffect(Unit) {
-        MyVibrationEffect(context, enableHaptic).dialog()
+        MyVibrationEffect(context, enableHaptic, hapticStrength).dialog()
     }
     BasicDialog(
         onDismissRequest = onDismiss,
@@ -149,7 +150,8 @@ fun YesNoDialog(
                 text = cancelText,
                 textColor = SaltTheme.colors.subText,
                 backgroundColor = SaltTheme.colors.subBackground,
-                enableHaptic = enableHaptic
+                enableHaptic = enableHaptic,
+                hapticStrength = hapticStrength
             )
             Spacer(modifier = Modifier.width(SaltTheme.dimens.outerHorizontalPadding))
             AnimatedContent(
@@ -165,7 +167,8 @@ fun YesNoDialog(
                     }, text = confirmText,
                     backgroundColor = confirmButtonColor,
                     enableHaptic = enableHaptic,
-                    enabled = it
+                    enabled = it,
+                    hapticStrength = hapticStrength
                 )
             }
         }
@@ -325,11 +328,12 @@ fun YesDialog(
     confirmText: String = stringResource(id = R.string.ok_button_text),
     fontSize: TextUnit = 13.sp,
     enableHaptic: Boolean = false,
-    drawContent: @Composable (() -> Unit)? = null
+    hapticStrength: Int,
+    drawContent: @Composable (() -> Unit)? = null,
 ) {
     val context = LocalContext.current
     LaunchedEffect(Unit) {
-        MyVibrationEffect(context, enableHaptic).dialog()
+        MyVibrationEffect(context, enableHaptic, hapticStrength).dialog()
     }
     BasicDialog(
         onDismissRequest = onDismissRequest,
@@ -353,7 +357,8 @@ fun YesDialog(
             modifier = Modifier
                 .padding(horizontal = SaltTheme.dimens.outerHorizontalPadding),
             text = confirmText,
-            enableHaptic = enableHaptic
+            enableHaptic = enableHaptic,
+            hapticStrength = hapticStrength
         )
         ItemOutSpacer()
     }
@@ -391,7 +396,8 @@ fun ItemCheck(
     sub: String? = null,
     hideIcon: Boolean = false,
     enableHaptic: Boolean = false,
-    minHeightIn: Dp = 50.dp
+    minHeightIn: Dp = 50.dp,
+    hapticStrength: Int
 ) {
     val context = LocalContext.current
     Row(
@@ -400,7 +406,7 @@ fun ItemCheck(
             .heightIn(min = minHeightIn)
             .alpha(if (enabled) 1f else 0.5f)
             .clickable(enabled = enabled) {
-                MyVibrationEffect(context, enableHaptic).click()
+                MyVibrationEffect(context, enableHaptic, hapticStrength).click()
                 onChange(!state)
             }
             .padding(
@@ -548,7 +554,8 @@ fun TextButton(
     textColor: Color = Color.White,
     backgroundColor: Color = SaltTheme.colors.highlight,
     enabled: Boolean = true,
-    enableHaptic: Boolean = false
+    enableHaptic: Boolean = false,
+    hapticStrength: Int
 ) {
     BasicButton(
         enabled = enabled,
@@ -556,6 +563,7 @@ fun TextButton(
         modifier = modifier,
         backgroundColor = if (enabled) backgroundColor else Color(0xFF8C8C8C),
         enableHaptic = enableHaptic,
+        hapticStrength = hapticStrength
     ) {
         Text(
             text = text,
@@ -580,6 +588,7 @@ fun BasicButton(
     onClick: () -> Unit,
     backgroundColor: Color = SaltTheme.colors.highlight,
     enableHaptic: Boolean = false,
+    hapticStrength: Int,
     content: @Composable BoxScope.() -> Unit
 ) {
     val context = LocalContext.current
@@ -591,7 +600,7 @@ fun BasicButton(
             .clip(RoundedCornerShape(SaltTheme.dimens.corner))
             .background(color = backgroundColor)
             .clickable(enabled = enabled) {
-                MyVibrationEffect(context, enableHaptic).click()
+                MyVibrationEffect(context, enableHaptic, hapticStrength).click()
                 onClick()
             }
             .padding(SaltTheme.dimens.contentPadding)
@@ -677,7 +686,8 @@ fun ItemEdit(
     iconPainter: Painter? = null,
     iconPaddingValues: PaddingValues = PaddingValues(0.dp),
     iconColor: Color? = null,
-    singleLine: Boolean = false
+    singleLine: Boolean = false,
+    hapticStrength: Int
 ) {
     val context = LocalContext.current
     BasicTextField(
@@ -730,7 +740,11 @@ fun ItemEdit(
                         modifier = Modifier
                             .size(20.dp)
                             .clickable {
-                                MyVibrationEffect(context, enableHaptic).click()
+                                MyVibrationEffect(
+                                    context,
+                                    enableHaptic,
+                                    hapticStrength
+                                ).click()
                                 onClear()
                             }
                             .alpha(0.7f),
@@ -759,7 +773,8 @@ fun ItemSwitcher(
     iconColor: Color? = null,
     text: String,
     sub: String? = null,
-    enableHaptic: Boolean = false
+    enableHaptic: Boolean = false,
+    hapticStrength: Int
 ) {
     val context = LocalContext.current
     Row(
@@ -769,9 +784,9 @@ fun ItemSwitcher(
             .alpha(if (enabled) 1f else 0.5f)
             .clickable(enabled = enabled) {
                 if (!state)
-                    MyVibrationEffect(context, enableHaptic).turnOn()
+                    MyVibrationEffect(context, enableHaptic, hapticStrength).turnOn()
                 else
-                    MyVibrationEffect(context, enableHaptic).turnOff()
+                    MyVibrationEffect(context, enableHaptic, hapticStrength).turnOff()
                 onChange(!state)
             }
             .padding(
@@ -960,6 +975,7 @@ fun FloatingActionButton(
     iconPainter: Painter = painterResource(id = R.drawable.plus_no_circle),
     iconTintColor: Color = SaltTheme.colors.subBackground,
     enableHaptic: Boolean = false,
+    hapticStrength: Int,
     drawContent: @Composable (() -> Unit)
 ) {
     val transition = updateTransition(targetState = expanded, label = "transition")
@@ -1020,6 +1036,7 @@ fun FloatingActionButton(
                             .fillMaxSize(),
                         onClick = { expanded.value = true },
                         enableHaptic = enableHaptic,
+                        hapticStrength = hapticStrength
                     ) {
                         Icon(
                             modifier = Modifier

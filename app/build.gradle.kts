@@ -14,8 +14,8 @@ android {
         minSdk = 26
 //        targetSdk = 28
         targetSdk = 34
-        versionCode = 38
-        versionName = "1.2.0"
+        versionCode = 39
+        versionName = "1.2.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -86,7 +86,7 @@ dependencies {
 
     //JAudioTagger
 //    implementation("org.bitbucket.ijabz:jaudiotagger:7b004a1")
-    implementation ("com.github.maxbruecken:jaudiotagger-android:master")
+    implementation("com.github.maxbruecken:jaudiotagger-android:master")
 
     //Kotlin协程
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.0")
@@ -117,6 +117,9 @@ dependencies {
 
     //Google ZXing二维码生成
     implementation("com.google.zxing:core:3.5.3")
+
+    //Splashscreen
+    implementation("androidx.core:core-splashscreen:1.1.0-alpha02")
 
     //拖拽排序-可注释
 //    implementation("org.burnoutcrew.composereorderable:reorderable:0.9.6")

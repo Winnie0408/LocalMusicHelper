@@ -39,6 +39,7 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableIntState
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -60,6 +61,7 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
@@ -82,6 +84,7 @@ import kotlinx.coroutines.withContext
 fun TagPageUi(
     tagPage: TagPage,
     enableHaptic: MutableState<Boolean>,
+    hapticStrength: MutableIntState
 ) {
     val context = LocalContext.current
     val songList = remember { mutableStateMapOf<Int, Array<String>>() }
@@ -109,7 +112,8 @@ fun TagPageUi(
                 tagPage.getMusicList(songList)
                 MyVibrationEffect(
                     context,
-                    enableHaptic.value
+                    enableHaptic.value,
+                    hapticStrength.intValue
                 ).done()
                 withContext(Dispatchers.Main) {
                     Toast
@@ -182,6 +186,7 @@ fun TagPageUi(
             content = null,
             confirmButtonColor = colorResource(id = R.color.unmatched),
             enableHaptic = enableHaptic.value,
+            hapticStrength = hapticStrength.intValue
         )
     }
 
@@ -210,6 +215,7 @@ fun TagPageUi(
             title = stringResource(id = R.string.song_info),
             content = null,
             enableHaptic = enableHaptic.value,
+            hapticStrength = hapticStrength.intValue
         ) {
             Column(
                 modifier = Modifier
@@ -235,18 +241,26 @@ fun TagPageUi(
                         ) {
                             if (it != null) {
                                 val bitmap = BitmapFactory.decodeByteArray(it, 0, it.size)
-                                Image(
+                                Column(
                                     modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(horizontal = SaltTheme.dimens.innerHorizontalPadding)
-                                        .clip(RoundedCornerShape(12.dp))
-                                        .combinedClickable(
-                                            onClick = { tagPage.selectCoverImage() },
-                                            onLongClick = { showConfirmDeleteCoverDialog = true }
-                                        ),
-                                    bitmap = bitmap.asImageBitmap(),
-                                    contentDescription = stringResource(id = R.string.cover_pic),
-                                )
+                                        .fillMaxWidth(),
+                                    verticalArrangement = Arrangement.Center,
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Image(
+                                        modifier = Modifier
+                                            .padding(horizontal = SaltTheme.dimens.innerHorizontalPadding)
+                                            .clip(RoundedCornerShape(12.dp))
+                                            .combinedClickable(
+                                                onClick = { tagPage.selectCoverImage() },
+                                                onLongClick = {
+                                                    showConfirmDeleteCoverDialog = true
+                                                }
+                                            ),
+                                        bitmap = bitmap.asImageBitmap(),
+                                        contentDescription = stringResource(id = R.string.cover_pic),
+                                    )
+                                }
                             } else {
                                 BasicButton(
                                     modifier = Modifier
@@ -254,6 +268,7 @@ fun TagPageUi(
                                         .padding(horizontal = SaltTheme.dimens.innerHorizontalPadding),
                                     onClick = { tagPage.selectCoverImage() },
                                     backgroundColor = SaltTheme.colors.subText.copy(alpha = 0.1f),
+                                    hapticStrength = hapticStrength.intValue
                                 ) {
                                     Icon(
                                         modifier = Modifier
@@ -286,7 +301,8 @@ fun TagPageUi(
                                 end = SaltTheme.dimens.innerHorizontalPadding,
                                 bottom = SaltTheme.dimens.innerHorizontalPadding,
                                 top = 4.dp
-                            )
+                            ),
+                            hapticStrength = hapticStrength.intValue
                         )
                         ItemTitle(
                             text = stringResource(id = R.string.atrist),
@@ -304,7 +320,8 @@ fun TagPageUi(
                                 end = SaltTheme.dimens.innerHorizontalPadding,
                                 bottom = SaltTheme.dimens.innerHorizontalPadding,
                                 top = 4.dp
-                            )
+                            ),
+                            hapticStrength = hapticStrength.intValue
                         )
                         ItemTitle(
                             text = stringResource(id = R.string.album1),
@@ -322,7 +339,8 @@ fun TagPageUi(
                                 end = SaltTheme.dimens.innerHorizontalPadding,
                                 bottom = SaltTheme.dimens.innerHorizontalPadding,
                                 top = 4.dp
-                            )
+                            ),
+                            hapticStrength = hapticStrength.intValue
                         )
                         ItemTitle(
                             text = stringResource(id = R.string.album_artist_tag_name),
@@ -340,7 +358,8 @@ fun TagPageUi(
                                 end = SaltTheme.dimens.innerHorizontalPadding,
                                 bottom = SaltTheme.dimens.innerHorizontalPadding,
                                 top = 4.dp
-                            )
+                            ),
+                            hapticStrength = hapticStrength.intValue
                         )
                         ItemTitle(
                             text = stringResource(id = R.string.genre_tag_name),
@@ -358,7 +377,8 @@ fun TagPageUi(
                                 end = SaltTheme.dimens.innerHorizontalPadding,
                                 bottom = SaltTheme.dimens.innerHorizontalPadding,
                                 top = 4.dp
-                            )
+                            ),
+                            hapticStrength = hapticStrength.intValue
                         )
                         ItemTitle(
                             text = stringResource(id = R.string.track_number_tag_name),
@@ -376,7 +396,8 @@ fun TagPageUi(
                                 end = SaltTheme.dimens.innerHorizontalPadding,
                                 bottom = SaltTheme.dimens.innerHorizontalPadding,
                                 top = 4.dp
-                            )
+                            ),
+                            hapticStrength = hapticStrength.intValue
                         )
                         ItemTitle(
                             text = stringResource(id = R.string.release_year_tag_name),
@@ -394,7 +415,8 @@ fun TagPageUi(
                                 end = SaltTheme.dimens.innerHorizontalPadding,
                                 bottom = SaltTheme.dimens.innerHorizontalPadding,
                                 top = 4.dp
-                            )
+                            ),
+                            hapticStrength = hapticStrength.intValue
                         )
                     }
                 }
@@ -413,7 +435,8 @@ fun TagPageUi(
             },
             title = stringResource(id = R.string.go_back_confirm_dialog_title),
             content = stringResource(id = R.string.go_back_confirm_dialog_content),
-            enableHaptic = enableHaptic.value
+            enableHaptic = enableHaptic.value,
+            hapticStrength = hapticStrength.intValue
         )
     }
 
@@ -456,10 +479,11 @@ fun TagPageUi(
                     }
                 }
             },
-            title = stringResource(id = R.string.complete),
+            title = stringResource(id = R.string.completion),
             content = null,
             enableHaptic = enableHaptic.value,
-            enableConfirmButton = !showDialogProgressBar
+            enableConfirmButton = !showDialogProgressBar,
+            hapticStrength = hapticStrength.intValue
         ) {
             Box {
                 if (showDialogProgressBar) {
@@ -476,6 +500,7 @@ fun TagPageUi(
                         .heightIn(max = (LocalConfiguration.current.screenHeightDp / 2).dp)
                 ) {
                     RoundedColumn {
+                        ItemTitle(text = stringResource(id = R.string.completion_options))
                         ItemPopup(
                             state = popupState,
                             text = stringResource(id = R.string.choose_need_complete_type),
@@ -514,13 +539,15 @@ fun TagPageUi(
                                         stringResource(id = R.string.overwrite_original_album_artist_tag_sub_on)
                                     else
                                         stringResource(id = R.string.overwrite_original_album_artist_tag_sub_off),
-                                    enableHaptic = enableHaptic.value
+                                    enableHaptic = enableHaptic.value,
+                                    hapticStrength = hapticStrength.intValue
                                 )
                             }
                         }
                     }
                     AnimatedVisibility(visible = completeResult.size != 0) {
                         RoundedColumn {
+                            ItemTitle(text = stringResource(id = R.string.completion_log))
                             LazyColumn(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -588,6 +615,7 @@ fun TagPageUi(
                                 iconColor = SaltTheme.colors.subText,
                                 iconPaddingValues = PaddingValues(all = 3.5.dp),
                                 singleLine = true,
+                                hapticStrength = hapticStrength.intValue
                             )
                             LaunchedEffect(Unit) {
                                 delay(300L)
@@ -597,9 +625,13 @@ fun TagPageUi(
                             androidx.compose.material3.TextButton(
                                 modifier = Modifier
                                     .padding(end = 8.dp)
-                                    .size(52.dp),
+                                    .size(72.dp),
                                 onClick = {
-                                    MyVibrationEffect(context, enableHaptic.value).click()
+                                    MyVibrationEffect(
+                                        context,
+                                        enableHaptic.value,
+                                        hapticStrength.intValue
+                                    ).click()
                                     showSearchInput = false
                                     searchInput = ""
                                 },
@@ -609,7 +641,8 @@ fun TagPageUi(
                             ) {
                                 Text(
                                     stringResource(id = R.string.cancel_button_text),
-                                    fontSize = 14.sp
+                                    fontSize = 14.sp,
+                                    textAlign = TextAlign.End
                                 )
                             }
                         }
@@ -820,12 +853,17 @@ fun TagPageUi(
             FloatingActionButton(
                 expanded = showFab,
                 heightExpand = 100.dp,
-                widthExpand = 160.dp,
+                widthExpand = 175.dp,
                 enableHaptic = enableHaptic.value,
+                hapticStrength = hapticStrength.intValue
             ) {
                 PopupMenuItem(
                     onClick = {
-                        MyVibrationEffect(context, enableHaptic.value).click()
+                        MyVibrationEffect(
+                            context,
+                            enableHaptic.value,
+                            hapticStrength.intValue
+                        ).click()
                         showFab.value = false
                         showSearchInput = !showSearchInput
                     },
@@ -836,11 +874,15 @@ fun TagPageUi(
                 )
                 PopupMenuItem(
                     onClick = {
-                        MyVibrationEffect(context, enableHaptic.value).click()
+                        MyVibrationEffect(
+                            context,
+                            enableHaptic.value,
+                            hapticStrength.intValue
+                        ).click()
                         showFab.value = false
                         showCompleteDialog = true
                     },
-                    text = stringResource(id = R.string.complete),
+                    text = stringResource(id = R.string.completion),
                     iconPainter = painterResource(id = R.drawable.complete),
                     iconColor = SaltTheme.colors.text,
                     iconPaddingValues = PaddingValues(all = 3.dp)

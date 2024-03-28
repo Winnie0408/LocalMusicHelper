@@ -2,4 +2,11 @@
 <resources>
 
     <style name="Theme.MusicHelper" parent="Theme.MaterialComponents.DayNight.NoActionBar" />
+
+    <style name="Theme.PlaylistNB.Starting" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/material_dynamic_primary40</item>
+        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_round</item>
+        <item name="windowSplashScreenAnimationDuration">10</item>
+        <item name="postSplashScreenTheme">@style/Theme.MusicHelper</item>
+    </style>
 </resources>

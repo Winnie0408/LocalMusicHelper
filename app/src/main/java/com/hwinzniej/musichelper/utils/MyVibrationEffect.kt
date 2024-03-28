@@ -6,7 +6,8 @@ import android.os.Vibrator
 
 class MyVibrationEffect(
     context: Context,
-    private val enable: Boolean
+    private val enable: Boolean,
+    private val strength: Int
 ) {
     private val vibrator: Vibrator = context.getSystemService(Vibrator::class.java)
 
@@ -14,8 +15,12 @@ class MyVibrationEffect(
         if (enable) {
             val vibrationEffect =
                 VibrationEffect.createWaveform(
-                    longArrayOf(18, 100, 13),
-                    intArrayOf(200, 0, 120),
+                    longArrayOf(
+                        (18 + (strength - 3) * 3).toLong(),
+                        100,
+                        (13 + (strength - 3) * 3).toLong()
+                    ),
+                    intArrayOf(200 + (strength - 3) * 15, 0, 120 + (strength - 3) * 15),
                     -1
                 )
             vibrator.vibrate(vibrationEffect)
@@ -25,7 +30,10 @@ class MyVibrationEffect(
     fun click() {
         if (enable) {
             val vibrationEffect =
-                VibrationEffect.createOneShot(12, 180)
+                VibrationEffect.createOneShot(
+                    (12 + (strength - 3) * 3).toLong(),
+                    180 + (strength - 3) * 15
+                )
             vibrator.vibrate(vibrationEffect)
         }
     }
@@ -34,8 +42,12 @@ class MyVibrationEffect(
         if (enable) {
             val vibrationEffect =
                 VibrationEffect.createWaveform(
-                    longArrayOf(12, 130, 18),
-                    intArrayOf(110, 0, 180),
+                    longArrayOf(
+                        (12 + (strength - 3) * 3).toLong(),
+                        130,
+                        (18 + (strength - 3) * 3).toLong()
+                    ),
+                    intArrayOf(110 + (strength - 3) * 15, 0, 180 + (strength - 3) * 15),
                     -1
                 )
             vibrator.vibrate(vibrationEffect)
@@ -46,8 +58,12 @@ class MyVibrationEffect(
         if (enable) {
             val vibrationEffect =
                 VibrationEffect.createWaveform(
-                    longArrayOf(18, 130, 12),
-                    intArrayOf(180, 0, 110),
+                    longArrayOf(
+                        (18 + (strength - 3) * 3).toLong(),
+                        130,
+                        (12 + (strength - 3) * 3).toLong()
+                    ),
+                    intArrayOf(180 + (strength - 3) * 15, 0, 110 + (strength - 3) * 15),
                     -1
                 )
             vibrator.vibrate(vibrationEffect)
@@ -57,7 +73,10 @@ class MyVibrationEffect(
     fun done() {
         if (enable) {
             val vibrationEffect =
-                VibrationEffect.createOneShot(20, 225)
+                VibrationEffect.createOneShot(
+                    (20 + (strength - 3) * 3).toLong(),
+                    225 + (strength - 3) * 15
+                )
             vibrator.vibrate(vibrationEffect)
         }
     }
@@ -65,7 +84,10 @@ class MyVibrationEffect(
     fun dragMove() {
         if (enable) {
             val vibrationEffect =
-                VibrationEffect.createOneShot(10, 220)
+                VibrationEffect.createOneShot(
+                    (10 + (strength - 3) * 3).toLong(),
+                    220 + (strength - 3) * 15
+                )
             vibrator.vibrate(vibrationEffect)
         }
     }

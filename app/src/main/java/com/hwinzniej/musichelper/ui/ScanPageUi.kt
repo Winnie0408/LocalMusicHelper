@@ -53,7 +53,8 @@ fun ScanPageUi(
     showConflictDialog: MutableState<Boolean>,
     exportResultFile: MutableState<Boolean>,
     selectedExportFormat: MutableIntState,
-    enableHaptic: MutableState<Boolean>
+    enableHaptic: MutableState<Boolean>,
+    hapticStrength: MutableIntState
 ) {
     val context = LocalContext.current
     if (showConflictDialog.value) {
@@ -65,7 +66,8 @@ fun ScanPageUi(
             content = stringResource(R.string.file_conflict_dialog_content).replace("#n", "\n"),
             cancelText = stringResource(R.string.file_conflict_dialog_no_text),
             confirmText = stringResource(R.string.file_conflict_dialog_yes_text),
-            enableHaptic = enableHaptic.value
+            enableHaptic = enableHaptic.value,
+            hapticStrength = hapticStrength.intValue
         )
     }
 
@@ -74,7 +76,8 @@ fun ScanPageUi(
             onDismissRequest = { scanPage.showErrorDialog.value = false },
             title = stringResource(id = R.string.scan_complete_but_have_error),
             content = null,
-            enableHaptic = enableHaptic.value
+            enableHaptic = enableHaptic.value,
+            hapticStrength = hapticStrength.intValue
         ) {
             RoundedColumn {
                 ItemTitle(text = stringResource(id = R.string.error_details))
@@ -143,7 +146,8 @@ fun ScanPageUi(
                         },
                         text = stringResource(id = R.string.export_result_file_switcher_text),
                         sub = stringResource(id = R.string.export_result_file_switcher_sub_text),
-                        enableHaptic = enableHaptic.value
+                        enableHaptic = enableHaptic.value,
+                        hapticStrength = hapticStrength.intValue
                     )
                     AnimatedVisibility(visible = exportResultFile.value) {
                         ItemPopup(
@@ -158,7 +162,11 @@ fun ScanPageUi(
                         ) {
                             PopupMenuItem(
                                 onClick = {
-                                    MyVibrationEffect(context, enableHaptic.value).click()
+                                    MyVibrationEffect(
+                                        context,
+                                        enableHaptic.value,
+                                        hapticStrength.intValue
+                                    ).click()
                                     selectedExportFormat.intValue = 0
                                     exportTypePopupState.dismiss()
                                 },
@@ -170,7 +178,11 @@ fun ScanPageUi(
                             )
                             PopupMenuItem(
                                 onClick = {
-                                    MyVibrationEffect(context, enableHaptic.value).click()
+                                    MyVibrationEffect(
+                                        context,
+                                        enableHaptic.value,
+                                        hapticStrength.intValue
+                                    ).click()
                                     selectedExportFormat.intValue = 1
                                     exportTypePopupState.dismiss()
                                 },
@@ -195,7 +207,8 @@ fun ScanPageUi(
                                 scanPage.init()
                             }, text = stringResource(R.string.start_text),
                             enabled = !it,
-                            enableHaptic = enableHaptic.value
+                            enableHaptic = enableHaptic.value,
+                            hapticStrength = hapticStrength.intValue
                         )
                     }
                 }

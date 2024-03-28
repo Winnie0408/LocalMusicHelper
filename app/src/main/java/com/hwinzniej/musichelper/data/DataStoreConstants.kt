@@ -22,4 +22,5 @@ object DataStoreConstants {
     val KUGOU_USER_ID = stringPreferencesKey("kugou_user_id")
     val UM_FILE_LEGAL = booleanPreferencesKey("um_file_legal")
     val UM_SUPPORT_OVERWRITE = booleanPreferencesKey("um_support_overwrite")
+    val HAPTIC_STRENGTH = intPreferencesKey("haptic_strength")
 }

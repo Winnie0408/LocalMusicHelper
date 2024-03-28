@@ -454,7 +454,8 @@ class ScanPage(
                 ).show()
                 MyVibrationEffect(
                     context,
-                    (context as MainActivity).enableHaptic.value
+                    (context as MainActivity).enableHaptic.value,
+                    context.hapticStrength.intValue
                 ).done()
                 if (errorLog.value != "") {
                     if (!errorLog.value.startsWith("- ${context.getString(R.string.export_scan_result_failed)}:"))

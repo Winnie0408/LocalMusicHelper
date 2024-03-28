@@ -301,7 +301,7 @@
     <string name="cover_image_not_support">잘못된 이미지 형식</string>
     <string name="delete_cover_image">"표지 이미지를 삭제하시겠습니까? "</string>
     <string name="search">검색하다</string>
-    <string name="complete">완성</string>
+    <string name="completion">완성</string>
     <string name="choose_need_complete_type">완료할 레이블</string>
     <string name="tag_type">라벨 유형</string>
     <string name="total_album_artist_null_count_in_song_list">라이브러리에는 \'앨범 아티스트\' 태그가 비어 있는 #곡의 노래가 있습니다.</string>
@@ -312,4 +312,12 @@
     <string name="modify_album_artist_failed">실패 노래 \"#1\"의 앨범 아티스트를 #2로 수정했습니다.</string>
     <string name="refresh_success">새로 고침 성공</string>
     <string name="overwrite_original_album_artist_tag_sub_off">\"앨범 아티스트\"가 비어 있는 곡만 처리합니다</string>
+    <string name="completion_log">완료 작업 로그</string>
+    <string name="completion_options">완료 옵션</string>
+    <string name="haptic_strength">촉각 강도</string>
+    <string name="weak">더 약함</string>
+    <string name="normal_weak">약함</string>
+    <string name="normal">중간</string>
+    <string name="normal_strong">강함</string>
+    <string name="strong">더 강함</string>
 </resources>

@@ -32,6 +32,7 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableFloatState
+import androidx.compose.runtime.MutableIntState
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -77,6 +78,7 @@ fun AboutPageUi(
     enableHaptic: MutableState<Boolean>,
     language: MutableState<String>,
     updateFileSize: MutableFloatState,
+    hapticStrength: MutableIntState
 ) {
     val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
@@ -110,7 +112,8 @@ fun AboutPageUi(
             },
             title = yesNoDialogTitle,
             content = yesNoDialogContent.ifEmpty { null },
-            enableHaptic = enableHaptic.value
+            enableHaptic = enableHaptic.value,
+            hapticStrength = hapticStrength.intValue
         )
     }
 
@@ -124,7 +127,8 @@ fun AboutPageUi(
             content = yesDialogContent.ifEmpty { null },
             fontSize = 14.sp,
             enableHaptic = enableHaptic.value,
-            drawContent = yesDialogCustomContent
+            drawContent = yesDialogCustomContent,
+            hapticStrength = hapticStrength.intValue
         )
     }
 
@@ -135,7 +139,7 @@ fun AboutPageUi(
     ) {
         TitleBar(
             onBack = {
-                MyVibrationEffect(context, enableHaptic.value).click()
+                MyVibrationEffect(context, enableHaptic.value, hapticStrength.intValue).click()
                 coroutineScope.launch {
                     settingsPageState.animateScrollToPage(
                         0, animationSpec = spring(2f)
@@ -450,6 +454,11 @@ fun AboutPageUi(
                                                         R.drawable.alipay
                                                     )
                                                     try {
+                                                        MyVibrationEffect(
+                                                            context,
+                                                            enableHaptic.value,
+                                                            hapticStrength.intValue
+                                                        ).click()
                                                         val path =
                                                             Environment.getExternalStoragePublicDirectory(
                                                                 Environment.DIRECTORY_PICTURES
@@ -505,6 +514,11 @@ fun AboutPageUi(
                                                         R.drawable.wechat
                                                     )
                                                     try {
+                                                        MyVibrationEffect(
+                                                            context,
+                                                            enableHaptic.value,
+                                                            hapticStrength.intValue
+                                                        ).click()
                                                         val path =
                                                             Environment.getExternalStoragePublicDirectory(
                                                                 Environment.DIRECTORY_PICTURES

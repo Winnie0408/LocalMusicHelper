@@ -258,7 +258,8 @@ class ConvertPage(
             if (selectedMethod.intValue == 0) {
                 MyVibrationEffect(
                     context,
-                    (context as MainActivity).enableHaptic.value
+                    (context as MainActivity).enableHaptic.value,
+                    context.hapticStrength.intValue
                 ).done()
                 if (haveError) {
                     showLoadingProgressBar.value = false
@@ -402,6 +403,7 @@ class ConvertPage(
     private fun checkAppStatusWithRoot() {
         val appExists =
             Tools().execShellCmd("pm list packages | grep -E '${sourceApp.pakageName}'")
+                .replace("\n", "")
         if (appExists.isNotEmpty()) {
             if (appExists.indexOf("package:") == appExists.lastIndexOf("package:")) {
                 val dirPath = context.getExternalFilesDir(null)?.absolutePath + "/userDatabase"
@@ -970,7 +972,8 @@ class ConvertPage(
                     showLoadingProgressBar.value = false
                     MyVibrationEffect(
                         context,
-                        (context as MainActivity).enableHaptic.value
+                        (context as MainActivity).enableHaptic.value,
+                        context.hapticStrength.intValue
                     ).done()
                     if (emptyPlaylistNum != 0) {
                         withContext(Dispatchers.Main) {
@@ -1108,7 +1111,8 @@ class ConvertPage(
                             showDialogProgressBar.value = false
                             MyVibrationEffect(
                                 context,
-                                (context as MainActivity).enableHaptic.value
+                                (context as MainActivity).enableHaptic.value,
+                                context.hapticStrength.intValue
                             ).done()
                             customPlaylistInput.value = ""
                         } else {
@@ -1181,7 +1185,8 @@ class ConvertPage(
                             showDialogProgressBar.value = false
                             MyVibrationEffect(
                                 context,
-                                (context as MainActivity).enableHaptic.value
+                                (context as MainActivity).enableHaptic.value,
+                                context.hapticStrength.intValue
                             ).done()
                             customPlaylistInput.value = ""
                         } else {
@@ -1255,7 +1260,8 @@ class ConvertPage(
                             showDialogProgressBar.value = false
                             MyVibrationEffect(
                                 context,
-                                (context as MainActivity).enableHaptic.value
+                                (context as MainActivity).enableHaptic.value,
+                                context.hapticStrength.intValue
                             ).done()
                             customPlaylistInput.value = ""
                         } else {
@@ -1342,7 +1348,8 @@ class ConvertPage(
                                 showDialogProgressBar.value = false
                                 MyVibrationEffect(
                                     context,
-                                    (context as MainActivity).enableHaptic.value
+                                    (context as MainActivity).enableHaptic.value,
+                                    context.hapticStrength.intValue
                                 ).done()
                                 customPlaylistInput.value = ""
                             } else {
@@ -1358,7 +1365,8 @@ class ConvertPage(
                 showDialogProgressBar.value = false
                 MyVibrationEffect(
                     context,
-                    (context as MainActivity).enableHaptic.value
+                    (context as MainActivity).enableHaptic.value,
+                    context.hapticStrength.intValue
                 ).done()
                 withContext(Dispatchers.Main) {
                     Toast.makeText(
@@ -1370,7 +1378,8 @@ class ConvertPage(
             } catch (e: Exception) {
                 MyVibrationEffect(
                     context,
-                    (context as MainActivity).enableHaptic.value
+                    (context as MainActivity).enableHaptic.value,
+                    context.hapticStrength.intValue
                 ).done()
                 showDialogProgressBar.value = false
                 errorDialogTitle.value =
@@ -1437,7 +1446,8 @@ class ConvertPage(
             showLoadingProgressBar.value = false
             MyVibrationEffect(
                 context,
-                (context as MainActivity).enableHaptic.value
+                (context as MainActivity).enableHaptic.value,
+                context.hapticStrength.intValue
             ).done()
         }
     }
@@ -2328,7 +2338,8 @@ class ConvertPage(
             }
             MyVibrationEffect(
                 context,
-                (context as MainActivity).enableHaptic.value
+                (context as MainActivity).enableHaptic.value,
+                context.hapticStrength.intValue
             ).done()
         }
     }
@@ -2395,7 +2406,8 @@ class ConvertPage(
             showDialogProgressBar.value = false
             MyVibrationEffect(
                 context,
-                (context as MainActivity).enableHaptic.value
+                (context as MainActivity).enableHaptic.value,
+                context.hapticStrength.intValue
             ).done()
         }
     }
@@ -2528,7 +2540,8 @@ class ConvertPage(
                 showDialogProgressBar.value = false
                 MyVibrationEffect(
                     context,
-                    (context as MainActivity).enableHaptic.value
+                    (context as MainActivity).enableHaptic.value,
+                    context.hapticStrength.intValue
                 ).done()
                 showSaveDialog.value = false
                 playlistEnabled[firstIndex1] = 2

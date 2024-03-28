@@ -5,6 +5,7 @@ import android.app.DownloadManager
 import android.content.Context
 import android.content.res.Resources
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.widget.Toast
@@ -53,6 +54,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.WindowCompat
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
@@ -121,15 +123,25 @@ class MainActivity : ComponentActivity() {
     var enableDynamicColor = mutableStateOf(false)
     var selectedThemeMode = mutableIntStateOf(2)
     var enableHaptic = mutableStateOf(true)
+    var hapticStrength = mutableIntStateOf(3)
     var language = mutableStateOf("system")
     private val checkUpdate = mutableStateOf(false)
     var updateFileSize = mutableFloatStateOf(0f)
+    var isDataLoaded = mutableStateOf(false)
 
     @SuppressLint("NewApi")
     @OptIn(UnstableSaltApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         dataStore = (application as MyDataStore).dataStore
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            val splashScreen = installSplashScreen()
+            splashScreen.setKeepOnScreenCondition {
+                !isDataLoaded.value
+            }
+        } else {
+            setTheme(R.style.Theme_MusicHelper)
+        }
 
         when (Locale.getDefault().language) {
             Locale.CHINESE.toString() -> language.value = "zh"
@@ -339,6 +351,7 @@ private fun Pages(
             preferences[DataStoreConstants.KEY_ENABLE_DYNAMIC_COLOR] ?: false
         mainPage.selectedThemeMode.intValue = preferences[DataStoreConstants.KEY_THEME_MODE] ?: 2
         mainPage.enableHaptic.value = preferences[DataStoreConstants.KEY_ENABLE_HAPTIC] ?: true
+        mainPage.hapticStrength.intValue = preferences[DataStoreConstants.HAPTIC_STRENGTH] ?: 3
         mainPage.language.value = preferences[DataStoreConstants.KEY_LANGUAGE] ?: "system"
         settingsPage.enableAutoCheckUpdate.value =
             preferences[DataStoreConstants.KEY_ENABLE_AUTO_CHECK_UPDATE] ?: true
@@ -358,6 +371,10 @@ private fun Pages(
             preferences[DataStoreConstants.UM_FILE_LEGAL] ?: false
         settingsPage.umSupportOverWrite.value =
             preferences[DataStoreConstants.UM_SUPPORT_OVERWRITE] ?: false
+        coroutineScope.launch(Dispatchers.Default) {
+            delay(248L)
+            mainPage.isDataLoaded.value = true
+        }
     }
 
     LaunchedEffect(key1 = mainPage.language.value) {
@@ -415,7 +432,8 @@ private fun Pages(
             },
             title = stringResource(id = R.string.download_lateset_ver),
             content = null,
-            enableHaptic = mainPage.enableHaptic.value
+            enableHaptic = mainPage.enableHaptic.value,
+            hapticStrength = mainPage.hapticStrength.intValue
         ) {
             Column {
                 RoundedColumn {
@@ -558,6 +576,7 @@ private fun Pages(
                         exportResultFile = scanPage.exportResultFile,
                         selectedExportFormat = scanPage.selectedExportFormat,
                         enableHaptic = mainPage.enableHaptic,
+                        hapticStrength = mainPage.hapticStrength,
                     )
                 }
 
@@ -599,6 +618,7 @@ private fun Pages(
                         showLoginDialog = convertPage.showLoginDialog,
                         dataStore = mainPage.dataStore,
                         showSongNumMismatchDialog = convertPage.showSongNumMismatchDialog,
+                        hapticStrength = mainPage.hapticStrength,
                     )
                 }
 
@@ -606,6 +626,7 @@ private fun Pages(
                     TagPageUi(
                         tagPage = tagPage,
                         enableHaptic = mainPage.enableHaptic,
+                        hapticStrength = mainPage.hapticStrength,
                     )
                 }
 
@@ -632,7 +653,8 @@ private fun Pages(
                         UnlockPageUi(
                             unlockPage = unlockPage,
                             enableHaptic = mainPage.enableHaptic,
-                            settingsPage = settingsPage
+                            settingsPage = settingsPage,
+                            hapticStrength = mainPage.hapticStrength,
                         )
                     } else {
                         HorizontalPager(
@@ -655,6 +677,7 @@ private fun Pages(
                                         enableHaptic = mainPage.enableHaptic,
                                         dataStore = mainPage.dataStore,
                                         encryptServer = settingsPage.encryptServer,
+                                        hapticStrength = mainPage.hapticStrength,
                                     )
                                 }
 
@@ -668,6 +691,7 @@ private fun Pages(
                                         enableHaptic = mainPage.enableHaptic,
                                         language = mainPage.language,
                                         updateFileSize = mainPage.updateFileSize,
+                                        hapticStrength = mainPage.hapticStrength,
                                     )
                                 }
                             }
@@ -697,6 +721,7 @@ private fun Pages(
                                         enableHaptic = mainPage.enableHaptic,
                                         dataStore = mainPage.dataStore,
                                         encryptServer = settingsPage.encryptServer,
+                                        hapticStrength = mainPage.hapticStrength,
                                     )
                                 }
 
@@ -710,6 +735,7 @@ private fun Pages(
                                         enableHaptic = mainPage.enableHaptic,
                                         language = mainPage.language,
                                         updateFileSize = mainPage.updateFileSize,
+                                        hapticStrength = mainPage.hapticStrength,
                                     )
                                 }
                             }
@@ -724,7 +750,11 @@ private fun Pages(
             BottomBarItem(
                 state = pageState.currentPage == 0,
                 onClick = {
-                    MyVibrationEffect(context, mainPage.enableHaptic.value).click()
+                    MyVibrationEffect(
+                        context,
+                        mainPage.enableHaptic.value,
+                        mainPage.hapticStrength.intValue
+                    ).click()
                     coroutineScope.launch {
                         settingsPageState.scrollToPage(0)
                     }
@@ -741,7 +771,11 @@ private fun Pages(
             BottomBarItem(
                 state = pageState.currentPage == 1,
                 onClick = {
-                    MyVibrationEffect(context, mainPage.enableHaptic.value).click()
+                    MyVibrationEffect(
+                        context,
+                        mainPage.enableHaptic.value,
+                        mainPage.hapticStrength.intValue
+                    ).click()
                     coroutineScope.launch {
                         settingsPageState.scrollToPage(0)
                     }
@@ -758,7 +792,11 @@ private fun Pages(
             BottomBarItem(
                 state = pageState.currentPage == 2,
                 onClick = {
-                    MyVibrationEffect(context, mainPage.enableHaptic.value).click()
+                    MyVibrationEffect(
+                        context,
+                        mainPage.enableHaptic.value,
+                        mainPage.hapticStrength.intValue
+                    ).click()
                     coroutineScope.launch {
                         settingsPageState.scrollToPage(0)
                     }
@@ -793,7 +831,11 @@ private fun Pages(
                 BottomBarItem(
                     state = pageState.currentPage == 3,
                     onClick = {
-                        MyVibrationEffect(context, mainPage.enableHaptic.value).click()
+                        MyVibrationEffect(
+                            context,
+                            mainPage.enableHaptic.value,
+                            mainPage.hapticStrength.intValue
+                        ).click()
                         coroutineScope.launch {
                             settingsPageState.scrollToPage(0)
                         }
@@ -814,7 +856,11 @@ private fun Pages(
                 else
                     pageState.currentPage == 3,
                 onClick = {
-                    MyVibrationEffect(context, mainPage.enableHaptic.value).click()
+                    MyVibrationEffect(
+                        context,
+                        mainPage.enableHaptic.value,
+                        mainPage.hapticStrength.intValue
+                    ).click()
                     coroutineScope.launch {
                         settingsPageState.animateScrollToPage(
                             0,
