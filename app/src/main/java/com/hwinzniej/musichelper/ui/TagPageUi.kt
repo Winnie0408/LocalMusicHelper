@@ -204,6 +204,7 @@ fun TagPageUi(
             onConfirm = {
                 coroutineScope.launch(Dispatchers.IO) {
                     if (tagPage.saveSongInfo(musicInfo.value, coverImage)) {
+                        tagPage.searchSong(searchInput, searchResult)
                         showSongInfoDialog = false
                         musicInfo.value = emptyMap()
                         showLoadingProgressBar = true
@@ -219,7 +220,7 @@ fun TagPageUi(
         ) {
             Column(
                 modifier = Modifier
-                    .heightIn(max = (LocalConfiguration.current.screenHeightDp / 1.75).dp)
+                    .heightIn(max = (LocalConfiguration.current.screenHeightDp / 1.7).dp)
             ) {
                 RoundedColumn {
                     Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
@@ -245,8 +246,6 @@ fun TagPageUi(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .padding(
-                                            start = SaltTheme.dimens.innerHorizontalPadding,
-                                            end = SaltTheme.dimens.innerHorizontalPadding,
                                             top = 4.dp,
                                             bottom = 8.dp
                                         ),
@@ -274,7 +273,6 @@ fun TagPageUi(
                                         .padding(
                                             start = SaltTheme.dimens.innerHorizontalPadding,
                                             end = SaltTheme.dimens.innerHorizontalPadding,
-                                            top = 4.dp,
                                             bottom = 8.dp
                                         ),
                                     onClick = { tagPage.selectCoverImage() },
@@ -283,7 +281,7 @@ fun TagPageUi(
                                 ) {
                                     Icon(
                                         modifier = Modifier
-                                            .size(16.dp)
+                                            .size(17.5.dp)
                                             .align(Alignment.Center),
                                         painter = painterResource(id = R.drawable.plus_no_circle),
                                         contentDescription = null,

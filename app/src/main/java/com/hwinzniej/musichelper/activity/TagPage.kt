@@ -58,7 +58,7 @@ class TagPage(
             "albumArtist" to audioFile.tag.getFirst(FieldKey.ALBUM_ARTIST),
             "genre" to audioFile.tag.getFirst(FieldKey.GENRE),
             "trackNumber" to audioFile.tag.getFirst(FieldKey.TRACK),
-            "diskNumber" to audioFile.tag.getFirst(FieldKey.DISC_NO),
+            "discNumber" to audioFile.tag.getFirst(FieldKey.DISC_NO),
             "releaseYear" to audioFile.tag.getFirst(FieldKey.YEAR),
             "composer" to audioFile.tag.getFirst(FieldKey.COMPOSER),
             "lyricist" to audioFile.tag.getFirst(FieldKey.LYRICIST),
@@ -90,13 +90,26 @@ class TagPage(
         val audioFile: AudioFile
         try {
             audioFile = AudioFileIO.read(File(musicInfo.absolutePath))
-            audioFile.tag.setField(FieldKey.TITLE, songInfoModified["song"] ?: "")
-            audioFile.tag.setField(FieldKey.ARTIST, songInfoModified["artist"] ?: "")
-            audioFile.tag.setField(FieldKey.ALBUM, songInfoModified["album"] ?: "")
-            audioFile.tag.setField(FieldKey.ALBUM_ARTIST, songInfoModified["albumArtist"] ?: "")
-            audioFile.tag.setField(FieldKey.GENRE, songInfoModified["genre"] ?: "")
-            audioFile.tag.setField(FieldKey.TRACK, songInfoModified["trackNumber"] ?: "")
-            audioFile.tag.setField(FieldKey.YEAR, songInfoModified["releaseYear"] ?: "")
+            val musicTag = mapOf(
+                "song" to FieldKey.TITLE,
+                "artist" to FieldKey.ARTIST,
+                "album" to FieldKey.ALBUM,
+                "albumArtist" to FieldKey.ALBUM_ARTIST,
+                "genre" to FieldKey.GENRE,
+                "trackNumber" to FieldKey.TRACK,
+                "discNumber" to FieldKey.DISC_NO,
+                "releaseYear" to FieldKey.YEAR,
+                "composer" to FieldKey.COMPOSER,
+                "lyricist" to FieldKey.LYRICIST,
+                "lyrics" to FieldKey.LYRICS,
+            )
+            musicTag.forEach {
+                if (songInfoModified[it.key] == null || songInfoModified[it.key]!!.isBlank()) {
+                    audioFile.tag.deleteField(it.value)
+                } else {
+                    audioFile.tag.setField(it.value, songInfoModified[it.key])
+                }
+            }
             audioFile.tag.deleteArtworkField()
             coverMimeType?.let {
                 val artwork = ArtworkFactory.getNew()
@@ -116,19 +129,15 @@ class TagPage(
         musicInfo.song = songInfoModified["song"] ?: ""
         musicInfo.artist = songInfoModified["artist"] ?: ""
         musicInfo.album = songInfoModified["album"] ?: ""
-        musicInfo.albumArtist = songInfoModified["albumArtist"] ?: ""
-        musicInfo.genre = songInfoModified["genre"] ?: ""
-        musicInfo.trackNumber = songInfoModified["trackNumber"] ?: ""
-        musicInfo.releaseYear = songInfoModified["releaseYear"] ?: ""
         db.musicDao().updateMusicInfo(
-            id,
-            musicInfo.song,
-            musicInfo.artist,
-            musicInfo.album,
-            musicInfo.albumArtist,
-            musicInfo.genre,
-            musicInfo.trackNumber,
-            musicInfo.releaseYear,
+            id = id,
+            song = musicInfo.song,
+            artist = musicInfo.artist,
+            album = musicInfo.album,
+            albumArtist = "",
+            genre = "",
+            trackNumber = "",
+            releaseYear = "",
         )
         withContext(Dispatchers.Main) {
             Toast.makeText(context, context.getString(R.string.save_success), Toast.LENGTH_SHORT)
