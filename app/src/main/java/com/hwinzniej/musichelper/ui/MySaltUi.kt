@@ -687,7 +687,8 @@ fun ItemEdit(
     iconPaddingValues: PaddingValues = PaddingValues(0.dp),
     iconColor: Color? = null,
     singleLine: Boolean = false,
-    hapticStrength: Int
+    hapticStrength: Int,
+    textStyle: TextStyle = SaltTheme.textStyles.main
 ) {
     val context = LocalContext.current
     BasicTextField(
@@ -697,7 +698,7 @@ fun ItemEdit(
         readOnly = readOnly,
         keyboardOptions = keyboardOptions,
         keyboardActions = keyboardActions,
-        textStyle = SaltTheme.textStyles.main,
+        textStyle = textStyle,
         visualTransformation = visualTransformation,
         cursorBrush = SolidColor(SaltTheme.colors.highlight),
         singleLine = singleLine,
@@ -731,7 +732,7 @@ fun ItemEdit(
                         Text(
                             text = hint,
                             color = hintColor,
-                            style = SaltTheme.textStyles.main
+                            style = textStyle
                         )
                     }
                 }

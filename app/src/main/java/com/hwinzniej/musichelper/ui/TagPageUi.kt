@@ -243,7 +243,13 @@ fun TagPageUi(
                                 val bitmap = BitmapFactory.decodeByteArray(it, 0, it.size)
                                 Column(
                                     modifier = Modifier
-                                        .fillMaxWidth(),
+                                        .fillMaxWidth()
+                                        .padding(
+                                            start = SaltTheme.dimens.innerHorizontalPadding,
+                                            end = SaltTheme.dimens.innerHorizontalPadding,
+                                            top = 4.dp,
+                                            bottom = 8.dp
+                                        ),
                                     verticalArrangement = Arrangement.Center,
                                     horizontalAlignment = Alignment.CenterHorizontally
                                 ) {
@@ -265,7 +271,12 @@ fun TagPageUi(
                                 BasicButton(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .padding(horizontal = SaltTheme.dimens.innerHorizontalPadding),
+                                        .padding(
+                                            start = SaltTheme.dimens.innerHorizontalPadding,
+                                            end = SaltTheme.dimens.innerHorizontalPadding,
+                                            top = 4.dp,
+                                            bottom = 8.dp
+                                        ),
                                     onClick = { tagPage.selectCoverImage() },
                                     backgroundColor = SaltTheme.colors.subText.copy(alpha = 0.1f),
                                     hapticStrength = hapticStrength.intValue
@@ -281,142 +292,94 @@ fun TagPageUi(
                                 }
                             }
                         }
-                        ItemTitle(
-                            text = stringResource(id = R.string.song_name),
-                            paddingValues = PaddingValues(
-                                start = SaltTheme.dimens.innerHorizontalPadding,
-                                end = SaltTheme.dimens.innerHorizontalPadding,
-                                top = SaltTheme.dimens.innerVerticalPadding
-                            )
-                        )
-                        ItemEdit(
-                            text = musicInfo.value["song"] ?: "",
+                        SongInfoItem(
+                            title = stringResource(id = R.string.song_name),
+                            editText = musicInfo.value["song"],
                             onChange = { musicInfo.value += ("song" to it) },
-                            hint = stringResource(id = R.string.text_null),
-                            enableHaptic = enableHaptic.value,
-                            showClearButton = true,
                             onClear = { musicInfo.value -= "song" },
-                            paddingValues = PaddingValues(
-                                start = SaltTheme.dimens.innerHorizontalPadding,
-                                end = SaltTheme.dimens.innerHorizontalPadding,
-                                bottom = SaltTheme.dimens.innerHorizontalPadding,
-                                top = 4.dp
-                            ),
+                            enableHaptic = enableHaptic.value,
                             hapticStrength = hapticStrength.intValue
                         )
-                        ItemTitle(
-                            text = stringResource(id = R.string.atrist),
-                            paddingValues = PaddingValues(horizontal = SaltTheme.dimens.innerHorizontalPadding)
-                        )
-                        ItemEdit(
-                            text = musicInfo.value["artist"] ?: "",
+                        SongInfoItem(
+                            title = stringResource(id = R.string.atrist),
+                            editText = musicInfo.value["artist"],
                             onChange = { musicInfo.value += ("artist" to it) },
-                            hint = stringResource(id = R.string.text_null),
-                            enableHaptic = enableHaptic.value,
-                            showClearButton = true,
                             onClear = { musicInfo.value -= "artist" },
-                            paddingValues = PaddingValues(
-                                start = SaltTheme.dimens.innerHorizontalPadding,
-                                end = SaltTheme.dimens.innerHorizontalPadding,
-                                bottom = SaltTheme.dimens.innerHorizontalPadding,
-                                top = 4.dp
-                            ),
+                            enableHaptic = enableHaptic.value,
                             hapticStrength = hapticStrength.intValue
                         )
-                        ItemTitle(
-                            text = stringResource(id = R.string.album1),
-                            paddingValues = PaddingValues(horizontal = SaltTheme.dimens.innerHorizontalPadding)
-                        )
-                        ItemEdit(
-                            text = musicInfo.value["album"] ?: "",
+                        SongInfoItem(
+                            title = stringResource(id = R.string.album1),
+                            editText = musicInfo.value["album"],
                             onChange = { musicInfo.value += ("album" to it) },
-                            hint = stringResource(id = R.string.text_null),
-                            enableHaptic = enableHaptic.value,
-                            showClearButton = true,
                             onClear = { musicInfo.value -= "album" },
-                            paddingValues = PaddingValues(
-                                start = SaltTheme.dimens.innerHorizontalPadding,
-                                end = SaltTheme.dimens.innerHorizontalPadding,
-                                bottom = SaltTheme.dimens.innerHorizontalPadding,
-                                top = 4.dp
-                            ),
+                            enableHaptic = enableHaptic.value,
                             hapticStrength = hapticStrength.intValue
                         )
-                        ItemTitle(
-                            text = stringResource(id = R.string.album_artist_tag_name),
-                            paddingValues = PaddingValues(horizontal = SaltTheme.dimens.innerHorizontalPadding)
-                        )
-                        ItemEdit(
-                            text = musicInfo.value["albumArtist"] ?: "",
+                        SongInfoItem(
+                            title = stringResource(id = R.string.album_artist_tag_name),
+                            editText = musicInfo.value["albumArtist"],
                             onChange = { musicInfo.value += ("albumArtist" to it) },
-                            hint = stringResource(id = R.string.text_null),
-                            enableHaptic = enableHaptic.value,
-                            showClearButton = true,
                             onClear = { musicInfo.value -= "albumArtist" },
-                            paddingValues = PaddingValues(
-                                start = SaltTheme.dimens.innerHorizontalPadding,
-                                end = SaltTheme.dimens.innerHorizontalPadding,
-                                bottom = SaltTheme.dimens.innerHorizontalPadding,
-                                top = 4.dp
-                            ),
+                            enableHaptic = enableHaptic.value,
                             hapticStrength = hapticStrength.intValue
                         )
-                        ItemTitle(
-                            text = stringResource(id = R.string.genre_tag_name),
-                            paddingValues = PaddingValues(horizontal = SaltTheme.dimens.innerHorizontalPadding)
-                        )
-                        ItemEdit(
-                            text = musicInfo.value["genre"] ?: "",
+                        SongInfoItem(
+                            title = stringResource(id = R.string.genre_tag_name),
+                            editText = musicInfo.value["genre"],
                             onChange = { musicInfo.value += ("genre" to it) },
-                            hint = stringResource(id = R.string.text_null),
-                            enableHaptic = enableHaptic.value,
-                            showClearButton = true,
                             onClear = { musicInfo.value -= "genre" },
-                            paddingValues = PaddingValues(
-                                start = SaltTheme.dimens.innerHorizontalPadding,
-                                end = SaltTheme.dimens.innerHorizontalPadding,
-                                bottom = SaltTheme.dimens.innerHorizontalPadding,
-                                top = 4.dp
-                            ),
+                            enableHaptic = enableHaptic.value,
                             hapticStrength = hapticStrength.intValue
                         )
-                        ItemTitle(
-                            text = stringResource(id = R.string.track_number_tag_name),
-                            paddingValues = PaddingValues(horizontal = SaltTheme.dimens.innerHorizontalPadding)
-                        )
-                        ItemEdit(
-                            text = musicInfo.value["trackNumber"] ?: "",
+                        SongInfoItem(
+                            title = stringResource(id = R.string.track_number_tag_name),
+                            editText = musicInfo.value["trackNumber"],
                             onChange = { musicInfo.value += ("trackNumber" to it) },
-                            hint = stringResource(id = R.string.text_null),
-                            enableHaptic = enableHaptic.value,
-                            showClearButton = true,
                             onClear = { musicInfo.value -= "trackNumber" },
-                            paddingValues = PaddingValues(
-                                start = SaltTheme.dimens.innerHorizontalPadding,
-                                end = SaltTheme.dimens.innerHorizontalPadding,
-                                bottom = SaltTheme.dimens.innerHorizontalPadding,
-                                top = 4.dp
-                            ),
-                            hapticStrength = hapticStrength.intValue
-                        )
-                        ItemTitle(
-                            text = stringResource(id = R.string.release_year_tag_name),
-                            paddingValues = PaddingValues(horizontal = SaltTheme.dimens.innerHorizontalPadding)
-                        )
-                        ItemEdit(
-                            text = musicInfo.value["releaseYear"] ?: "",
-                            onChange = { musicInfo.value += ("releaseYear" to it) },
-                            hint = stringResource(id = R.string.text_null),
                             enableHaptic = enableHaptic.value,
-                            showClearButton = true,
-                            onClear = { musicInfo.value -= "releaseYear" },
-                            paddingValues = PaddingValues(
-                                start = SaltTheme.dimens.innerHorizontalPadding,
-                                end = SaltTheme.dimens.innerHorizontalPadding,
-                                bottom = SaltTheme.dimens.innerHorizontalPadding,
-                                top = 4.dp
-                            ),
                             hapticStrength = hapticStrength.intValue
+                        )
+                        SongInfoItem(
+                            title = stringResource(id = R.string.disc_number),
+                            editText = musicInfo.value["discNumber"],
+                            onChange = { musicInfo.value += ("discNumber" to it) },
+                            onClear = { musicInfo.value -= "discNumber" },
+                            enableHaptic = enableHaptic.value,
+                            hapticStrength = hapticStrength.intValue
+                        )
+                        SongInfoItem(
+                            title = stringResource(id = R.string.release_year_tag_name),
+                            editText = musicInfo.value["releaseYear"],
+                            onChange = { musicInfo.value += ("releaseYear" to it) },
+                            onClear = { musicInfo.value -= "releaseYear" },
+                            enableHaptic = enableHaptic.value,
+                            hapticStrength = hapticStrength.intValue
+                        )
+                        SongInfoItem(
+                            title = stringResource(id = R.string.composer),
+                            editText = musicInfo.value["composer"],
+                            onChange = { musicInfo.value += ("composer" to it) },
+                            onClear = { musicInfo.value -= "composer" },
+                            enableHaptic = enableHaptic.value,
+                            hapticStrength = hapticStrength.intValue
+                        )
+                        SongInfoItem(
+                            title = stringResource(id = R.string.lyricist),
+                            editText = musicInfo.value["lyricist"],
+                            onChange = { musicInfo.value += ("lyricist" to it) },
+                            onClear = { musicInfo.value -= "lyricist" },
+                            enableHaptic = enableHaptic.value,
+                            hapticStrength = hapticStrength.intValue
+                        )
+                        SongInfoItem(
+                            title = stringResource(id = R.string.lyrics),
+                            editText = musicInfo.value["lyrics"],
+                            onChange = { musicInfo.value += ("lyrics" to it) },
+                            onClear = { musicInfo.value -= "lyrics" },
+                            enableHaptic = enableHaptic.value,
+                            hapticStrength = hapticStrength.intValue,
+                            textStyle = TextStyle(fontSize = 15.sp)
                         )
                     }
                 }
@@ -890,4 +853,40 @@ fun TagPageUi(
             }
         }
     }
+}
+
+@Composable
+fun SongInfoItem(
+    title: String,
+    editText: String?,
+    onChange: (String) -> Unit,
+    onClear: () -> Unit,
+    enableHaptic: Boolean,
+    hapticStrength: Int,
+    textStyle: TextStyle = SaltTheme.textStyles.main
+) {
+    ItemTitle(
+        text = title,
+        paddingValues = PaddingValues(
+            start = SaltTheme.dimens.innerHorizontalPadding,
+            end = SaltTheme.dimens.innerHorizontalPadding,
+            top = SaltTheme.dimens.innerVerticalPadding
+        )
+    )
+    ItemEdit(
+        text = editText ?: "",
+        onChange = onChange,
+        hint = stringResource(id = R.string.text_null),
+        enableHaptic = enableHaptic,
+        showClearButton = true,
+        onClear = onClear,
+        paddingValues = PaddingValues(
+            start = SaltTheme.dimens.innerHorizontalPadding,
+            end = SaltTheme.dimens.innerHorizontalPadding,
+            bottom = 8.dp,
+            top = 4.dp
+        ),
+        hapticStrength = hapticStrength,
+        textStyle = textStyle
+    )
 }

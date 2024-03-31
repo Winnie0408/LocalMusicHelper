@@ -55,10 +55,14 @@ class TagPage(
             "song" to musicInfo.song,
             "artist" to musicInfo.artist,
             "album" to musicInfo.album,
-            "albumArtist" to musicInfo.albumArtist,
-            "genre" to musicInfo.genre,
-            "trackNumber" to musicInfo.trackNumber,
-            "releaseYear" to musicInfo.releaseYear,
+            "albumArtist" to audioFile.tag.getFirst(FieldKey.ALBUM_ARTIST),
+            "genre" to audioFile.tag.getFirst(FieldKey.GENRE),
+            "trackNumber" to audioFile.tag.getFirst(FieldKey.TRACK),
+            "diskNumber" to audioFile.tag.getFirst(FieldKey.DISC_NO),
+            "releaseYear" to audioFile.tag.getFirst(FieldKey.YEAR),
+            "composer" to audioFile.tag.getFirst(FieldKey.COMPOSER),
+            "lyricist" to audioFile.tag.getFirst(FieldKey.LYRICIST),
+            "lyrics" to audioFile.tag.getFirst(FieldKey.LYRICS),
         )
     }
 

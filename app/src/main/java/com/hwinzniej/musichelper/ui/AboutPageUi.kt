@@ -42,6 +42,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -51,6 +52,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.zIndex
+import androidx.core.content.res.ResourcesCompat
+import androidx.core.graphics.drawable.toBitmap
 import com.alibaba.fastjson2.JSON
 import com.hwinzniej.musichelper.R
 import com.hwinzniej.musichelper.utils.MyVibrationEffect
@@ -168,13 +171,21 @@ fun AboutPageUi(
                     modifier = Modifier.fillMaxSize(),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Image(
-                        modifier = Modifier
-                            .size(125.dp)
-                            .clip(RoundedCornerShape(12.dp)),
-                        painter = painterResource(id = R.mipmap.ic_launcher_foreground),
-                        contentDescription = null
-                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    ResourcesCompat.getDrawable(
+                        context.resources,
+                        R.mipmap.ic_launcher_round,
+                        null
+                    )?.let {
+                        Image(
+                            modifier = Modifier
+                                .size(96.dp)
+                                .clip(RoundedCornerShape(12.dp)),
+                            bitmap = (it).toBitmap().asImageBitmap(),
+                            contentDescription = null
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
                     Text(
                         text = stringResource(
                             id = R.string.app_name
@@ -191,79 +202,87 @@ fun AboutPageUi(
                 }
                 RoundedColumn {
                     ItemTitle(text = stringResource(id = R.string.related_info))
-                    Item(
-                        onClick = {
-                            yesDialogContent = ""
-                            yesDialogCustomContent = {
-                                Column {
-                                    RoundedColumn {
-                                        ItemTitle(text = stringResource(id = R.string.app_developer))
-                                        Text(
-                                            modifier = Modifier.padding(
-                                                horizontal = 16.dp,
-                                                vertical = 8.dp
-                                            ),
-                                            text = "HWinZnieJ",
-                                            color = SaltTheme.colors.text,
-                                            fontSize = 14.sp
-                                        )
-                                    }
-                                    RoundedColumn {
-                                        ItemTitle(text = stringResource(id = R.string.app_translator))
-                                        Text(
-                                            modifier = Modifier.padding(
-                                                horizontal = 16.dp,
-                                                vertical = 8.dp
-                                            ),
-                                            text = "HWinZnieJ & Microsoft Copilot & DeepL Translator",
-                                            color = SaltTheme.colors.text,
-                                            fontSize = 14.sp
-                                        )
-                                    }
-                                    RoundedColumn {
-                                        ItemTitle(text = stringResource(id = R.string.app_technical_supportor))
-                                        Text(
-                                            modifier = Modifier.padding(
-                                                horizontal = 16.dp,
-                                                vertical = 8.dp
-                                            ),
-                                            text = "Microsoft Copilot & GitHub Copilot & OpenAI GPT-4",
-                                            color = SaltTheme.colors.text,
-                                            fontSize = 14.sp
-                                        )
-                                    }
-                                    RoundedColumn {
-                                        ItemTitle(text = stringResource(id = R.string.app_special_thanks))
-                                        Text(
-                                            modifier = Modifier
-                                                .padding(
+                    if (context.packageManager.getApplicationInfo(
+                            context.packageName,
+                            0
+                        ).targetSdkVersion > 28
+                    ) {
+                        Item(
+                            onClick = {
+                                yesDialogContent = ""
+                                yesDialogCustomContent = {
+                                    Column(
+                                        modifier = Modifier
+                                            .heightIn(max = (LocalConfiguration.current.screenHeightDp / 1.8).dp)
+                                            .verticalScroll(rememberScrollState())
+                                    ) {
+                                        RoundedColumn {
+                                            ItemTitle(text = stringResource(id = R.string.app_developer))
+                                            Text(
+                                                modifier = Modifier.padding(
                                                     horizontal = 16.dp,
                                                     vertical = 8.dp
-                                                )
-                                                .heightIn(max = 120.dp)
-                                                .verticalScroll(rememberScrollState()),
-                                            text = "${
-                                                stringResource(id = R.string.coolapk)
-                                            }\n叶谖儿、网恋被骗九八上单、路还要走、星辰与月、破晓px、OmegaFallen、鷄你太魅、暮雨江天、PO8的惊堂木、叁陈小洋楼、白给少年又来了、梦中之城你和TA、大帅帅帅帅逼、不良人有品大帅、大泉麻衣、zz_xmy、迷茫和乐观的小陈\n\n${
-                                                stringResource(id = R.string.qq_group)
-                                            }\n过客、　、.、王八仨水、路还要走、天中HD、曾喜樂、。、ZERO、60、MATURE、Xik-、Zj、这是一个名字、唯爱、天择\uD83D\uDCAB、九江、迷雾水珠、K、七、xmy、大泉麻衣、w、Sandmい旧梦、奔跑吧，兄弟！、吔—、匿名用户、S\n\n${
-                                                stringResource(
-                                                    id = R.string.rank_no_order
-                                                )
-                                            }",
-                                            color = SaltTheme.colors.text,
-                                            fontSize = 14.sp
-                                        )
+                                                ),
+                                                text = "HWinZnieJ",
+                                                color = SaltTheme.colors.text,
+                                                fontSize = 14.sp
+                                            )
+                                        }
+                                        RoundedColumn {
+                                            ItemTitle(text = stringResource(id = R.string.app_translator))
+                                            Text(
+                                                modifier = Modifier.padding(
+                                                    horizontal = 16.dp,
+                                                    vertical = 8.dp
+                                                ),
+                                                text = "HWinZnieJ & Microsoft Copilot & DeepL Translator",
+                                                color = SaltTheme.colors.text,
+                                                fontSize = 14.sp
+                                            )
+                                        }
+                                        RoundedColumn {
+                                            ItemTitle(text = stringResource(id = R.string.app_technical_supportor))
+                                            Text(
+                                                modifier = Modifier.padding(
+                                                    horizontal = 16.dp,
+                                                    vertical = 8.dp
+                                                ),
+                                                text = "Microsoft Copilot & GitHub Copilot & OpenAI GPT-4",
+                                                color = SaltTheme.colors.text,
+                                                fontSize = 14.sp
+                                            )
+                                        }
+                                        RoundedColumn {
+                                            ItemTitle(text = stringResource(id = R.string.app_special_thanks))
+                                            Text(
+                                                modifier = Modifier
+                                                    .padding(
+                                                        horizontal = 16.dp,
+                                                        vertical = 8.dp
+                                                    ),
+                                                text = "${
+                                                    stringResource(id = R.string.coolapk)
+                                                }\n叶谖儿、网恋被骗九八上单、路还要走、星辰与月、破晓px、OmegaFallen、鷄你太魅、暮雨江天、PO8的惊堂木、叁陈小洋楼、白给少年又来了、梦中之城你和TA、大帅帅帅帅逼、不良人有品大帅、大泉麻衣、zz_xmy、迷茫和乐观的小陈\n\n${
+                                                    stringResource(id = R.string.qq_group)
+                                                }\n过客、　、.、王八仨水、路还要走、天中HD、曾喜樂、。、ZERO、60、MATURE、Xik-、Zj、这是一个名字、唯爱、天择\uD83D\uDCAB、九江、迷雾水珠、K、七、xmy、大泉麻衣、w、Sandmい旧梦、奔跑吧，兄弟！、吔—、匿名用户、S\n\n${
+                                                    stringResource(
+                                                        id = R.string.rank_no_order
+                                                    )
+                                                }",
+                                                color = SaltTheme.colors.text,
+                                                fontSize = 14.sp
+                                            )
+                                        }
                                     }
                                 }
-                            }
-                            yesDialogOnConfirm = {}
-                            yesDialogTitle = context.getString(R.string.staff)
-                            showYesDialog = true
-                        }, text = stringResource(id = R.string.staff),
-                        iconPainter = painterResource(id = R.drawable.developer),
-                        iconColor = SaltTheme.colors.text
-                    )
+                                yesDialogOnConfirm = {}
+                                yesDialogTitle = context.getString(R.string.staff)
+                                showYesDialog = true
+                            }, text = stringResource(id = R.string.staff),
+                            iconPainter = painterResource(id = R.drawable.developer),
+                            iconColor = SaltTheme.colors.text
+                        )
+                    }
                     Item(
                         enabled = !showLoadingProgressBar,
                         onClick = {

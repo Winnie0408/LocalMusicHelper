@@ -187,17 +187,35 @@ fun SettingsPageUi(
                                     settings[DataStoreConstants.KEY_ENABLE_DYNAMIC_COLOR] = it
                                 }
                             }
+                            if (it) {
+                                MyVibrationEffect(
+                                    context,
+                                    enableHaptic.value,
+                                    hapticStrength.intValue
+                                ).turnOn()
+                            } else {
+                                MyVibrationEffect(
+                                    context,
+                                    enableHaptic.value,
+                                    hapticStrength.intValue
+                                ).turnOff()
+                            }
                         } else {
                             Toast.makeText(
                                 context,
                                 context.getString(R.string.android_12_and_above_only),
                                 Toast.LENGTH_SHORT
                             ).show()
+                            MyVibrationEffect(
+                                context,
+                                enableHaptic.value,
+                                hapticStrength.intValue
+                            ).turnOff()
                         }
                     },
                     text = stringResource(R.string.dynamic_color_switcher_text),
                     sub = stringResource(R.string.dynamic_color_switcher_sub),
-                    enableHaptic = enableHaptic.value,
+                    enableHaptic = false,
                     iconPainter = painterResource(id = R.drawable.color),
                     iconColor = SaltTheme.colors.text,
                     hapticStrength = hapticStrength.intValue
@@ -300,13 +318,11 @@ fun SettingsPageUi(
                                             settings[DataStoreConstants.KEY_USE_ROOT_ACCESS] =
                                                 true
                                         }
-                                        if (enableHaptic.value) {
-                                            MyVibrationEffect(
-                                                context,
-                                                enableHaptic.value,
-                                                hapticStrength.intValue
-                                            ).turnOn()
-                                        }
+                                        MyVibrationEffect(
+                                            context,
+                                            enableHaptic.value,
+                                            hapticStrength.intValue
+                                        ).turnOn()
                                     }
                                 } catch (_: Exception) {
                                     withContext(Dispatchers.Main) {
@@ -316,19 +332,22 @@ fun SettingsPageUi(
                                             Toast.LENGTH_SHORT
                                         ).show()
                                     }
-                                }
-                            } else {
-                                dataStore.edit { settings ->
-                                    settings[DataStoreConstants.KEY_USE_ROOT_ACCESS] =
-                                        false
-                                }
-                                if (enableHaptic.value) {
                                     MyVibrationEffect(
                                         context,
                                         enableHaptic.value,
                                         hapticStrength.intValue
                                     ).turnOff()
                                 }
+                            } else {
+                                dataStore.edit { settings ->
+                                    settings[DataStoreConstants.KEY_USE_ROOT_ACCESS] =
+                                        false
+                                }
+                                MyVibrationEffect(
+                                    context,
+                                    enableHaptic.value,
+                                    hapticStrength.intValue
+                                ).turnOff()
                             }
                         }
                     },
@@ -360,7 +379,7 @@ fun SettingsPageUi(
             if (context.packageManager.getApplicationInfo(
                     context.packageName,
                     0
-                ).targetSdkVersion == 28
+                ).targetSdkVersion <= 28
             ) {
                 RoundedColumn {
                     ItemTitle(text = stringResource(R.string.music_unlock))

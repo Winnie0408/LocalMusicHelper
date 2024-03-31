@@ -320,4 +320,8 @@
     <string name="normal">중간</string>
     <string name="normal_strong">강함</string>
     <string name="strong">더 강함</string>
+    <string name="disc_number">디스크 번호</string>
+    <string name="composer">작사가</string>
+    <string name="lyricist">작곡가</string>
+    <string name="lyrics">가사</string>
 </resources>

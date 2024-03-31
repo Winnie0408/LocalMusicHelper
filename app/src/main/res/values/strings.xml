@@ -326,4 +326,8 @@
     <string name="normal">Moderate</string>
     <string name="normal_strong">Strong</string>
     <string name="strong">Stronger</string>
+    <string name="disc_number">Disc number</string>
+    <string name="composer">Composer</string>
+    <string name="lyricist">Lyricist</string>
+    <string name="lyrics">Lyrics</string>
 </resources>

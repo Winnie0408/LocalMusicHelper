@@ -331,7 +331,7 @@ private fun Pages(
         0
     ).targetSdkVersion
     val pages =
-        if (targetSdkVersion == 28)
+        if (targetSdkVersion <= 28)
             listOf("0", "1", "2", "3", "4")
         else
             listOf("0", "1", "2", "3")
@@ -649,7 +649,7 @@ private fun Pages(
 //                }
 
                 3 -> {
-                    if (targetSdkVersion == 28) {
+                    if (targetSdkVersion <= 28) {
                         UnlockPageUi(
                             unlockPage = unlockPage,
                             enableHaptic = mainPage.enableHaptic,
@@ -700,7 +700,7 @@ private fun Pages(
                 }
 
                 4 -> {
-                    if (targetSdkVersion == 28) {
+                    if (targetSdkVersion <= 28) {
                         HorizontalPager(
                             state = settingsPageState,
                             modifier = Modifier
@@ -827,7 +827,7 @@ private fun Pages(
 //                painter = painterResource(id = R.drawable.ic_launcher_foreground),
 //                text = stringResource(R.string.process_function_name)
 //            )
-            if (targetSdkVersion == 28) {
+            if (targetSdkVersion <= 28) {
                 BottomBarItem(
                     state = pageState.currentPage == 3,
                     onClick = {
@@ -851,7 +851,7 @@ private fun Pages(
                 )
             }
             BottomBarItem(
-                state = if (targetSdkVersion == 28)
+                state = if (targetSdkVersion <= 28)
                     pageState.currentPage == 4
                 else
                     pageState.currentPage == 3,
@@ -869,7 +869,7 @@ private fun Pages(
                     }
                     coroutineScope.launch {
                         pageState.animateScrollToPage(
-                            if (targetSdkVersion == 28)
+                            if (targetSdkVersion <= 28)
                                 4
                             else
                                 3,

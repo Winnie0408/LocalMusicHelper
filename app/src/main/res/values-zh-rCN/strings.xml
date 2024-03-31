@@ -320,4 +320,8 @@
     <string name="normal">中</string>
     <string name="normal_strong">较强</string>
     <string name="strong">强</string>
+    <string name="disc_number">碟号</string>
+    <string name="composer">作曲</string>
+    <string name="lyricist">作词</string>
+    <string name="lyrics">歌词</string>
 </resources>
