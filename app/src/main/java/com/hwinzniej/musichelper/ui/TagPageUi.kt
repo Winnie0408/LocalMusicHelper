@@ -105,10 +105,12 @@ fun TagPageUi(
     var showDialogProgressBar by remember { mutableStateOf(false) }
     val completeResult =
         remember { mutableStateListOf<Map<String, Int>>() } // Int: 0: 失败 1: 成功 2: 提示
+    var refreshComplete by remember { mutableIntStateOf(0) }
     val pullRefreshState = rememberPullRefreshState(
-        refreshing = songList.size == 0,
+        refreshing = refreshComplete == 1,
         onRefresh = {
             coroutineScope.launch(Dispatchers.IO) {
+                refreshComplete = 1
                 tagPage.getMusicList(songList)
                 MyVibrationEffect(
                     context,
@@ -124,6 +126,7 @@ fun TagPageUi(
                         )
                         .show()
                 }
+                refreshComplete = 2
             }
         }
     )
@@ -726,11 +729,6 @@ fun TagPageUi(
                                     }
                                 }
                             }
-                            PullRefreshIndicator(
-                                modifier = Modifier.align(Alignment.TopCenter),
-                                refreshing = songList.size == 0,
-                                state = pullRefreshState
-                            )
                         }
                     }
 
@@ -745,7 +743,9 @@ fun TagPageUi(
                                     top = 12.dp
                                 )
                                 .clip(RoundedCornerShape(12.dp))
-                                .background(color = SaltTheme.colors.background),
+                                .background(color = SaltTheme.colors.background)
+                                .pullRefresh(pullRefreshState)
+                                .verticalScroll(rememberScrollState()),
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.Center
                         ) {
@@ -849,6 +849,11 @@ fun TagPageUi(
                     iconPaddingValues = PaddingValues(all = 3.dp)
                 )
             }
+            PullRefreshIndicator(
+                modifier = Modifier.align(Alignment.TopCenter),
+                refreshing = refreshComplete == 1,
+                state = pullRefreshState
+            )
         }
     }
 }
