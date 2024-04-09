@@ -105,12 +105,12 @@ fun TagPageUi(
     var showDialogProgressBar by remember { mutableStateOf(false) }
     val completeResult =
         remember { mutableStateListOf<Map<String, Int>>() } // Int: 0: 失败 1: 成功 2: 提示
-    var refreshComplete by remember { mutableIntStateOf(0) }
+    var refreshComplete by remember { mutableStateOf(true) }
     val pullRefreshState = rememberPullRefreshState(
-        refreshing = refreshComplete == 1,
+        refreshing = !refreshComplete,
         onRefresh = {
             coroutineScope.launch(Dispatchers.IO) {
-                refreshComplete = 1
+                refreshComplete = false
                 tagPage.getMusicList(songList)
                 MyVibrationEffect(
                     context,
@@ -126,7 +126,7 @@ fun TagPageUi(
                         )
                         .show()
                 }
-                refreshComplete = 2
+                refreshComplete = true
             }
         }
     )
@@ -851,7 +851,7 @@ fun TagPageUi(
             }
             PullRefreshIndicator(
                 modifier = Modifier.align(Alignment.TopCenter),
-                refreshing = refreshComplete == 1,
+                refreshing = !refreshComplete,
                 state = pullRefreshState
             )
         }
