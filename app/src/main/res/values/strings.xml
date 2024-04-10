@@ -261,7 +261,7 @@
     <string name="online_server_response_null"># server\'s response was null.</string>
     <string name="no_info_in_playlist">The database is empty, please reload it in #.</string>
     <string name="add_extra_playlist">Add extra playlist</string>
-    <string name="hint_add_extra_playlist1">Pure numbers, or playlist sharing link</string>
+    <string name="hint_add_extra_playlist1">Purely numeric playlist ID, or song list sharing link</string>
     <string name="hint_add_extra_playlist2">Playlist sharing link</string>
     <string name="please_input_playlist_id">Please input data</string>
     <string name="wrong_input_playlist_data">Playlist info input error</string>

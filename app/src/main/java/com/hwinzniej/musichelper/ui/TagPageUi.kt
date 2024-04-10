@@ -36,7 +36,6 @@ import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableIntState
@@ -70,6 +69,7 @@ import com.hwinzniej.musichelper.activity.TagPage
 import com.hwinzniej.musichelper.utils.MyVibrationEffect
 import com.moriafly.salt.ui.RoundedColumn
 import com.moriafly.salt.ui.SaltTheme
+import com.moriafly.salt.ui.Text
 import com.moriafly.salt.ui.TitleBar
 import com.moriafly.salt.ui.UnstableSaltApi
 import com.moriafly.salt.ui.popup.rememberPopupState
@@ -524,14 +524,12 @@ fun TagPageUi(
                                         ),
                                         text = completeResult[index].keys.first(),
                                         fontSize = 14.sp,
-                                        style = TextStyle(
-                                            color = if (completeResult[index].values.first() == 1)
-                                                SaltTheme.colors.subText
-                                            else if (completeResult[index].values.first() == 2)
-                                                colorResource(id = R.color.manual)
-                                            else
-                                                colorResource(id = R.color.unmatched)
-                                        ),
+                                        color = if (completeResult[index].values.first() == 1)
+                                            SaltTheme.colors.subText
+                                        else if (completeResult[index].values.first() == 2)
+                                            colorResource(id = R.color.manual)
+                                        else
+                                            colorResource(id = R.color.unmatched),
                                     )
                                 }
                             }

@@ -17,7 +17,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableIntState
@@ -33,7 +32,6 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
@@ -43,6 +41,7 @@ import com.hwinzniej.musichelper.activity.UnlockPage
 import com.moriafly.salt.ui.ItemContainer
 import com.moriafly.salt.ui.RoundedColumn
 import com.moriafly.salt.ui.SaltTheme
+import com.moriafly.salt.ui.Text
 import com.moriafly.salt.ui.TitleBar
 import com.moriafly.salt.ui.UnstableSaltApi
 
@@ -102,12 +101,10 @@ fun UnlockPageUi(
                             ),
                             text = unlockPage.unlockResult[index].keys.first(),
                             fontSize = 14.sp,
-                            style = TextStyle(
-                                color = if (unlockPage.unlockResult[index].values.first())
-                                    SaltTheme.colors.subText
-                                else
-                                    colorResource(id = R.color.unmatched)
-                            ),
+                            color = if (unlockPage.unlockResult[index].values.first())
+                                SaltTheme.colors.subText
+                            else
+                                colorResource(id = R.color.unmatched),
                         )
                     }
                 }

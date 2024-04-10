@@ -257,7 +257,7 @@
     <string name="online_server_response_null">#服务器的返回数据为空。</string>
     <string name="no_info_in_playlist">数据库为空，请在#中重新加载。</string>
     <string name="add_extra_playlist">添加额外的歌单</string>
-    <string name="hint_add_extra_playlist1">纯数字，或歌单分享链接</string>
+    <string name="hint_add_extra_playlist1">纯数字歌单ID，或歌单分享链接</string>
     <string name="hint_add_extra_playlist2">歌单分享链接</string>
     <string name="please_input_playlist_id">请输入数据</string>
     <string name="wrong_input_playlist_data">歌单信息输入错误，请检查</string>

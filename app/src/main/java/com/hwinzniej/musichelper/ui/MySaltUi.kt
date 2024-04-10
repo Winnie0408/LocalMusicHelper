@@ -47,7 +47,6 @@ import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardColors
 import androidx.compose.material3.Icon
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
@@ -98,6 +97,7 @@ import com.hwinzniej.musichelper.utils.Tools
 import com.moriafly.salt.ui.ItemOutHalfSpacer
 import com.moriafly.salt.ui.ItemOutSpacer
 import com.moriafly.salt.ui.SaltTheme
+import com.moriafly.salt.ui.Text
 import com.moriafly.salt.ui.UnstableSaltApi
 import com.moriafly.salt.ui.dialog.DialogTitle
 import com.moriafly.salt.ui.popup.PopupMenu
@@ -268,8 +268,7 @@ fun ItemPopup(  //TODO 根据文字长度自动调整宽度；在对话框内点
             ) {
                 Text(
                     text = text,
-                    color = if (enabled) SaltTheme.colors.text else SaltTheme.colors.subText,
-                    style = SaltTheme.textStyles.main
+                    color = if (enabled) SaltTheme.colors.text else SaltTheme.colors.subText
                 )
                 if (sub != null) {
                     Spacer(modifier = Modifier.height(2.dp))
@@ -285,7 +284,6 @@ fun ItemPopup(  //TODO 根据文字长度自动调整宽度；在对话框内点
                     .weight(if (selectedItem.isEmpty()) 0.001f else rightSubWeight),
                 text = selectedItem,
                 color = SaltTheme.colors.subText,
-                style = SaltTheme.textStyles.main,
                 fontSize = 14.sp,
                 textAlign = TextAlign.End
             )
@@ -436,8 +434,7 @@ fun ItemCheck(
         ) {
             Text(
                 text = text,
-                color = if (enabled) SaltTheme.colors.text else SaltTheme.colors.subText,
-                style = SaltTheme.textStyles.main
+                color = if (enabled) SaltTheme.colors.text else SaltTheme.colors.subText
             )
             sub?.let {
                 Spacer(modifier = Modifier.height(2.dp))
@@ -515,8 +512,7 @@ fun Item(
         ) {
             Text(
                 text = text,
-                color = if (enabled) SaltTheme.colors.text else SaltTheme.colors.subText,
-                style = SaltTheme.textStyles.main
+                color = if (enabled) SaltTheme.colors.text else SaltTheme.colors.subText
             )
             sub?.let {
                 Spacer(modifier = Modifier.height(2.dp))
@@ -531,7 +527,6 @@ fun Item(
         rightSub?.let {
             Text(
                 text = it,
-                style = SaltTheme.textStyles.main,
                 color = rightSubColor ?: SaltTheme.colors.subText,
                 fontSize = 14.sp
             )
@@ -572,8 +567,7 @@ fun TextButton(
             color = textColor,
             textAlign = TextAlign.Center,
             overflow = TextOverflow.Ellipsis,
-            maxLines = 1,
-            style = SaltTheme.textStyles.main
+            maxLines = 1
         )
     }
 }
@@ -632,8 +626,7 @@ fun ItemValue(
         ) {
             Column(modifier = Modifier.weight(textWeight)) {
                 Text(
-                    text = text,
-                    style = SaltTheme.textStyles.main
+                    text = text
                 )
                 sub?.let {
                     Spacer(modifier = Modifier.height(2.dp))
@@ -654,8 +647,7 @@ fun ItemValue(
                         text = rightSub,
                         color = SaltTheme.colors.subText,
                         fontSize = 15.sp,
-                        textAlign = TextAlign.End,
-                        style = SaltTheme.textStyles.main
+                        textAlign = TextAlign.End
                     )
                 }
             }
@@ -814,8 +806,7 @@ fun ItemSwitcher(
         ) {
             Text(
                 text = text,
-                color = if (enabled) SaltTheme.colors.text else SaltTheme.colors.subText,
-                style = SaltTheme.textStyles.main
+                color = if (enabled) SaltTheme.colors.text else SaltTheme.colors.subText
             )
             sub?.let {
                 Spacer(modifier = Modifier.height(2.dp))
@@ -913,8 +904,7 @@ fun PopupMenuItem(
         ) {
             Text(
                 text = text,
-                color = if (selected == true) SaltTheme.colors.highlight else SaltTheme.colors.text,
-                style = SaltTheme.textStyles.main
+                color = if (selected == true) SaltTheme.colors.highlight else SaltTheme.colors.text
             )
             sub?.let {
                 Spacer(modifier = Modifier.height(2.dp))
