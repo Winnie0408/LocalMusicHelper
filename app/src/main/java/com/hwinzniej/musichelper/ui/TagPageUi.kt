@@ -25,6 +25,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -65,6 +66,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import com.hwinzniej.musichelper.R
+import com.hwinzniej.musichelper.activity.ScanPage
 import com.hwinzniej.musichelper.activity.TagPage
 import com.hwinzniej.musichelper.utils.MyVibrationEffect
 import com.moriafly.salt.ui.RoundedColumn
@@ -84,15 +86,19 @@ import kotlinx.coroutines.withContext
 fun TagPageUi(
     tagPage: TagPage,
     enableHaptic: MutableState<Boolean>,
-    hapticStrength: MutableIntState
+    hapticStrength: MutableIntState,
+    scanPage: ScanPage,
+    pageState: PagerState
 ) {
     val context = LocalContext.current
     val songList = remember { mutableStateMapOf<Int, Array<String>>() }
     var showLoadingProgressBar by remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
     val musicInfo = remember { mutableStateOf<Map<String, String?>>(emptyMap()) }
+    val musicInfoOriginal = remember { mutableStateOf<Map<String, String?>>(emptyMap()) }
     var showSongInfoDialog by remember { mutableStateOf(false) }
     val coverImage = remember { mutableStateOf<ByteArray?>(null) }
+    val coverImageModified = remember { mutableStateOf(false) }
     var showSearchInput by remember { mutableStateOf(false) }
     var searchInput by remember { mutableStateOf("") }
     var job by remember { mutableStateOf<Job?>(null) }
@@ -177,6 +183,23 @@ fun TagPageUi(
         }
     }
 
+    LaunchedEffect(key1 = pageState.currentPage) {
+        if (pageState.currentPage == 2) {
+            showSearchInput = false
+            searchInput = ""
+            showFab.value = false
+        }
+    }
+
+    LaunchedEffect(key1 = scanPage.scanComplete.value) {
+        if (scanPage.scanComplete.value) {
+            scanPage.scanComplete.value = false
+            coroutineScope.launch(Dispatchers.IO) {
+                tagPage.getMusicList(songList)
+            }
+        }
+    }
+
     if (showConfirmDeleteCoverDialog) {
         YesNoDialog(
             onDismiss = { showConfirmDeleteCoverDialog = false },
@@ -184,6 +207,7 @@ fun TagPageUi(
             onConfirm = {
                 showConfirmDeleteCoverDialog = false
                 coverImage.value = null
+                coverImageModified.value = true
             },
             title = stringResource(id = R.string.delete_cover_image),
             content = null,
@@ -196,13 +220,24 @@ fun TagPageUi(
     if (showSongInfoDialog) {
         YesNoDialog(
             onDismiss = {
-                showConfirmGoBackDialog = true
-//                showSongInfoDialog = false
-//                musicInfo.value = emptyMap()
+                if (musicInfo.value != musicInfoOriginal.value || coverImageModified.value) {
+                    showConfirmGoBackDialog = true
+                } else {
+                    showSongInfoDialog = false
+                    musicInfo.value = emptyMap()
+                    musicInfoOriginal.value = emptyMap()
+                    coverImage.value = null
+                }
             },
             onCancel = {
-                showSongInfoDialog = false
-                musicInfo.value = emptyMap()
+                if (musicInfo.value != musicInfoOriginal.value || coverImageModified.value) {
+                    showConfirmGoBackDialog = true
+                } else {
+                    showSongInfoDialog = false
+                    musicInfo.value = emptyMap()
+                    musicInfoOriginal.value = emptyMap()
+                    coverImage.value = null
+                }
             },
             onConfirm = {
                 coroutineScope.launch(Dispatchers.IO) {
@@ -210,6 +245,8 @@ fun TagPageUi(
                         tagPage.searchSong(searchInput, searchResult)
                         showSongInfoDialog = false
                         musicInfo.value = emptyMap()
+                        musicInfoOriginal.value = emptyMap()
+                        coverImage.value = null
                         showLoadingProgressBar = true
                         tagPage.getMusicList(songList)
                         showLoadingProgressBar = false
@@ -260,7 +297,10 @@ fun TagPageUi(
                                             .padding(horizontal = SaltTheme.dimens.innerHorizontalPadding)
                                             .clip(RoundedCornerShape(12.dp))
                                             .combinedClickable(
-                                                onClick = { tagPage.selectCoverImage() },
+                                                onClick = {
+                                                    coverImageModified.value = true
+                                                    tagPage.selectCoverImage()
+                                                },
                                                 onLongClick = {
                                                     showConfirmDeleteCoverDialog = true
                                                 }
@@ -278,7 +318,10 @@ fun TagPageUi(
                                             end = SaltTheme.dimens.innerHorizontalPadding,
                                             bottom = 8.dp
                                         ),
-                                    onClick = { tagPage.selectCoverImage() },
+                                    onClick = {
+                                        coverImageModified.value = true
+                                        tagPage.selectCoverImage()
+                                    },
                                     backgroundColor = SaltTheme.colors.subText.copy(alpha = 0.1f),
                                     hapticStrength = hapticStrength.intValue
                                 ) {
@@ -396,6 +439,9 @@ fun TagPageUi(
                 showConfirmGoBackDialog = false
                 showSongInfoDialog = false
                 musicInfo.value = emptyMap()
+                musicInfoOriginal.value = emptyMap()
+                coverImage.value = null
+                coverImageModified.value = false
             },
             title = stringResource(id = R.string.go_back_confirm_dialog_title),
             content = stringResource(id = R.string.go_back_confirm_dialog_content),
@@ -674,6 +720,7 @@ fun TagPageUi(
                                                                 it1!![3].toInt(),
                                                                 coverImage
                                                             )
+                                                        musicInfoOriginal.value = musicInfo.value
                                                     }
                                             },
                                             text = it1!![0],
@@ -718,6 +765,8 @@ fun TagPageUi(
                                                                     songList[it]!![3].toInt(),
                                                                     coverImage
                                                                 )
+                                                            musicInfoOriginal.value =
+                                                                musicInfo.value
                                                         }
                                                 },
                                                 text = songList[it]!![0],

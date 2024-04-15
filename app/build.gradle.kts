@@ -14,8 +14,8 @@ android {
         minSdk = 26
 //        targetSdk = 28
         targetSdk = 34
-        versionCode = 42
-        versionName = "1.2.4"
+        versionCode = 43
+        versionName = "1.2.5"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -101,7 +101,7 @@ dependencies {
     ksp("androidx.room:room-compiler:$roomVersion")
 
     //FastJson
-    implementation("com.alibaba.fastjson2:fastjson2-kotlin:2.0.48")
+    implementation("com.alibaba.fastjson2:fastjson2-kotlin:2.0.49")
 
     //Navigation
     implementation("androidx.navigation:navigation-compose:2.7.7")

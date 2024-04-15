@@ -627,6 +627,8 @@ private fun Pages(
                         tagPage = tagPage,
                         enableHaptic = mainPage.enableHaptic,
                         hapticStrength = mainPage.hapticStrength,
+                        scanPage = scanPage,
+                        pageState = pageState
                     )
                 }
 

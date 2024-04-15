@@ -57,6 +57,7 @@ class ScanPage(
     var selectedExportFormat = mutableIntStateOf(0)
     var errorLog = mutableStateOf("")
     var showErrorDialog = mutableStateOf(false)
+    var scanComplete = mutableStateOf(false)
 
     /**
      * 功能入口，初始化变量
@@ -294,6 +295,7 @@ class ScanPage(
                     db.musicDao().deleteAll()
                 }
                 lastIndex = 0
+                scanComplete.value = true
                 try {
                     openDirectoryLauncher.launch(null)
                 } catch (_: Exception) {
@@ -457,6 +459,7 @@ class ScanPage(
                     (context as MainActivity).enableHaptic.value,
                     context.hapticStrength.intValue
                 ).done()
+                scanComplete.value = true
                 if (errorLog.value != "") {
                     if (!errorLog.value.startsWith("- ${context.getString(R.string.export_scan_result_failed)}:"))
                         errorLog.value = "${
