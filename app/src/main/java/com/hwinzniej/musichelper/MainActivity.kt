@@ -181,7 +181,9 @@ class MainActivity : ComponentActivity() {
 
         db = Room.databaseBuilder(
             applicationContext, MusicDatabase::class.java, "music"
-        ).build()
+        )
+            .fallbackToDestructiveMigration()
+            .build()
 
         scanPage = ScanPage(
             context = this,

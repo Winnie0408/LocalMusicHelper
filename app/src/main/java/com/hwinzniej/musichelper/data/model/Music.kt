@@ -15,4 +15,7 @@ data class Music(
     @ColumnInfo(name = "trackNumber") val trackNumber: String,  //音轨号
     @ColumnInfo(name = "albumArtist") val albumArtist: String,  //专辑艺术家
     @ColumnInfo(name = "genre") val genre: String,  //风格（流派）
+    @ColumnInfo(name = "lyricist") val lyricist: String,  //作词
+    @ColumnInfo(name = "composer") val composer: String,  //作曲
+    @ColumnInfo(name = "arranger") val arranger: String,  //编曲
 )

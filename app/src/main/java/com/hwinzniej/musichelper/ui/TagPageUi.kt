@@ -401,6 +401,14 @@ fun TagPageUi(
                             hapticStrength = hapticStrength.intValue
                         )
                         SongInfoItem(
+                            title = stringResource(id = R.string.lyricist),
+                            editText = musicInfo.value["lyricist"],
+                            onChange = { musicInfo.value += ("lyricist" to it) },
+                            onClear = { musicInfo.value -= "lyricist" },
+                            enableHaptic = enableHaptic.value,
+                            hapticStrength = hapticStrength.intValue
+                        )
+                        SongInfoItem(
                             title = stringResource(id = R.string.composer),
                             editText = musicInfo.value["composer"],
                             onChange = { musicInfo.value += ("composer" to it) },
@@ -409,10 +417,10 @@ fun TagPageUi(
                             hapticStrength = hapticStrength.intValue
                         )
                         SongInfoItem(
-                            title = stringResource(id = R.string.lyricist),
-                            editText = musicInfo.value["lyricist"],
-                            onChange = { musicInfo.value += ("lyricist" to it) },
-                            onClear = { musicInfo.value -= "lyricist" },
+                            title = stringResource(id = R.string.arranger),
+                            editText = musicInfo.value["arranger"],
+                            onChange = { musicInfo.value += ("arranger" to it) },
+                            onClear = { musicInfo.value -= "arranger" },
                             enableHaptic = enableHaptic.value,
                             hapticStrength = hapticStrength.intValue
                         )
@@ -423,7 +431,7 @@ fun TagPageUi(
                             onClear = { musicInfo.value -= "lyrics" },
                             enableHaptic = enableHaptic.value,
                             hapticStrength = hapticStrength.intValue,
-                            textStyle = TextStyle(fontSize = 15.sp)
+                            textStyle = TextStyle(fontSize = 15.sp, color = SaltTheme.colors.text)
                         )
                     }
                 }
@@ -451,25 +459,44 @@ fun TagPageUi(
     }
 
     if (showCompleteDialog) {
-        val popupState = rememberPopupState()
+        val popupState1 = rememberPopupState()
+        val popupState2 = rememberPopupState()
         var selectedItem by remember { mutableIntStateOf(-1) }
-        var switchState by remember { mutableStateOf(false) }
+        var overwrite by remember { mutableStateOf(false) }
+        var lyricist by remember { mutableStateOf(true) }
+        var composer by remember { mutableStateOf(true) }
+        var arranger by remember { mutableStateOf(true) }
+        val subtype = remember {
+            mutableStateListOf(
+                context.getString(R.string.lyricist),
+                " ${context.getString(R.string.composer)}",
+                " ${context.getString(R.string.arranger)}"
+            )
+        }
+        var readyForComplete by remember { mutableStateOf(false) }
+        var completeDone by remember { mutableStateOf(false) }
+
         YesNoDialog(
             onDismiss = {
-                showCompleteDialog = false
-                completeResult.clear()
+                if (!showDialogProgressBar) {
+                    showCompleteDialog = false
+                    completeResult.clear()
+                }
             },
             onCancel = {
-                showCompleteDialog = false
-                completeResult.clear()
+                if (!showDialogProgressBar) {
+                    showCompleteDialog = false
+                    completeResult.clear()
+                }
             },
             onConfirm = {
-                if (completeResult.size == 0 ||
-                    completeResult.first().keys.first()
-                        .contains(context.getString(R.string.all_done)) ||
-                    (completeResult.first().keys.first()
-                        .contains(context.getString(R.string.no_album_artist_null_count_in_song_list)) && !switchState)
-                ) {
+                if (!readyForComplete) {
+                    if (completeDone) {
+                        coroutineScope.launch(Dispatchers.IO) {
+                            tagPage.getMusicList(songList)
+                        }
+                        completeDone = false
+                    }
                     showCompleteDialog = false
                     completeResult.clear()
                     return@YesNoDialog
@@ -479,11 +506,50 @@ fun TagPageUi(
                             coroutineScope.launch(Dispatchers.IO) {
                                 showDialogProgressBar = true
                                 tagPage.handleDuplicateAlbum(
-                                    overwrite = switchState,
+                                    overwrite = overwrite,
                                     completeResult = completeResult
                                 )
-                                tagPage.getMusicList(songList)
+                                readyForComplete = false
                                 showDialogProgressBar = false
+                                completeDone = true
+                                MyVibrationEffect(
+                                    context,
+                                    enableHaptic.value,
+                                    hapticStrength.intValue
+                                ).done()
+                            }
+                        }
+
+                        1 -> {
+                            coroutineScope.launch(Dispatchers.IO) {
+                                if (!lyricist && !composer && !arranger) {
+                                    withContext(Dispatchers.Main) {
+                                        Toast
+                                            .makeText(
+                                                context,
+                                                context.getString(R.string.no_tag_to_complete),
+                                                Toast.LENGTH_SHORT
+                                            )
+                                            .show()
+                                    }
+                                    return@launch
+                                }
+                                showDialogProgressBar = true
+                                tagPage.handleBlankLyricistComposerArranger(
+                                    overwrite = overwrite,
+                                    lyricist = lyricist,
+                                    composer = composer,
+                                    arranger = arranger,
+                                    completeResult = completeResult
+                                )
+                                readyForComplete = false
+                                showDialogProgressBar = false
+                                completeDone = true
+                                MyVibrationEffect(
+                                    context,
+                                    enableHaptic.value,
+                                    hapticStrength.intValue
+                                ).done()
                             }
                         }
                     }
@@ -507,15 +573,17 @@ fun TagPageUi(
                 }
                 Column(
                     modifier = Modifier
-                        .heightIn(max = (LocalConfiguration.current.screenHeightDp / 2).dp)
+                        .heightIn(max = (LocalConfiguration.current.screenHeightDp / 1.6).dp)
                 ) {
                     RoundedColumn {
                         ItemTitle(text = stringResource(id = R.string.completion_options))
                         ItemPopup(
-                            state = popupState,
+                            state = popupState1,
                             text = stringResource(id = R.string.choose_need_complete_type),
                             selectedItem = when (selectedItem) {
                                 0 -> stringResource(id = R.string.album_artist_tag_name)
+                                1 -> stringResource(id = R.string.lyric_and_songs)
+
                                 else -> ""
                             },
                         ) {
@@ -523,35 +591,137 @@ fun TagPageUi(
                                 onClick = {
                                     coroutineScope.launch(Dispatchers.IO) {
                                         selectedItem = 0
-                                        popupState.dismiss()
+                                        popupState1.dismiss()
+                                        overwrite = false
+                                        lyricist = true
+                                        composer = true
+                                        arranger = true
                                         showDialogProgressBar = true
+                                        completeResult.clear()
                                         delay(300L)
-                                        tagPage.searchDuplicateAlbum(completeResult)
+                                        readyForComplete =
+                                            tagPage.searchDuplicateAlbum(completeResult)
                                         showDialogProgressBar = false
                                     }
                                 },
                                 text = stringResource(id = R.string.album_artist_tag_name),
                                 selected = selectedItem == 0
                             )
+                            PopupMenuItem(
+                                onClick = {
+                                    coroutineScope.launch(Dispatchers.IO) {
+                                        selectedItem = 1
+                                        popupState1.dismiss()
+                                        overwrite = false
+                                        lyricist = true
+                                        composer = true
+                                        arranger = true
+                                        showDialogProgressBar = true
+                                        completeResult.clear()
+                                        delay(300L)
+                                        readyForComplete =
+                                            tagPage.searchBlankLyricistComposerArranger(
+                                                completeResult
+                                            )
+                                        showDialogProgressBar = false
+                                    }
+                                },
+                                text = stringResource(id = R.string.lyric_and_songs),
+                                selected = selectedItem == 1
+                            )
                         }
                         AnimatedVisibility(visible = selectedItem == 0) {
                             AnimatedContent(
-                                targetState = switchState,
+                                targetState = overwrite,
                                 label = "",
                                 transitionSpec = {
                                     fadeIn() togetherWith fadeOut()
                                 }) {
                                 ItemSwitcher(
-                                    state = switchState,
-                                    onChange = { it1 -> switchState = it1 },
+                                    state = overwrite,
+                                    onChange = { it1 -> overwrite = it1 },
                                     text = stringResource(id = R.string.file_conflict_dialog_yes_text),
                                     sub = if (it)
                                         stringResource(id = R.string.overwrite_original_album_artist_tag_sub_on)
                                     else
-                                        stringResource(id = R.string.overwrite_original_album_artist_tag_sub_off),
+                                        stringResource(id = R.string.overwrite_original_album_artist_tag_sub_off)
+                                            .replace(
+                                                "#",
+                                                stringResource(id = R.string.album_artist_tag_name)
+                                            ),
                                     enableHaptic = enableHaptic.value,
                                     hapticStrength = hapticStrength.intValue
                                 )
+                            }
+                        }
+                        AnimatedVisibility(visible = selectedItem == 1) {
+                            Column {
+                                AnimatedContent(
+                                    targetState = overwrite,
+                                    label = "",
+                                    transitionSpec = {
+                                        fadeIn() togetherWith fadeOut()
+                                    }) {
+                                    ItemSwitcher(
+                                        state = overwrite,
+                                        onChange = { it1 -> overwrite = it1 },
+                                        text = stringResource(id = R.string.file_conflict_dialog_yes_text),
+                                        sub = if (it)
+                                            stringResource(id = R.string.overwrite_original_album_artist_tag_sub_on)
+                                        else
+                                            stringResource(id = R.string.overwrite_original_album_artist_tag_sub_off)
+                                                .replace(
+                                                    "#",
+                                                    stringResource(id = R.string.choose_need_complete_subtype)
+                                                ),
+                                        enableHaptic = enableHaptic.value,
+                                        hapticStrength = hapticStrength.intValue
+                                    )
+                                }
+                                ItemPopup(
+                                    state = popupState2,
+                                    text = stringResource(id = R.string.choose_need_complete_subtype),
+                                    selectedItem = subtype.joinToString(separator = ""),
+                                    popupWidth = 135,
+                                    rightSubWeight = 1f
+                                ) {
+                                    PopupMenuItem(
+                                        onClick = {
+                                            lyricist = !lyricist
+                                            if (lyricist)
+                                                subtype[0] =
+                                                    context.getString(R.string.lyricist)
+                                            else
+                                                subtype[0] = ""
+                                        },
+                                        text = stringResource(id = R.string.lyricist),
+                                        selected = lyricist
+                                    )
+                                    PopupMenuItem(
+                                        onClick = {
+                                            composer = !composer
+                                            if (composer)
+                                                subtype[1] =
+                                                    " ${context.getString(R.string.composer)}"
+                                            else
+                                                subtype[1] = ""
+                                        },
+                                        text = stringResource(id = R.string.composer),
+                                        selected = composer
+                                    )
+                                    PopupMenuItem(
+                                        onClick = {
+                                            arranger = !arranger
+                                            if (arranger)
+                                                subtype[2] =
+                                                    " ${context.getString(R.string.arranger)}"
+                                            else
+                                                subtype[2] = ""
+                                        },
+                                        text = stringResource(id = R.string.arranger),
+                                        selected = arranger
+                                    )
+                                }
                             }
                         }
                     }
@@ -858,43 +1028,45 @@ fun TagPageUi(
                 }
             }
 
-            FloatingActionButton(
-                expanded = showFab,
-                heightExpand = 100.dp,
-                widthExpand = 175.dp,
-                enableHaptic = enableHaptic.value,
-                hapticStrength = hapticStrength.intValue
-            ) {
-                PopupMenuItem(
-                    onClick = {
-                        MyVibrationEffect(
-                            context,
-                            enableHaptic.value,
-                            hapticStrength.intValue
-                        ).click()
-                        showFab.value = false
-                        showSearchInput = !showSearchInput
-                    },
-                    text = stringResource(id = R.string.search),
-                    iconPainter = painterResource(id = R.drawable.search),
-                    iconColor = SaltTheme.colors.text,
-                    iconPaddingValues = PaddingValues(all = 2.5.dp)
-                )
-                PopupMenuItem(
-                    onClick = {
-                        MyVibrationEffect(
-                            context,
-                            enableHaptic.value,
-                            hapticStrength.intValue
-                        ).click()
-                        showFab.value = false
-                        showCompleteDialog = true
-                    },
-                    text = stringResource(id = R.string.completion),
-                    iconPainter = painterResource(id = R.drawable.complete),
-                    iconColor = SaltTheme.colors.text,
-                    iconPaddingValues = PaddingValues(all = 3.dp)
-                )
+            if (songList.size != 0) {
+                FloatingActionButton(
+                    expanded = showFab,
+                    heightExpand = 100.dp,
+                    widthExpand = 175.dp,
+                    enableHaptic = enableHaptic.value,
+                    hapticStrength = hapticStrength.intValue
+                ) {
+                    PopupMenuItem(
+                        onClick = {
+                            MyVibrationEffect(
+                                context,
+                                enableHaptic.value,
+                                hapticStrength.intValue
+                            ).click()
+                            showFab.value = false
+                            showSearchInput = !showSearchInput
+                        },
+                        text = stringResource(id = R.string.search),
+                        iconPainter = painterResource(id = R.drawable.search),
+                        iconColor = SaltTheme.colors.text,
+                        iconPaddingValues = PaddingValues(all = 2.5.dp)
+                    )
+                    PopupMenuItem(
+                        onClick = {
+                            MyVibrationEffect(
+                                context,
+                                enableHaptic.value,
+                                hapticStrength.intValue
+                            ).click()
+                            showFab.value = false
+                            showCompleteDialog = true
+                        },
+                        text = stringResource(id = R.string.completion),
+                        iconPainter = painterResource(id = R.drawable.complete),
+                        iconColor = SaltTheme.colors.text,
+                        iconPaddingValues = PaddingValues(all = 3.dp)
+                    )
+                }
             }
             PullRefreshIndicator(
                 modifier = Modifier.align(Alignment.TopCenter),

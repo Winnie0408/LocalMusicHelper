@@ -2012,7 +2012,10 @@ class ConvertPage(
                                 null,
                                 null,
                                 null,
-                                absolutePath
+                                absolutePath,
+                                null,
+                                null,
+                                null
                             )
                             musicInfoList.add(musicInfo)
                         }
@@ -2378,7 +2381,10 @@ class ConvertPage(
                             null,
                             null,
                             null,
-                            absolutePath
+                            absolutePath,
+                            null,
+                            null,
+                            null
                         )
                         musicInfoList.add(musicInfo)
                     }
@@ -2437,7 +2443,10 @@ class ConvertPage(
                     null,
                     null,
                     null,
-                    absolutePath
+                    absolutePath,
+                    null,
+                    null,
+                    null
                 )
             } else
                 db.musicDao().getMusicById(songId)

@@ -106,7 +106,7 @@
     <string name="state_of_the_song_to_be_saved">要保存的歌曲状态</string>
     <string name="result_file_save_location">结果文件保存位置：</string>
     <string name="save_success">保存成功</string>
-    <string name="no_song_to_save">请至少启用一个状态来保存</string>
+    <string name="no_song_to_save">请至少启用1个状态来保存</string>
     <string name="go_back_confirm_dialog_title">返回吗？</string>
     <string name="go_back_confirm_dialog_content">您在该页面的修改将会丢失！</string>
     <string name="all_done">全部完成！</string>
@@ -304,14 +304,14 @@
     <string name="completion">补全</string>
     <string name="choose_need_complete_type">要补全的标签</string>
     <string name="tag_type">标签类型</string>
-    <string name="total_album_artist_null_count_in_song_list">曲库中共有 # 首歌曲的“专辑艺术家”标签为空。</string>
-    <string name="no_album_artist_null_count_in_song_list">曲库中没有“专辑艺术家”标签为空的歌曲。</string>
+    <string name="total_tagname_null_count_in_song_list">曲库中共有 # 首歌曲的“#tagName”标签为空。</string>
+    <string name="no_tagname_null_count_in_song_list">曲库中没有“#”标签为空的歌曲。</string>
     <string name="overwrite_original_album_artist_tag_sub_on">处理曲库中所有的歌曲</string>
     <string name="click_ok_to_start">点击“确定”按钮以开始补全。</string>
-    <string name="modify_album_artist_success">成功修改歌曲《#1》的专辑艺术家为#2。</string>
-    <string name="modify_album_artist_failed">失败修改歌曲《#1》的专辑艺术家为#2。</string>
+    <string name="modify_tagName_success">成功修改《#1》的#3为#2。</string>
+    <string name="modify_album_artist_failed">失败修改《#1》的专辑艺术家为#2。</string>
     <string name="refresh_success">刷新成功</string>
-    <string name="overwrite_original_album_artist_tag_sub_off">仅处理“专辑艺术家”标签为空的歌曲</string>
+    <string name="overwrite_original_album_artist_tag_sub_off">仅处理“#”标签为空的歌曲</string>
     <string name="completion_log">补全操作日志</string>
     <string name="completion_options">补全选项</string>
     <string name="haptic_strength">触感强度</string>
@@ -324,4 +324,10 @@
     <string name="composer">作曲</string>
     <string name="lyricist">作词</string>
     <string name="lyrics">歌词</string>
+    <string name="arranger">编曲</string>
+    <string name="lyric_and_songs">词/曲</string>
+    <string name="choose_need_complete_subtype">标签子类型</string>
+    <string name="no_tag_to_complete">请至少选择一个标签子类型</string>
+    <string name="lrc_empty_skip">歌词为空，跳过。</string>
+    <string name="lrc_not_contain_info">歌词中不包含该信息。</string>
 </resources>

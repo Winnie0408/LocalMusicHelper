@@ -10,4 +10,7 @@ class MusicInfo(
     var albumArtist: String?,
     var genre: String?,
     var absolutePath: String,
+    var lyricist: String?,
+    var composer: String?,
+    var arranger: String?
 )

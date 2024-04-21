@@ -304,14 +304,14 @@
     <string name="completion">완성</string>
     <string name="choose_need_complete_type">완료할 레이블</string>
     <string name="tag_type">라벨 유형</string>
-    <string name="total_album_artist_null_count_in_song_list">라이브러리에는 \'앨범 아티스트\' 태그가 비어 있는 #곡의 노래가 있습니다.</string>
-    <string name="no_album_artist_null_count_in_song_list">라이브러리에 \'앨범 아티스트\' 태그가 비어 있는 노래가 없습니다.</string>
+    <string name="total_tagname_null_count_in_song_list">라이브러리에는 \'#tagName\' 태그가 비어 있는 #곡의 노래가 있습니다.</string>
+    <string name="no_tagname_null_count_in_song_list">라이브러리에 \'#\' 태그가 비어 있는 노래가 없습니다.</string>
     <string name="overwrite_original_album_artist_tag_sub_on">라이브러리에 있는 모든 노래 처리</string>
     <string name="click_ok_to_start">확인 버튼을 클릭하여 완료를 시작합니다.</string>
-    <string name="modify_album_artist_success">성공 노래 \"#1\"의 앨범 아티스트를 #2로 수정했습니다.</string>
-    <string name="modify_album_artist_failed">실패 노래 \"#1\"의 앨범 아티스트를 #2로 수정했습니다.</string>
+    <string name="modify_tagName_success">성공 \"#1\"의 #3를 #2로 수정했습니다.</string>
+    <string name="modify_album_artist_failed">실패 \"#1\"의 앨범 아티스트를 #2로 수정했습니다.</string>
     <string name="refresh_success">새로 고침 성공</string>
-    <string name="overwrite_original_album_artist_tag_sub_off">\"앨범 아티스트\"가 비어 있는 곡만 처리합니다</string>
+    <string name="overwrite_original_album_artist_tag_sub_off">\"#\"가 비어 있는 곡만 처리합니다</string>
     <string name="completion_log">완료 작업 로그</string>
     <string name="completion_options">완료 옵션</string>
     <string name="haptic_strength">촉각 강도</string>
@@ -321,7 +321,13 @@
     <string name="normal_strong">강함</string>
     <string name="strong">더 강함</string>
     <string name="disc_number">디스크 번호</string>
-    <string name="composer">작사가</string>
-    <string name="lyricist">작곡가</string>
+    <string name="composer">작곡가</string>
+    <string name="lyricist">작사가</string>
     <string name="lyrics">가사</string>
+    <string name="arranger">편곡자</string>
+    <string name="lyric_and_songs">단어/노래</string>
+    <string name="choose_need_complete_subtype">태그 하위 유형</string>
+    <string name="no_tag_to_complete">라벨 하위 유형을 하나 이상 선택해 주세요</string>
+    <string name="lrc_empty_skip">가사가 비어 있습니다, 건너뛰기.</string>
+    <string name="lrc_not_contain_info">가사에는 해당 정보가 포함되어 있지 않습니다.</string>
 </resources>

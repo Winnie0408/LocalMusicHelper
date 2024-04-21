@@ -411,6 +411,9 @@ class ScanPage(
         val trackNumber = tag.getFirst(FieldKey.TRACK)
         val albumArtist = tag.getFirst(FieldKey.ALBUM_ARTIST)
         val genre = tag.getFirst(FieldKey.GENRE)
+        val lyricist = tag.getFirst(FieldKey.LYRICIST)
+        val composer = tag.getFirst(FieldKey.COMPOSER)
+        val arranger = tag.getFirst(FieldKey.ARRANGER)
 
         musicAllList.add(
             Music(
@@ -422,7 +425,10 @@ class ScanPage(
                 releaseYear,
                 trackNumber,
                 albumArtist,
-                genre
+                genre,
+                lyricist,
+                composer,
+                arranger
             )
         )
         increment()

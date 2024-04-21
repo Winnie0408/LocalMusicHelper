@@ -95,6 +95,23 @@ interface MusicDao {
     @Query("SELECT COUNT(*) FROM music WHERE albumArtist IS NULL OR albumArtist = ''")
     fun countNullAlbumArtist(): Int
 
+    @Query("SELECT COUNT(*) FROM music WHERE lyricist IS NULL OR lyricist = ''")
+    fun countNullLyricist(): Int
+
+    @Query("SELECT COUNT(*) FROM music WHERE composer IS NULL OR composer = ''")
+    fun countNullComposer(): Int
+
+    @Query("SELECT COUNT(*) FROM music WHERE arranger IS NULL OR arranger = ''")
+    fun countNullArranger(): Int
+
+    @Query("UPDATE music SET lyricist = :lyricist, composer = :composer, arranger = :arranger WHERE id = :id")
+    fun updateLyricistComposerArranger(
+        id: Int,
+        lyricist: String?,
+        composer: String?,
+        arranger: String?,
+    )
+
 //    @Insert
 //    fun updateMusicInfo(musicInfo: MusicInfo)
 }

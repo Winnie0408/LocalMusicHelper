@@ -61,6 +61,7 @@ class TagPage(
             "discNumber" to audioFile.tag.getFirst(FieldKey.DISC_NO),
             "releaseYear" to audioFile.tag.getFirst(FieldKey.YEAR),
             "composer" to audioFile.tag.getFirst(FieldKey.COMPOSER),
+            "arranger" to audioFile.tag.getFirst(FieldKey.ARRANGER),
             "lyricist" to audioFile.tag.getFirst(FieldKey.LYRICIST),
             "lyrics" to audioFile.tag.getFirst(FieldKey.LYRICS),
         )
@@ -100,6 +101,7 @@ class TagPage(
                 "discNumber" to FieldKey.DISC_NO,
                 "releaseYear" to FieldKey.YEAR,
                 "composer" to FieldKey.COMPOSER,
+                "arranger" to FieldKey.ARRANGER,
                 "lyricist" to FieldKey.LYRICIST,
                 "lyrics" to FieldKey.LYRICS,
             )
@@ -197,19 +199,26 @@ class TagPage(
         }
     }
 
-    suspend fun searchDuplicateAlbum(completeResult: MutableList<Map<String, Int>>) {
+    suspend fun searchDuplicateAlbum(completeResult: MutableList<Map<String, Int>>): Boolean {
         val nullAlbumArtistCount = db.musicDao().countNullAlbumArtist()
         if (nullAlbumArtistCount == 0) {
-            completeResult.add(mapOf(context.getString(R.string.no_album_artist_null_count_in_song_list) to 2))
-            return
+            completeResult.add(
+                mapOf(
+                    context.getString(R.string.no_tagname_null_count_in_song_list)
+                        .replace("#", context.getString(R.string.album_artist_tag_name)) to 2
+                )
+            )
+            return false
         }
         completeResult.add(
             mapOf(
-                context.getString(R.string.total_album_artist_null_count_in_song_list)
+                context.getString(R.string.total_tagname_null_count_in_song_list)
+                    .replace("#tagName", context.getString(R.string.album_artist_tag_name))
                     .replace("#", nullAlbumArtistCount.toString()) to 2
             )
         )
         completeResult.add(mapOf(context.getString(R.string.click_ok_to_start) to 2))
+        return true
     }
 
     suspend fun handleDuplicateAlbum(
@@ -262,15 +271,232 @@ class TagPage(
             completeResult.add(
                 0,
                 mapOf(
-                    context.getString(R.string.modify_album_artist_success)
+                    context.getString(R.string.modify_tagName_success)
                         .replace("#1", it.song)
-                        .replace("#2", lastAlbumArtist) to 1
+                        .replace("#2", lastAlbumArtist)
+                        .replace("#3", context.getString(R.string.album_artist_tag_name)) to 1
                 )
             )
         }
         if (haveError) {
             completeResult.sortBy { it.values.first() }
         }
+        completeResult.add(0, mapOf(context.getString(R.string.all_done) to 2))
+    }
+
+    suspend fun searchBlankLyricistComposerArranger(completeResult: MutableList<Map<String, Int>>): Boolean {
+        val nullLyricistCount = db.musicDao().countNullLyricist()
+        val nullComposerCount = db.musicDao().countNullComposer()
+        val nullArrangerCount = db.musicDao().countNullArranger()
+        if (nullLyricistCount == 0) {
+            completeResult.add(
+                mapOf(
+                    context.getString(R.string.no_tagname_null_count_in_song_list)
+                        .replace("#", context.getString(R.string.lyricist)) to 2
+                )
+            )
+        } else {
+            completeResult.add(
+                mapOf(
+                    context.getString(R.string.total_tagname_null_count_in_song_list)
+                        .replace("#tagName", context.getString(R.string.lyricist))
+                        .replace("#", nullLyricistCount.toString()) to 2
+                )
+            )
+        }
+
+        if (nullComposerCount == 0) {
+            completeResult.add(
+                mapOf(
+                    context.getString(R.string.no_tagname_null_count_in_song_list)
+                        .replace("#", context.getString(R.string.composer)) to 2
+                )
+            )
+        } else {
+            completeResult.add(
+                mapOf(
+                    context.getString(R.string.total_tagname_null_count_in_song_list)
+                        .replace("#tagName", context.getString(R.string.composer))
+                        .replace("#", nullComposerCount.toString()) to 2
+                )
+            )
+        }
+
+        if (nullArrangerCount == 0) {
+            completeResult.add(
+                mapOf(
+                    context.getString(R.string.no_tagname_null_count_in_song_list)
+                        .replace("#", context.getString(R.string.arranger)) to 2
+                )
+            )
+        } else {
+            completeResult.add(
+                mapOf(
+                    context.getString(R.string.total_tagname_null_count_in_song_list)
+                        .replace("#tagName", context.getString(R.string.arranger))
+                        .replace("#", nullArrangerCount.toString()) to 2
+                )
+            )
+        }
+        if (nullLyricistCount != 0 || nullComposerCount != 0 || nullArrangerCount != 0) {
+            completeResult.add(mapOf(context.getString(R.string.click_ok_to_start) to 2))
+            return true
+        }
+        return false
+    }
+
+    suspend fun handleBlankLyricistComposerArranger(
+        overwrite: Boolean,
+        lyricist: Boolean,
+        composer: Boolean,
+        arranger: Boolean,
+        completeResult: MutableList<Map<String, Int>>
+    ) {
+        val searchResult = db.musicDao().getAll()
+//        var errorCount = 0
+        val lyricistRegex =
+            "\\[\\d{2}:\\d{2}\\.\\d{2}](((作)?词\\s?(Lyrics)?\\s?(：|:)?\\s?)|(Lyrics by\\s?(：|:)?\\s?))(.*)\n".toRegex()
+        val composerRegex =
+            "\\[\\d{2}:\\d{2}\\.\\d{2}](((作)?曲\\s?(Composer)?\\s?(：|:)?\\s?)|(Composed by\\s?(：|:)?\\s?))(.*)\n".toRegex()
+        val arrangerRegex =
+            "\\[\\d{2}:\\d{2}\\.\\d{2}]((编曲\\s?(Arranger|Arrangement)?\\s?(：|:)?\\s?)|(Arranged by\\s?(：|:)?\\s?))(.*)\n".toRegex()
+        val cleanRegex = "\\s?(/|&|\\||,|，)\\s?".toRegex()
+        searchResult.forEach {
+            var modified = false
+//            var errorHappened = false
+            val audioFile = AudioFileIO.read(File(it.absolutePath))
+            val songLyrics = audioFile.tag.getFirst(FieldKey.LYRICS)
+            if (songLyrics.isBlank()) {
+//                errorCount++
+                completeResult.add(
+                    0,
+                    mapOf(
+                        "" to 1
+                    )
+                )
+                completeResult.add(
+                    0,
+                    mapOf(
+                        context.getString(R.string.lrc_empty_skip) to 0
+                    )
+                )
+                completeResult.add(
+                    0,
+                    mapOf(
+                        it.song to 1
+                    )
+                )
+                return@forEach
+            }
+            completeResult.add(
+                0,
+                mapOf(
+                    "" to 1
+                )
+            )
+            var arrangerString = ""
+            var composerString = ""
+            var lyricistString = ""
+
+            if (arranger) {
+                val songArranger = audioFile.tag.getFirst(FieldKey.ARRANGER)
+                val tempData = arrangerRegex.find(songLyrics)?.groupValues?.last()
+                if ((overwrite || songArranger.isBlank()) && !tempData.isNullOrBlank()) {
+                    arrangerString = cleanRegex.replace(tempData, "/")
+                    audioFile.tag.setField(FieldKey.ARRANGER, arrangerString)
+                    modified = true
+                    completeResult.add(
+                        0,
+                        mapOf(
+                            "${context.getString(R.string.arranger)}: ${arrangerString}" to 1
+                        )
+                    )
+                } else {
+//                    if (!errorHappened) {
+//                        errorCount++
+//                        errorHappened = true
+//                    }
+                    completeResult.add(
+                        0,
+                        mapOf(
+                            "${context.getString(R.string.arranger)}: ${context.getString(R.string.lrc_not_contain_info)}" to 0
+                        )
+                    )
+                }
+            }
+
+            if (composer) {
+                val songComposer = audioFile.tag.getFirst(FieldKey.COMPOSER)
+                val tempData = composerRegex.find(songLyrics)?.groupValues?.last()
+                if ((overwrite || songComposer.isBlank()) && !tempData.isNullOrBlank()) {
+                    composerString = cleanRegex.replace(tempData, "/")
+                    audioFile.tag.setField(FieldKey.COMPOSER, composerString)
+                    modified = true
+                    completeResult.add(
+                        0,
+                        mapOf(
+                            "${context.getString(R.string.composer)}: ${composerString}" to 1
+                        )
+                    )
+                } else {
+//                    if (!errorHappened) {
+//                        errorCount++
+//                        errorHappened = true
+//                    }
+                    completeResult.add(
+                        0,
+                        mapOf(
+                            "${context.getString(R.string.composer)}: ${context.getString(R.string.lrc_not_contain_info)}" to 0
+                        )
+                    )
+                }
+            }
+
+            if (lyricist) {
+                val songLyricist = audioFile.tag.getFirst(FieldKey.LYRICIST)
+                val tempData = lyricistRegex.find(songLyrics)?.groupValues?.last()
+                if ((overwrite || songLyricist.isBlank()) && !tempData.isNullOrBlank()) {
+                    lyricistString = cleanRegex.replace(tempData, "/")
+                    audioFile.tag.setField(FieldKey.LYRICIST, lyricistString)
+                    modified = true
+                    completeResult.add(
+                        0,
+                        mapOf(
+                            "${context.getString(R.string.lyricist)}: ${lyricistString}" to 1
+                        )
+                    )
+                } else {
+//                    if (!errorHappened) {
+//                        errorCount++
+//                        errorHappened = true
+//                    }
+                    completeResult.add(
+                        0,
+                        mapOf(
+                            "${context.getString(R.string.lyricist)}: ${context.getString(R.string.lrc_not_contain_info)}" to 0
+                        )
+                    )
+                }
+            }
+            if (modified) {
+                audioFile.commit()
+                db.musicDao().updateLyricistComposerArranger(
+                    id = it.id,
+                    lyricist = lyricistString,
+                    composer = composerString,
+                    arranger = arrangerString
+                )
+            }
+            completeResult.add(
+                0,
+                mapOf(
+                    it.song to 1
+                )
+            )
+        }
+//        if (errorCount > 0) {
+//            completeResult.sortBy { it.values.first() }
+//        }
         completeResult.add(0, mapOf(context.getString(R.string.all_done) to 2))
     }
 }
