@@ -327,7 +327,8 @@
     <string name="arranger">编曲</string>
     <string name="lyric_and_songs">词/曲</string>
     <string name="choose_need_complete_subtype">标签子类型</string>
-    <string name="no_tag_to_complete">请至少选择一个标签子类型</string>
+    <string name="no_tag_to_complete">请至少选择1个标签子类型</string>
     <string name="lrc_empty_skip">歌词为空，跳过。</string>
     <string name="lrc_not_contain_info">歌词中不包含该信息。</string>
+    <string name="keep_original_value">已存在，保持原值。</string>
 </resources>

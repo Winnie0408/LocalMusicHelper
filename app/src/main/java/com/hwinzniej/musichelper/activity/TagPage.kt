@@ -353,17 +353,15 @@ class TagPage(
         completeResult: MutableList<Map<String, Int>>
     ) {
         val searchResult = db.musicDao().getAll()
-//        var errorCount = 0
         val lyricistRegex =
-            "\\[\\d{2}:\\d{2}\\.\\d{2}](((作)?词\\s?(Lyrics)?\\s?(：|:)?\\s?)|(Lyrics by\\s?(：|:)?\\s?))(.*)\n".toRegex()
+            "\\[\\d{2}:\\d{2}\\.\\d{2}](((作)?[词詞]\\s?(Lyrics)?\\s?[：:]?\\s?)|((Lyrics|Written)\\sby\\s?[：:]?\\s?))(.*)\\n".toRegex()
         val composerRegex =
-            "\\[\\d{2}:\\d{2}\\.\\d{2}](((作)?曲\\s?(Composer)?\\s?(：|:)?\\s?)|(Composed by\\s?(：|:)?\\s?))(.*)\n".toRegex()
+            "\\[\\d{2}:\\d{2}\\.\\d{2}](((作)?曲\\s?(Composer)?\\s?[：:]?\\s?)|((Composed|Written)\\sby\\s?[：:]?\\s?))(.*)\\n".toRegex()
         val arrangerRegex =
-            "\\[\\d{2}:\\d{2}\\.\\d{2}]((编曲\\s?(Arranger|Arrangement)?\\s?(：|:)?\\s?)|(Arranged by\\s?(：|:)?\\s?))(.*)\n".toRegex()
-        val cleanRegex = "\\s?(/|&|\\||,|，)\\s?".toRegex()
+            "\\[\\d{2}:\\d{2}\\.\\d{2}](([编編]曲\\s?(Arranger|Arrangement)?\\s?[：:]?\\s?)|(Arranged\\sby\\s?[：:]?\\s?))(.*)\\n".toRegex()
+        val cleanRegex = "\\s?([/&|,，])\\s?".toRegex()
         searchResult.forEach {
             var modified = false
-//            var errorHappened = false
             val audioFile = AudioFileIO.read(File(it.absolutePath))
             val songLyrics = audioFile.tag.getFirst(FieldKey.LYRICS)
             if (songLyrics.isBlank()) {
@@ -411,15 +409,18 @@ class TagPage(
                             "${context.getString(R.string.arranger)}: ${arrangerString}" to 1
                         )
                     )
-                } else {
-//                    if (!errorHappened) {
-//                        errorCount++
-//                        errorHappened = true
-//                    }
+                } else if (tempData.isNullOrBlank()) {
                     completeResult.add(
                         0,
                         mapOf(
                             "${context.getString(R.string.arranger)}: ${context.getString(R.string.lrc_not_contain_info)}" to 0
+                        )
+                    )
+                } else if (songArranger.isNotBlank()) {
+                    completeResult.add(
+                        0,
+                        mapOf(
+                            "${context.getString(R.string.arranger)}: ${context.getString(R.string.keep_original_value)}" to 1
                         )
                     )
                 }
@@ -438,15 +439,18 @@ class TagPage(
                             "${context.getString(R.string.composer)}: ${composerString}" to 1
                         )
                     )
-                } else {
-//                    if (!errorHappened) {
-//                        errorCount++
-//                        errorHappened = true
-//                    }
+                } else if (tempData.isNullOrBlank()) {
                     completeResult.add(
                         0,
                         mapOf(
                             "${context.getString(R.string.composer)}: ${context.getString(R.string.lrc_not_contain_info)}" to 0
+                        )
+                    )
+                } else if (songComposer.isNotBlank()) {
+                    completeResult.add(
+                        0,
+                        mapOf(
+                            "${context.getString(R.string.composer)}: ${context.getString(R.string.keep_original_value)}" to 1
                         )
                     )
                 }
@@ -465,15 +469,18 @@ class TagPage(
                             "${context.getString(R.string.lyricist)}: ${lyricistString}" to 1
                         )
                     )
-                } else {
-//                    if (!errorHappened) {
-//                        errorCount++
-//                        errorHappened = true
-//                    }
+                } else if (tempData.isNullOrBlank()) {
                     completeResult.add(
                         0,
                         mapOf(
                             "${context.getString(R.string.lyricist)}: ${context.getString(R.string.lrc_not_contain_info)}" to 0
+                        )
+                    )
+                } else if (songLyricist.isNotBlank()) {
+                    completeResult.add(
+                        0,
+                        mapOf(
+                            "${context.getString(R.string.lyricist)}: ${context.getString(R.string.keep_original_value)}" to 1
                         )
                     )
                 }
@@ -490,13 +497,10 @@ class TagPage(
             completeResult.add(
                 0,
                 mapOf(
-                    it.song to 1
+                    "${it.song} - ${it.artist}" to 1
                 )
             )
         }
-//        if (errorCount > 0) {
-//            completeResult.sortBy { it.values.first() }
-//        }
         completeResult.add(0, mapOf(context.getString(R.string.all_done) to 2))
     }
 }
