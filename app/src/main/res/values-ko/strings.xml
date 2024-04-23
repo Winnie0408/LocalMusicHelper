@@ -201,7 +201,7 @@
     <string name="please_select_database_file">데이터베이스 파일을 선택하십시오</string>
     <string name="please_select_result_file">변환 결과 파일을 선택하십시오</string>
     <string name="update_size">"업데이트 크기: "</string>
-    <string name="file_no_tag">ID3태그가 포함되어 있지 않거나 읽을 수 없습니다</string>
+    <string name="file_no_tag">태그가 포함되어 있지 않거나 읽을 수 없습니다</string>
     <string name="scan_complete_but_have_error">스캔이 완료되었는데 오류가 있습니다</string>
     <string name="scan_failed_tips">선택한 디렉터리에 있는 다음 파일은 스캔 결과에 **추가되지 않습니다**.</string>
     <string name="way_to_get_song_list">목록 가져오기 방법</string>

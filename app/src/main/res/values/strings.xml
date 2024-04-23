@@ -204,7 +204,7 @@
     <string name="please_select_database_file">Please select database file</string>
     <string name="please_select_result_file">Please select convert result file</string>
     <string name="update_size">"Update size: "</string>
-    <string name="file_no_tag">Does not contain ID3 Tags or is unreadable</string>
+    <string name="file_no_tag">Does not contain Tags or is unreadable</string>
     <string name="scan_complete_but_have_error">Scanning completed, but with errors</string>
     <string name="scan_failed_tips">The following files in the selected directory will **NOT** be added to the scan results.</string>
     <string name="way_to_get_song_list">Way to get song list</string>

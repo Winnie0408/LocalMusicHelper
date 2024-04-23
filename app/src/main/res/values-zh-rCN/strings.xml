@@ -201,7 +201,7 @@
     <string name="please_select_database_file">请选择数据库文件</string>
     <string name="please_select_result_file">请选择转换结果文件</string>
     <string name="update_size">更新大小：</string>
-    <string name="file_no_tag">不包含ID3标签或无法读取</string>
+    <string name="file_no_tag">不包含标签或无法读取</string>
     <string name="scan_complete_but_have_error">扫描完成，但有错误</string>
     <string name="scan_failed_tips">所选目录中的下列文件**不会**添加到「扫描结果」中。</string>
     <string name="way_to_get_song_list">歌单获取方式</string>

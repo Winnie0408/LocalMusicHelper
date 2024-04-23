@@ -128,18 +128,18 @@ class TagPage(
             return false
         }
 
-        musicInfo.song = songInfoModified["song"] ?: ""
-        musicInfo.artist = songInfoModified["artist"] ?: ""
-        musicInfo.album = songInfoModified["album"] ?: ""
         db.musicDao().updateMusicInfo(
             id = id,
-            song = musicInfo.song,
-            artist = musicInfo.artist,
-            album = musicInfo.album,
-            albumArtist = "",
-            genre = "",
-            trackNumber = "",
-            releaseYear = "",
+            song = songInfoModified["song"] ?: "",
+            artist = songInfoModified["artist"] ?: "",
+            album = songInfoModified["album"] ?: "",
+            albumArtist = songInfoModified["albumArtist"] ?: "",
+            genre = songInfoModified["genre"] ?: "",
+            trackNumber = songInfoModified["trackNumber"] ?: "",
+            releaseYear = songInfoModified["releaseYear"] ?: "",
+            lyricist = songInfoModified["lyricist"] ?: "",
+            composer = songInfoModified["composer"] ?: "",
+            arranger = songInfoModified["arranger"] ?: "",
         )
         withContext(Dispatchers.Main) {
             Toast.makeText(context, context.getString(R.string.save_success), Toast.LENGTH_SHORT)

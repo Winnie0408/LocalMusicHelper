@@ -46,6 +46,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -62,6 +63,7 @@ import com.moriafly.salt.ui.SaltTheme
 import com.moriafly.salt.ui.Text
 import com.moriafly.salt.ui.TitleBar
 import com.moriafly.salt.ui.UnstableSaltApi
+import dev.jeziellago.compose.markdowntext.MarkdownText
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -91,7 +93,6 @@ fun AboutPageUi(
     var yesNoDialogContent by remember { mutableStateOf("") }
     var showYesDialog by remember { mutableStateOf(false) }
     var yesDialogTitle by remember { mutableStateOf("") }
-    var yesDialogContent by remember { mutableStateOf("") }
     var yesDialogCustomContent by remember { mutableStateOf<@Composable () -> Unit>({}) }
     var yesNoDialogOnConfirm by remember { mutableStateOf({}) }
     var yesDialogOnConfirm by remember { mutableStateOf({}) }
@@ -127,7 +128,7 @@ fun AboutPageUi(
                 yesDialogOnConfirm()
             },
             title = yesDialogTitle,
-            content = yesDialogContent.ifEmpty { null },
+            content = null,
             fontSize = 14.sp,
             enableHaptic = enableHaptic.value,
             drawContent = yesDialogCustomContent,
@@ -209,7 +210,6 @@ fun AboutPageUi(
                     ) {
                         Item(
                             onClick = {
-                                yesDialogContent = ""
                                 yesDialogCustomContent = {
                                     Column(
                                         modifier = Modifier
@@ -342,14 +342,29 @@ fun AboutPageUi(
                                         }
                                     }
                                 } catch (e: Exception) {
-                                    yesDialogCustomContent = {}
                                     yesDialogTitle = context.getString(R.string.error)
-                                    yesDialogContent =
-                                        "${context.getString(R.string.check_connectivity)}\n${
-                                            context.getString(
-                                                R.string.error_details
-                                            )
-                                        }\n- ${e.message.toString()}"
+                                    yesDialogCustomContent = {
+                                        RoundedColumn {
+                                            ItemTitle(text = stringResource(id = R.string.error_details))
+                                            Column(
+                                                modifier = Modifier
+                                                    .padding(horizontal = 16.dp)
+                                                    .fillMaxWidth()
+                                            ) {
+                                                MarkdownText(
+                                                    modifier = Modifier.padding(bottom = 8.dp),
+                                                    markdown =
+                                                    "${context.getString(R.string.check_connectivity)}\n- ${e.message.toString()}",
+                                                    style = TextStyle(
+                                                        color = SaltTheme.colors.text,
+                                                        fontSize = 14.sp
+                                                    ),
+                                                    isTextSelectable = true,
+                                                    disableLinkMovementMethod = true
+                                                )
+                                            }
+                                        }
+                                    }
                                     yesDialogOnConfirm = {}
                                     showYesDialog = true
                                 } finally {
@@ -364,7 +379,6 @@ fun AboutPageUi(
                     )
                     Item(
                         onClick = {
-                            yesDialogContent = ""
                             yesDialogCustomContent = {
                                 val currentTheme = SaltTheme.colors.text.red
                                 Column(
@@ -444,7 +458,6 @@ fun AboutPageUi(
                     )
                     Item(
                         onClick = {
-                            yesDialogContent = ""
                             yesDialogCustomContent = {
                                 RoundedColumn {
                                     Column(
