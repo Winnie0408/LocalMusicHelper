@@ -37,11 +37,11 @@ class UnlockPage(
     val openDecryptDirectoryLauncher: ActivityResultLauncher<Uri?>,
     val settingsPage: SettingsPage
 ) : PermissionResultHandler {
-    var unlockResult = mutableStateListOf<Map<String, Boolean>>()
-    private var unlockResultString = mutableStateOf("")
-    var selectedEncryptedPath = mutableStateOf("")
-    var selectedDecryptedPath = mutableStateOf("")
-    var deleteEncryptedFile = mutableStateOf(false)
+    var operateResult = mutableStateListOf<Map<String, Boolean>>()
+    private var operateResultString = mutableStateOf("")
+    var selectedInputPath = mutableStateOf("")
+    var selectedOutputPath = mutableStateOf("")
+    var deleteOriginalFile = mutableStateOf(false)
     var overwriteOutputFile = mutableStateOf(true)
     var showLoadingProgressBar = mutableStateOf(false)
     var showUmStdoutDialog = mutableStateOf(false)
@@ -150,28 +150,50 @@ class UnlockPage(
         }
     }
 
-    fun handleSelectedEncryptedPath(uri: Uri?) {
+    fun handleSelectedInputPath(uri: Uri?) {
         if (uri == null)
             return
         lifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
-            delay(200L)
-            selectedEncryptedPath.value = Tools().uriToAbsolutePath(uri)
+            val temp = Tools().uriToAbsolutePath(uri)
+            if (isAllAscii(temp)) {
+                delay(200L)
+                selectedInputPath.value = Tools().uriToAbsolutePath(uri)
+            } else {
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(
+                        context,
+                        context.getString(R.string.only_ascii),
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+            }
         }
     }
 
-    fun handleSelectedDecryptedPath(uri: Uri?) {
+    fun handleSelectedOutputPath(uri: Uri?) {
         if (uri == null)
             return
         lifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
-            delay(200L)
-            selectedDecryptedPath.value = Tools().uriToAbsolutePath(uri)
+            val temp = Tools().uriToAbsolutePath(uri)
+            if (isAllAscii(temp)) {
+                delay(200L)
+                selectedOutputPath.value = Tools().uriToAbsolutePath(uri)
+            } else {
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(
+                        context,
+                        context.getString(R.string.only_ascii),
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+            }
         }
     }
 
     private fun init() {
         lifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
-            unlockResult.clear()
-            unlockResultString.value = ""
+            operateResult.clear()
+            operateResultString.value = ""
             val internalFile = File(context.filesDir, "um_executable")
             if (!internalFile.exists()) {
                 withContext(Dispatchers.Main) {
@@ -201,18 +223,18 @@ class UnlockPage(
                         return@launch
                     }
                     var cmd =
-                        "${internalFile.absolutePath} -i ${selectedEncryptedPath.value} -o ${selectedDecryptedPath.value}"
-                    if (deleteEncryptedFile.value)
+                        "${internalFile.absolutePath} -i ${selectedInputPath.value} -o ${selectedOutputPath.value}"
+                    if (deleteOriginalFile.value)
                         cmd += " --rs"
 
                     if (overwriteOutputFile.value && settingsPage.umSupportOverWrite.value)
                         cmd += " --overwrite"
 
-                    unlockResultString.value = Tools().execShellCmd(
+                    operateResultString.value = Tools().execShellCmd(
                         cmd = cmd,
                         withoutRoot = true,
                     )
-                    val resultArray = unlockResultString.value.split("\n")
+                    val resultArray = operateResultString.value.split("\n")
                     for (i in resultArray) {
                         if (i.isBlank())
                             continue
@@ -221,13 +243,13 @@ class UnlockPage(
                                 i.split("\t")[i.count { it == '\t' }].parseObject()
                                     .getString("destination")
                             val fileName = filePath.substring(filePath.lastIndexOf("/") + 1)
-                            unlockResult.add(mapOf(fileName to true))
+                            operateResult.add(mapOf(fileName to true))
                         } else {
                             val filePath =
                                 i.split("\t")[i.count { it == '\t' }].parseObject()
                                     .getString("source")
                             val fileName = filePath.substring(filePath.lastIndexOf("/") + 1)
-                            unlockResult.add(0, mapOf(fileName to false))
+                            operateResult.add(0, mapOf(fileName to false))
                         }
                     }
                     showLoadingProgressBar.value = false
@@ -245,5 +267,14 @@ class UnlockPage(
                 }
             }
         }
+    }
+
+    private fun isAllAscii(input: String): Boolean {
+        input.forEach { char ->
+            if (char.code > 0x7F) {
+                return false
+            }
+        }
+        return true
     }
 }

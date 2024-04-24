@@ -66,12 +66,12 @@ fun UnlockPageUi(
         umSupportOverWrite = settingsPage.umSupportOverWrite.value
     }
 
-    LaunchedEffect(key1 = unlockPage.selectedEncryptedPath.value) {
-        inputPath = unlockPage.selectedEncryptedPath.value
+    LaunchedEffect(key1 = unlockPage.selectedInputPath.value) {
+        inputPath = unlockPage.selectedInputPath.value
     }
 
-    LaunchedEffect(key1 = unlockPage.selectedDecryptedPath.value) {
-        outputPath = unlockPage.selectedDecryptedPath.value
+    LaunchedEffect(key1 = unlockPage.selectedOutputPath.value) {
+        outputPath = unlockPage.selectedOutputPath.value
     }
 
     if (unlockPage.showUmStdoutDialog.value) {
@@ -93,15 +93,15 @@ fun UnlockPageUi(
                         .clip(RoundedCornerShape(12.dp))
                         .background(color = SaltTheme.colors.subBackground)
                 ) {
-                    items(unlockPage.unlockResult.size) { index ->
+                    items(unlockPage.operateResult.size) { index ->
                         Text(
                             modifier = Modifier.padding(
                                 horizontal = 16.dp,
                                 vertical = 4.dp
                             ),
-                            text = unlockPage.unlockResult[index].keys.first(),
+                            text = unlockPage.operateResult[index].keys.first(),
                             fontSize = 14.sp,
-                            color = if (unlockPage.unlockResult[index].values.first())
+                            color = if (unlockPage.operateResult[index].values.first())
                                 SaltTheme.colors.subText
                             else
                                 colorResource(id = R.color.unmatched),
@@ -179,7 +179,7 @@ fun UnlockPageUi(
                         state = deleteEncryptedFile,
                         onChange = {
                             deleteEncryptedFile = it
-                            unlockPage.deleteEncryptedFile.value = it
+                            unlockPage.deleteOriginalFile.value = it
                         },
                         text = stringResource(id = R.string.delete_input_file),
                         sub = stringResource(id = R.string.delete_input_file_sub),

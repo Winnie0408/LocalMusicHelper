@@ -270,9 +270,9 @@
     <string name="select_the_directory_for_output_files">选择文件的输出目录</string>
     <string name="input_path">选择的输入目录</string>
     <string name="output_path">选择的输出目录</string>
-    <string name="delete_input_file">删除原文件</string>
+    <string name="delete_input_file">删除源文件</string>
     <string name="overwrite_output_file">覆盖已有文件</string>
-    <string name="delete_input_file_sub">操作成功后自动删除原文件</string>
+    <string name="delete_input_file_sub">操作成功后自动删除源文件</string>
     <string name="overwrite_output_file_sub">若输出目录中已存在同名文件，直接覆盖</string>
     <string name="input_options">输入选项</string>
     <string name="output_options">输出选项</string>
@@ -331,4 +331,5 @@
     <string name="lrc_empty_skip">歌词为空，跳过。</string>
     <string name="lrc_not_contain_info">歌词中不包含该信息。</string>
     <string name="keep_original_value">已存在，保持原值。</string>
+    <string name="only_ascii">路径只能包含英文或数字，请重试</string>
 </resources>

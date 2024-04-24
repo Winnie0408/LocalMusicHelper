@@ -156,11 +156,11 @@ class MainActivity : ComponentActivity() {
             }
         openEncryptDirectoryLauncher =
             registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
-                unlockPage.handleSelectedEncryptedPath(uri)
+                unlockPage.handleSelectedInputPath(uri)
             }
         openDecryptDirectoryLauncher =
             registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
-                unlockPage.handleSelectedDecryptedPath(uri)
+                unlockPage.handleSelectedOutputPath(uri)
             }
         openMusicPlatformSqlFileLauncher =
             registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->

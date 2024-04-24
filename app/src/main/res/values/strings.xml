@@ -337,4 +337,5 @@
     <string name="lrc_empty_skip">Lyrics are empty, skip.</string>
     <string name="lrc_not_contain_info">Lyrics do not contain this info.</string>
     <string name="keep_original_value">Already exists, keep original value.</string>
+    <string name="only_ascii">Paths can only contain English or numbers, please try again</string>
 </resources>

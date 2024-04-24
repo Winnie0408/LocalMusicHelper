@@ -331,4 +331,5 @@
     <string name="lrc_empty_skip">가사가 비어 있습니다, 건너뛰기.</string>
     <string name="lrc_not_contain_info">가사에는 해당 정보가 포함되어 있지 않습니다.</string>
     <string name="keep_original_value">이미 존재하므로 원래 값을 유지합니다.</string>
+    <string name="only_ascii">경로는 영어나 숫자만 가능합니다, 다시 시도해주세요</string>
 </resources>
