@@ -28,10 +28,18 @@ class TagPage(
     val db: MusicDatabase,
     val openMusicCoverLauncher: ActivityResultLauncher<Array<String>>
 ) {
-    fun getMusicList(songList: SnapshotStateMap<Int, Array<String>>) {
+    fun getMusicList(songList: SnapshotStateMap<Int, Array<String>>, sortMethod: Int) {
         songList.clear()
-        db.musicDao().getMusic3Info().forEach {
-            songList[it.id] = arrayOf(it.song.ifBlank {
+        var i = 0
+        when (sortMethod) {
+            0 -> db.musicDao().getMusic3Info().sortedBy { it.id }
+            1 -> db.musicDao().getMusic3Info().sortedBy { it.song }
+            2 -> db.musicDao().getMusic3Info().sortedByDescending { it.song }
+            3 -> db.musicDao().getMusic3Info().sortedBy { it.modifyTime }
+            4 -> db.musicDao().getMusic3Info().sortedByDescending { it.modifyTime }
+            else -> db.musicDao().getMusic3Info().sortedBy { it.id }
+        }.forEach {
+            songList[i++] = arrayOf(it.song.ifBlank {
                 it.absolutePath.substring(
                     it.absolutePath.lastIndexOf(
                         '/'
@@ -44,7 +52,7 @@ class TagPage(
     fun getSongInfo(id: Int, cover: MutableState<ByteArray?>): Map<String, String?> {
         cover.value = null
         val audioFile: AudioFile
-        val musicInfo = db.musicDao().getMusicAllInfo(id)
+        val musicInfo = db.musicDao().getMusicById(id)
         audioFile = AudioFileIO.read(File(musicInfo.absolutePath))
         try {
             cover.value = audioFile.tag.artworkList.first().binaryData
@@ -86,7 +94,7 @@ class TagPage(
                 return false
             }
         }
-        val musicInfo = db.musicDao().getMusicAllInfo(id)
+        val musicInfo = db.musicDao().getMusicById(id)
 
         val audioFile: AudioFile
         try {
@@ -140,6 +148,7 @@ class TagPage(
             lyricist = songInfoModified["lyricist"] ?: "",
             composer = songInfoModified["composer"] ?: "",
             arranger = songInfoModified["arranger"] ?: "",
+            modifyTime = System.currentTimeMillis()
         )
         withContext(Dispatchers.Main) {
             Toast.makeText(context, context.getString(R.string.save_success), Toast.LENGTH_SHORT)
@@ -199,7 +208,7 @@ class TagPage(
         }
     }
 
-    suspend fun searchDuplicateAlbum(completeResult: MutableList<Map<String, Int>>): Boolean {
+    fun searchDuplicateAlbum(completeResult: MutableList<Map<String, Int>>): Boolean {
         val nullAlbumArtistCount = db.musicDao().countNullAlbumArtist()
         if (nullAlbumArtistCount == 0) {
             completeResult.add(
@@ -221,7 +230,7 @@ class TagPage(
         return true
     }
 
-    suspend fun handleDuplicateAlbum(
+    fun handleDuplicateAlbum(
         overwrite: Boolean,
         completeResult: MutableList<Map<String, Int>>
     ) {
@@ -267,7 +276,7 @@ class TagPage(
                 haveError = true
                 return@forEach
             }
-            db.musicDao().updateAlbumArtist(it.id, lastAlbumArtist)
+            db.musicDao().updateAlbumArtist(it.id, lastAlbumArtist, System.currentTimeMillis())
             completeResult.add(
                 0,
                 mapOf(
@@ -284,7 +293,7 @@ class TagPage(
         completeResult.add(0, mapOf(context.getString(R.string.all_done) to 2))
     }
 
-    suspend fun searchBlankLyricistComposerArranger(completeResult: MutableList<Map<String, Int>>): Boolean {
+    fun searchBlankLyricistComposerArranger(completeResult: MutableList<Map<String, Int>>): Boolean {
         val nullLyricistCount = db.musicDao().countNullLyricist()
         val nullComposerCount = db.musicDao().countNullComposer()
         val nullArrangerCount = db.musicDao().countNullArranger()
@@ -345,7 +354,7 @@ class TagPage(
         return false
     }
 
-    suspend fun handleBlankLyricistComposerArranger(
+    fun handleBlankLyricistComposerArranger(
         overwrite: Boolean,
         lyricist: Boolean,
         composer: Boolean,
@@ -366,32 +375,12 @@ class TagPage(
             val songLyrics = audioFile.tag.getFirst(FieldKey.LYRICS)
             if (songLyrics.isBlank()) {
 //                errorCount++
-                completeResult.add(
-                    0,
-                    mapOf(
-                        "" to 1
-                    )
-                )
-                completeResult.add(
-                    0,
-                    mapOf(
-                        context.getString(R.string.lrc_empty_skip) to 0
-                    )
-                )
-                completeResult.add(
-                    0,
-                    mapOf(
-                        it.song to 1
-                    )
-                )
+                completeResult.add(0, mapOf("" to 1))
+                completeResult.add(0, mapOf(context.getString(R.string.lrc_empty_skip) to 0))
+                completeResult.add(0, mapOf(it.song to 1))
                 return@forEach
             }
-            completeResult.add(
-                0,
-                mapOf(
-                    "" to 1
-                )
-            )
+            completeResult.add(0, mapOf("" to 1))
             var arrangerString = ""
             var composerString = ""
             var lyricistString = ""
@@ -491,7 +480,8 @@ class TagPage(
                     id = it.id,
                     lyricist = lyricistString,
                     composer = composerString,
-                    arranger = arrangerString
+                    arranger = arrangerString,
+                    modifyTime = System.currentTimeMillis()
                 )
             }
             completeResult.add(

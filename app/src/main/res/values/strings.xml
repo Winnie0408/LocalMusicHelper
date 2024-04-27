@@ -193,7 +193,7 @@
     <string name="save_failed">Save failed</string>
     <string name="temporarily_unavailable">(Temporarily unavailable)</string>
     <string name="open_source_gitee">View this project on Gitee</string>
-    <string name="no_music_found">⚠️No supported music files in the selected directory</string>
+    <string name="no_music_found">⚠️ No supported music files in the selected directory</string>
     <string name="original_songlist"># original</string>
     <string name="type_of_view">View</string>
     <string name="target_formats">Target formats</string>
@@ -338,4 +338,9 @@
     <string name="lrc_not_contain_info">Lyrics do not contain this info.</string>
     <string name="keep_original_value">Already exists, keep original value.</string>
     <string name="only_ascii">Paths can only contain English or numbers, please try again</string>
+    <string name="default_sort">Default Sort</string>
+    <string name="title_asc">Title Asc</string>
+    <string name="title_desc">Title Desc</string>
+    <string name="modify_date_asc">Date Asc</string>
+    <string name="modify_date_desc">Date Desc</string>
 </resources>

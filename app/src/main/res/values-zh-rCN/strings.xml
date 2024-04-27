@@ -190,7 +190,7 @@
     <string name="save_failed">保存失败</string>
     <string name="temporarily_unavailable">（暂时不可用）</string>
     <string name="open_source_gitee">在Gitee上查看本项目</string>
-    <string name="no_music_found">⚠️所选目录中没有受支持的音乐文件</string>
+    <string name="no_music_found">⚠️ 所选目录中没有受支持的音乐文件</string>
     <string name="original_songlist">#原始歌单</string>
     <string name="type_of_view">查看</string>
     <string name="target_formats">目标格式</string>
@@ -332,4 +332,9 @@
     <string name="lrc_not_contain_info">歌词中不包含该信息。</string>
     <string name="keep_original_value">已存在，保持原值。</string>
     <string name="only_ascii">路径只能包含英文或数字，请重试</string>
+    <string name="default_sort">默认排序</string>
+    <string name="title_asc">歌名升序</string>
+    <string name="title_desc">歌名降序</string>
+    <string name="modify_date_asc">日期升序</string>
+    <string name="modify_date_desc">日期降序</string>
 </resources>

@@ -25,6 +25,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -65,9 +66,13 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.edit
 import com.hwinzniej.musichelper.R
 import com.hwinzniej.musichelper.activity.ScanPage
 import com.hwinzniej.musichelper.activity.TagPage
+import com.hwinzniej.musichelper.data.DataStoreConstants
 import com.hwinzniej.musichelper.utils.MyVibrationEffect
 import com.moriafly.salt.ui.RoundedColumn
 import com.moriafly.salt.ui.SaltTheme
@@ -88,7 +93,13 @@ fun TagPageUi(
     enableHaptic: MutableState<Boolean>,
     hapticStrength: MutableIntState,
     scanPage: ScanPage,
-    pageState: PagerState
+    pageState: PagerState,
+    overwrite: MutableState<Boolean>,
+    lyricist: MutableState<Boolean>,
+    composer: MutableState<Boolean>,
+    arranger: MutableState<Boolean>,
+    sortMethod: MutableIntState,
+    dataStore: DataStore<Preferences>,
 ) {
     val context = LocalContext.current
     val songList = remember { mutableStateMapOf<Int, Array<String>>() }
@@ -112,12 +123,13 @@ fun TagPageUi(
     val completeResult =
         remember { mutableStateListOf<Map<String, Int>>() } // Int: 0: 失败 1: 成功 2: 提示
     var refreshComplete by remember { mutableStateOf(true) }
+    val lazyColumnState = rememberLazyListState()
     val pullRefreshState = rememberPullRefreshState(
         refreshing = !refreshComplete,
         onRefresh = {
             coroutineScope.launch(Dispatchers.IO) {
                 refreshComplete = false
-                tagPage.getMusicList(songList)
+                tagPage.getMusicList(songList, sortMethod.intValue)
                 MyVibrationEffect(
                     context,
                     enableHaptic.value,
@@ -146,7 +158,8 @@ fun TagPageUi(
         if (songList.isEmpty()) {
             coroutineScope.launch(Dispatchers.IO) {
                 showLoadingProgressBar = true
-                tagPage.getMusicList(songList)
+                delay(1000L)
+                tagPage.getMusicList(songList, sortMethod.intValue)
                 showLoadingProgressBar = false
             }
         }
@@ -183,6 +196,10 @@ fun TagPageUi(
         }
     }
 
+    LaunchedEffect(key1 = lazyColumnState.isScrollInProgress) {
+        showFab.value = false
+    }
+
     LaunchedEffect(key1 = pageState.currentPage) {
         if (pageState.currentPage == 2) {
             showSearchInput = false
@@ -195,7 +212,7 @@ fun TagPageUi(
         if (scanPage.scanComplete.value) {
             scanPage.scanComplete.value = false
             coroutineScope.launch(Dispatchers.IO) {
-                tagPage.getMusicList(songList)
+                tagPage.getMusicList(songList, sortMethod.intValue)
             }
         }
     }
@@ -248,7 +265,7 @@ fun TagPageUi(
                         musicInfoOriginal.value = emptyMap()
                         coverImage.value = null
                         showLoadingProgressBar = true
-                        tagPage.getMusicList(songList)
+                        tagPage.getMusicList(songList, sortMethod.intValue)
                         showLoadingProgressBar = false
                     }
                 }
@@ -462,15 +479,11 @@ fun TagPageUi(
         val popupState1 = rememberPopupState()
         val popupState2 = rememberPopupState()
         var selectedItem by remember { mutableIntStateOf(-1) }
-        var overwrite by remember { mutableStateOf(false) }
-        var lyricist by remember { mutableStateOf(true) }
-        var composer by remember { mutableStateOf(true) }
-        var arranger by remember { mutableStateOf(true) }
         val subtype = remember {
             mutableStateListOf(
-                context.getString(R.string.lyricist),
-                " ${context.getString(R.string.composer)}",
-                " ${context.getString(R.string.arranger)}"
+                if (lyricist.value) context.getString(R.string.lyricist) else "",
+                if (composer.value) " ${context.getString(R.string.composer)}" else "",
+                if (arranger.value) " ${context.getString(R.string.arranger)}" else ""
             )
         }
         var readyForComplete by remember { mutableStateOf(false) }
@@ -493,7 +506,7 @@ fun TagPageUi(
                 if (!readyForComplete) {
                     if (completeDone) {
                         coroutineScope.launch(Dispatchers.IO) {
-                            tagPage.getMusicList(songList)
+                            tagPage.getMusicList(songList, sortMethod.intValue)
                         }
                         completeDone = false
                     }
@@ -506,7 +519,7 @@ fun TagPageUi(
                             coroutineScope.launch(Dispatchers.IO) {
                                 showDialogProgressBar = true
                                 tagPage.handleDuplicateAlbum(
-                                    overwrite = overwrite,
+                                    overwrite = overwrite.value,
                                     completeResult = completeResult
                                 )
                                 readyForComplete = false
@@ -522,7 +535,7 @@ fun TagPageUi(
 
                         1 -> {
                             coroutineScope.launch(Dispatchers.IO) {
-                                if (!lyricist && !composer && !arranger) {
+                                if (!lyricist.value && !composer.value && !arranger.value) {
                                     withContext(Dispatchers.Main) {
                                         Toast
                                             .makeText(
@@ -536,10 +549,10 @@ fun TagPageUi(
                                 }
                                 showDialogProgressBar = true
                                 tagPage.handleBlankLyricistComposerArranger(
-                                    overwrite = overwrite,
-                                    lyricist = lyricist,
-                                    composer = composer,
-                                    arranger = arranger,
+                                    overwrite = overwrite.value,
+                                    lyricist = lyricist.value,
+                                    composer = composer.value,
+                                    arranger = arranger.value,
                                     completeResult = completeResult
                                 )
                                 readyForComplete = false
@@ -592,10 +605,6 @@ fun TagPageUi(
                                     coroutineScope.launch(Dispatchers.IO) {
                                         selectedItem = 0
                                         popupState1.dismiss()
-                                        overwrite = false
-                                        lyricist = true
-                                        composer = true
-                                        arranger = true
                                         showDialogProgressBar = true
                                         completeResult.clear()
                                         delay(300L)
@@ -612,10 +621,6 @@ fun TagPageUi(
                                     coroutineScope.launch(Dispatchers.IO) {
                                         selectedItem = 1
                                         popupState1.dismiss()
-                                        overwrite = false
-                                        lyricist = true
-                                        composer = true
-                                        arranger = true
                                         showDialogProgressBar = true
                                         completeResult.clear()
                                         delay(300L)
@@ -632,14 +637,20 @@ fun TagPageUi(
                         }
                         AnimatedVisibility(visible = selectedItem == 0) {
                             AnimatedContent(
-                                targetState = overwrite,
+                                targetState = overwrite.value,
                                 label = "",
                                 transitionSpec = {
                                     fadeIn() togetherWith fadeOut()
                                 }) {
                                 ItemSwitcher(
-                                    state = overwrite,
-                                    onChange = { it1 -> overwrite = it1 },
+                                    state = overwrite.value,
+                                    onChange = { it1 ->
+                                        coroutineScope.launch {
+                                            dataStore.edit { settings ->
+                                                settings[DataStoreConstants.TAG_OVERWRITE] = it1
+                                            }
+                                        }
+                                    },
                                     text = stringResource(id = R.string.file_conflict_dialog_yes_text),
                                     sub = if (it)
                                         stringResource(id = R.string.overwrite_original_album_artist_tag_sub_on)
@@ -657,14 +668,20 @@ fun TagPageUi(
                         AnimatedVisibility(visible = selectedItem == 1) {
                             Column {
                                 AnimatedContent(
-                                    targetState = overwrite,
+                                    targetState = overwrite.value,
                                     label = "",
                                     transitionSpec = {
                                         fadeIn() togetherWith fadeOut()
                                     }) {
                                     ItemSwitcher(
-                                        state = overwrite,
-                                        onChange = { it1 -> overwrite = it1 },
+                                        state = overwrite.value,
+                                        onChange = { it1 ->
+                                            coroutineScope.launch {
+                                                dataStore.edit { settings ->
+                                                    settings[DataStoreConstants.TAG_OVERWRITE] = it1
+                                                }
+                                            }
+                                        },
                                         text = stringResource(id = R.string.file_conflict_dialog_yes_text),
                                         sub = if (it)
                                             stringResource(id = R.string.overwrite_original_album_artist_tag_sub_on)
@@ -687,39 +704,54 @@ fun TagPageUi(
                                 ) {
                                     PopupMenuItem(
                                         onClick = {
-                                            lyricist = !lyricist
-                                            if (lyricist)
+                                            coroutineScope.launch {
+                                                dataStore.edit { settings ->
+                                                    settings[DataStoreConstants.TAG_LYRICIST] =
+                                                        !lyricist.value
+                                                }
+                                            }
+                                            if (!lyricist.value)
                                                 subtype[0] =
                                                     context.getString(R.string.lyricist)
                                             else
                                                 subtype[0] = ""
                                         },
                                         text = stringResource(id = R.string.lyricist),
-                                        selected = lyricist
+                                        selected = lyricist.value
                                     )
                                     PopupMenuItem(
                                         onClick = {
-                                            composer = !composer
-                                            if (composer)
+                                            coroutineScope.launch {
+                                                dataStore.edit { settings ->
+                                                    settings[DataStoreConstants.TAG_COMPOSER] =
+                                                        !composer.value
+                                                }
+                                            }
+                                            if (!composer.value)
                                                 subtype[1] =
                                                     " ${context.getString(R.string.composer)}"
                                             else
                                                 subtype[1] = ""
                                         },
                                         text = stringResource(id = R.string.composer),
-                                        selected = composer
+                                        selected = composer.value
                                     )
                                     PopupMenuItem(
                                         onClick = {
-                                            arranger = !arranger
-                                            if (arranger)
+                                            coroutineScope.launch {
+                                                dataStore.edit { settings ->
+                                                    settings[DataStoreConstants.TAG_ARRANGER] =
+                                                        !arranger.value
+                                                }
+                                            }
+                                            if (!arranger.value)
                                                 subtype[2] =
                                                     " ${context.getString(R.string.arranger)}"
                                             else
                                                 subtype[2] = ""
                                         },
                                         text = stringResource(id = R.string.arranger),
-                                        selected = arranger
+                                        selected = arranger.value
                                     )
                                 }
                             }
@@ -919,6 +951,7 @@ fun TagPageUi(
                                     .background(color = SaltTheme.colors.background)
                             ) {
                                 LazyColumn(
+                                    state = lazyColumnState,
                                     modifier = Modifier
                                         .background(color = SaltTheme.colors.subBackground)
                                 ) {
@@ -1028,14 +1061,51 @@ fun TagPageUi(
                 }
             }
 
-            if (songList.size != 0) {
+            if (songList.size != 0 || !refreshComplete || showFab.value) {
                 FloatingActionButton(
                     expanded = showFab,
-                    heightExpand = 100.dp,
+                    heightExpand = 150.dp,
                     widthExpand = 175.dp,
                     enableHaptic = enableHaptic.value,
                     hapticStrength = hapticStrength.intValue
                 ) {
+                    PopupMenuItem(
+                        onClick = {
+                            MyVibrationEffect(
+                                context,
+                                enableHaptic.value,
+                                hapticStrength.intValue
+                            ).click()
+                            showLoadingProgressBar = true
+                            if (sortMethod.intValue == 4)
+                                coroutineScope.launch(Dispatchers.IO) {
+                                    dataStore.edit { settings ->
+                                        settings[DataStoreConstants.SORT_METHOD] = 0
+                                        tagPage.getMusicList(songList, 0)
+                                    }
+                                }
+                            else
+                                coroutineScope.launch(Dispatchers.IO) {
+                                    dataStore.edit { settings ->
+                                        settings[DataStoreConstants.SORT_METHOD] =
+                                            ++sortMethod.intValue
+                                        tagPage.getMusicList(songList, sortMethod.intValue)
+                                    }
+                                }
+                            showLoadingProgressBar = false
+                        },
+                        text = when (sortMethod.intValue) {
+                            0 -> stringResource(id = R.string.default_sort)
+                            1 -> stringResource(id = R.string.title_asc)
+                            2 -> stringResource(id = R.string.title_desc)
+                            3 -> stringResource(id = R.string.modify_date_asc)
+                            4 -> stringResource(id = R.string.modify_date_desc)
+                            else -> stringResource(id = R.string.default_sort)
+                        },
+                        iconPainter = painterResource(id = R.drawable.sort),
+                        iconColor = SaltTheme.colors.text,
+                        iconPaddingValues = PaddingValues(all = 0.5.dp)
+                    )
                     PopupMenuItem(
                         onClick = {
                             MyVibrationEffect(
@@ -1071,7 +1141,9 @@ fun TagPageUi(
             PullRefreshIndicator(
                 modifier = Modifier.align(Alignment.TopCenter),
                 refreshing = !refreshComplete,
-                state = pullRefreshState
+                state = pullRefreshState,
+                backgroundColor = SaltTheme.colors.background,
+                contentColor = SaltTheme.colors.highlight
             )
         }
     }

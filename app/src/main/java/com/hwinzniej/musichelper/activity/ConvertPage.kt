@@ -2004,18 +2004,19 @@ class ConvertPage(
                             val absolutePath =
                                 cursor.getString(cursor.getColumnIndexOrThrow("absolutePath"))
                             val musicInfo = MusicInfo(
-                                id,
-                                song,
-                                artist,
-                                album,
-                                null,
-                                null,
-                                null,
-                                null,
-                                absolutePath,
-                                null,
-                                null,
-                                null
+                                id = id,
+                                song = song,
+                                artist = artist,
+                                album = album,
+                                releaseYear = null,
+                                trackNumber = null,
+                                albumArtist = null,
+                                genre = null,
+                                absolutePath = absolutePath,
+                                lyricist = null,
+                                composer = null,
+                                arranger = null,
+                                modifyTime = null,
                             )
                             musicInfoList.add(musicInfo)
                         }
@@ -2373,18 +2374,19 @@ class ConvertPage(
                         val absolutePath =
                             cursor.getString(cursor.getColumnIndexOrThrow("absolutePath"))
                         val musicInfo = MusicInfo(
-                            id,
-                            song,
-                            artist,
-                            album,
-                            null,
-                            null,
-                            null,
-                            null,
-                            absolutePath,
-                            null,
-                            null,
-                            null
+                            id = id,
+                            song = song,
+                            artist = artist,
+                            album = album,
+                            releaseYear = null,
+                            trackNumber = null,
+                            albumArtist = null,
+                            genre = null,
+                            absolutePath = absolutePath,
+                            lyricist = null,
+                            composer = null,
+                            arranger = null,
+                            modifyTime = null,
                         )
                         musicInfoList.add(musicInfo)
                     }
@@ -2435,18 +2437,19 @@ class ConvertPage(
                 cursor.close()
                 db.close()
                 MusicInfo(
-                    songId,
-                    song,
-                    artist,
-                    album,
-                    null,
-                    null,
-                    null,
-                    null,
-                    absolutePath,
-                    null,
-                    null,
-                    null
+                    id = songId,
+                    song = song,
+                    artist = artist,
+                    album = album,
+                    releaseYear = null,
+                    trackNumber = null,
+                    albumArtist = null,
+                    genre = null,
+                    absolutePath = absolutePath,
+                    lyricist = null,
+                    composer = null,
+                    arranger = null,
+                    modifyTime = null,
                 )
             } else
                 db.musicDao().getMusicById(songId)

@@ -190,7 +190,7 @@
     <string name="you_have_selected">선택한 파일</string>
     <string name="temporarily_unavailable">(일시적으로 사용할 수 없습니다)</string>
     <string name="open_source_gitee">Gitee에서 이 프로젝트 보기</string>
-    <string name="no_music_found">⚠️선택한 디렉토리에 지원되는 음악 파일이 없습니다</string>
+    <string name="no_music_found">⚠️ 선택한 디렉토리에 지원되는 음악 파일이 없습니다</string>
     <string name="original_songlist">#의 오리지널</string>
     <string name="type_of_view">보기</string>
     <string name="target_formats">대상 형식</string>
@@ -332,4 +332,9 @@
     <string name="lrc_not_contain_info">가사에는 해당 정보가 포함되어 있지 않습니다.</string>
     <string name="keep_original_value">이미 존재하므로 원래 값을 유지합니다.</string>
     <string name="only_ascii">경로는 영어나 숫자만 가능합니다, 다시 시도해주세요</string>
+    <string name="default_sort">기본 정렬</string>
+    <string name="title_asc">제목 오름차순</string>
+    <string name="title_desc">제목 내림차순</string>
+    <string name="modify_date_asc">날짜 오름차순</string>
+    <string name="modify_date_desc">날짜 내림차순</string>
 </resources>

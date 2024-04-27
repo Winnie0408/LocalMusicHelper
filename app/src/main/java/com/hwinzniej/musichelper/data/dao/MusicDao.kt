@@ -8,7 +8,7 @@ import com.hwinzniej.musichelper.data.model.MusicInfo
 
 @Dao
 interface MusicDao {
-    @Query("SELECT * FROM music")
+    @Query("SELECT * FROM music ORDER BY modifyTime ASC")
     fun getAll(): List<MusicInfo>
 
     @Insert
@@ -23,7 +23,7 @@ interface MusicDao {
 //    @Query("SELECT song, artist, album, releaseYear, trackNumber, albumArtist, genre FROM music")
 //    fun getMusicInfo(): List<MusicInfo>
 
-    @Query("SELECT song, artist, album, absolutePath, id FROM music")
+    @Query("SELECT song, artist, album, absolutePath, id, modifyTime FROM music")
     fun getMusic3Info(): List<MusicInfo>
 
     @Query("SELECT COUNT(*) FROM music")
@@ -41,7 +41,7 @@ interface MusicDao {
     @Query("SELECT song, artist, album, absolutePath, id, albumArtist, genre, trackNumber, releaseYear FROM music WHERE id = :id")
     fun getMusicAllInfo(id: Int): MusicInfo
 
-    @Query("UPDATE music SET song = :song, artist = :artist, album = :album, albumArtist = :albumArtist, genre = :genre, trackNumber = :trackNumber, releaseYear = :releaseYear, lyricist = :lyricist, composer = :composer, arranger = :arranger WHERE id = :id")
+    @Query("UPDATE music SET song = :song, artist = :artist, album = :album, albumArtist = :albumArtist, genre = :genre, trackNumber = :trackNumber, releaseYear = :releaseYear, lyricist = :lyricist, composer = :composer, arranger = :arranger, modifyTime = :modifyTime WHERE id = :id")
     fun updateMusicInfo(
         id: Int,
         song: String,
@@ -54,6 +54,7 @@ interface MusicDao {
         lyricist: String?,
         composer: String?,
         arranger: String?,
+        modifyTime: Long,
     )
 
     @Query(
@@ -83,16 +84,17 @@ interface MusicDao {
 //        ) AND (albumArtist IS NULL OR albumArtist = '')
 //    """
 //    )
-    @Query("SELECT * FROM music WHERE albumArtist IS NULL OR albumArtist = ''")
+    @Query("SELECT * FROM music WHERE albumArtist IS NULL OR albumArtist = '' ORDER BY modifyTime ASC")
     fun searchDuplicateAlbumNoOverwrite(): List<MusicInfo>
 
     @Query("SELECT DISTINCT artist FROM music WHERE album = :album")
     fun getDuplicateAlbumArtistList(album: String): List<String>
 
-    @Query("UPDATE music SET albumArtist = :albumArtist WHERE id = :id")
+    @Query("UPDATE music SET albumArtist = :albumArtist, modifyTime = :modifyTime WHERE id = :id")
     fun updateAlbumArtist(
         id: Int,
         albumArtist: String?,
+        modifyTime: Long
     )
 
     @Query("SELECT COUNT(*) FROM music WHERE albumArtist IS NULL OR albumArtist = ''")
@@ -107,12 +109,13 @@ interface MusicDao {
     @Query("SELECT COUNT(*) FROM music WHERE arranger IS NULL OR arranger = ''")
     fun countNullArranger(): Int
 
-    @Query("UPDATE music SET lyricist = :lyricist, composer = :composer, arranger = :arranger WHERE id = :id")
+    @Query("UPDATE music SET lyricist = :lyricist, composer = :composer, arranger = :arranger, modifyTime = :modifyTime WHERE id = :id")
     fun updateLyricistComposerArranger(
         id: Int,
         lyricist: String?,
         composer: String?,
         arranger: String?,
+        modifyTime: Long
     )
 
 //    @Insert

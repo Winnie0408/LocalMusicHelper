@@ -12,5 +12,6 @@ class MusicInfo(
     var absolutePath: String,
     var lyricist: String?,
     var composer: String?,
-    var arranger: String?
+    var arranger: String?,
+    var modifyTime: Long?
 )

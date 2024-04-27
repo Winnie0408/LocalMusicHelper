@@ -183,6 +183,7 @@ class MainActivity : ComponentActivity() {
             applicationContext, MusicDatabase::class.java, "music"
         )
             .fallbackToDestructiveMigration()
+//            .fallbackToDestructiveMigrationOnDowngrade()
             .build()
 
         scanPage = ScanPage(
@@ -328,6 +329,7 @@ private fun Pages(
     checkUpdate: MutableState<Boolean>
 ) {
     val context = LocalContext.current
+    val configuration = LocalConfiguration.current
     val targetSdkVersion = context.packageManager.getApplicationInfo(
         context.packageName,
         0
@@ -347,6 +349,11 @@ private fun Pages(
     val latestDescription = remember { mutableStateOf("") }
     val latestDownloadLink = remember { mutableStateOf("") }
 
+    val overwrite = remember { mutableStateOf(false) }
+    val lyricist = remember { mutableStateOf(true) }
+    val composer = remember { mutableStateOf(true) }
+    val arranger = remember { mutableStateOf(true) }
+    val sortMethod = remember { mutableIntStateOf(0) }
 
     mainPage.dataStore.data.collectAsState(initial = null).value?.let { preferences ->
         mainPage.enableDynamicColor.value =
@@ -373,6 +380,11 @@ private fun Pages(
             preferences[DataStoreConstants.UM_FILE_LEGAL] ?: false
         settingsPage.umSupportOverWrite.value =
             preferences[DataStoreConstants.UM_SUPPORT_OVERWRITE] ?: false
+        overwrite.value = preferences[DataStoreConstants.TAG_OVERWRITE] ?: false
+        lyricist.value = preferences[DataStoreConstants.TAG_LYRICIST] ?: true
+        composer.value = preferences[DataStoreConstants.TAG_COMPOSER] ?: true
+        arranger.value = preferences[DataStoreConstants.TAG_ARRANGER] ?: true
+        sortMethod.intValue = preferences[DataStoreConstants.SORT_METHOD] ?: 0
         coroutineScope.launch(Dispatchers.Default) {
             delay(248L)
             mainPage.isDataLoaded.value = true
@@ -385,7 +397,6 @@ private fun Pages(
             locale = Resources.getSystem().configuration.locales[0]
         }
         val resources = context.resources
-        val configuration = resources.configuration
         Locale.setDefault(locale)
         configuration.setLocale(locale)
         resources.updateConfiguration(
@@ -464,7 +475,7 @@ private fun Pages(
                             .fillMaxWidth()
                             .heightIn(
                                 min = 20.dp,
-                                max = (LocalConfiguration.current.screenHeightDp / 3.5).dp
+                                max = (configuration.screenHeightDp / 3.5).dp
                             )
                             .clip(RoundedCornerShape(12.dp))
                     ) {
@@ -630,7 +641,13 @@ private fun Pages(
                         enableHaptic = mainPage.enableHaptic,
                         hapticStrength = mainPage.hapticStrength,
                         scanPage = scanPage,
-                        pageState = pageState
+                        pageState = pageState,
+                        overwrite = overwrite,
+                        lyricist = lyricist,
+                        composer = composer,
+                        arranger = arranger,
+                        sortMethod = sortMethod,
+                        dataStore = mainPage.dataStore
                     )
                 }
 

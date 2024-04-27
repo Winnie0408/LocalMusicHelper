@@ -23,4 +23,9 @@ object DataStoreConstants {
     val UM_FILE_LEGAL = booleanPreferencesKey("um_file_legal")
     val UM_SUPPORT_OVERWRITE = booleanPreferencesKey("um_support_overwrite")
     val HAPTIC_STRENGTH = intPreferencesKey("haptic_strength")
+    val TAG_OVERWRITE = booleanPreferencesKey("tag_overwrite")
+    val TAG_LYRICIST = booleanPreferencesKey("tag_lyricist")
+    val TAG_COMPOSER = booleanPreferencesKey("tag_composer")
+    val TAG_ARRANGER = booleanPreferencesKey("tag_arranger")
+    val SORT_METHOD = intPreferencesKey("sort_method")
 }

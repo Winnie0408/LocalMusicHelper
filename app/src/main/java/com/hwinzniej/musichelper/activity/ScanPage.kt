@@ -36,7 +36,6 @@ import kotlinx.coroutines.withContext
 import org.jaudiotagger.audio.AudioFile
 import org.jaudiotagger.audio.AudioFileIO
 import org.jaudiotagger.tag.FieldKey
-import org.jaudiotagger.tag.Tag
 import java.io.File
 import java.io.FileWriter
 
@@ -396,14 +395,15 @@ class ScanPage(
         lifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
             scanResult.add(0, file.name)
         }
-        getTag(audioFile.tag, file.path)
+        getTag(audioFile, file.path)
     }
 
     /**
      * 将扫描到音乐的标签信息写入临时变量，准备写入数据库
      */
     @Synchronized
-    private fun getTag(tag: Tag, filePath: String) {
+    private fun getTag(audioFile: AudioFile, filePath: String) {
+        val tag = audioFile.tag
         val songName = tag.getFirst(FieldKey.TITLE)
         val artistName = tag.getFirst(FieldKey.ARTIST)
         val albumName = tag.getFirst(FieldKey.ALBUM)
@@ -417,18 +417,19 @@ class ScanPage(
 
         musicAllList.add(
             Music(
-                lastIndex,
-                songName,
-                artistName,
-                albumName,
-                filePath,
-                releaseYear,
-                trackNumber,
-                albumArtist,
-                genre,
-                lyricist,
-                composer,
-                arranger
+                id = lastIndex,
+                song = songName,
+                artist = artistName,
+                album = albumName,
+                absolutePath = filePath,
+                releaseYear = releaseYear,
+                trackNumber = trackNumber,
+                albumArtist = albumArtist,
+                genre = genre,
+                lyricist = lyricist,
+                composer = composer,
+                arranger = arranger,
+                modifyTime = audioFile.file.lastModified()
             )
         )
         increment()
@@ -440,13 +441,8 @@ class ScanPage(
             if (exportResultFile.value) {
                 try {
                     when (selectedExportFormat.intValue) {
-                        0 -> {
-                            exportToDb()
-                        }
-
-                        1 -> {
-                            exportToTxt()
-                        }
+                        0 -> exportToDb()
+                        1 -> exportToTxt()
                     }
                 } catch (e: Exception) {
                     errorLog.value += "- ${context.getString(R.string.export_scan_result_failed)}:\n  - $e\n"
