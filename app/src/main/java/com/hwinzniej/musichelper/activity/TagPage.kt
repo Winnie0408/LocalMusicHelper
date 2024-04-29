@@ -6,6 +6,7 @@ import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
@@ -14,6 +15,7 @@ import com.hwinzniej.musichelper.data.database.MusicDatabase
 import com.hwinzniej.musichelper.data.model.MusicInfo
 import com.hwinzniej.musichelper.utils.Tools
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.jaudiotagger.audio.AudioFile
@@ -28,8 +30,13 @@ class TagPage(
     val db: MusicDatabase,
     val openMusicCoverLauncher: ActivityResultLauncher<Array<String>>
 ) {
-    fun getMusicList(songList: SnapshotStateMap<Int, Array<String>>, sortMethod: Int) {
+    fun getMusicList(
+        songList: SnapshotStateMap<Int, Array<String>>,
+        sortMethod: Int,
+        selectedSongList: SnapshotStateList<Int>
+    ) {
         songList.clear()
+        selectedSongList.clear()
         var i = 0
         when (sortMethod) {
             0 -> db.musicDao().getMusic3Info().sortedBy { it.id }
@@ -46,6 +53,7 @@ class TagPage(
                     ) + 1
                 )
             }, it.artist, it.album, it.id.toString())
+            selectedSongList.add(0)
         }
     }
 
@@ -208,21 +216,52 @@ class TagPage(
         }
     }
 
-    fun searchDuplicateAlbum(completeResult: MutableList<Map<String, Int>>): Boolean {
-        val nullAlbumArtistCount = db.musicDao().countNullAlbumArtist()
+    suspend fun searchDuplicateAlbum(
+        completeResult: MutableList<Map<String, Int>>,
+        multiSelect: Boolean,
+        selectedSongList: SnapshotStateList<Int>
+    ): Boolean {
+        val nullAlbumArtistCount = if (selectedSongList.all { it == 0 }) {
+            if (multiSelect)
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(
+                        context,
+                        context.getString(R.string.no_song_selected_default_all),
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            db.musicDao().countNullAlbumArtist()
+        } else {
+            db.musicDao().countSelectedNullAlbumArtist(
+                selectedSongList.withIndex()
+                    .filter { it.value == 1 }
+                    .map { it.index }
+            )
+        }
         if (nullAlbumArtistCount == 0) {
             completeResult.add(
                 mapOf(
                     context.getString(R.string.no_tagname_null_count_in_song_list)
+                        .replace(
+                            "#location",
+                            if (selectedSongList.all { it == 0 }) context.getString(R.string.song_library)
+                            else context.getString(R.string.selected_songs)
+                        )
                         .replace("#", context.getString(R.string.album_artist_tag_name)) to 2
                 )
             )
+            completeResult.add(mapOf(context.getString(R.string.click_ok_to_start2) to 2))
             return false
         }
         completeResult.add(
             mapOf(
                 context.getString(R.string.total_tagname_null_count_in_song_list)
                     .replace("#tagName", context.getString(R.string.album_artist_tag_name))
+                    .replace(
+                        "#location",
+                        if (selectedSongList.all { it == 0 }) context.getString(R.string.song_library)
+                        else context.getString(R.string.selected_songs)
+                    )
                     .replace("#", nullAlbumArtistCount.toString()) to 2
             )
         )
@@ -230,14 +269,29 @@ class TagPage(
         return true
     }
 
-    fun handleDuplicateAlbum(
+    suspend fun handleDuplicateAlbum(
         overwrite: Boolean,
-        completeResult: MutableList<Map<String, Int>>
+        slow: Boolean,
+        completeResult: MutableList<Map<String, Int>>,
+        selectedSongList: SnapshotStateList<Int>
     ) {
         val searchResult: List<MusicInfo> = if (overwrite) {
-            db.musicDao().getAll()
+            if (selectedSongList.all { it == 0 })
+                db.musicDao().getAll()
+            else {
+                db.musicDao().getSelectedMusic(selectedSongList.withIndex()
+                    .filter { it.value == 1 }
+                    .map { it.index })
+            }
         } else {
-            db.musicDao().searchDuplicateAlbumNoOverwrite()
+            if (selectedSongList.all { it == 0 })
+                db.musicDao().searchDuplicateAlbumNoOverwrite()
+            else {
+                db.musicDao().searchSelectedDuplicateAlbumNoOverwrite(
+                    selectedSongList.withIndex()
+                        .filter { it.value == 1 }
+                        .map { it.index })
+            }
         }
         var lastAlbumArtist = ""
         var lastAlbum = ""
@@ -246,6 +300,7 @@ class TagPage(
             if (it.album.isBlank()) {
                 return@forEach
             }
+            completeResult.add(0, mapOf("" to 1))
             if (lastAlbum != it.album) {
                 val tempAlbumArtistList = mutableSetOf<String>()
                 db.musicDao().getDuplicateAlbumArtistList(it.album).forEach { it1 ->
@@ -286,6 +341,8 @@ class TagPage(
                         .replace("#3", context.getString(R.string.album_artist_tag_name)) to 1
                 )
             )
+            if (slow)
+                delay(1248L)
         }
         if (haveError) {
             completeResult.sortBy { it.values.first() }
@@ -293,14 +350,43 @@ class TagPage(
         completeResult.add(0, mapOf(context.getString(R.string.all_done) to 2))
     }
 
-    fun searchBlankLyricistComposerArranger(completeResult: MutableList<Map<String, Int>>): Boolean {
-        val nullLyricistCount = db.musicDao().countNullLyricist()
-        val nullComposerCount = db.musicDao().countNullComposer()
-        val nullArrangerCount = db.musicDao().countNullArranger()
+    suspend fun searchBlankLyricistComposerArranger(
+        completeResult: MutableList<Map<String, Int>>,
+        multiSelect: Boolean,
+        selectedSongList: SnapshotStateList<Int>
+    ): Boolean {
+        val nullLyricistCount: Int
+        val nullComposerCount: Int
+        val nullArrangerCount: Int
+
+        if (selectedSongList.all { it == 0 }) {
+            if (multiSelect)
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(
+                        context,
+                        context.getString(R.string.no_song_selected_default_all),
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            nullLyricistCount = db.musicDao().countNullLyricist()
+            nullComposerCount = db.musicDao().countNullComposer()
+            nullArrangerCount = db.musicDao().countNullArranger()
+        } else {
+            val innerSelectedSongList =
+                selectedSongList.withIndex().filter { it.value == 1 }.map { it.index }
+            nullLyricistCount = db.musicDao().countSelectedNullLyricist(innerSelectedSongList)
+            nullComposerCount = db.musicDao().countSelectedNullComposer(innerSelectedSongList)
+            nullArrangerCount = db.musicDao().countSelectedNullArranger(innerSelectedSongList)
+        }
         if (nullLyricistCount == 0) {
             completeResult.add(
                 mapOf(
                     context.getString(R.string.no_tagname_null_count_in_song_list)
+                        .replace(
+                            "#location",
+                            if (selectedSongList.all { it == 0 }) context.getString(R.string.song_library)
+                            else context.getString(R.string.selected_songs)
+                        )
                         .replace("#", context.getString(R.string.lyricist)) to 2
                 )
             )
@@ -309,6 +395,11 @@ class TagPage(
                 mapOf(
                     context.getString(R.string.total_tagname_null_count_in_song_list)
                         .replace("#tagName", context.getString(R.string.lyricist))
+                        .replace(
+                            "#location",
+                            if (selectedSongList.all { it == 0 }) context.getString(R.string.song_library)
+                            else context.getString(R.string.selected_songs)
+                        )
                         .replace("#", nullLyricistCount.toString()) to 2
                 )
             )
@@ -318,6 +409,11 @@ class TagPage(
             completeResult.add(
                 mapOf(
                     context.getString(R.string.no_tagname_null_count_in_song_list)
+                        .replace(
+                            "#location",
+                            if (selectedSongList.all { it == 0 }) context.getString(R.string.song_library)
+                            else context.getString(R.string.selected_songs)
+                        )
                         .replace("#", context.getString(R.string.composer)) to 2
                 )
             )
@@ -326,6 +422,11 @@ class TagPage(
                 mapOf(
                     context.getString(R.string.total_tagname_null_count_in_song_list)
                         .replace("#tagName", context.getString(R.string.composer))
+                        .replace(
+                            "#location",
+                            if (selectedSongList.all { it == 0 }) context.getString(R.string.song_library)
+                            else context.getString(R.string.selected_songs)
+                        )
                         .replace("#", nullComposerCount.toString()) to 2
                 )
             )
@@ -335,6 +436,11 @@ class TagPage(
             completeResult.add(
                 mapOf(
                     context.getString(R.string.no_tagname_null_count_in_song_list)
+                        .replace(
+                            "#location",
+                            if (selectedSongList.all { it == 0 }) context.getString(R.string.song_library)
+                            else context.getString(R.string.selected_songs)
+                        )
                         .replace("#", context.getString(R.string.arranger)) to 2
                 )
             )
@@ -343,38 +449,52 @@ class TagPage(
                 mapOf(
                     context.getString(R.string.total_tagname_null_count_in_song_list)
                         .replace("#tagName", context.getString(R.string.arranger))
+                        .replace(
+                            "#location",
+                            if (selectedSongList.all { it == 0 }) context.getString(R.string.song_library)
+                            else context.getString(R.string.selected_songs)
+                        )
                         .replace("#", nullArrangerCount.toString()) to 2
                 )
             )
         }
-        if (nullLyricistCount != 0 || nullComposerCount != 0 || nullArrangerCount != 0) {
+        return if (nullLyricistCount != 0 || nullComposerCount != 0 || nullArrangerCount != 0) {
             completeResult.add(mapOf(context.getString(R.string.click_ok_to_start) to 2))
-            return true
+            true
+        } else {
+            completeResult.add(mapOf(context.getString(R.string.click_ok_to_start2) to 2))
+            false
         }
-        return false
     }
 
-    fun handleBlankLyricistComposerArranger(
+    suspend fun handleBlankLyricistComposerArranger(
         overwrite: Boolean,
         lyricist: Boolean,
         composer: Boolean,
         arranger: Boolean,
-        completeResult: MutableList<Map<String, Int>>
+        slow: Boolean,
+        completeResult: MutableList<Map<String, Int>>,
+        selectedSongList: SnapshotStateList<Int>
     ) {
-        val searchResult = db.musicDao().getAll()
+        val searchResult =
+            if (selectedSongList.all { it == 0 }) db.musicDao().getAll()
+            else {
+                db.musicDao().getSelectedMusic(selectedSongList.withIndex()
+                    .filter { it.value == 1 }
+                    .map { it.index })
+            }
         val lyricistRegex =
-            "\\[\\d{2}:\\d{2}\\.\\d{2}](((作)?[词詞]\\s?(Lyrics)?\\s?[：:]?\\s?)|((Lyrics|Written)\\sby\\s?[：:]?\\s?))(.*)\\n".toRegex()
+            "\\[\\d{2}:\\d{2}\\.\\d{2}](((作)?[词詞]\\s?(Lyrics)?\\s?[：:]?\\s?)|((Lyrics|Written)\\sby\\s?[：:]?\\s?))(.*)\\n?".toRegex()
         val composerRegex =
-            "\\[\\d{2}:\\d{2}\\.\\d{2}](((作)?曲\\s?(Composer)?\\s?[：:]?\\s?)|((Composed|Written)\\sby\\s?[：:]?\\s?))(.*)\\n".toRegex()
+            "\\[\\d{2}:\\d{2}\\.\\d{2}](((作)?曲\\s?(Composer)?\\s?[：:]?\\s?)|((Composed|Written)\\sby\\s?[：:]?\\s?))(.*)\\n?".toRegex()
         val arrangerRegex =
-            "\\[\\d{2}:\\d{2}\\.\\d{2}](([编編]曲\\s?(Arranger|Arrangement)?\\s?[：:]?\\s?)|(Arranged\\sby\\s?[：:]?\\s?))(.*)\\n".toRegex()
+            "\\[\\d{2}:\\d{2}\\.\\d{2}](([编編]曲\\s?(Arranger|Arrangement)?\\s?[：:]?\\s?)|(Arranged\\sby\\s?[：:]?\\s?))(.*)\\n?".toRegex()
         val cleanRegex = "\\s?([/&|,，])\\s?".toRegex()
         searchResult.forEach {
-            var modified = false
+//            var modified = false
             val audioFile = AudioFileIO.read(File(it.absolutePath))
             val songLyrics = audioFile.tag.getFirst(FieldKey.LYRICS)
             if (songLyrics.isBlank()) {
-//                errorCount++
                 completeResult.add(0, mapOf("" to 1))
                 completeResult.add(0, mapOf(context.getString(R.string.lrc_empty_skip) to 0))
                 completeResult.add(0, mapOf(it.song to 1))
@@ -391,7 +511,7 @@ class TagPage(
                 if ((overwrite || songArranger.isBlank()) && !tempData.isNullOrBlank()) {
                     arrangerString = cleanRegex.replace(tempData, "/")
                     audioFile.tag.setField(FieldKey.ARRANGER, arrangerString)
-                    modified = true
+//                    modified = true
                     completeResult.add(
                         0,
                         mapOf(
@@ -421,7 +541,7 @@ class TagPage(
                 if ((overwrite || songComposer.isBlank()) && !tempData.isNullOrBlank()) {
                     composerString = cleanRegex.replace(tempData, "/")
                     audioFile.tag.setField(FieldKey.COMPOSER, composerString)
-                    modified = true
+//                    modified = true
                     completeResult.add(
                         0,
                         mapOf(
@@ -451,7 +571,7 @@ class TagPage(
                 if ((overwrite || songLyricist.isBlank()) && !tempData.isNullOrBlank()) {
                     lyricistString = cleanRegex.replace(tempData, "/")
                     audioFile.tag.setField(FieldKey.LYRICIST, lyricistString)
-                    modified = true
+//                    modified = true
                     completeResult.add(
                         0,
                         mapOf(
@@ -474,22 +594,24 @@ class TagPage(
                     )
                 }
             }
-            if (modified) {
-                audioFile.commit()
-                db.musicDao().updateLyricistComposerArranger(
-                    id = it.id,
-                    lyricist = lyricistString,
-                    composer = composerString,
-                    arranger = arrangerString,
-                    modifyTime = System.currentTimeMillis()
-                )
-            }
+//            if (modified) {
+            audioFile.commit()
+            db.musicDao().updateLyricistComposerArranger(
+                id = it.id,
+                lyricist = lyricistString,
+                composer = composerString,
+                arranger = arrangerString,
+                modifyTime = System.currentTimeMillis()
+            )
+//            }
             completeResult.add(
                 0,
                 mapOf(
                     "${it.song} - ${it.artist}" to 1
                 )
             )
+            if (slow)
+                delay(1248L)
         }
         completeResult.add(0, mapOf(context.getString(R.string.all_done) to 2))
     }

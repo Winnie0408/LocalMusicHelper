@@ -28,4 +28,5 @@ object DataStoreConstants {
     val TAG_COMPOSER = booleanPreferencesKey("tag_composer")
     val TAG_ARRANGER = booleanPreferencesKey("tag_arranger")
     val SORT_METHOD = intPreferencesKey("sort_method")
+    val SLOW_MODE = booleanPreferencesKey("slow_mode")
 }

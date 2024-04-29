@@ -8,8 +8,11 @@ import com.hwinzniej.musichelper.data.model.MusicInfo
 
 @Dao
 interface MusicDao {
-    @Query("SELECT * FROM music ORDER BY modifyTime ASC")
+    @Query("SELECT id, song, artist, album, absolutePath FROM music ORDER BY modifyTime ASC")
     fun getAll(): List<MusicInfo>
+
+    @Query("SELECT id, song, artist, album, absolutePath FROM music WHERE id IN (:selection) ORDER BY modifyTime ASC")
+    fun getSelectedMusic(selection: List<Int>): List<MusicInfo>
 
     @Insert
     fun insertAll(vararg music: Music)
@@ -84,8 +87,11 @@ interface MusicDao {
 //        ) AND (albumArtist IS NULL OR albumArtist = '')
 //    """
 //    )
-    @Query("SELECT * FROM music WHERE albumArtist IS NULL OR albumArtist = '' ORDER BY modifyTime ASC")
+    @Query("SELECT id, song, artist, album, absolutePath FROM music WHERE albumArtist IS NULL OR albumArtist = '' ORDER BY modifyTime ASC")
     fun searchDuplicateAlbumNoOverwrite(): List<MusicInfo>
+
+    @Query("SELECT id, song, artist, album, absolutePath FROM music WHERE id IN (:selection) AND (albumArtist IS NULL OR albumArtist = '') ORDER BY modifyTime ASC")
+    fun searchSelectedDuplicateAlbumNoOverwrite(selection: List<Int>): List<MusicInfo>
 
     @Query("SELECT DISTINCT artist FROM music WHERE album = :album")
     fun getDuplicateAlbumArtistList(album: String): List<String>
@@ -100,6 +106,9 @@ interface MusicDao {
     @Query("SELECT COUNT(*) FROM music WHERE albumArtist IS NULL OR albumArtist = ''")
     fun countNullAlbumArtist(): Int
 
+    @Query("SELECT COUNT(*) FROM music WHERE id IN (:selection) AND (albumArtist IS NULL OR albumArtist = '')")
+    fun countSelectedNullAlbumArtist(selection: List<Int>): Int
+
     @Query("SELECT COUNT(*) FROM music WHERE lyricist IS NULL OR lyricist = ''")
     fun countNullLyricist(): Int
 
@@ -108,6 +117,15 @@ interface MusicDao {
 
     @Query("SELECT COUNT(*) FROM music WHERE arranger IS NULL OR arranger = ''")
     fun countNullArranger(): Int
+
+    @Query("SELECT COUNT(*) FROM music WHERE id IN (:selection) AND (lyricist IS NULL OR lyricist = '')")
+    fun countSelectedNullLyricist(selection: List<Int>): Int
+
+    @Query("SELECT COUNT(*) FROM music WHERE id IN (:selection) AND (composer IS NULL OR composer = '')")
+    fun countSelectedNullComposer(selection: List<Int>): Int
+
+    @Query("SELECT COUNT(*) FROM music WHERE id IN (:selection) AND (arranger IS NULL OR arranger = '')")
+    fun countSelectedNullArranger(selection: List<Int>): Int
 
     @Query("UPDATE music SET lyricist = :lyricist, composer = :composer, arranger = :arranger, modifyTime = :modifyTime WHERE id = :id")
     fun updateLyricistComposerArranger(

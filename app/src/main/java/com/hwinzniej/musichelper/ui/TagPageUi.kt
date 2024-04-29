@@ -94,6 +94,7 @@ fun TagPageUi(
     hapticStrength: MutableIntState,
     scanPage: ScanPage,
     pageState: PagerState,
+    slow: MutableState<Boolean>,
     overwrite: MutableState<Boolean>,
     lyricist: MutableState<Boolean>,
     composer: MutableState<Boolean>,
@@ -124,12 +125,19 @@ fun TagPageUi(
         remember { mutableStateListOf<Map<String, Int>>() } // Int: 0: 失败 1: 成功 2: 提示
     var refreshComplete by remember { mutableStateOf(true) }
     val lazyColumnState = rememberLazyListState()
+    var multiSelect by remember { mutableStateOf(false) }
+    val selectedSongList = remember { mutableStateListOf<Int>() }
+    var intervalSelectionStart by remember { mutableIntStateOf(-1) }
     val pullRefreshState = rememberPullRefreshState(
         refreshing = !refreshComplete,
         onRefresh = {
             coroutineScope.launch(Dispatchers.IO) {
                 refreshComplete = false
-                tagPage.getMusicList(songList, sortMethod.intValue)
+                if (multiSelect) {
+                    multiSelect = false
+                    delay(842L)
+                }
+                tagPage.getMusicList(songList, sortMethod.intValue, selectedSongList)
                 MyVibrationEffect(
                     context,
                     enableHaptic.value,
@@ -154,12 +162,20 @@ fun TagPageUi(
         searchInput = ""
     }
 
+    BackHandler(enabled = multiSelect && !showSearchInput) {
+        multiSelect = false
+        coroutineScope.launch(Dispatchers.Default) {
+            delay(300L)
+            selectedSongList.replaceAll { 0 }
+        }
+    }
+
     LaunchedEffect(Unit) {
         if (songList.isEmpty()) {
             coroutineScope.launch(Dispatchers.IO) {
                 showLoadingProgressBar = true
                 delay(1000L)
-                tagPage.getMusicList(songList, sortMethod.intValue)
+                tagPage.getMusicList(songList, sortMethod.intValue, selectedSongList)
                 showLoadingProgressBar = false
             }
         }
@@ -212,7 +228,7 @@ fun TagPageUi(
         if (scanPage.scanComplete.value) {
             scanPage.scanComplete.value = false
             coroutineScope.launch(Dispatchers.IO) {
-                tagPage.getMusicList(songList, sortMethod.intValue)
+                tagPage.getMusicList(songList, sortMethod.intValue, selectedSongList)
             }
         }
     }
@@ -259,13 +275,14 @@ fun TagPageUi(
             onConfirm = {
                 coroutineScope.launch(Dispatchers.IO) {
                     if (tagPage.saveSongInfo(musicInfo.value, coverImage)) {
-                        tagPage.searchSong(searchInput, searchResult)
+                        if (searchInput.isNotBlank())
+                            tagPage.searchSong(searchInput, searchResult)
                         showSongInfoDialog = false
                         musicInfo.value = emptyMap()
                         musicInfoOriginal.value = emptyMap()
                         coverImage.value = null
                         showLoadingProgressBar = true
-                        tagPage.getMusicList(songList, sortMethod.intValue)
+                        tagPage.getMusicList(songList, sortMethod.intValue, selectedSongList)
                         showLoadingProgressBar = false
                     }
                 }
@@ -492,12 +509,24 @@ fun TagPageUi(
         YesNoDialog(
             onDismiss = {
                 if (!showDialogProgressBar) {
+                    if (completeDone) {
+                        coroutineScope.launch(Dispatchers.IO) {
+                            tagPage.getMusicList(songList, sortMethod.intValue, selectedSongList)
+                        }
+                        completeDone = false
+                    }
                     showCompleteDialog = false
                     completeResult.clear()
                 }
             },
             onCancel = {
                 if (!showDialogProgressBar) {
+                    if (completeDone) {
+                        coroutineScope.launch(Dispatchers.IO) {
+                            tagPage.getMusicList(songList, sortMethod.intValue, selectedSongList)
+                        }
+                        completeDone = false
+                    }
                     showCompleteDialog = false
                     completeResult.clear()
                 }
@@ -506,7 +535,7 @@ fun TagPageUi(
                 if (!readyForComplete) {
                     if (completeDone) {
                         coroutineScope.launch(Dispatchers.IO) {
-                            tagPage.getMusicList(songList, sortMethod.intValue)
+                            tagPage.getMusicList(songList, sortMethod.intValue, selectedSongList)
                         }
                         completeDone = false
                     }
@@ -520,7 +549,9 @@ fun TagPageUi(
                                 showDialogProgressBar = true
                                 tagPage.handleDuplicateAlbum(
                                     overwrite = overwrite.value,
-                                    completeResult = completeResult
+                                    completeResult = completeResult,
+                                    slow = slow.value,
+                                    selectedSongList = selectedSongList
                                 )
                                 readyForComplete = false
                                 showDialogProgressBar = false
@@ -553,7 +584,9 @@ fun TagPageUi(
                                     lyricist = lyricist.value,
                                     composer = composer.value,
                                     arranger = arranger.value,
-                                    completeResult = completeResult
+                                    completeResult = completeResult,
+                                    slow = slow.value,
+                                    selectedSongList = selectedSongList
                                 )
                                 readyForComplete = false
                                 showDialogProgressBar = false
@@ -609,7 +642,13 @@ fun TagPageUi(
                                         completeResult.clear()
                                         delay(300L)
                                         readyForComplete =
-                                            tagPage.searchDuplicateAlbum(completeResult)
+                                            tagPage.searchDuplicateAlbum(
+                                                completeResult = completeResult,
+                                                multiSelect = multiSelect,
+                                                selectedSongList = selectedSongList
+                                            )
+                                        if (overwrite.value)
+                                            readyForComplete = true
                                         showDialogProgressBar = false
                                     }
                                 },
@@ -626,8 +665,12 @@ fun TagPageUi(
                                         delay(300L)
                                         readyForComplete =
                                             tagPage.searchBlankLyricistComposerArranger(
-                                                completeResult
+                                                completeResult = completeResult,
+                                                multiSelect = multiSelect,
+                                                selectedSongList = selectedSongList
                                             )
+                                        if (overwrite.value)
+                                            readyForComplete = true
                                         showDialogProgressBar = false
                                     }
                                 },
@@ -636,12 +679,7 @@ fun TagPageUi(
                             )
                         }
                         AnimatedVisibility(visible = selectedItem == 0) {
-                            AnimatedContent(
-                                targetState = overwrite.value,
-                                label = "",
-                                transitionSpec = {
-                                    fadeIn() togetherWith fadeOut()
-                                }) {
+                            Column {
                                 ItemSwitcher(
                                     state = overwrite.value,
                                     onChange = { it1 ->
@@ -650,16 +688,33 @@ fun TagPageUi(
                                                 settings[DataStoreConstants.TAG_OVERWRITE] = it1
                                             }
                                         }
+                                        readyForComplete = it1
                                     },
                                     text = stringResource(id = R.string.file_conflict_dialog_yes_text),
-                                    sub = if (it)
+                                    sub =
+                                    if (selectedSongList.all { it == 0 })
                                         stringResource(id = R.string.overwrite_original_album_artist_tag_sub_on)
                                     else
-                                        stringResource(id = R.string.overwrite_original_album_artist_tag_sub_off)
-                                            .replace(
-                                                "#",
-                                                stringResource(id = R.string.album_artist_tag_name)
-                                            ),
+                                        stringResource(id = R.string.overwrite_original_album_artist_tag_sub_on2),
+                                    subOff = stringResource(id = R.string.overwrite_original_album_artist_tag_sub_off)
+                                        .replace(
+                                            "#",
+                                            stringResource(id = R.string.album_artist_tag_name)
+                                        ),
+                                    enableHaptic = enableHaptic.value,
+                                    hapticStrength = hapticStrength.intValue
+                                )
+                                ItemSwitcher(
+                                    state = slow.value,
+                                    onChange = { it1 ->
+                                        coroutineScope.launch {
+                                            dataStore.edit { settings ->
+                                                settings[DataStoreConstants.SLOW_MODE] = it1
+                                            }
+                                        }
+                                    },
+                                    text = stringResource(id = R.string.keep_original_file_sort),
+                                    sub = stringResource(id = R.string.keep_original_file_sort_sub),
                                     enableHaptic = enableHaptic.value,
                                     hapticStrength = hapticStrength.intValue
                                 )
@@ -667,34 +722,44 @@ fun TagPageUi(
                         }
                         AnimatedVisibility(visible = selectedItem == 1) {
                             Column {
-                                AnimatedContent(
-                                    targetState = overwrite.value,
-                                    label = "",
-                                    transitionSpec = {
-                                        fadeIn() togetherWith fadeOut()
-                                    }) {
-                                    ItemSwitcher(
-                                        state = overwrite.value,
-                                        onChange = { it1 ->
-                                            coroutineScope.launch {
-                                                dataStore.edit { settings ->
-                                                    settings[DataStoreConstants.TAG_OVERWRITE] = it1
-                                                }
+                                ItemSwitcher(
+                                    state = overwrite.value,
+                                    onChange = { it1 ->
+                                        coroutineScope.launch {
+                                            dataStore.edit { settings ->
+                                                settings[DataStoreConstants.TAG_OVERWRITE] = it1
                                             }
-                                        },
-                                        text = stringResource(id = R.string.file_conflict_dialog_yes_text),
-                                        sub = if (it)
-                                            stringResource(id = R.string.overwrite_original_album_artist_tag_sub_on)
-                                        else
-                                            stringResource(id = R.string.overwrite_original_album_artist_tag_sub_off)
-                                                .replace(
-                                                    "#",
-                                                    stringResource(id = R.string.choose_need_complete_subtype)
-                                                ),
-                                        enableHaptic = enableHaptic.value,
-                                        hapticStrength = hapticStrength.intValue
-                                    )
-                                }
+                                        }
+                                        readyForComplete = it1
+                                    },
+                                    text = stringResource(id = R.string.file_conflict_dialog_yes_text),
+                                    sub =
+                                    if (selectedSongList.all { it == 0 })
+                                        stringResource(id = R.string.overwrite_original_album_artist_tag_sub_on)
+                                    else
+                                        stringResource(id = R.string.overwrite_original_album_artist_tag_sub_on2),
+                                    subOff = stringResource(id = R.string.overwrite_original_album_artist_tag_sub_off)
+                                        .replace(
+                                            "#",
+                                            stringResource(id = R.string.choose_need_complete_subtype)
+                                        ),
+                                    enableHaptic = enableHaptic.value,
+                                    hapticStrength = hapticStrength.intValue
+                                )
+                                ItemSwitcher(
+                                    state = slow.value,
+                                    onChange = { it1 ->
+                                        coroutineScope.launch {
+                                            dataStore.edit { settings ->
+                                                settings[DataStoreConstants.SLOW_MODE] = it1
+                                            }
+                                        }
+                                    },
+                                    text = stringResource(id = R.string.keep_original_file_sort),
+                                    sub = stringResource(id = R.string.keep_original_file_sort_sub),
+                                    enableHaptic = enableHaptic.value,
+                                    hapticStrength = hapticStrength.intValue
+                                )
                                 ItemPopup(
                                     state = popupState2,
                                     text = stringResource(id = R.string.choose_need_complete_subtype),
@@ -857,11 +922,27 @@ fun TagPageUi(
                             }
                         }
                     } else {
-                        TitleBar(
-                            onBack = {},
-                            text = stringResource(id = R.string.tag_function_name),
-                            showBackBtn = false
-                        )
+                        AnimatedContent(
+                            targetState = multiSelect,
+                            label = "",
+                            transitionSpec = {
+                                fadeIn() togetherWith fadeOut()
+                            }) { animate ->
+                            TitleBar(
+                                onBack = {
+                                    MyVibrationEffect(
+                                        context,
+                                        enableHaptic.value,
+                                        hapticStrength.intValue
+                                    ).click()
+                                    multiSelect = false
+                                },
+                                text = if (animate)
+                                    "${stringResource(id = R.string.tag_function_name)} (${selectedSongList.count { it1 -> it1 != 0 }})"
+                                else stringResource(id = R.string.tag_function_name),
+                                showBackBtn = animate
+                            )
+                        }
                     }
                 }
             }
@@ -908,27 +989,99 @@ fun TagPageUi(
                             ) {
                                 items(searchResult.size) {
                                     AnimatedContent(
-                                        targetState = searchResult[it],
+                                        targetState = multiSelect,
                                         label = "",
-                                    ) { it1 ->
-                                        Item(
-                                            onClick = {
-                                                if (showFab.value)
-                                                    showFab.value = false
-                                                else
-                                                    coroutineScope.launch(Dispatchers.IO) {
-                                                        musicInfo.value =
-                                                            tagPage.getSongInfo(
-                                                                it1!![3].toInt(),
-                                                                coverImage
-                                                            )
-                                                        musicInfoOriginal.value = musicInfo.value
+                                        transitionSpec = {
+                                            fadeIn() togetherWith fadeOut()
+                                        }) { animate ->
+                                        if (!animate)
+                                            Item(
+                                                onClick = {
+                                                    if (showFab.value)
+                                                        showFab.value = false
+                                                    else
+                                                        coroutineScope.launch(Dispatchers.IO) {
+                                                            musicInfo.value =
+                                                                tagPage.getSongInfo(
+                                                                    searchResult[it]!![3].toInt(),
+                                                                    coverImage
+                                                                )
+                                                            musicInfoOriginal.value =
+                                                                musicInfo.value
+                                                        }
+                                                },
+                                                onLongClick = {
+                                                    coroutineScope.launch(Dispatchers.Default) {
+                                                        delay(248L)
+                                                        if (showFab.value)
+                                                            showFab.value = false
+                                                        multiSelect = true
+                                                        MyVibrationEffect(
+                                                            context,
+                                                            enableHaptic.value,
+                                                            hapticStrength.intValue
+                                                        ).click()
+                                                        selectedSongList[searchResult[it]!![3].toInt()] =
+                                                            1
                                                     }
-                                            },
-                                            text = it1!![0],
-                                            sub = "${it1[1].ifBlank { "?" }} - ${it1[2].ifBlank { "?" }}",
-                                            indication = if (showFab.value) null else rememberRipple()
-                                        )
+                                                },
+                                                text = searchResult[it]!![0],
+                                                sub = "${searchResult[it]!![1].ifBlank { "?" }} - ${searchResult[it]!![2].ifBlank { "?" }}",
+                                                indication = if (showFab.value) null else rememberRipple()
+                                            )
+                                        else
+                                            ItemCheck(
+                                                state = selectedSongList[searchResult[it]!![3].toInt()] == 1,
+                                                onChange = { it1 ->
+                                                    if (showFab.value)
+                                                        showFab.value = false
+                                                    else {
+                                                        selectedSongList[searchResult[it]!![3].toInt()] =
+                                                            if (it1) 1 else 0
+                                                        MyVibrationEffect(
+                                                            context,
+                                                            enableHaptic.value,
+                                                            hapticStrength.intValue
+                                                        ).click()
+                                                    }
+                                                },
+                                                onLongChange = { it1 ->
+                                                    if (showFab.value)
+                                                        showFab.value = false
+                                                    else {
+                                                        MyVibrationEffect(
+                                                            context,
+                                                            enableHaptic.value,
+                                                            hapticStrength.intValue
+                                                        ).click()
+                                                        if (intervalSelectionStart == -1) {
+                                                            intervalSelectionStart = it
+                                                        } else {
+                                                            val start = intervalSelectionStart
+                                                            val end = it
+                                                            if (start < end) {
+                                                                for (i in start..end) {
+                                                                    selectedSongList[searchResult[i]!![3].toInt()] =
+                                                                        if (it1) 1 else 0
+                                                                }
+                                                            } else {
+                                                                for (i in end..start) {
+                                                                    selectedSongList[searchResult[i]!![3].toInt()] =
+                                                                        if (it1) 1 else 0
+                                                                }
+                                                            }
+                                                            intervalSelectionStart = -1
+                                                        }
+                                                    }
+                                                },
+                                                highlight = intervalSelectionStart == it,
+                                                indication = if (showFab.value) null else rememberRipple(),
+                                                iconAtLeft = false,
+                                                text = searchResult[it]!![0],
+                                                sub = "${searchResult[it]!![1].ifBlank { "?" }} - ${searchResult[it]!![2].ifBlank { "?" }}",
+                                                enableHaptic = false,
+                                                hapticStrength = hapticStrength.intValue
+                                            )
                                     }
                                 }
                             }
@@ -956,26 +1109,103 @@ fun TagPageUi(
                                         .background(color = SaltTheme.colors.subBackground)
                                 ) {
                                     items(songList.size) {
-                                        if (songList[it] != null)
-                                            Item(
-                                                onClick = {
-                                                    if (showFab.value)
-                                                        showFab.value = false
-                                                    else
-                                                        coroutineScope.launch(Dispatchers.IO) {
-                                                            musicInfo.value =
-                                                                tagPage.getSongInfo(
-                                                                    songList[it]!![3].toInt(),
-                                                                    coverImage
-                                                                )
-                                                            musicInfoOriginal.value =
-                                                                musicInfo.value
+                                        AnimatedContent(
+                                            targetState = multiSelect,
+                                            label = "",
+                                            transitionSpec = {
+                                                fadeIn() togetherWith fadeOut()
+                                            }) { animate ->
+                                            if (songList[it] != null && !animate)
+                                                Item(
+                                                    onClick = {
+                                                        if (showFab.value)
+                                                            showFab.value = false
+                                                        else
+                                                            coroutineScope.launch(Dispatchers.IO) {
+                                                                musicInfo.value =
+                                                                    tagPage.getSongInfo(
+                                                                        songList[it]!![3].toInt(),
+                                                                        coverImage
+                                                                    )
+                                                                musicInfoOriginal.value =
+                                                                    musicInfo.value
+                                                            }
+                                                    },
+                                                    onLongClick = {
+                                                        coroutineScope.launch(Dispatchers.Default) {
+                                                            delay(248L)
+                                                            if (showFab.value)
+                                                                showFab.value = false
+                                                            else {
+                                                                multiSelect = true
+                                                                MyVibrationEffect(
+                                                                    context,
+                                                                    enableHaptic.value,
+                                                                    hapticStrength.intValue
+                                                                ).click()
+                                                                selectedSongList[songList[it]!![3].toInt()] =
+                                                                    1
+                                                            }
                                                         }
-                                                },
-                                                text = songList[it]!![0],
-                                                sub = "${songList[it]!![1].ifBlank { "?" }} - ${songList[it]!![2].ifBlank { "?" }}",
-                                                indication = if (showFab.value) null else rememberRipple()
-                                            )
+                                                    },
+                                                    text = songList[it]!![0],
+                                                    sub = "${songList[it]!![1].ifBlank { "?" }} - ${songList[it]!![2].ifBlank { "?" }}",
+                                                    indication = if (showFab.value) null else rememberRipple()
+                                                )
+                                            else if (songList[it] != null && animate)
+                                                ItemCheck(
+                                                    state = selectedSongList[songList[it]!![3].toInt()] == 1,
+                                                    onChange = { it1 ->
+                                                        if (showFab.value)
+                                                            showFab.value = false
+                                                        else {
+                                                            selectedSongList[songList[it]!![3].toInt()] =
+                                                                if (it1) 1 else 0
+                                                            MyVibrationEffect(
+                                                                context,
+                                                                enableHaptic.value,
+                                                                hapticStrength.intValue
+                                                            ).click()
+                                                        }
+                                                    },
+                                                    onLongChange = { it1 ->
+                                                        if (showFab.value)
+                                                            showFab.value = false
+                                                        else {
+                                                            MyVibrationEffect(
+                                                                context,
+                                                                enableHaptic.value,
+                                                                hapticStrength.intValue
+                                                            ).click()
+                                                            if (intervalSelectionStart == -1) {
+                                                                intervalSelectionStart = it
+                                                            } else {
+                                                                val start = intervalSelectionStart
+                                                                val end = it
+                                                                if (start < end) {
+                                                                    for (i in start..end) {
+                                                                        selectedSongList[songList[i]!![3].toInt()] =
+                                                                            if (it1) 1 else 0
+                                                                    }
+                                                                } else {
+                                                                    for (i in end..start) {
+                                                                        selectedSongList[songList[i]!![3].toInt()] =
+                                                                            if (it1) 1 else 0
+                                                                    }
+                                                                }
+                                                                intervalSelectionStart = -1
+                                                            }
+                                                        }
+                                                    },
+                                                    highlight = intervalSelectionStart == it,
+                                                    indication = if (showFab.value) null else rememberRipple(),
+                                                    iconAtLeft = false,
+                                                    text = songList[it]!![0],
+                                                    sub = "${songList[it]!![1].ifBlank { "?" }} - ${songList[it]!![2].ifBlank { "?" }}",
+                                                    enableHaptic = false,
+                                                    hapticStrength = hapticStrength.intValue
+                                                )
+                                        }
                                     }
                                 }
                             }
@@ -1081,7 +1311,7 @@ fun TagPageUi(
                                 coroutineScope.launch(Dispatchers.IO) {
                                     dataStore.edit { settings ->
                                         settings[DataStoreConstants.SORT_METHOD] = 0
-                                        tagPage.getMusicList(songList, 0)
+                                        tagPage.getMusicList(songList, 0, selectedSongList)
                                     }
                                 }
                             else
@@ -1089,7 +1319,11 @@ fun TagPageUi(
                                     dataStore.edit { settings ->
                                         settings[DataStoreConstants.SORT_METHOD] =
                                             ++sortMethod.intValue
-                                        tagPage.getMusicList(songList, sortMethod.intValue)
+                                        tagPage.getMusicList(
+                                            songList,
+                                            sortMethod.intValue,
+                                            selectedSongList
+                                        )
                                     }
                                 }
                             showLoadingProgressBar = false

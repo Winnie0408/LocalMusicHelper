@@ -310,12 +310,12 @@
     <string name="completion">Completion</string>
     <string name="choose_need_complete_type">Tag to be completed</string>
     <string name="tag_type">Tag type</string>
-    <string name="total_tagname_null_count_in_song_list">There are # songs in the library with \"#tagName\" tagged as empty.</string>
-    <string name="no_tagname_null_count_in_song_list">There are NO songs in the library with an empty \"#\" tag.</string>
+    <string name="total_tagname_null_count_in_song_list">There are # songs in the #location with \"#tagName\" tagged as empty.</string>
+    <string name="no_tagname_null_count_in_song_list">There are NO songs in the #location with an empty \"#\" tag.</string>
     <string name="overwrite_original_album_artist_tag_sub_on">Handle all songs in the library</string>
     <string name="click_ok_to_start">Click the \"OK\" button to start completing.</string>
-    <string name="modify_tagName_success">Success modified the #3 for \"#1\" to #2.</string>
-    <string name="modify_album_artist_failed">Failed modified the album artist for \"#1\" to #2.</string>
+    <string name="modify_tagName_success">Success modified the #3 for \"#1\" to \"#2\".</string>
+    <string name="modify_album_artist_failed">Failed modified the album artist for \"#1\" to \"#2\".</string>
     <string name="refresh_success">Refresh success</string>
     <string name="overwrite_original_album_artist_tag_sub_off">Process only songs with an empty \"#\" tag</string>
     <string name="completion_log">Completion operation log</string>
@@ -343,4 +343,11 @@
     <string name="title_desc">Title Desc</string>
     <string name="modify_date_asc">Date Asc</string>
     <string name="modify_date_desc">Date Desc</string>
+    <string name="keep_original_file_sort">Keep original modified time order</string>
+    <string name="keep_original_file_sort_sub">Limit processing to 1 file per second</string>
+    <string name="no_song_selected_default_all">No song selected, default use library</string>
+    <string name="song_library">song library</string>
+    <string name="selected_songs">selected songs</string>
+    <string name="click_ok_to_start2">Turn on Overwrite and click the \"OK\" button to start completing.</string>
+    <string name="overwrite_original_album_artist_tag_sub_on2">Handle all selected songs</string>
 </resources>

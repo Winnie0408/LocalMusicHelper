@@ -13,22 +13,27 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.Indication
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.indication
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -100,6 +105,7 @@ import com.moriafly.salt.ui.SaltTheme
 import com.moriafly.salt.ui.Text
 import com.moriafly.salt.ui.UnstableSaltApi
 import com.moriafly.salt.ui.dialog.DialogTitle
+import com.moriafly.salt.ui.fadeClickable
 import com.moriafly.salt.ui.popup.PopupMenu
 import com.moriafly.salt.ui.popup.PopupState
 
@@ -383,19 +389,23 @@ fun ItemText(
     )
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @UnstableSaltApi
 @Composable
 fun ItemCheck(
     state: Boolean,
     onChange: (Boolean) -> Unit,
+    onLongChange: (Boolean) -> Unit = { _ -> },
     enabled: Boolean = true,
+    highlight: Boolean = false,
     text: String,
     iconAtLeft: Boolean = false,
     sub: String? = null,
     hideIcon: Boolean = false,
     enableHaptic: Boolean = false,
     minHeightIn: Dp = 50.dp,
-    hapticStrength: Int
+    hapticStrength: Int,
+    indication: Indication? = rememberRipple()
 ) {
     val context = LocalContext.current
     Row(
@@ -403,10 +413,22 @@ fun ItemCheck(
             .fillMaxWidth()
             .heightIn(min = minHeightIn)
             .alpha(if (enabled) 1f else 0.5f)
-            .clickable(enabled = enabled) {
-                MyVibrationEffect(context, enableHaptic, hapticStrength).click()
-                onChange(!state)
-            }
+            .combinedClickable(
+                enabled = enabled,
+                onClick = {
+                    onChange(!state)
+                    MyVibrationEffect(context, enableHaptic, hapticStrength).click()
+                },
+                onLongClick = {
+                    onLongChange(!state)
+                    MyVibrationEffect(context, enableHaptic, hapticStrength).click()
+                },
+                indication = indication,
+                interactionSource = remember {
+                    MutableInteractionSource()
+                }
+            )
+            .background(SaltTheme.colors.highlight.copy(alpha = if (highlight) 0.15f else 0f))
             .padding(
                 horizontal = SaltTheme.dimens.innerHorizontalPadding,
                 vertical = SaltTheme.dimens.innerVerticalPadding
@@ -446,7 +468,7 @@ fun ItemCheck(
         }
         if (!hideIcon) {
             if (!iconAtLeft) {
-                Spacer(modifier = Modifier.width(SaltTheme.dimens.contentPadding))
+                Spacer(modifier = Modifier.width(SaltTheme.dimens.outerVerticalPadding))
                 Icon(
                     modifier = Modifier
                         .size(24.dp),
@@ -461,9 +483,11 @@ fun ItemCheck(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun Item(
     onClick: () -> Unit,
+    onLongClick: () -> Unit = {},
     enabled: Boolean = true,
     iconPainter: Painter? = null,
     iconPaddingValues: PaddingValues = PaddingValues(0.dp),
@@ -480,9 +504,10 @@ fun Item(
             .fillMaxWidth()
             .heightIn(min = 56.dp)
             .alpha(if (enabled) 1f else 0.5f)
-            .clickable(
+            .combinedClickable(
                 enabled = enabled,
                 onClick = { onClick() },
+                onLongClick = { onLongClick() },
                 indication = indication,
                 interactionSource = remember {
                     MutableInteractionSource()
@@ -717,7 +742,7 @@ fun ItemEdit(
                 Box(
                     modifier = Modifier
                         .weight(1f)
-                        .padding(vertical = SaltTheme.dimens.contentPadding),
+                        .padding(vertical = 10.dp),
                 ) {
                     innerTextField()
                     if (hint != null && text.isEmpty()) {
@@ -766,6 +791,7 @@ fun ItemSwitcher(
     iconColor: Color? = null,
     text: String,
     sub: String? = null,
+    subOff: String? = null,
     enableHaptic: Boolean = false,
     hapticStrength: Int
 ) {
@@ -810,10 +836,22 @@ fun ItemSwitcher(
             )
             sub?.let {
                 Spacer(modifier = Modifier.height(2.dp))
-                Text(
-                    text = sub,
-                    style = SaltTheme.textStyles.sub
-                )
+                AnimatedContent(
+                    targetState = state,
+                    label = "",
+                    transitionSpec = {
+                        fadeIn() togetherWith fadeOut()
+                    }) {
+                    if (it || subOff == null)
+                        Text(
+                            text = sub,
+                            style = SaltTheme.textStyles.sub
+                        )
+                    else Text(
+                        text = subOff,
+                        style = SaltTheme.textStyles.sub
+                    )
+                }
             }
         }
         Spacer(modifier = Modifier.width(SaltTheme.dimens.contentPadding))

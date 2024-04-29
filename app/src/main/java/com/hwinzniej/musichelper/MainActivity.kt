@@ -353,6 +353,7 @@ private fun Pages(
     val lyricist = remember { mutableStateOf(true) }
     val composer = remember { mutableStateOf(true) }
     val arranger = remember { mutableStateOf(true) }
+    val slow = remember { mutableStateOf(false) }
     val sortMethod = remember { mutableIntStateOf(0) }
 
     mainPage.dataStore.data.collectAsState(initial = null).value?.let { preferences ->
@@ -385,6 +386,7 @@ private fun Pages(
         composer.value = preferences[DataStoreConstants.TAG_COMPOSER] ?: true
         arranger.value = preferences[DataStoreConstants.TAG_ARRANGER] ?: true
         sortMethod.intValue = preferences[DataStoreConstants.SORT_METHOD] ?: 0
+        slow.value = preferences[DataStoreConstants.SLOW_MODE] ?: false
         coroutineScope.launch(Dispatchers.Default) {
             delay(248L)
             mainPage.isDataLoaded.value = true
@@ -647,7 +649,8 @@ private fun Pages(
                         composer = composer,
                         arranger = arranger,
                         sortMethod = sortMethod,
-                        dataStore = mainPage.dataStore
+                        dataStore = mainPage.dataStore,
+                        slow = slow
                     )
                 }
 

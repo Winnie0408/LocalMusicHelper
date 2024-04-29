@@ -206,14 +206,14 @@ fun UnlockPageUi(
                     }
                     ItemSwitcher(
                         enabled = umSupportOverWrite && settingsPage.umFileLegal.value,
-                        state = overwriteOutputFile && umSupportOverWrite,
+                        state = overwriteOutputFile && umSupportOverWrite && settingsPage.umFileLegal.value,
                         onChange = {
                             overwriteOutputFile = it
                             unlockPage.overwriteOutputFile.value = it
                         },
                         text = stringResource(id = R.string.overwrite_output_file),
                         sub = if (umSupportOverWrite) stringResource(id = R.string.overwrite_output_file_sub)
-                        else stringResource(id = R.string.current_um_not_support_this_fun) + "\n" +
+                        else if (settingsPage.umFileLegal.value) stringResource(id = R.string.current_um_not_support_this_fun) else "" + "\n" +
                                 stringResource(id = R.string.overwrite_output_file_sub),
                         enableHaptic = enableHaptic.value,
                         hapticStrength = hapticStrength.intValue

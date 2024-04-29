@@ -304,12 +304,12 @@
     <string name="completion">완성</string>
     <string name="choose_need_complete_type">완료할 레이블</string>
     <string name="tag_type">라벨 유형</string>
-    <string name="total_tagname_null_count_in_song_list">라이브러리에는 \'#tagName\' 태그가 비어 있는 #곡의 노래가 있습니다.</string>
-    <string name="no_tagname_null_count_in_song_list">라이브러리에 \'#\' 태그가 비어 있는 노래가 없습니다.</string>
+    <string name="total_tagname_null_count_in_song_list">#location에는 \'#tagName\' 태그가 비어 있는 #곡의 노래가 있습니다.</string>
+    <string name="no_tagname_null_count_in_song_list">#location에 \'#\' 태그가 비어 있는 노래가 없습니다.</string>
     <string name="overwrite_original_album_artist_tag_sub_on">라이브러리에 있는 모든 노래 처리</string>
     <string name="click_ok_to_start">확인 버튼을 클릭하여 완료를 시작합니다.</string>
-    <string name="modify_tagName_success">성공 \"#1\"의 #3를 #2로 수정했습니다.</string>
-    <string name="modify_album_artist_failed">실패 \"#1\"의 앨범 아티스트를 #2로 수정했습니다.</string>
+    <string name="modify_tagName_success">성공 \"#1\"의 #3를 \"#2\"로 수정했습니다.</string>
+    <string name="modify_album_artist_failed">실패 \"#1\"의 앨범 아티스트를 \"#2\"로 수정했습니다.</string>
     <string name="refresh_success">새로 고침 성공</string>
     <string name="overwrite_original_album_artist_tag_sub_off">\"#\"가 비어 있는 곡만 처리합니다</string>
     <string name="completion_log">완료 작업 로그</string>
@@ -337,4 +337,11 @@
     <string name="title_desc">제목 내림차순</string>
     <string name="modify_date_asc">날짜 오름차순</string>
     <string name="modify_date_desc">날짜 내림차순</string>
+    <string name="keep_original_file_sort">원래의 수정된 시간 순서 유지</string>
+    <string name="keep_original_file_sort_sub">초당 파일 1개로 처리 제한</string>
+    <string name="no_song_selected_default_all">선택한 노래 없음, 기본값은 라이브러리</string>
+    <string name="song_library">노래 라이브러리</string>
+    <string name="selected_songs">선택한 노래</string>
+    <string name="click_ok_to_start2">\'덮어쓰기\'를 활성화하고 \'확인\' 버튼을 클릭하여 완료를 시작합니다.</string>
+    <string name="overwrite_original_album_artist_tag_sub_on2">선택한 모든 곡 처리</string>
 </resources>

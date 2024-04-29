@@ -304,12 +304,12 @@
     <string name="completion">补全</string>
     <string name="choose_need_complete_type">要补全的标签</string>
     <string name="tag_type">标签类型</string>
-    <string name="total_tagname_null_count_in_song_list">曲库中共有 # 首歌曲的“#tagName”标签为空。</string>
-    <string name="no_tagname_null_count_in_song_list">曲库中没有“#”标签为空的歌曲。</string>
+    <string name="total_tagname_null_count_in_song_list">#location中共有 # 首歌曲的“#tagName”标签为空。</string>
+    <string name="no_tagname_null_count_in_song_list">#location中没有“#”标签为空的歌曲。</string>
     <string name="overwrite_original_album_artist_tag_sub_on">处理曲库中所有的歌曲</string>
-    <string name="click_ok_to_start">点击“确定”按钮以开始补全。</string>
-    <string name="modify_tagName_success">成功修改《#1》的#3为#2。</string>
-    <string name="modify_album_artist_failed">失败修改《#1》的专辑艺术家为#2。</string>
+    <string name="click_ok_to_start">点击“确定”以开始补全。</string>
+    <string name="modify_tagName_success">成功修改《#1》的#3为「#2」。</string>
+    <string name="modify_album_artist_failed">失败修改《#1》的专辑艺术家为「#2」。</string>
     <string name="refresh_success">刷新成功</string>
     <string name="overwrite_original_album_artist_tag_sub_off">仅处理“#”标签为空的歌曲</string>
     <string name="completion_log">补全操作日志</string>
@@ -337,4 +337,11 @@
     <string name="title_desc">歌名降序</string>
     <string name="modify_date_asc">日期升序</string>
     <string name="modify_date_desc">日期降序</string>
+    <string name="keep_original_file_sort">保持原修改时间顺序</string>
+    <string name="keep_original_file_sort_sub">将处理速度限制为每秒1个文件</string>
+    <string name="no_song_selected_default_all">未选择歌曲，默认使用曲库</string>
+    <string name="song_library">曲库</string>
+    <string name="selected_songs">已选歌曲</string>
+    <string name="click_ok_to_start2">启用“覆盖”并点击“确定”以开始补全。</string>
+    <string name="overwrite_original_album_artist_tag_sub_on2">处理所有选择的歌曲</string>
 </resources>
