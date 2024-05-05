@@ -14,8 +14,8 @@ android {
         minSdk = 26
 //        targetSdk = 28
         targetSdk = 34
-        versionCode = 50
-        versionName = "1.3.5"
+        versionCode = 51
+        versionName = "1.3.6"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -113,7 +113,7 @@ dependencies {
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
 
     //Markdown渲染器
-    implementation("com.github.jeziellago:compose-markdown:0.4.1")
+    implementation("com.github.jeziellago:compose-markdown:0.5.0")
 
     //Google ZXing二维码生成
     implementation("com.google.zxing:core:3.5.3")
