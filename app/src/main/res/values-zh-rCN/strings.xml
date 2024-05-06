@@ -194,7 +194,7 @@
     <string name="original_songlist">#原始歌单</string>
     <string name="type_of_view">查看</string>
     <string name="target_formats">目标格式</string>
-    <string name="using_player">使用的音乐播放器</string>
+    <string name="using_player">目标音乐播放器</string>
     <string name="developing">开发中，敬请期待…</string>
     <string name="select_source_app">选择要使用的来源App</string>
     <string name="search_results">搜索结果</string>
@@ -348,4 +348,12 @@
     <string name="luna_app_qr_code">汽水扫码</string>
     <string name="keep_blank_to_use_developers_cookie">留空以使用开发者提供的Cookie</string>
     <string name="cannot_read_your_own_online_playlist">由于您使用的不是自己的Cookie，故需要手动输入歌单链接或歌单编号。</string>
+    <string name="convert_mode">转换模式</string>
+    <string name="choose_convert_mode">选择转换模式</string>
+    <string name="online_to_local">流媒体 → 本地</string>
+    <string name="local_to_local">本地 → 本地</string>
+    <string name="source_format">来源格式</string>
+    <string name="source_music_player">来源音乐播放器</string>
+    <string name="select_playlist_file_match_to_source">选择#的歌单文件</string>
+    <string name="source_target_same">来源不能与目标相同</string>
 </resources>

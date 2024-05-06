@@ -166,7 +166,9 @@ fun ConvertPageUi(
     var showOriginalSonglist by remember { mutableIntStateOf(1) }
     val originalSonglistPopupMenuState = rememberPopupState()
     var selectedTargetApp by remember { mutableIntStateOf(0) }
+    var selectedSourceLocalApp by remember { mutableIntStateOf(-1) }
     val targetAppPopupMenuState = rememberPopupState()
+    val sourceLocalAppPopupMenuState = rememberPopupState()
     var selectedMultiSourceApp by remember { mutableIntStateOf(-1) }
     var userLoggedIn by remember { mutableStateOf(false) }
     var kugouDeviceId by remember { mutableStateOf(false) }
@@ -174,6 +176,8 @@ fun ConvertPageUi(
     var kugouLoginQrCode by remember { mutableStateOf<Bitmap?>(null) }
     var kugouCurrentIp by remember { mutableStateOf("") }
     val kugouUserRelated = remember { mutableStateMapOf<String, String>() }
+    val convertModePopupMenuState = rememberPopupState()
+    val selectedConvertMode = remember { mutableIntStateOf(1) }
 
     fun init() {
         coroutine.launch {
@@ -199,6 +203,8 @@ fun ConvertPageUi(
             showOriginalSonglist = 1
             selectedTargetApp = 0
             selectedMultiSourceApp = -1
+            selectedSourceLocalApp = -1
+            convertPage.sourcePlaylistFileName.value = ""
         }
     }
 
@@ -1614,184 +1620,19 @@ fun ConvertPageUi(
                                 .verticalScroll(rememberScrollState())
                         ) {
                             RoundedColumn {
-                                ItemTitle(text = stringResource(R.string.source_of_songlist_app))
-                                AnimatedContent(
-                                    targetState = useRootAccess.value && selectedMethod.intValue == 0,
-                                    label = "",
-                                    transitionSpec = {
-                                        fadeIn() togetherWith fadeOut()
-                                    }) {
-                                    ItemPopup(
-                                        state = sourceAppPopupMenuState,
-                                        text = stringResource(R.string.select_source_of_songlist),
-                                        sub = if (it)
-                                            stringResource(R.string.with_root_access)
-                                        else null,
-                                        selectedItem = when (selectedSourceApp.intValue) {
-                                            1 -> stringResource(R.string.source_netease_cloud_music)
-                                            2 -> stringResource(R.string.source_qq_music)
-                                            3 -> stringResource(R.string.source_kugou_music)
-                                            4 -> stringResource(R.string.source_kuwo_music)
-                                            5 -> stringResource(R.string.source_luna_music)
-                                            else -> ""
-                                        },
-                                        popupWidth = 180
-                                    ) {
-                                        PopupMenuItem(
-                                            onClick = {
-                                                MyVibrationEffect(
-                                                    context,
-                                                    enableHaptic.value,
-                                                    hapticStrength.intValue
-                                                ).click()
-                                                selectedSourceApp.intValue = 1
-                                                coroutine.launch {
-                                                    dataStore.edit { settings ->
-                                                        settings[DataStoreConstants.PLAYLIST_SOURCE_PLATFORM] =
-                                                            1
-                                                    }
-                                                }
-                                                sourceAppPopupMenuState.dismiss()
-                                                databaseFileName.value = ""
-                                            },
-                                            selected = selectedSourceApp.intValue == 1,
-                                            text = stringResource(R.string.source_netease_cloud_music),
-                                            iconPainter = painterResource(id = R.drawable.cloudmusic),
-                                            iconColor = SaltTheme.colors.text
-                                        )
-                                        PopupMenuItem(
-                                            onClick = {
-                                                MyVibrationEffect(
-                                                    context,
-                                                    enableHaptic.value,
-                                                    hapticStrength.intValue
-                                                ).click()
-                                                selectedSourceApp.intValue = 2
-                                                coroutine.launch {
-                                                    dataStore.edit { settings ->
-                                                        settings[DataStoreConstants.PLAYLIST_SOURCE_PLATFORM] =
-                                                            2
-                                                    }
-                                                }
-                                                sourceAppPopupMenuState.dismiss()
-                                                databaseFileName.value = ""
-                                            },
-                                            selected = selectedSourceApp.intValue == 2,
-                                            text = stringResource(R.string.source_qq_music),
-                                            iconPainter = painterResource(id = R.drawable.qqmusic),
-                                            iconColor = SaltTheme.colors.text
-                                        )
-
-                                        PopupMenuItem(
-                                            onClick = {
-                                                MyVibrationEffect(
-                                                    context,
-                                                    enableHaptic.value,
-                                                    hapticStrength.intValue
-                                                ).click()
-                                                selectedSourceApp.intValue = 3
-                                                coroutine.launch {
-                                                    dataStore.edit { settings ->
-                                                        settings[DataStoreConstants.PLAYLIST_SOURCE_PLATFORM] =
-                                                            3
-                                                    }
-                                                }
-                                                sourceAppPopupMenuState.dismiss()
-                                                databaseFileName.value = ""
-                                            },
-                                            selected = selectedSourceApp.intValue == 3,
-                                            text = stringResource(R.string.source_kugou_music),
-                                            iconPainter = painterResource(id = R.drawable.kugou),
-                                            iconColor = SaltTheme.colors.text,
-                                            iconPaddingValues = PaddingValues(all = 1.5.dp)
-                                        )
-                                        PopupMenuItem(
-                                            onClick = {
-                                                MyVibrationEffect(
-                                                    context,
-                                                    enableHaptic.value,
-                                                    hapticStrength.intValue
-                                                ).click()
-                                                selectedSourceApp.intValue = 4
-                                                coroutine.launch {
-                                                    dataStore.edit { settings ->
-                                                        settings[DataStoreConstants.PLAYLIST_SOURCE_PLATFORM] =
-                                                            4
-                                                    }
-                                                }
-                                                sourceAppPopupMenuState.dismiss()
-                                                databaseFileName.value = ""
-                                            },
-                                            selected = selectedSourceApp.intValue == 4,
-                                            text = stringResource(R.string.source_kuwo_music),
-                                            iconPainter = painterResource(id = R.drawable.kuwo),
-                                            iconColor = SaltTheme.colors.text,
-                                            iconPaddingValues = PaddingValues(all = 1.5.dp)
-                                        )
-                                        PopupMenuItem(
-                                            onClick = {
-                                                MyVibrationEffect(
-                                                    context,
-                                                    enableHaptic.value,
-                                                    hapticStrength.intValue
-                                                ).click()
-                                                selectedSourceApp.intValue = 5
-                                                coroutine.launch {
-                                                    dataStore.edit { settings ->
-                                                        settings[DataStoreConstants.PLAYLIST_SOURCE_PLATFORM] =
-                                                            5
-                                                    }
-                                                }
-                                                sourceAppPopupMenuState.dismiss()
-                                                databaseFileName.value = ""
-                                                selectedMethod.intValue = 1
-                                                coroutine.launch {
-                                                    dataStore.edit { settings ->
-                                                        settings[DataStoreConstants.GET_PLAYLIST_METHOD] =
-                                                            1
-                                                    }
-                                                }
-                                            },
-                                            selected = selectedSourceApp.intValue == 5,
-                                            text = stringResource(R.string.source_luna_music),
-                                            iconPainter = painterResource(id = R.drawable.luna_music),
-                                            iconColor = SaltTheme.colors.text,
-                                            iconPaddingValues = PaddingValues(all = 1.5.dp)
-                                        )
-                                    }
-                                }
+                                ItemTitle(text = stringResource(R.string.convert_mode))
                                 ItemPopup(
-                                    state = methodPopupMenuState,
-                                    text = stringResource(R.string.way_to_get_song_list),
-                                    selectedItem = when (selectedMethod.intValue) {
-                                        0 -> stringResource(R.string.database)
-                                        1 -> stringResource(R.string.online)
+                                    state = convertModePopupMenuState,
+                                    text = stringResource(R.string.choose_convert_mode),
+                                    sub = null,
+                                    selectedItem = when (selectedConvertMode.intValue) {
+                                        1 -> stringResource(R.string.online_to_local)
+                                        2 -> stringResource(R.string.local_to_local)
                                         else -> ""
                                     },
-                                    popupWidth = 165,
+                                    popupWidth = 170,
+//                                    rightSubWeight = 1f
                                 ) {
-                                    if (selectedSourceApp.intValue != 5)
-                                        PopupMenuItem(
-                                            onClick = {
-                                                MyVibrationEffect(
-                                                    context,
-                                                    enableHaptic.value,
-                                                    hapticStrength.intValue
-                                                ).click()
-                                                selectedMethod.intValue = 0
-                                                coroutine.launch {
-                                                    dataStore.edit { settings ->
-                                                        settings[DataStoreConstants.GET_PLAYLIST_METHOD] =
-                                                            0
-                                                    }
-                                                }
-                                                methodPopupMenuState.dismiss()
-                                            },
-                                            selected = selectedMethod.intValue == 0,
-                                            text = stringResource(R.string.database),
-                                            iconPainter = painterResource(id = R.drawable.database),
-                                            iconColor = SaltTheme.colors.text
-                                        )
                                     PopupMenuItem(
                                         onClick = {
                                             MyVibrationEffect(
@@ -1799,112 +1640,395 @@ fun ConvertPageUi(
                                                 enableHaptic.value,
                                                 hapticStrength.intValue
                                             ).click()
-                                            selectedMethod.intValue = 1
-                                            coroutine.launch {
-                                                dataStore.edit { settings ->
-                                                    settings[DataStoreConstants.GET_PLAYLIST_METHOD] =
-                                                        1
+                                            selectedConvertMode.intValue = 1
+                                            convertModePopupMenuState.dismiss()
+                                            init()
+                                        },
+                                        selected = selectedConvertMode.intValue == 1,
+                                        text = stringResource(R.string.online_to_local),
+                                    )
+                                    PopupMenuItem(
+                                        onClick = {
+                                            MyVibrationEffect(
+                                                context,
+                                                enableHaptic.value,
+                                                hapticStrength.intValue
+                                            ).click()
+                                            selectedConvertMode.intValue = 2
+                                            convertModePopupMenuState.dismiss()
+                                            init()
+                                        },
+                                        selected = selectedConvertMode.intValue == 2,
+                                        text = stringResource(R.string.local_to_local),
+                                    )
+                                }
+                            }
+                            AnimatedContent(
+                                targetState = selectedConvertMode.intValue,
+                                label = "",
+                                transitionSpec = {
+                                    fadeIn() togetherWith fadeOut()
+                                }) { it1 ->
+                                if (it1 == 1) {
+                                    Column {
+                                        RoundedColumn {
+                                            ItemTitle(text = stringResource(R.string.source_of_songlist_app))
+                                            AnimatedContent(
+                                                targetState = useRootAccess.value && selectedMethod.intValue == 0,
+                                                label = "",
+                                                transitionSpec = {
+                                                    fadeIn() togetherWith fadeOut()
+                                                }) { it ->
+                                                ItemPopup(
+                                                    state = sourceAppPopupMenuState,
+                                                    text = stringResource(R.string.select_source_of_songlist),
+                                                    sub = if (it)
+                                                        stringResource(R.string.with_root_access)
+                                                    else null,
+                                                    selectedItem = when (selectedSourceApp.intValue) {
+                                                        1 -> stringResource(R.string.source_netease_cloud_music)
+                                                        2 -> stringResource(R.string.source_qq_music)
+                                                        3 -> stringResource(R.string.source_kugou_music)
+                                                        4 -> stringResource(R.string.source_kuwo_music)
+                                                        5 -> stringResource(R.string.source_luna_music)
+                                                        else -> ""
+                                                    },
+                                                    popupWidth = 180
+                                                ) {
+                                                    PopupMenuItem(
+                                                        onClick = {
+                                                            MyVibrationEffect(
+                                                                context,
+                                                                enableHaptic.value,
+                                                                hapticStrength.intValue
+                                                            ).click()
+                                                            selectedSourceApp.intValue = 1
+                                                            coroutine.launch {
+                                                                dataStore.edit { settings ->
+                                                                    settings[DataStoreConstants.PLAYLIST_SOURCE_PLATFORM] =
+                                                                        1
+                                                                }
+                                                            }
+                                                            sourceAppPopupMenuState.dismiss()
+                                                            databaseFileName.value = ""
+                                                        },
+                                                        selected = selectedSourceApp.intValue == 1,
+                                                        text = stringResource(R.string.source_netease_cloud_music),
+                                                        iconPainter = painterResource(id = R.drawable.cloudmusic),
+                                                        iconColor = SaltTheme.colors.text
+                                                    )
+                                                    PopupMenuItem(
+                                                        onClick = {
+                                                            MyVibrationEffect(
+                                                                context,
+                                                                enableHaptic.value,
+                                                                hapticStrength.intValue
+                                                            ).click()
+                                                            selectedSourceApp.intValue = 2
+                                                            coroutine.launch {
+                                                                dataStore.edit { settings ->
+                                                                    settings[DataStoreConstants.PLAYLIST_SOURCE_PLATFORM] =
+                                                                        2
+                                                                }
+                                                            }
+                                                            sourceAppPopupMenuState.dismiss()
+                                                            databaseFileName.value = ""
+                                                        },
+                                                        selected = selectedSourceApp.intValue == 2,
+                                                        text = stringResource(R.string.source_qq_music),
+                                                        iconPainter = painterResource(id = R.drawable.qqmusic),
+                                                        iconColor = SaltTheme.colors.text
+                                                    )
+
+                                                    PopupMenuItem(
+                                                        onClick = {
+                                                            MyVibrationEffect(
+                                                                context,
+                                                                enableHaptic.value,
+                                                                hapticStrength.intValue
+                                                            ).click()
+                                                            selectedSourceApp.intValue = 3
+                                                            coroutine.launch {
+                                                                dataStore.edit { settings ->
+                                                                    settings[DataStoreConstants.PLAYLIST_SOURCE_PLATFORM] =
+                                                                        3
+                                                                }
+                                                            }
+                                                            sourceAppPopupMenuState.dismiss()
+                                                            databaseFileName.value = ""
+                                                        },
+                                                        selected = selectedSourceApp.intValue == 3,
+                                                        text = stringResource(R.string.source_kugou_music),
+                                                        iconPainter = painterResource(id = R.drawable.kugou),
+                                                        iconColor = SaltTheme.colors.text,
+                                                        iconPaddingValues = PaddingValues(all = 1.5.dp)
+                                                    )
+                                                    PopupMenuItem(
+                                                        onClick = {
+                                                            MyVibrationEffect(
+                                                                context,
+                                                                enableHaptic.value,
+                                                                hapticStrength.intValue
+                                                            ).click()
+                                                            selectedSourceApp.intValue = 4
+                                                            coroutine.launch {
+                                                                dataStore.edit { settings ->
+                                                                    settings[DataStoreConstants.PLAYLIST_SOURCE_PLATFORM] =
+                                                                        4
+                                                                }
+                                                            }
+                                                            sourceAppPopupMenuState.dismiss()
+                                                            databaseFileName.value = ""
+                                                        },
+                                                        selected = selectedSourceApp.intValue == 4,
+                                                        text = stringResource(R.string.source_kuwo_music),
+                                                        iconPainter = painterResource(id = R.drawable.kuwo),
+                                                        iconColor = SaltTheme.colors.text,
+                                                        iconPaddingValues = PaddingValues(all = 1.5.dp)
+                                                    )
+                                                    PopupMenuItem(
+                                                        onClick = {
+                                                            MyVibrationEffect(
+                                                                context,
+                                                                enableHaptic.value,
+                                                                hapticStrength.intValue
+                                                            ).click()
+                                                            selectedSourceApp.intValue = 5
+                                                            coroutine.launch {
+                                                                dataStore.edit { settings ->
+                                                                    settings[DataStoreConstants.PLAYLIST_SOURCE_PLATFORM] =
+                                                                        5
+                                                                }
+                                                            }
+                                                            sourceAppPopupMenuState.dismiss()
+                                                            databaseFileName.value = ""
+                                                            selectedMethod.intValue = 1
+                                                            coroutine.launch {
+                                                                dataStore.edit { settings ->
+                                                                    settings[DataStoreConstants.GET_PLAYLIST_METHOD] =
+                                                                        1
+                                                                }
+                                                            }
+                                                        },
+                                                        selected = selectedSourceApp.intValue == 5,
+                                                        text = stringResource(R.string.source_luna_music),
+                                                        iconPainter = painterResource(id = R.drawable.luna_music),
+                                                        iconColor = SaltTheme.colors.text,
+                                                        iconPaddingValues = PaddingValues(all = 1.5.dp)
+                                                    )
                                                 }
                                             }
-                                            methodPopupMenuState.dismiss()
-                                        },
-                                        selected = selectedMethod.intValue == 1,
-                                        text = stringResource(R.string.online),
-                                        iconPainter = painterResource(id = R.drawable.network),
-                                        iconColor = SaltTheme.colors.text
-                                    )
-                                }
-                                AnimatedVisibility(
-                                    visible = (selectedSourceApp.intValue != 0) && !useRootAccess.value && (selectedMethod.intValue == 0)
-                                ) {
-                                    Item(
-                                        onClick = { convertPage.selectDatabaseFile() },
-                                        text = stringResource(R.string.select_database_file_match_to_source).replace(
-                                            "#",
-                                            when (selectedSourceApp.intValue) {
-                                                1 -> stringResource(R.string.source_netease_cloud_music)
-                                                2 -> stringResource(R.string.source_qq_music)
-                                                3 -> stringResource(R.string.source_kugou_music)
-                                                4 -> stringResource(R.string.source_kuwo_music)
-                                                5 -> stringResource(R.string.source_luna_music)
-                                                else -> ""
+                                            ItemPopup(
+                                                state = methodPopupMenuState,
+                                                text = stringResource(R.string.way_to_get_song_list),
+                                                selectedItem = when (selectedMethod.intValue) {
+                                                    0 -> stringResource(R.string.database)
+                                                    1 -> stringResource(R.string.online)
+                                                    else -> ""
+                                                },
+                                                popupWidth = 165,
+                                            ) {
+                                                if (selectedSourceApp.intValue != 5)
+                                                    PopupMenuItem(
+                                                        onClick = {
+                                                            MyVibrationEffect(
+                                                                context,
+                                                                enableHaptic.value,
+                                                                hapticStrength.intValue
+                                                            ).click()
+                                                            selectedMethod.intValue = 0
+                                                            coroutine.launch {
+                                                                dataStore.edit { settings ->
+                                                                    settings[DataStoreConstants.GET_PLAYLIST_METHOD] =
+                                                                        0
+                                                                }
+                                                            }
+                                                            methodPopupMenuState.dismiss()
+                                                        },
+                                                        selected = selectedMethod.intValue == 0,
+                                                        text = stringResource(R.string.database),
+                                                        iconPainter = painterResource(id = R.drawable.database),
+                                                        iconColor = SaltTheme.colors.text
+                                                    )
+                                                PopupMenuItem(
+                                                    onClick = {
+                                                        MyVibrationEffect(
+                                                            context,
+                                                            enableHaptic.value,
+                                                            hapticStrength.intValue
+                                                        ).click()
+                                                        selectedMethod.intValue = 1
+                                                        coroutine.launch {
+                                                            dataStore.edit { settings ->
+                                                                settings[DataStoreConstants.GET_PLAYLIST_METHOD] =
+                                                                    1
+                                                            }
+                                                        }
+                                                        methodPopupMenuState.dismiss()
+                                                    },
+                                                    selected = selectedMethod.intValue == 1,
+                                                    text = stringResource(R.string.online),
+                                                    iconPainter = painterResource(id = R.drawable.network),
+                                                    iconColor = SaltTheme.colors.text
+                                                )
                                             }
-                                        )
-//                                        if (selectedSourceApp.intValue == 0) {
-//                                            stringResource(R.string.please_select_source_app)
-//                                        } else {
-//                                            if (useRootAccess.value)
-//                                                stringResource(R.string.get_file_with_root).replace(
-//                                                    "#",
-//                                                    sourceApp.value
-//                                                )
-//                                            else
-//                                                stringResource(R.string.select_database_file_match_to_source).replace(
-//                                                    "#",
-//                                                    sourceApp.value
-//                                                )
-//                                        },
-//                                        sub = if (useRootAccess.value && (selectedSourceApp.intValue != 0)) stringResource(
-//                                            R.string.with_root_access
-//                                        ) else null,
-                                    )
-                                }
-                                AnimatedVisibility(
-                                    visible = (databaseFileName.value != "") && !useRootAccess.value
-                                ) {
-                                    ItemValue(
-                                        text = stringResource(R.string.you_have_selected),
-                                        rightSub = databaseFileName.value
-                                    )
-                                }
-                            }
+                                            AnimatedVisibility(
+                                                visible = (selectedSourceApp.intValue != 0) && !useRootAccess.value && (selectedMethod.intValue == 0)
+                                            ) {
+                                                Item(
+                                                    onClick = { convertPage.selectDatabaseFile() },
+                                                    text = stringResource(R.string.select_database_file_match_to_source).replace(
+                                                        "#",
+                                                        when (selectedSourceApp.intValue) {
+                                                            1 -> stringResource(R.string.source_netease_cloud_music)
+                                                            2 -> stringResource(R.string.source_qq_music)
+                                                            3 -> stringResource(R.string.source_kugou_music)
+                                                            4 -> stringResource(R.string.source_kuwo_music)
+                                                            5 -> stringResource(R.string.source_luna_music)
+                                                            else -> ""
+                                                        }
+                                                    )
+                                                )
+                                            }
+                                            AnimatedVisibility(
+                                                visible = (databaseFileName.value != "") && !useRootAccess.value
+                                            ) {
+                                                ItemValue(
+                                                    text = stringResource(R.string.you_have_selected),
+                                                    rightSub = databaseFileName.value
+                                                )
+                                            }
+                                        }
 
-                            sourceApp.value = when (selectedSourceApp.intValue) {
-                                1 -> stringResource(R.string.source_netease_cloud_music)
-                                2 -> stringResource(R.string.source_qq_music)
-                                3 -> stringResource(R.string.source_kugou_music)
-                                4 -> stringResource(R.string.source_kuwo_music)
-                                5 -> stringResource(R.string.source_luna_music)
-                                else -> ""
-                            }
-
-                            RoundedColumn {
-                                ItemTitle(text = stringResource(R.string.import_result_file))
-                                ItemSwitcher(
-                                    state = useCustomResultFile.value,
-                                    onChange = {
-                                        useCustomResultFile.value = it
-                                    },
-                                    text = stringResource(R.string.use_custom_result_file),
-                                    sub = stringResource(R.string.use_other_result_file).replace(
-                                        "#",
-                                        stringResource(id = R.string.app_name)
-                                    ),
-                                    enableHaptic = enableHaptic.value,
-                                    hapticStrength = hapticStrength.intValue
-                                )
-                                AnimatedVisibility(
-                                    visible = useCustomResultFile.value
-                                ) {
-                                    Column(
-                                        modifier = Modifier
-                                            .weight(1f)
-                                            .fillMaxSize()
-                                            .background(color = SaltTheme.colors.subBackground)
-                                    ) {
+                                        RoundedColumn {
+                                            ItemTitle(text = stringResource(R.string.import_result_file))
+                                            ItemSwitcher(
+                                                state = useCustomResultFile.value,
+                                                onChange = {
+                                                    useCustomResultFile.value = it
+                                                },
+                                                text = stringResource(R.string.use_custom_result_file),
+                                                sub = stringResource(R.string.use_other_result_file).replace(
+                                                    "#",
+                                                    stringResource(id = R.string.app_name)
+                                                ),
+                                                enableHaptic = enableHaptic.value,
+                                                hapticStrength = hapticStrength.intValue
+                                            )
+                                            AnimatedVisibility(
+                                                visible = useCustomResultFile.value
+                                            ) {
+                                                Column(
+                                                    modifier = Modifier
+                                                        .weight(1f)
+                                                        .fillMaxSize()
+                                                        .background(color = SaltTheme.colors.subBackground)
+                                                ) {
+                                                    Item(
+                                                        onClick = { convertPage.selectResultFile() },
+                                                        text = stringResource(R.string.select_result_file_item_title).replace(
+                                                            "#",
+                                                            stringResource(id = R.string.app_name)
+                                                        ),
+                                                    )
+                                                    AnimatedVisibility(
+                                                        visible = customResultFileName.value != ""
+                                                    ) {
+                                                        ItemValue(
+                                                            text = stringResource(R.string.you_have_selected),
+                                                            rightSub = customResultFileName.value
+                                                        )
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                } else {
+                                    RoundedColumn {
+                                        ItemTitle(text = stringResource(R.string.source_format))
+                                        ItemPopup(
+                                            state = sourceLocalAppPopupMenuState,
+                                            text = stringResource(R.string.source_music_player),
+                                            selectedItem = when (selectedSourceLocalApp) {
+                                                0 -> "Salt Player"
+                                                1 -> "APlayer"
+                                                2 -> "Poweramp"
+                                                else -> ""
+                                            },
+                                            popupWidth = 160
+                                        ) {
+                                            PopupMenuItem(
+                                                onClick = {
+                                                    MyVibrationEffect(
+                                                        context,
+                                                        enableHaptic.value,
+                                                        hapticStrength.intValue
+                                                    ).click()
+                                                    selectedSourceLocalApp = 0
+                                                    sourceLocalAppPopupMenuState.dismiss()
+                                                },
+                                                selected = selectedSourceLocalApp == 0,
+                                                text = "Salt Player",
+                                                iconPainter = painterResource(id = R.drawable.saltplayer),
+                                                iconColor = SaltTheme.colors.text,
+//                                        iconPaddingValues = PaddingValues(
+//                                            start = 1.5.dp,
+//                                            end = 1.5.dp,
+//                                            top = 1.5.dp,
+//                                            bottom = 1.5.dp
+//                                        )
+                                            )
+                                            PopupMenuItem(
+                                                onClick = {
+                                                    MyVibrationEffect(
+                                                        context,
+                                                        enableHaptic.value,
+                                                        hapticStrength.intValue
+                                                    ).click()
+                                                    selectedSourceLocalApp = 1
+                                                    sourceLocalAppPopupMenuState.dismiss()
+                                                },
+                                                selected = selectedSourceLocalApp == 1,
+                                                text = "APlayer",
+                                                iconPainter = painterResource(id = R.drawable.aplayer),
+                                                iconColor = SaltTheme.colors.text,
+                                                iconPaddingValues = PaddingValues(all = 1.dp)
+                                            )
+                                            PopupMenuItem(
+                                                onClick = {
+                                                    MyVibrationEffect(
+                                                        context,
+                                                        enableHaptic.value,
+                                                        hapticStrength.intValue
+                                                    ).click()
+                                                    selectedSourceLocalApp = 2
+                                                    sourceLocalAppPopupMenuState.dismiss()
+                                                },
+                                                selected = selectedSourceLocalApp == 2,
+                                                text = "Poweramp",
+                                                iconPainter = painterResource(id = R.drawable.poweramp),
+                                                iconColor = SaltTheme.colors.text,
+                                                iconPaddingValues = PaddingValues(all = 1.dp)
+                                            )
+                                        }
                                         Item(
-                                            onClick = { convertPage.selectResultFile() },
-                                            text = stringResource(R.string.select_result_file_item_title).replace(
+                                            onClick = { convertPage.selectPlaylistFile() },
+                                            text = stringResource(R.string.select_playlist_file_match_to_source).replace(
                                                 "#",
-                                                stringResource(id = R.string.app_name)
-                                            ),
+                                                when (selectedSourceLocalApp) {
+                                                    0 -> "Salt Player"
+                                                    1 -> "APlayer"
+                                                    2 -> "Poweramp"
+                                                    else -> ""
+                                                }
+                                            )
                                         )
                                         AnimatedVisibility(
-                                            visible = customResultFileName.value != ""
+                                            visible = (convertPage.sourcePlaylistFileName.value.isNotBlank())
                                         ) {
                                             ItemValue(
                                                 text = stringResource(R.string.you_have_selected),
-                                                rightSub = customResultFileName.value
+                                                rightSub = convertPage.sourcePlaylistFileName.value
                                             )
                                         }
                                     }
@@ -1989,8 +2113,25 @@ fun ConvertPageUi(
                                 ItemContainer {
                                     TextButton(
                                         onClick = {
-                                            selectedMultiSourceApp = -1
-                                            convertPage.requestPermission()
+                                            if (selectedConvertMode.intValue == 1) {
+                                                selectedMultiSourceApp = -1
+                                                convertPage.requestPermission()
+                                            } else {
+                                                if (selectedSourceLocalApp == selectedTargetApp) {
+                                                    Toast.makeText(
+                                                        context,
+                                                        context.getString(R.string.source_target_same),
+                                                        Toast.LENGTH_SHORT
+                                                    ).show()
+                                                } else {
+                                                    showDialogProgressBar.value = true
+                                                    convertPage.convertLocalPlaylist(
+                                                        sourceApp = selectedSourceLocalApp,
+                                                        targetApp = selectedTargetApp
+                                                    )
+                                                    showDialogProgressBar.value = true
+                                                }
+                                            }
                                         },
                                         text = stringResource(R.string.next_step_text),
                                         enabled = !it,

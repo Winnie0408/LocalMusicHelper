@@ -194,7 +194,7 @@
     <string name="original_songlist">#의 오리지널</string>
     <string name="type_of_view">보기</string>
     <string name="target_formats">대상 형식</string>
-    <string name="using_player">사용 중인 음악 플레이어</string>
+    <string name="using_player">타겟 음악 플레이어</string>
     <string name="developing">개발 중이니 계속 지켜봐 주세요…</string>
     <string name="select_source_app">사용할 소스 앱을 선택합니다</string>
     <string name="search_results">검색 결과</string>
@@ -348,4 +348,12 @@
     <string name="luna_app_qr_code">Luna QR코드</string>
     <string name="keep_blank_to_use_developers_cookie">개발자가 제공한 쿠키를 사용하려면 비워 두세요</string>
     <string name="cannot_read_your_own_online_playlist">자체 쿠키를 사용하지 않으므로 노래 목록 링크 또는 노래 목록 번호를 수동으로 입력해야 합니다.</string>
+    <string name="convert_mode">변환 모드</string>
+    <string name="choose_convert_mode">변환 모드 선택</string>
+    <string name="online_to_local">온라인 → 로컬</string>
+    <string name="local_to_local">로컬 → 로컬</string>
+    <string name="source_format">소스 형식</string>
+    <string name="source_music_player">소스 음악 플레이어</string>
+    <string name="select_playlist_file_match_to_source">#의 노래 목록 파일 선택</string>
+    <string name="source_target_same">소스는 대상과 동일할 수 없습니다.소스는 대상과 동일할 수 없습니다</string>
 </resources>

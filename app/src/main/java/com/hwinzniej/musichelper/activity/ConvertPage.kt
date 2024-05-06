@@ -65,6 +65,7 @@ class ConvertPage(
     private val lifecycleOwner: LifecycleOwner,
     private val openMusicPlatformSqlFileLauncher: ActivityResultLauncher<Array<String>>,
     private val openResultSqlFileLauncher: ActivityResultLauncher<Array<String>>,
+    private val openPlaylistFileLauncher: ActivityResultLauncher<Array<String>>,
     val db: MusicDatabase,
     componentActivity: ComponentActivity,
     val encryptServer: MutableState<String>,
@@ -74,6 +75,7 @@ class ConvertPage(
     var selectedSourceApp = mutableIntStateOf(0)
     var useCustomResultFile = mutableStateOf(false)
     var customResultFileName = mutableStateOf("")
+    var sourcePlaylistFileName = mutableStateOf("")
     private var selectedFileName = mutableStateOf("")
     var showLoadingProgressBar = mutableStateOf(false)
     var showErrorDialog = mutableStateOf(false)
@@ -81,6 +83,7 @@ class ConvertPage(
     var errorDialogContent = mutableStateOf("")
     var databaseFilePath = mutableStateOf("")
     private var resultFilePath = ""
+    private var sourcePlaylistFilePath = ""
     private var sourceApp = SourceApp()
     val loadingProgressSema = Semaphore(2)
     var currentPage = mutableIntStateOf(0)
@@ -109,6 +112,8 @@ class ConvertPage(
     var showSongNumMismatchDialog = mutableStateOf(false)
     var showCustomPlaylistDialog = mutableStateOf(false)
     var customPlaylistInput = mutableStateOf("")
+    val HWinZnieJLunaMusicCookie =
+        mutableStateOf("")
 
     /**
      * 请求存储权限
@@ -214,6 +219,18 @@ class ConvertPage(
         }
     }
 
+    fun selectPlaylistFile() {
+        try {
+            openPlaylistFileLauncher.launch(arrayOf("*/*"))
+        } catch (_: Exception) {
+            Toast.makeText(
+                context,
+                context.getString(R.string.unable_start_documentsui),
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+    }
+
     fun handleUri(uri: Uri?, code: Int) {
         if (uri == null) {
             return
@@ -232,6 +249,12 @@ class ConvertPage(
             lifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
                 delay(200L)  //播放动画
                 customResultFileName.value = selectedFileName.value
+            }
+        } else if (code == 2) {
+            sourcePlaylistFilePath = Tools().uriToAbsolutePath(uri)
+            lifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
+                delay(200L)  //播放动画
+                sourcePlaylistFileName.value = selectedFileName.value
             }
         }
     }
@@ -3151,6 +3174,50 @@ class ConvertPage(
             delay(1250L)
         }
         return result
+    }
+
+    fun convertLocalPlaylist(
+        sourceApp: Int,
+        targetApp: Int,
+    ): Boolean {
+        when (sourceApp) {
+            0 -> {
+                when (targetApp) {
+                    1 -> {
+                        //APlayer
+                    }
+
+                    2 -> {
+                        //Poweramp
+                    }
+                }
+            }
+
+            1 -> {
+                when (targetApp) {
+                    0 -> {
+                        //Salt Player
+                    }
+
+                    2 -> {
+                        //Poweramp
+                    }
+                }
+            }
+
+            2 -> {
+                when (targetApp) {
+                    0 -> {
+                        //Salt Player
+                    }
+
+                    1 -> {
+                        //APlayer
+                    }
+                }
+            }
+        }
+        return false
     }
 }
 

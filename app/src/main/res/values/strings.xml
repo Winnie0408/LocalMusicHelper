@@ -197,7 +197,7 @@
     <string name="original_songlist"># original</string>
     <string name="type_of_view">View</string>
     <string name="target_formats">Target formats</string>
-    <string name="using_player">Music player in use</string>
+    <string name="using_player">Target music player</string>
     <string name="developing">In development, stay tuned…</string>
     <string name="select_source_app">Select the source app to be used</string>
     <string name="search_results">Search results</string>
@@ -354,4 +354,12 @@
     <string name="luna_app_qr_code">Luna QR code</string>
     <string name="keep_blank_to_use_developers_cookie">Leave blank to use developer-provided cookies</string>
     <string name="cannot_read_your_own_online_playlist">Since you are not using your own cookies, you will need to manually enter the song list link or song list number.</string>
+    <string name="convert_mode">Convert mode</string>
+    <string name="choose_convert_mode">Select convert mode</string>
+    <string name="online_to_local">Online → Local</string>
+    <string name="local_to_local">Local → Local</string>
+    <string name="source_format">Source formats</string>
+    <string name="source_music_player">Source music player</string>
+    <string name="select_playlist_file_match_to_source">Select the playlist file of #</string>
+    <string name="source_target_same">Source cannot be the same as target</string>
 </resources>
