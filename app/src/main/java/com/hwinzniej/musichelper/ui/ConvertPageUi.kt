@@ -781,6 +781,7 @@ fun ConvertPageUi(
                         2 -> CookieManager.getInstance().getCookie("y.qq.com")
                         3 -> ""
                         4 -> CookieManager.getInstance().getCookie("kuwo.cn")
+                        5 -> ""
                         else -> ""
                     }
 
@@ -800,6 +801,7 @@ fun ConvertPageUi(
 
                         3 -> userLoggedIn
                         4 -> convertPage.cookie.value.contains("\\bHm_Iuvt.*=\\w+".toRegex())
+                        5 -> false
                         else -> false
                     }
 
@@ -846,6 +848,13 @@ fun ConvertPageUi(
 
                         3 -> userLoggedIn
                         4 -> userInput.contains("\\bHm_Iuvt.*=\\w+".toRegex())
+                        5 -> {
+                            if (userInput.isBlank())
+                                true
+                            else
+                                userInput.contains("\\bsessionid(_ss)?=\\w+".toRegex())
+                        }
+
                         else -> false
                     }
 
@@ -875,6 +884,7 @@ fun ConvertPageUi(
                     2 -> stringResource(R.string.source_qq_music)
                     3 -> stringResource(R.string.source_kugou_music)
                     4 -> stringResource(R.string.source_kuwo_music)
+                    5 -> stringResource(R.string.source_luna_music)
                     else -> ""
                 }
             ),
@@ -913,52 +923,53 @@ fun ConvertPageUi(
                             },
                             popupWidth = 150
                         ) {
-                            PopupMenuItem(
-                                onClick = {
-                                    MyVibrationEffect(
-                                        context,
-                                        enableHaptic.value,
-                                        hapticStrength.intValue
-                                    ).click()
-                                    webViewState.value?.onResume()
-                                    webViewState.value?.resumeTimers()
-                                    userLoggedIn = false
-                                    convertPage.cookie.value = ""
-                                    selectedLoginMethod.intValue = 0
-                                    loginMethodPopupState.dismiss()
-                                    showDialogProgressBar.value = true
-                                    if (selectedSourceApp.intValue == 3) {
-                                        coroutine.launch(Dispatchers.IO) {
-                                            kugouLoginQrCode = null
-                                            convertPage.stopGetLoginStatus()
-                                            kugouDeviceId = false
-                                            kugouDeviceRelated.clear()
-                                            kugouUserRelated.clear()
-                                            kugouDeviceId =
-                                                convertPage.kugouActiveDevice(currentIp = kugouCurrentIp)
-                                        }
-                                    }
-                                    if (selectedSourceApp.intValue == 4) {
-                                        Toast.makeText(
+                            if (selectedSourceApp.intValue != 5)
+                                PopupMenuItem(
+                                    onClick = {
+                                        MyVibrationEffect(
                                             context,
-                                            context.getString(R.string.kuwo_no_login_click_ok_button),
-                                            Toast.LENGTH_LONG
-                                        ).show()
-                                    }
-                                },
-                                selected = selectedLoginMethod.intValue == 0,
-                                text = if (selectedSourceApp.intValue != 3)
-                                    stringResource(R.string.web_login)
-                                else
-                                    stringResource(R.string.kugou_app_qr_code),
-                                iconPainter =
-                                if (selectedSourceApp.intValue != 3)
-                                    painterResource(id = R.drawable.web_page)
-                                else
-                                    painterResource(id = R.drawable.kugou),
-                                iconColor = SaltTheme.colors.text,
-                                iconPaddingValues = PaddingValues(all = 1.dp)
-                            )
+                                            enableHaptic.value,
+                                            hapticStrength.intValue
+                                        ).click()
+                                        webViewState.value?.onResume()
+                                        webViewState.value?.resumeTimers()
+                                        userLoggedIn = false
+                                        convertPage.cookie.value = ""
+                                        selectedLoginMethod.intValue = 0
+                                        loginMethodPopupState.dismiss()
+                                        showDialogProgressBar.value = true
+                                        if (selectedSourceApp.intValue == 3) {
+                                            coroutine.launch(Dispatchers.IO) {
+                                                kugouLoginQrCode = null
+                                                convertPage.stopGetLoginStatus()
+                                                kugouDeviceId = false
+                                                kugouDeviceRelated.clear()
+                                                kugouUserRelated.clear()
+                                                kugouDeviceId =
+                                                    convertPage.kugouActiveDevice(currentIp = kugouCurrentIp)
+                                            }
+                                        }
+                                        if (selectedSourceApp.intValue == 4) {
+                                            Toast.makeText(
+                                                context,
+                                                context.getString(R.string.kuwo_no_login_click_ok_button),
+                                                Toast.LENGTH_LONG
+                                            ).show()
+                                        }
+                                    },
+                                    selected = selectedLoginMethod.intValue == 0,
+                                    text = if (selectedSourceApp.intValue != 3)
+                                        stringResource(R.string.web_login)
+                                    else
+                                        stringResource(R.string.kugou_app_qr_code),
+                                    iconPainter =
+                                    if (selectedSourceApp.intValue != 3)
+                                        painterResource(id = R.drawable.web_page)
+                                    else
+                                        painterResource(id = R.drawable.kugou),
+                                    iconColor = SaltTheme.colors.text,
+                                    iconPaddingValues = PaddingValues(all = 1.dp)
+                                )
                             PopupMenuItem(
                                 onClick = {
                                     MyVibrationEffect(
@@ -980,6 +991,13 @@ fun ConvertPageUi(
                                             kugouDeviceId =
                                                 convertPage.kugouActiveDevice(currentIp = kugouCurrentIp)
                                         }
+                                    }
+                                    if (selectedSourceApp.intValue == 5) {
+                                        Toast.makeText(
+                                            context,
+                                            context.getString(R.string.keep_blank_to_use_developers_cookie),
+                                            Toast.LENGTH_LONG
+                                        ).show()
                                     }
                                 },
                                 selected = selectedLoginMethod.intValue == 1,
@@ -1140,6 +1158,8 @@ fun ConvertPageUi(
                                                         3 -> {}
 
                                                         4 -> {}
+
+                                                        5 -> {}
                                                     }
 //                                                view.scrollTo(800, 950)
                                                     showDialogProgressBar.value = false
@@ -1163,6 +1183,7 @@ fun ConvertPageUi(
                                             2 -> webView.loadUrl("https://y.qq.com/n/ryqq/profile")
                                             3 -> webView.loadUrl("about:blank")
                                             4 -> webView.loadUrl("https://kuwo.cn/")
+                                            5 -> webView.loadUrl("about:blank")
                                         }
                                     }
                                 }
@@ -1232,13 +1253,16 @@ fun ConvertPageUi(
                                     }
                                 }
                                 AnimatedVisibility(visible = selectedSourceApp.intValue != 3) {
+                                    val focusRequester = remember { FocusRequester() }
                                     ItemEdit(
+                                        modifier = Modifier.focusRequester(focusRequester),
                                         text = userInput,
                                         hint = when (selectedSourceApp.intValue) {
                                             1 -> "MUSIC_U=xxx; __csrf=xxx; uid=xxx"
                                             2 -> "(wx)uin=xxx; qm_keyst=xxx"
                                             3 -> ""
                                             4 -> "Hm_Iuvtxxx=xxx"
+                                            5 -> "sessionid(_ss)=xxx"
                                             else -> ""
                                         },
                                         onChange = {
@@ -1251,6 +1275,9 @@ fun ConvertPageUi(
                                         },
                                         hapticStrength = hapticStrength.intValue
                                     )
+                                    LaunchedEffect(Unit) {
+                                        focusRequester.requestFocus()
+                                    }
                                 }
                                 AnimatedVisibility(visible = !userLoggedIn && selectedSourceApp.intValue == 3) {
                                     AnimatedVisibility(visible = kugouLoginQrCode == null) {
@@ -1363,6 +1390,8 @@ fun ConvertPageUi(
                                         4 -> {
                                             webViewState.value?.loadUrl("https://kuwo.cn/")
                                         }
+
+                                        5 -> {}
                                     }
                                     userLoggedIn = false
                                 },
@@ -1603,6 +1632,7 @@ fun ConvertPageUi(
                                             2 -> stringResource(R.string.source_qq_music)
                                             3 -> stringResource(R.string.source_kugou_music)
                                             4 -> stringResource(R.string.source_kuwo_music)
+                                            5 -> stringResource(R.string.source_luna_music)
                                             else -> ""
                                         },
                                         popupWidth = 180
@@ -1698,6 +1728,36 @@ fun ConvertPageUi(
                                             iconColor = SaltTheme.colors.text,
                                             iconPaddingValues = PaddingValues(all = 1.5.dp)
                                         )
+                                        PopupMenuItem(
+                                            onClick = {
+                                                MyVibrationEffect(
+                                                    context,
+                                                    enableHaptic.value,
+                                                    hapticStrength.intValue
+                                                ).click()
+                                                selectedSourceApp.intValue = 5
+                                                coroutine.launch {
+                                                    dataStore.edit { settings ->
+                                                        settings[DataStoreConstants.PLAYLIST_SOURCE_PLATFORM] =
+                                                            5
+                                                    }
+                                                }
+                                                sourceAppPopupMenuState.dismiss()
+                                                databaseFileName.value = ""
+                                                selectedMethod.intValue = 1
+                                                coroutine.launch {
+                                                    dataStore.edit { settings ->
+                                                        settings[DataStoreConstants.GET_PLAYLIST_METHOD] =
+                                                            1
+                                                    }
+                                                }
+                                            },
+                                            selected = selectedSourceApp.intValue == 5,
+                                            text = stringResource(R.string.source_luna_music),
+                                            iconPainter = painterResource(id = R.drawable.luna_music),
+                                            iconColor = SaltTheme.colors.text,
+                                            iconPaddingValues = PaddingValues(all = 1.5.dp)
+                                        )
                                     }
                                 }
                                 ItemPopup(
@@ -1710,27 +1770,28 @@ fun ConvertPageUi(
                                     },
                                     popupWidth = 165,
                                 ) {
-                                    PopupMenuItem(
-                                        onClick = {
-                                            MyVibrationEffect(
-                                                context,
-                                                enableHaptic.value,
-                                                hapticStrength.intValue
-                                            ).click()
-                                            selectedMethod.intValue = 0
-                                            coroutine.launch {
-                                                dataStore.edit { settings ->
-                                                    settings[DataStoreConstants.GET_PLAYLIST_METHOD] =
-                                                        0
+                                    if (selectedSourceApp.intValue != 5)
+                                        PopupMenuItem(
+                                            onClick = {
+                                                MyVibrationEffect(
+                                                    context,
+                                                    enableHaptic.value,
+                                                    hapticStrength.intValue
+                                                ).click()
+                                                selectedMethod.intValue = 0
+                                                coroutine.launch {
+                                                    dataStore.edit { settings ->
+                                                        settings[DataStoreConstants.GET_PLAYLIST_METHOD] =
+                                                            0
+                                                    }
                                                 }
-                                            }
-                                            methodPopupMenuState.dismiss()
-                                        },
-                                        selected = selectedMethod.intValue == 0,
-                                        text = stringResource(R.string.database),
-                                        iconPainter = painterResource(id = R.drawable.database),
-                                        iconColor = SaltTheme.colors.text
-                                    )
+                                                methodPopupMenuState.dismiss()
+                                            },
+                                            selected = selectedMethod.intValue == 0,
+                                            text = stringResource(R.string.database),
+                                            iconPainter = painterResource(id = R.drawable.database),
+                                            iconColor = SaltTheme.colors.text
+                                        )
                                     PopupMenuItem(
                                         onClick = {
                                             MyVibrationEffect(
@@ -1765,6 +1826,7 @@ fun ConvertPageUi(
                                                 2 -> stringResource(R.string.source_qq_music)
                                                 3 -> stringResource(R.string.source_kugou_music)
                                                 4 -> stringResource(R.string.source_kuwo_music)
+                                                5 -> stringResource(R.string.source_luna_music)
                                                 else -> ""
                                             }
                                         )
@@ -1802,6 +1864,7 @@ fun ConvertPageUi(
                                 2 -> stringResource(R.string.source_qq_music)
                                 3 -> stringResource(R.string.source_kugou_music)
                                 4 -> stringResource(R.string.source_kuwo_music)
+                                5 -> stringResource(R.string.source_luna_music)
                                 else -> ""
                             }
 
@@ -2261,6 +2324,7 @@ fun ConvertPageUi(
                                                             2 -> stringResource(R.string.source_qq_music)
                                                             3 -> stringResource(R.string.source_kugou_music)
                                                             4 -> stringResource(R.string.source_kuwo_music)
+                                                            5 -> stringResource(R.string.source_luna_music)
                                                             else -> ""
                                                         }
                                                     )
@@ -2289,6 +2353,7 @@ fun ConvertPageUi(
                                                                 2 -> stringResource(R.string.source_qq_music)
                                                                 3 -> stringResource(R.string.source_kugou_music)
                                                                 4 -> stringResource(R.string.source_kuwo_music)
+                                                                5 -> stringResource(R.string.source_luna_music)
                                                                 else -> ""
                                                             }
                                                         }\n"
@@ -2299,6 +2364,7 @@ fun ConvertPageUi(
                                                         2 -> painterResource(id = R.drawable.qqmusic)
                                                         3 -> painterResource(id = R.drawable.kugou)
                                                         4 -> painterResource(id = R.drawable.kuwo)
+                                                        5 -> painterResource(id = R.drawable.luna_music)
                                                         else -> painterResource(id = R.drawable.android)
                                                     },
                                                     iconColor = SaltTheme.colors.text,
@@ -2442,6 +2508,7 @@ fun ConvertPageUi(
                                                                 2 -> stringResource(R.string.source_qq_music)
                                                                 3 -> stringResource(R.string.source_kugou_music)
                                                                 4 -> stringResource(R.string.source_kuwo_music)
+                                                                5 -> stringResource(R.string.source_luna_music)
                                                                 else -> ""
                                                             }
                                                         )
@@ -2780,6 +2847,7 @@ fun ConvertPageUi(
                                                 2 -> stringResource(id = R.string.source_qq_music)
                                                 3 -> stringResource(id = R.string.source_kugou_music)
                                                 4 -> stringResource(id = R.string.source_kuwo_music)
+                                                5 -> stringResource(R.string.source_luna_music)
                                                 else -> ""
                                             }
                                         )

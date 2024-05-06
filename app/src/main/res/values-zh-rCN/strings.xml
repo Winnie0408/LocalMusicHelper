@@ -344,4 +344,8 @@
     <string name="selected_songs">已选歌曲</string>
     <string name="click_ok_to_start2">启用“覆盖”并点击“确定”以开始补全。</string>
     <string name="overwrite_original_album_artist_tag_sub_on2">处理所有选择的歌曲</string>
+    <string name="source_luna_music">汽水音乐</string>
+    <string name="luna_app_qr_code">汽水扫码</string>
+    <string name="keep_blank_to_use_developers_cookie">留空以使用开发者提供的Cookie</string>
+    <string name="cannot_read_your_own_online_playlist">由于您使用的不是自己的Cookie，故需要手动输入歌单链接或歌单编号。</string>
 </resources>

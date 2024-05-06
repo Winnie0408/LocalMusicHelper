@@ -483,4 +483,18 @@ class Tools {
             .contentEquals(signature)
     }
 
+    fun getRealUrl(shortUrl: String): String {
+        val client = OkHttpClient.Builder()
+            .followRedirects(false)
+            .build()
+
+        val request = Request.Builder()
+            .url(shortUrl)
+            .build()
+
+        client.newCall(request).execute().use { response ->
+            return response.header("Location") ?: shortUrl
+        }
+    }
+
 }

@@ -101,6 +101,26 @@ class SourceApp {
                 songInfoSongAlbum = "album"
                 pakageName = "cn.kuwo.player"
             }
+
+            "LunaMusic" -> {
+                sourceEng = "LunaMusic"
+                sourceChn = "汽水音乐"
+                databaseName = "QQMusic"
+                songListTableName = "User_Folder_table"
+                songListId = "folderid"
+                songListName = "foldername"
+                musicNum = "count"
+                songListSongInfoTableName = "User_Folder_Song_table"
+                songListSongInfoPlaylistId = "folderid"
+                songListSongInfoSongId = "id"
+                songInfoTableName = "Song_table"
+                sortField = "position"
+                songInfoSongId = "id"
+                songInfoSongName = "name"
+                songInfoSongArtist = "singername"
+                songInfoSongAlbum = "albumname"
+                pakageName = "com.luna.music"
+            }
         }
     }
 }

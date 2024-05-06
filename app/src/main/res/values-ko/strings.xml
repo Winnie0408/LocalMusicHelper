@@ -344,4 +344,8 @@
     <string name="selected_songs">선택한 노래</string>
     <string name="click_ok_to_start2">\'덮어쓰기\'를 활성화하고 \'확인\' 버튼을 클릭하여 완료를 시작합니다.</string>
     <string name="overwrite_original_album_artist_tag_sub_on2">선택한 모든 곡 처리</string>
+    <string name="source_luna_music">Luna 음악</string>
+    <string name="luna_app_qr_code">Luna QR코드</string>
+    <string name="keep_blank_to_use_developers_cookie">개발자가 제공한 쿠키를 사용하려면 비워 두세요</string>
+    <string name="cannot_read_your_own_online_playlist">자체 쿠키를 사용하지 않으므로 노래 목록 링크 또는 노래 목록 번호를 수동으로 입력해야 합니다.</string>
 </resources>

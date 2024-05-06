@@ -497,6 +497,7 @@ class ConvertPage(
                 2 -> sourceApp.init("QQMusic")
                 3 -> sourceApp.init("KugouMusic")
                 4 -> sourceApp.init("KuwoMusic")
+                5 -> sourceApp.init("LunaMusic")
             }
             if (selectedMethod.intValue == 0) {
                 if (sourceApp.sourceEng != "") {
@@ -541,7 +542,16 @@ class ConvertPage(
                             if (playlistNum.getInt(0) == 0) {
                                 throw Exception(
                                     context.getString(R.string.no_info_in_playlist)
-                                        .replace("#", sourceApp.sourceEng)
+                                        .replace(
+                                            "#", when (selectedSourceApp.intValue) {
+                                                1 -> context.getString(R.string.source_netease_cloud_music)
+                                                2 -> context.getString(R.string.source_qq_music)
+                                                3 -> context.getString(R.string.source_kugou_music)
+                                                4 -> context.getString(R.string.source_kuwo_music)
+                                                5 -> context.getString(R.string.source_luna_music)
+                                                else -> ""
+                                            }
+                                        )
                                 )
                             }
                             playlistNum.close()
@@ -617,6 +627,17 @@ class ConvertPage(
                 showErrorDialog.value = true
                 return@launch
             }
+            if (cookie.value.isBlank() && selectedSourceApp.intValue == 5) {
+                delay(300L)
+                showLoadingProgressBar.value = false
+                errorDialogTitle.value =
+                    context.getString(R.string.tips)
+                errorDialogContent.value =
+                    "- ${context.getString(R.string.cannot_read_your_own_online_playlist)}"
+                errorDialogCustomAction.value = {}
+                showErrorDialog.value = true
+                return@launch
+            }
             if (playlistId.size != 0) {
                 playlistId.clear()
                 playlistName.clear()
@@ -632,6 +653,7 @@ class ConvertPage(
                     2 -> "https://c.y.qq.com/rsc/fcgi-bin/fcg_user_created_diss"
                     3 -> "https://thirdsso.kugou.com/v2/favorite/selfv2/list"
                     4 -> ""
+                    5 -> "https://api.qishui.com/luna/pc/me/playlist"
                     else -> ""
                 }
                 val client = OkHttpClient()
@@ -712,6 +734,25 @@ class ConvertPage(
                     }
 
                     4 -> {}
+
+                    5 -> {
+                        val currentTime = "${System.currentTimeMillis() + 70000000000}${
+                            Tools().generateRandomString(
+                                3,
+                                includeDigits = true
+                            )
+                        }"
+                        request = request
+                            .url("${url}?aid=386088&app_name=luna_pc&region=cn&geo_region=cn&os_region=cn&device_id=${currentTime}&iid=${currentTime}&version_name=1.6.3&version_code=10060300&channel=master&build_mode=master&ac=wifi&tz_name=Asia%2FShanghai&device_platform=windows&device_type=Windows&os_version=Windows+10+Pro&fp=${currentTime}&count=50")
+                            .addHeader("Cookie",
+                                cookie.value.ifBlank { HWinZnieJLunaMusicCookie.value }
+                            )
+                            .addHeader("Referer", "api.qishui.com")
+                            .addHeader("User-Agent", "LunaPC/1.6.3(11741945)")
+                            .addHeader("Accept", "*/*")
+                            .addHeader("Connection", "keep-alive")
+                            .get()
+                    }
                 }
 
                 var response =
@@ -957,11 +998,58 @@ class ConvertPage(
                         }
 
                         4 -> {}
+
+                        5 -> {
+                            Tools().copyFileToExternalFilesDir(
+                                context,
+                                "QQMusic"
+                            )
+                            val databaseFile =
+                                File(context.getExternalFilesDir(null), "QQMusic")
+                            val db = SQLiteDatabase.openDatabase(
+                                databaseFile.absolutePath,
+                                null,
+                                SQLiteDatabase.OPEN_READWRITE
+                            )
+                            databaseFilePath.value = databaseFile.absolutePath
+                            val playlistInfo =
+                                response.getJSONArray("playlists")
+                            playlistInfo.forEach {
+                                val playlist = it as JSONObject
+                                if (!playlist.containsKey("count_tracks") || playlist.getInteger("count_tracks") == 0) {
+                                    emptyPlaylistNum++
+                                    return@forEach
+                                }
+                                innerPlaylistId.add(playlist.getString("id"))
+                                innerPlaylistName.add(playlist.getString("title"))
+                                innerPlaylistSum.add(playlist.getInteger("count_tracks"))
+                                innerPlaylistEnabled.add(0)
+                                innerPlaylistShow.add(true)
+                                db.execSQL(
+                                    "INSERT INTO ${sourceApp.songListTableName} (${sourceApp.songListId}, ${sourceApp.songListName}, ${sourceApp.musicNum}) VALUES (?, ?, ?)",
+                                    arrayOf(
+                                        playlist.getString("id"),
+                                        playlist.getString("title"),
+                                        playlist.getInteger("count_tracks")
+                                    )
+                                )
+                            }
+                            db.close()
+                        }
                     }
                     if (innerPlaylistId.size == 0) {
                         throw Exception(
                             context.getString(R.string.online_server_response_null)
-                                .replace("#", sourceApp.sourceEng)
+                                .replace(
+                                    "#", when (selectedSourceApp.intValue) {
+                                        1 -> context.getString(R.string.source_netease_cloud_music)
+                                        2 -> context.getString(R.string.source_qq_music)
+                                        3 -> context.getString(R.string.source_kugou_music)
+                                        4 -> context.getString(R.string.source_kuwo_music)
+                                        5 -> context.getString(R.string.source_luna_music)
+                                        else -> ""
+                                    }
+                                )
                         )
                     }
                     playlistId.addAll(innerPlaylistId)
@@ -988,7 +1076,16 @@ class ConvertPage(
                 } else {
                     throw Exception(
                         context.getString(R.string.online_server_response_null)
-                            .replace("#", sourceApp.sourceEng)
+                            .replace(
+                                "#", when (selectedSourceApp.intValue) {
+                                    1 -> context.getString(R.string.source_netease_cloud_music)
+                                    2 -> context.getString(R.string.source_qq_music)
+                                    3 -> context.getString(R.string.source_kugou_music)
+                                    4 -> context.getString(R.string.source_kuwo_music)
+                                    5 -> context.getString(R.string.source_luna_music)
+                                    else -> ""
+                                }
+                            )
                     )
                 }
             } catch (e: Exception) {
@@ -1022,12 +1119,16 @@ class ConvertPage(
                 "https://.*\\b".toRegex().find(customPlaylistInput.value)?.value
             else
                 customPlaylistInput.value
+        if (selectedSourceApp.intValue == 5 && customPlaylistId!!.contains("http"))
+            customPlaylistId = Tools().getRealUrl(customPlaylistId)
+
         if (customPlaylistId != null) {
             val url = when (selectedSourceApp.intValue) {
                 1 -> "https://interface.music.163.com/weapi/v6/playlist/detail"
                 2 -> "https://u.y.qq.com/cgi-bin/musicu.fcg"
                 3 -> ""
                 4 -> "https://kuwo.cn/api/www/playlist/playListInfo"
+                5 -> "https://api.qishui.com/luna/pc/playlist/detail"
                 else -> ""
             }
             val client = OkHttpClient()
@@ -1357,6 +1458,83 @@ class ConvertPage(
                             }
                         }
                     }
+
+                    5 -> {
+                        if (customPlaylistInput.value.contains("http"))
+                            customPlaylistId = "(\\bplaylist_id=)\\d*".toRegex()
+                                .find(customPlaylistId)?.value?.substring(12)
+                        val currentTime = "${System.currentTimeMillis() + 70000000000}${
+                            Tools().generateRandomString(
+                                3,
+                                includeDigits = true
+                            )
+                        }"
+                        request = request
+                            .url("${url}?aid=386088&app_name=luna_pc&region=cn&geo_region=cn&os_region=cn&device_id=${currentTime}&iid=${currentTime}&version_name=1.6.3&version_code=10060300&channel=master&build_mode=master&ac=wifi&tz_name=Asia%2FShanghai&device_platform=windows&device_type=Windows&os_version=Windows+10+Pro&fp=${currentTime}&playlist_id=${customPlaylistId}&count=3")
+                            .addHeader("Cookie",
+                                cookie.value.ifBlank { HWinZnieJLunaMusicCookie.value }
+                            )
+                            .addHeader("Referer", "api.qishui.com")
+                            .addHeader("User-Agent", "LunaPC/1.6.3(11741945)")
+                            .addHeader("Accept", "*/*")
+                            .addHeader("Connection", "keep-alive")
+                            .get()
+                        val response = JSON.parseObject(
+                            client.newCall(request.build()).execute().body?.string()
+                        )
+                        if (response?.getJSONObject("status_info")
+                                ?.getString("status_msg") == null
+                        ) {
+                            if (playlistId.size == 0) {
+                                Tools().copyFileToExternalFilesDir(
+                                    context,
+                                    "QQMusic"
+                                )
+                            }
+                            val databaseFile =
+                                File(context.getExternalFilesDir(null), "QQMusic")
+                            val db = SQLiteDatabase.openDatabase(
+                                databaseFile.absolutePath,
+                                null,
+                                SQLiteDatabase.OPEN_READWRITE
+                            )
+                            databaseFilePath.value = databaseFile.absolutePath
+                            val playlistInfo = response.getJSONObject("playlist")
+                            val cursor = db.rawQuery(
+                                "SELECT COUNT(*) FROM ${sourceApp.songListTableName} WHERE ${sourceApp.songListId} = ?",
+                                arrayOf(customPlaylistId)
+                            )
+                            cursor.moveToFirst()
+                            if (cursor.getInt(0) != 0) {
+                                cursor.close()
+                                db.close()
+                                throw IllegalStateException(context.getString(R.string.playlist_already_exists))
+                            }
+                            cursor.close()
+                            db.execSQL(
+                                "INSERT INTO ${sourceApp.songListTableName} (${sourceApp.songListId}, ${sourceApp.songListName}, ${sourceApp.musicNum}) VALUES (?, ?, ?)",
+                                arrayOf(
+                                    playlistInfo.getString("id"),
+                                    playlistInfo.getString("title"),
+                                    playlistInfo.getInteger("count_tracks")
+                                )
+                            )
+                            db.close()
+                            playlistShow.add(0, false)
+                            playlistEnabled.add(0, 0)
+                            playlistId.add(0, playlistInfo.getString("id"))
+                            playlistName.add(0, playlistInfo.getString("title"))
+                            playlistSum.add(0, playlistInfo.getInteger("count_tracks"))
+                            showCustomPlaylistDialog.value = false
+                            showDialogProgressBar.value = false
+                            MyVibrationEffect(
+                                context,
+                                (context as MainActivity).enableHaptic.value,
+                                context.hapticStrength.intValue
+                            ).done()
+                            customPlaylistInput.value = ""
+                        }
+                    }
                 }
                 if (playlistShow.size > 1)
                     delay(250L)
@@ -1503,6 +1681,7 @@ class ConvertPage(
                                 2 -> "https://u.y.qq.com/cgi-bin/musicu.fcg"
                                 3 -> "https://gateway.kugou.com/pubsongs/v4/get_other_list_file"
                                 4 -> "https://kuwo.cn/api/www/playlist/playListInfo"
+                                5 -> "https://api.qishui.com/luna/pc/playlist/detail"
                                 else -> ""
                             }
                             val client = OkHttpClient()
@@ -1606,6 +1785,25 @@ class ConvertPage(
                                             )
                                             .get()
                                     }
+                                }
+
+                                5 -> {
+                                    val currentTime = "${System.currentTimeMillis() + 70000000000}${
+                                        Tools().generateRandomString(
+                                            3,
+                                            includeDigits = true
+                                        )
+                                    }"
+                                    request = request
+                                        .url("${url}?aid=386088&app_name=luna_pc&region=cn&geo_region=cn&os_region=cn&device_id=${currentTime}&iid=${currentTime}&version_name=1.6.3&version_code=10060300&channel=master&build_mode=master&ac=wifi&tz_name=Asia%2FShanghai&device_platform=windows&device_type=Windows&os_version=Windows+10+Pro&fp=${currentTime}&playlist_id=${playlistId[firstIndex1]}&count=1000")
+                                        .addHeader("Cookie",
+                                            cookie.value.ifBlank { HWinZnieJLunaMusicCookie.value }
+                                        )
+                                        .addHeader("Referer", "api.qishui.com")
+                                        .addHeader("User-Agent", "LunaPC/1.6.3(11741945)")
+                                        .addHeader("Accept", "*/*")
+                                        .addHeader("Connection", "keep-alive")
+                                        .get()
                                 }
                             }
 
@@ -1964,6 +2162,73 @@ class ConvertPage(
                                             }
                                         }
                                     }
+
+                                    5 -> {
+                                        val db = SQLiteDatabase.openDatabase(
+                                            databaseFilePath.value,
+                                            null,
+                                            SQLiteDatabase.OPEN_READWRITE
+                                        )
+                                        db.execSQL("DELETE FROM ${sourceApp.songListSongInfoTableName}")
+                                        db.execSQL("DELETE FROM ${sourceApp.songInfoTableName}")
+                                        try {
+                                            db.execSQL("DELETE FROM sqlite_sequence WHERE name = '${sourceApp.songListSongInfoTableName}'")
+                                            db.execSQL("DELETE FROM sqlite_sequence WHERE name = '${sourceApp.songInfoTableName}'")
+                                        } catch (_: Exception) {
+                                        }
+                                        db.execSQL("VACUUM")
+
+                                        val playListDetailInfo = response.getJSONObject("playlist")
+                                        response.getJSONArray("media_resources")
+                                            .forEachIndexed { index, it ->
+                                                val song =
+                                                    (it as JSONObject).getJSONObject("entity")
+                                                        .getJSONObject("track_wrapper")
+                                                        .getJSONObject("track")
+                                                val playlistId = playListDetailInfo.getString("id")
+                                                val songId = song.getString("id")
+                                                val songName = song.getString("name")
+                                                val songArtistsBuilder = StringBuilder()
+                                                song.getJSONArray("artists").forEach { it1 ->
+                                                    val artistsInfo = it1 as JSONObject
+                                                    songArtistsBuilder.append(
+                                                        artistsInfo.getString(
+                                                            "name"
+                                                        )
+                                                    )
+                                                    songArtistsBuilder.append("/")
+                                                }
+                                                songArtistsBuilder.deleteCharAt(songArtistsBuilder.length - 1)
+                                                var songArtists = songArtistsBuilder.toString()
+                                                var songAlbum =
+                                                    song.getJSONObject("album").getString("name")
+                                                if (songArtists.isBlank() || songArtists == "null") {
+                                                    songArtists =
+                                                        context.getString(R.string.unknown)
+                                                }
+                                                if (songAlbum == null || songAlbum.isBlank() || songAlbum == "null") {
+                                                    songAlbum = context.getString(R.string.unknown)
+                                                }
+                                                db.execSQL(
+                                                    "INSERT INTO ${sourceApp.songListSongInfoTableName} (${sourceApp.songListSongInfoPlaylistId}, ${sourceApp.songListSongInfoSongId}, ${sourceApp.sortField}) VALUES (?, ?, ?)",
+                                                    arrayOf(
+                                                        playlistId,
+                                                        songId,
+                                                        index
+                                                    )
+                                                )
+                                                db.execSQL(
+                                                    "INSERT INTO ${sourceApp.songInfoTableName} (${sourceApp.songInfoSongId}, ${sourceApp.songInfoSongName}, ${sourceApp.songInfoSongArtist}, ${sourceApp.songInfoSongAlbum}) VALUES (?, ?, ?, ?)",
+                                                    arrayOf(
+                                                        songId,
+                                                        songName,
+                                                        songArtists,
+                                                        songAlbum
+                                                    )
+                                                )
+                                            }
+                                        db.close()
+                                    }
                                 }
                                 delay(500L)
                                 showNumberProgressBar.value = true
@@ -1971,7 +2236,16 @@ class ConvertPage(
                             } else {
                                 throw Exception(
                                     context.getString(R.string.online_server_response_null)
-                                        .replace("#", sourceApp.sourceEng)
+                                        .replace(
+                                            "#", when (selectedSourceApp.intValue) {
+                                                1 -> context.getString(R.string.source_netease_cloud_music)
+                                                2 -> context.getString(R.string.source_qq_music)
+                                                3 -> context.getString(R.string.source_kugou_music)
+                                                4 -> context.getString(R.string.source_kuwo_music)
+                                                5 -> context.getString(R.string.source_luna_music)
+                                                else -> ""
+                                            }
+                                        )
                                 )
                             }
                         } catch (e: Exception) {
@@ -2051,6 +2325,7 @@ class ConvertPage(
                                     2 -> context.getString(R.string.source_qq_music)
                                     3 -> context.getString(R.string.source_kugou_music)
                                     4 -> context.getString(R.string.source_kuwo_music)
+                                    5 -> context.getString(R.string.source_luna_music)
                                     else -> ""
                                 }
                             )
@@ -2629,6 +2904,7 @@ class ConvertPage(
                 2 -> CookieManager.getInstance().getCookie("y.qq.com")
                 3 -> "KUGOU"
                 4 -> CookieManager.getInstance().getCookie("kuwo.cn")
+                5 -> ""
                 else -> ""
             }
             if (temp == null || temp.isBlank()) {
@@ -2651,6 +2927,10 @@ class ConvertPage(
 
                 3 -> true
                 4 -> temp.contains("\\bHm_Iuvt.*=\\w+".toRegex())
+                5 -> {
+                    temp.contains("\\bsessionid(_ss)?=\\w+".toRegex())
+                }
+
                 else -> false
             }
             if (cookieValid) {
