@@ -155,9 +155,15 @@ class UnlockPage(
             return
         lifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
             val temp = Tools().uriToAbsolutePath(uri)
+            if (temp.isBlank()) {
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(context, R.string.unable_get_path, Toast.LENGTH_SHORT).show()
+                }
+                return@launch
+            }
             if (isAllAscii(temp)) {
                 delay(200L)
-                selectedInputPath.value = Tools().uriToAbsolutePath(uri)
+                selectedInputPath.value = temp
             } else {
                 withContext(Dispatchers.Main) {
                     Toast.makeText(
@@ -175,9 +181,15 @@ class UnlockPage(
             return
         lifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
             val temp = Tools().uriToAbsolutePath(uri)
+            if (temp.isBlank()) {
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(context, R.string.unable_get_path, Toast.LENGTH_SHORT).show()
+                }
+                return@launch
+            }
             if (isAllAscii(temp)) {
                 delay(200L)
-                selectedOutputPath.value = Tools().uriToAbsolutePath(uri)
+                selectedOutputPath.value = temp
             } else {
                 withContext(Dispatchers.Main) {
                     Toast.makeText(

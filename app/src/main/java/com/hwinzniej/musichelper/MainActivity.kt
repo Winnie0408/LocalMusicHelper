@@ -285,6 +285,11 @@ class MainActivity : ComponentActivity() {
                 checkUpdate.value = true
             }
         }
+
+        lifecycleScope.launch(Dispatchers.IO) {
+            delay(3000L)
+            Tools().deleteOldFiles(context = this@MainActivity)
+        }
     }
 
     override fun onRequestPermissionsResult(

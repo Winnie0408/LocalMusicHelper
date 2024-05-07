@@ -356,4 +356,6 @@
     <string name="source_music_player">소스 음악 플레이어</string>
     <string name="select_playlist_file_match_to_source">#의 노래 목록 파일 선택</string>
     <string name="source_target_same">소스는 대상과 동일할 수 없습니다.소스는 대상과 동일할 수 없습니다</string>
+    <string name="cannot_get_file_name">선택한 파일의 이름을 가져올 수 없습니다</string>
+    <string name="unable_get_path">선택한 디렉터리를 가져올 수 없습니다</string>
 </resources>

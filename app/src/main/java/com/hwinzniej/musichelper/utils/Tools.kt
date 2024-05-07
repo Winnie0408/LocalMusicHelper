@@ -3,6 +3,7 @@ package com.hwinzniej.musichelper.utils
 import android.content.Context
 import android.graphics.Bitmap
 import android.net.Uri
+import android.provider.OpenableColumns
 import com.alibaba.fastjson2.JSON
 import com.alibaba.fastjson2.JSONObject
 import com.google.zxing.BarcodeFormat
@@ -20,17 +21,74 @@ import java.io.OutputStream
 import java.io.RandomAccessFile
 import java.security.MessageDigest
 import java.util.Locale
+import java.util.concurrent.TimeUnit
 import kotlin.random.Random
 
 class Tools {
     fun uriToAbsolutePath(uri: Uri): String {
         val uriPath = uri.pathSegments?.get(uri.pathSegments!!.size - 1).toString()
-        val absolutePath = if (uriPath.contains("primary")) {  //内部存储
-            uriPath.replace("primary:", "/storage/emulated/0/")
-        } else {  //SD卡
-            "/storage/${uriPath.split(":")[0]}/${uriPath.split(":")[1]}"
+        return if (uri.toString().contains("com.android.externalstorage.documents")) {
+            if (uriPath.contains("primary")) {  //内部存储
+                uriPath.replace("primary:", "/storage/emulated/0/")
+            } else {  //SD卡
+                "/storage/${uriPath.split(":")[0]}/${uriPath.split(":")[1]}"
+            }
+        } else if (uri.toString().contains("raw:")) {
+            uriPath.substring(uriPath.indexOf("raw:") + 4)
+        } else {
+            ""
         }
-        return absolutePath
+    }
+
+    fun getFileNameFromUri(context: Context, uri: Uri): String {
+        var result = ""
+        if (uri.scheme == "content") {
+            val cursor = context.contentResolver.query(uri, null, null, null, null)
+            cursor.use {
+                if (it != null && it.moveToFirst()) {
+                    val columnIndex = it.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                    if (columnIndex != -1) {
+                        result = it.getString(columnIndex)
+                    }
+                }
+            }
+        }
+        if (result.isBlank()) {
+            result = uri.path ?: ""
+            val cut = result.lastIndexOf('/')
+            if (cut != -1) {
+                result = result.substring(cut + 1)
+            }
+        }
+        return result
+    }
+
+    fun fromUriCopyFileToExternalFilesDir(context: Context, uri: Uri, filename: String): String {
+        val inputStream: InputStream? = context.contentResolver.openInputStream(uri)
+
+        val outputFile = File(context.getExternalFilesDir(null), filename)
+        val outputStream = FileOutputStream(outputFile)
+
+        inputStream?.copyTo(outputStream)
+
+        inputStream?.close()
+        outputStream.close()
+
+        return outputFile.absolutePath
+    }
+
+    fun deleteOldFiles(context: Context) {
+        val directory = context.getExternalFilesDir(null)
+        val currentTime = System.currentTimeMillis()
+
+        directory?.listFiles()?.forEach { file ->
+            val fileAge = currentTime - file.lastModified()
+            val fileAgeInDays = TimeUnit.MILLISECONDS.toDays(fileAge)
+
+            if (fileAgeInDays > 3) {
+                file.delete()
+            }
+        }
     }
 
     fun readLastNChars(file: File, N: Int): String {
@@ -329,7 +387,7 @@ class Tools {
         )
     }
 
-    fun copyFileToExternalFilesDir(context: Context, filename: String) {
+    fun copyAssetFileToExternalFilesDir(context: Context, filename: String) {
         val assetManager = context.assets
 
         var inputStream: InputStream? = null

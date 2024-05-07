@@ -235,26 +235,37 @@ class ConvertPage(
         if (uri == null) {
             return
         }
-        selectedFileName.value = uri.pathSegments[uri.pathSegments.size - 1]
-        selectedFileName.value =
-            selectedFileName.value.substring(selectedFileName.value.lastIndexOf("/") + 1)
-        if (code == 0) {
-            databaseFilePath.value = Tools().uriToAbsolutePath(uri)
-            lifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
-                delay(200L) //播放动画
-                databaseFileName.value = selectedFileName.value
+        selectedFileName.value = Tools().getFileNameFromUri(context, uri)
+        if (selectedFileName.value.isBlank()) {
+            Toast.makeText(context, R.string.cannot_get_file_name, Toast.LENGTH_SHORT).show()
+            return
+        }
+        when (code) {
+            0 -> {
+                databaseFilePath.value =
+                    Tools().fromUriCopyFileToExternalFilesDir(context, uri, selectedFileName.value)
+                lifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
+                    delay(200L) //播放动画
+                    databaseFileName.value = selectedFileName.value
+                }
             }
-        } else if (code == 1) {
-            resultFilePath = Tools().uriToAbsolutePath(uri)
-            lifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
-                delay(200L)  //播放动画
-                customResultFileName.value = selectedFileName.value
+
+            1 -> {
+                resultFilePath =
+                    Tools().fromUriCopyFileToExternalFilesDir(context, uri, selectedFileName.value)
+                lifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
+                    delay(200L)  //播放动画
+                    customResultFileName.value = selectedFileName.value
+                }
             }
-        } else if (code == 2) {
-            sourcePlaylistFilePath = Tools().uriToAbsolutePath(uri)
-            lifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
-                delay(200L)  //播放动画
-                sourcePlaylistFileName.value = selectedFileName.value
+
+            2 -> {
+                sourcePlaylistFilePath =
+                    Tools().fromUriCopyFileToExternalFilesDir(context, uri, selectedFileName.value)
+                lifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
+                    delay(200L)  //播放动画
+                    sourcePlaylistFileName.value = selectedFileName.value
+                }
             }
         }
     }
@@ -791,7 +802,7 @@ class ConvertPage(
 
                     when (selectedSourceApp.intValue) {
                         1 -> {
-                            Tools().copyFileToExternalFilesDir(
+                            Tools().copyAssetFileToExternalFilesDir(
                                 context,
                                 "cloudmusic.db"
                             )
@@ -836,7 +847,7 @@ class ConvertPage(
                         }
 
                         2 -> {
-                            Tools().copyFileToExternalFilesDir(
+                            Tools().copyAssetFileToExternalFilesDir(
                                 context,
                                 "QQMusic"
                             )
@@ -922,7 +933,7 @@ class ConvertPage(
                         }
 
                         3 -> {
-                            Tools().copyFileToExternalFilesDir(
+                            Tools().copyAssetFileToExternalFilesDir(
                                 context,
                                 "kugou_music_phone_v7.db"
                             )
@@ -1023,7 +1034,7 @@ class ConvertPage(
                         4 -> {}
 
                         5 -> {
-                            Tools().copyFileToExternalFilesDir(
+                            Tools().copyAssetFileToExternalFilesDir(
                                 context,
                                 "QQMusic"
                             )
@@ -1192,7 +1203,7 @@ class ConvertPage(
                         )
                         if (response?.getInteger("code") == 200) {
                             if (playlistId.size == 0) {
-                                Tools().copyFileToExternalFilesDir(
+                                Tools().copyAssetFileToExternalFilesDir(
                                     context,
                                     "cloudmusic.db"
                                 )
@@ -1265,7 +1276,7 @@ class ConvertPage(
                                 ?.getInteger("code") == 0
                         ) {
                             if (playlistId.size == 0) {
-                                Tools().copyFileToExternalFilesDir(
+                                Tools().copyAssetFileToExternalFilesDir(
                                     context,
                                     "QQMusic"
                                 )
@@ -1329,7 +1340,7 @@ class ConvertPage(
                         ).execute().body?.string()
                         if (response != null) {
                             if (playlistId.size == 0) {
-                                Tools().copyFileToExternalFilesDir(
+                                Tools().copyAssetFileToExternalFilesDir(
                                     context,
                                     "kugou_music_phone_v7.db"
                                 )
@@ -1429,7 +1440,7 @@ class ConvertPage(
                             )
                             if (response?.getInteger("code") == 200) {
                                 if (playlistId.size == 0) {
-                                    Tools().copyFileToExternalFilesDir(
+                                    Tools().copyAssetFileToExternalFilesDir(
                                         context,
                                         "kwplayer.db"
                                     )
@@ -1509,7 +1520,7 @@ class ConvertPage(
                                 ?.getString("status_msg") == null
                         ) {
                             if (playlistId.size == 0) {
-                                Tools().copyFileToExternalFilesDir(
+                                Tools().copyAssetFileToExternalFilesDir(
                                     context,
                                     "QQMusic"
                                 )

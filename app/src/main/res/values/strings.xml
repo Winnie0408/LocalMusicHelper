@@ -362,4 +362,6 @@
     <string name="source_music_player">Source music player</string>
     <string name="select_playlist_file_match_to_source">Select the playlist file of #</string>
     <string name="source_target_same">Source cannot be the same as target</string>
+    <string name="cannot_get_file_name">Cannot get selected file name</string>
+    <string name="unable_get_path">Cannot get selected path</string>
 </resources>
