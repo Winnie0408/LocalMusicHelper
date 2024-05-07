@@ -67,7 +67,7 @@ class Tools {
         val inputStream: InputStream? = context.contentResolver.openInputStream(uri)
 
         val outputFile = File(context.getExternalFilesDir(null), filename)
-        val outputStream = FileOutputStream(outputFile)
+        val outputStream = FileOutputStream(outputFile, false)
 
         inputStream?.copyTo(outputStream)
 

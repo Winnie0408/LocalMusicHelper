@@ -219,9 +219,18 @@ class ConvertPage(
         }
     }
 
-    fun selectPlaylistFile() {
+    fun selectPlaylistFile(selectedSourceLocalApp: Int) {
         try {
-            openPlaylistFileLauncher.launch(arrayOf("*/*"))
+            openPlaylistFileLauncher.launch(
+                arrayOf(
+                    when (selectedSourceLocalApp) {
+                        0 -> "text/plain"
+                        1 -> "audio/x-mpegurl"
+                        2 -> "audio/x-mpegurl"
+                        else -> "*/*"
+                    }
+                )
+            )
         } catch (_: Exception) {
             Toast.makeText(
                 context,
@@ -3190,45 +3199,57 @@ class ConvertPage(
     fun convertLocalPlaylist(
         sourceApp: Int,
         targetApp: Int,
-    ): Boolean {
+    ): String {
+        val targetFile = File(
+            "${Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)}/${
+                context.getString(
+                    R.string.app_name
+                )
+            }/${
+                LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+            }",
+            "${
+                sourcePlaylistFileName.value.substring(
+                    0,
+                    sourcePlaylistFileName.value.lastIndexOf(".")
+                )
+            }.${
+                when (targetApp) {
+                    0 -> "txt"
+                    1 -> "m3u"
+                    2 -> "m3u8"
+                    else -> ""
+                }
+            }"
+        )
+        if (targetFile.exists())
+            targetFile.delete()
+        if (targetFile.parentFile?.exists() == false)
+            targetFile.parentFile?.mkdirs()
+        val sourceFile = File(sourcePlaylistFilePath)
         when (sourceApp) {
-            0 -> {
-                when (targetApp) {
-                    1 -> {
-                        //APlayer
-                    }
-
-                    2 -> {
-                        //Poweramp
-                    }
-                }
+            0 -> { //来源：Salt Player
+                sourceFile.copyTo(targetFile, true)
+                return targetFile.absolutePath.replace("/storage/emulated/0/", "")
             }
 
-            1 -> {
-                when (targetApp) {
-                    0 -> {
-                        //Salt Player
-                    }
-
-                    2 -> {
-                        //Poweramp
-                    }
-                }
+            1 -> { //来源：APlayer
+                sourceFile.copyTo(targetFile, true)
+                return targetFile.absolutePath.replace("/storage/emulated/0/", "")
             }
 
-            2 -> {
-                when (targetApp) {
-                    0 -> {
-                        //Salt Player
-                    }
-
-                    1 -> {
-                        //APlayer
-                    }
-                }
+            2 -> { //来源：Poweramp
+                val extRegex = "#.*((\\r\\n)|\\r|\\n)".toRegex()
+                var powerampPlaylist = sourceFile.readText()
+                powerampPlaylist = extRegex.replace(powerampPlaylist, "")
+                powerampPlaylist = powerampPlaylist.replace("primary/", "/storage/emulated/0/")
+                val fileWriter = FileWriter(targetFile, true)
+                fileWriter.write(powerampPlaylist)
+                fileWriter.close()
+                return targetFile.absolutePath.replace("/storage/emulated/0/", "")
             }
         }
-        return false
+        return ""
     }
 }
 

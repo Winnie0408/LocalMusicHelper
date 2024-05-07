@@ -358,4 +358,6 @@
     <string name="source_target_same">来源不能与目标相同</string>
     <string name="cannot_get_file_name">无法获取所选文件的名称</string>
     <string name="unable_get_path">无法获取所选目录</string>
+    <string name="convert_failed">转换失败</string>
+    <string name="convert_success">成功！路径：</string>
 </resources>

@@ -474,6 +474,7 @@ private fun Pages(
                         }",
                         rightSub = "${
                             String.format(
+                                Locale(mainPage.language.value),
                                 "%.2f",
                                 mainPage.updateFileSize.floatValue / 1024 / 1024
                             )

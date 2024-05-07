@@ -166,7 +166,7 @@ fun ConvertPageUi(
     var showOriginalSonglist by remember { mutableIntStateOf(1) }
     val originalSonglistPopupMenuState = rememberPopupState()
     var selectedTargetApp by remember { mutableIntStateOf(0) }
-    var selectedSourceLocalApp by remember { mutableIntStateOf(-1) }
+    var selectedSourceLocalApp by remember { mutableIntStateOf(2) }
     val targetAppPopupMenuState = rememberPopupState()
     val sourceLocalAppPopupMenuState = rememberPopupState()
     var selectedMultiSourceApp by remember { mutableIntStateOf(-1) }
@@ -179,10 +179,10 @@ fun ConvertPageUi(
     val convertModePopupMenuState = rememberPopupState()
     val selectedConvertMode = remember { mutableIntStateOf(1) }
 
-    fun init() {
+    fun init(delay: Long = 0L) {
         coroutine.launch {
             currentPage.intValue = 0
-            delay(500L)
+            delay(delay)
             databaseFileName.value = ""
             useCustomResultFile.value = false
             customResultFileName.value = ""
@@ -203,7 +203,7 @@ fun ConvertPageUi(
             showOriginalSonglist = 1
             selectedTargetApp = 0
             selectedMultiSourceApp = -1
-            selectedSourceLocalApp = -1
+            selectedSourceLocalApp = 2
             convertPage.sourcePlaylistFileName.value = ""
         }
     }
@@ -211,7 +211,7 @@ fun ConvertPageUi(
     BackHandler(enabled = (currentPage.intValue != 0 && mainActivityPageState.currentPage == 1)) {
         if (convertResult.isEmpty()) {
             if (currentPage.intValue == 3) {
-                init()
+                init(500L)
             } else
                 currentPage.intValue--
         } else {
@@ -1567,7 +1567,7 @@ fun ConvertPageUi(
                 if (convertResult.isEmpty()) {
                     MyVibrationEffect(context, enableHaptic.value, hapticStrength.intValue).click()
                     if (currentPage.intValue == 3) {
-                        init()
+                        init(500L)
                     } else
                         currentPage.intValue--
                 } else {
@@ -2012,7 +2012,11 @@ fun ConvertPageUi(
                                             )
                                         }
                                         Item(
-                                            onClick = { convertPage.selectPlaylistFile() },
+                                            onClick = {
+                                                convertPage.selectPlaylistFile(
+                                                    selectedSourceLocalApp
+                                                )
+                                            },
                                             text = stringResource(R.string.select_playlist_file_match_to_source).replace(
                                                 "#",
                                                 when (selectedSourceLocalApp) {
@@ -2123,17 +2127,49 @@ fun ConvertPageUi(
                                                         context.getString(R.string.source_target_same),
                                                         Toast.LENGTH_SHORT
                                                     ).show()
+                                                    MyVibrationEffect(
+                                                        context,
+                                                        enableHaptic.value,
+                                                        hapticStrength.intValue
+                                                    ).done()
                                                 } else {
-                                                    showDialogProgressBar.value = true
-                                                    convertPage.convertLocalPlaylist(
-                                                        sourceApp = selectedSourceLocalApp,
-                                                        targetApp = selectedTargetApp
-                                                    )
-                                                    showDialogProgressBar.value = true
+                                                    coroutine.launch(Dispatchers.IO) {
+                                                        showDialogProgressBar.value = true
+                                                        val convertSuccess =
+                                                            convertPage.convertLocalPlaylist(
+                                                                sourceApp = selectedSourceLocalApp,
+                                                                targetApp = selectedTargetApp
+                                                            )
+                                                        if (convertSuccess.isBlank()) {
+                                                            withContext(Dispatchers.Main) {
+                                                                Toast.makeText(
+                                                                    context,
+                                                                    context.getString(R.string.convert_failed),
+                                                                    Toast.LENGTH_SHORT
+                                                                ).show()
+                                                            }
+                                                        } else {
+                                                            withContext(Dispatchers.Main) {
+                                                                Toast.makeText(
+                                                                    context,
+                                                                    "${context.getString(R.string.convert_success)}${convertSuccess}",
+                                                                    Toast.LENGTH_LONG
+                                                                ).show()
+                                                            }
+                                                        }
+                                                        MyVibrationEffect(
+                                                            context,
+                                                            enableHaptic.value,
+                                                            hapticStrength.intValue
+                                                        ).done()
+                                                        showDialogProgressBar.value = true
+                                                    }
                                                 }
                                             }
                                         },
-                                        text = stringResource(R.string.next_step_text),
+                                        text = if (selectedConvertMode.intValue == 1) stringResource(
+                                            R.string.next_step_text
+                                        ) else stringResource(R.string.start_text),
                                         enabled = !it,
                                         enableHaptic = enableHaptic.value,
                                         hapticStrength = hapticStrength.intValue

@@ -364,4 +364,6 @@
     <string name="source_target_same">Source cannot be the same as target</string>
     <string name="cannot_get_file_name">Cannot get selected file name</string>
     <string name="unable_get_path">Cannot get selected path</string>
+    <string name="convert_failed">Convert failed</string>
+    <string name="convert_success">"Success! Path: "</string>
 </resources>
