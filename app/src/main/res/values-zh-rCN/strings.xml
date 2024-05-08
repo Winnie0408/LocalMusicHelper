@@ -360,4 +360,10 @@
     <string name="unable_get_path">无法获取所选目录</string>
     <string name="convert_failed">转换失败</string>
     <string name="convert_success">成功！路径：</string>
+    <string name="failed_get_login_status">获取登录状态失败，请重试</string>
+    <string name="unsupported_auth_method">不支持的验证方式，请在应用中绑定手机号后重试</string>
+    <string name="luna_music_sec_verify">汽水音乐安全验证</string>
+    <string name="luna_music_verify_content">汽水音乐认为本次登录存在风险，需要进行安全验证。#n请使用`#phone`，发送短信：#n- 内容：`#content`#n- 收信人：`#target`#n#n发送成功后，请点击`确定 `按钮。#n如果是本机号码，点击`发送短信 `按钮，即可跳转到短信发送界面。</string>
+    <string name="send_sms">发送短信</string>
+    <string name="verify_failed">认证失败，请检查短信是否发送成功</string>
 </resources>

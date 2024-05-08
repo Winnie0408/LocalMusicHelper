@@ -29,4 +29,7 @@ object DataStoreConstants {
     val TAG_ARRANGER = booleanPreferencesKey("tag_arranger")
     val SORT_METHOD = intPreferencesKey("sort_method")
     val SLOW_MODE = booleanPreferencesKey("slow_mode")
+    val LUNA_DEVICE_ID = stringPreferencesKey("luna_device_id")
+    val LUNA_INSTALL_ID = stringPreferencesKey("luna_install_id")
+    val LUNA_COOKIE = stringPreferencesKey("luna_cookie")
 }

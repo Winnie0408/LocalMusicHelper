@@ -1,6 +1,8 @@
 package com.hwinzniej.musichelper.ui
 
+import android.content.Intent
 import android.graphics.Bitmap
+import android.net.Uri
 import android.webkit.CookieManager
 import android.webkit.WebView
 import android.webkit.WebViewClient
@@ -133,7 +135,6 @@ fun ConvertPageUi(
     mainActivityPageState: PagerState,
     enableHaptic: MutableState<Boolean>,
     useRootAccess: MutableState<Boolean>,
-    sourceApp: MutableState<String>,
     databaseFilePath: MutableState<String>,
     showSelectSourceDialog: MutableState<Boolean>,
     multiSource: MutableList<Array<String>>,
@@ -172,8 +173,8 @@ fun ConvertPageUi(
     var selectedMultiSourceApp by remember { mutableIntStateOf(-1) }
     var userLoggedIn by remember { mutableStateOf(false) }
     var kugouDeviceId by remember { mutableStateOf(false) }
-    val kugouDeviceRelated = remember { mutableStateMapOf<String, String>() }
-    var kugouLoginQrCode by remember { mutableStateOf<Bitmap?>(null) }
+    val qrCodeDeviceRelated = remember { mutableStateMapOf<String, String>() }
+    var loginQrCode by remember { mutableStateOf<Bitmap?>(null) }
     var kugouCurrentIp by remember { mutableStateOf("") }
     val kugouUserRelated = remember { mutableStateMapOf<String, String>() }
     val convertModePopupMenuState = rememberPopupState()
@@ -555,15 +556,15 @@ fun ConvertPageUi(
     LaunchedEffect(key1 = kugouDeviceId) {
         if (kugouDeviceId) {
             coroutine.launch(Dispatchers.IO) {
-                kugouDeviceRelated.putAll(
+                qrCodeDeviceRelated.putAll(
                     convertPage.kugouGetLoginQrCodeUrl(
                         type = selectedLoginMethod.intValue,
                         currentIp = kugouCurrentIp
                     )
                 )
-                kugouLoginQrCode =
-                    kugouDeviceRelated["qrCodeUrl"]?.let { Tools().generateQRCode(content = it) }
-                kugouDeviceRelated["ticket"]?.let {
+                loginQrCode =
+                    qrCodeDeviceRelated["qrCodeUrl"]?.let { Tools().generateQRCode(content = it) }
+                qrCodeDeviceRelated["ticket"]?.let {
                     kugouUserRelated.putAll(
                         convertPage.kugouGetLoginStatus(
                             type = selectedLoginMethod.intValue,
@@ -807,7 +808,7 @@ fun ConvertPageUi(
 
                         3 -> userLoggedIn
                         4 -> convertPage.cookie.value.contains("\\bHm_Iuvt.*=\\w+".toRegex())
-                        5 -> false
+                        5 -> userLoggedIn
                         else -> false
                     }
 
@@ -915,10 +916,11 @@ fun ConvertPageUi(
                             state = loginMethodPopupState,
                             text = stringResource(R.string.login_method),
                             selectedItem = when (selectedLoginMethod.intValue) {
-                                0 -> if (selectedSourceApp.intValue != 3)
-                                    stringResource(R.string.web_login)
-                                else
-                                    stringResource(R.string.kugou_app_qr_code)
+                                0 -> when (selectedSourceApp.intValue) {
+                                    3 -> stringResource(R.string.kugou_app_qr_code)
+                                    5 -> stringResource(R.string.luna_app_qr_code)
+                                    else -> stringResource(R.string.web_login)
+                                }
 
                                 1 -> if (selectedSourceApp.intValue != 3)
                                     stringResource(R.string.cookie_login)
@@ -929,53 +931,80 @@ fun ConvertPageUi(
                             },
                             popupWidth = 150
                         ) {
-                            if (selectedSourceApp.intValue != 5)
-                                PopupMenuItem(
-                                    onClick = {
-                                        MyVibrationEffect(
-                                            context,
-                                            enableHaptic.value,
-                                            hapticStrength.intValue
-                                        ).click()
-                                        webViewState.value?.onResume()
-                                        webViewState.value?.resumeTimers()
-                                        userLoggedIn = false
-                                        convertPage.cookie.value = ""
-                                        selectedLoginMethod.intValue = 0
-                                        loginMethodPopupState.dismiss()
-                                        showDialogProgressBar.value = true
-                                        if (selectedSourceApp.intValue == 3) {
+                            PopupMenuItem(
+                                onClick = {
+                                    MyVibrationEffect(
+                                        context,
+                                        enableHaptic.value,
+                                        hapticStrength.intValue
+                                    ).click()
+                                    webViewState.value?.onResume()
+                                    webViewState.value?.resumeTimers()
+                                    userLoggedIn = false
+                                    convertPage.cookie.value = ""
+                                    selectedLoginMethod.intValue = 0
+                                    loginMethodPopupState.dismiss()
+                                    showDialogProgressBar.value = true
+                                    when (selectedSourceApp.intValue) {
+                                        3 -> {
                                             coroutine.launch(Dispatchers.IO) {
-                                                kugouLoginQrCode = null
+                                                loginQrCode = null
                                                 convertPage.stopGetLoginStatus()
                                                 kugouDeviceId = false
-                                                kugouDeviceRelated.clear()
+                                                qrCodeDeviceRelated.clear()
                                                 kugouUserRelated.clear()
                                                 kugouDeviceId =
                                                     convertPage.kugouActiveDevice(currentIp = kugouCurrentIp)
                                             }
                                         }
-                                        if (selectedSourceApp.intValue == 4) {
+
+                                        4 -> {
                                             Toast.makeText(
                                                 context,
                                                 context.getString(R.string.kuwo_no_login_click_ok_button),
                                                 Toast.LENGTH_LONG
                                             ).show()
                                         }
-                                    },
-                                    selected = selectedLoginMethod.intValue == 0,
-                                    text = if (selectedSourceApp.intValue != 3)
-                                        stringResource(R.string.web_login)
-                                    else
-                                        stringResource(R.string.kugou_app_qr_code),
-                                    iconPainter =
-                                    if (selectedSourceApp.intValue != 3)
-                                        painterResource(id = R.drawable.web_page)
-                                    else
-                                        painterResource(id = R.drawable.kugou),
-                                    iconColor = SaltTheme.colors.text,
-                                    iconPaddingValues = PaddingValues(all = 1.dp)
-                                )
+
+                                        5 -> {
+                                            coroutine.launch(Dispatchers.IO) {
+                                                loginQrCode = null
+                                                convertPage.stopGetLoginStatus()
+                                                qrCodeDeviceRelated.clear()
+                                                qrCodeDeviceRelated.putAll(
+                                                    convertPage.lunaGetLoginQrCodeUrl()
+                                                )
+                                                loginQrCode =
+                                                    qrCodeDeviceRelated["qrCodeUrl"]?.let {
+                                                        Tools().generateQRCode(
+                                                            content = it
+                                                        )
+                                                    }
+                                                convertPage.lunaVerifyRelated.clear()
+                                                qrCodeDeviceRelated["token"]?.let {
+                                                    userLoggedIn =
+                                                        convertPage.lunaGetLoginStatus(token = it)
+                                                }
+                                                showDialogProgressBar.value = false
+                                            }
+                                        }
+                                    }
+                                },
+                                selected = selectedLoginMethod.intValue == 0,
+                                text = when (selectedSourceApp.intValue) {
+                                    3 -> stringResource(R.string.kugou_app_qr_code)
+                                    5 -> stringResource(R.string.luna_app_qr_code)
+                                    else -> stringResource(R.string.web_login)
+                                },
+                                iconPainter =
+                                when (selectedSourceApp.intValue) {
+                                    3 -> painterResource(id = R.drawable.kugou)
+                                    5 -> painterResource(id = R.drawable.luna_music)
+                                    else -> painterResource(id = R.drawable.web_page)
+                                },
+                                iconColor = SaltTheme.colors.text,
+                                iconPaddingValues = PaddingValues(all = 1.dp)
+                            )
                             PopupMenuItem(
                                 onClick = {
                                     MyVibrationEffect(
@@ -989,21 +1018,14 @@ fun ConvertPageUi(
                                     loginMethodPopupState.dismiss()
                                     if (selectedSourceApp.intValue == 3) {
                                         coroutine.launch(Dispatchers.IO) {
-                                            kugouLoginQrCode = null
+                                            loginQrCode = null
                                             convertPage.stopGetLoginStatus()
                                             kugouDeviceId = false
-                                            kugouDeviceRelated.clear()
+                                            qrCodeDeviceRelated.clear()
                                             kugouUserRelated.clear()
                                             kugouDeviceId =
                                                 convertPage.kugouActiveDevice(currentIp = kugouCurrentIp)
                                         }
-                                    }
-                                    if (selectedSourceApp.intValue == 5) {
-                                        Toast.makeText(
-                                            context,
-                                            context.getString(R.string.keep_blank_to_use_developers_cookie),
-                                            Toast.LENGTH_LONG
-                                        ).show()
                                     }
                                 },
                                 selected = selectedLoginMethod.intValue == 1,
@@ -1051,7 +1073,7 @@ fun ConvertPageUi(
                                         )
                                     }
                                 }
-                                AnimatedVisibility(visible = !userLoggedIn && selectedSourceApp.intValue != 3) {
+                                AnimatedVisibility(visible = !userLoggedIn && selectedSourceApp.intValue != 3 && selectedSourceApp.intValue != 5) {
                                     AndroidView(
                                         modifier = Modifier
                                             .fillMaxWidth()
@@ -1193,8 +1215,8 @@ fun ConvertPageUi(
                                         }
                                     }
                                 }
-                                AnimatedVisibility(visible = !userLoggedIn && selectedSourceApp.intValue == 3) {
-                                    AnimatedVisibility(visible = kugouLoginQrCode == null) {
+                                AnimatedVisibility(visible = !userLoggedIn && (selectedSourceApp.intValue == 3 || selectedSourceApp.intValue == 5)) {
+                                    AnimatedVisibility(visible = loginQrCode == null) {
                                         Column(
                                             modifier = Modifier.fillMaxWidth(),
                                             horizontalAlignment = Alignment.CenterHorizontally
@@ -1207,12 +1229,12 @@ fun ConvertPageUi(
                                             Spacer(modifier = Modifier.height(8.dp))
                                         }
                                     }
-                                    AnimatedVisibility(visible = kugouLoginQrCode != null) {
+                                    AnimatedVisibility(visible = loginQrCode != null) {
                                         Column(
                                             modifier = Modifier.fillMaxWidth(),
                                             horizontalAlignment = Alignment.CenterHorizontally
                                         ) {
-                                            kugouLoginQrCode?.let {
+                                            loginQrCode?.let {
                                                 Image(
                                                     bitmap = it.asImageBitmap(),
                                                     contentDescription = "Kugou Login QR Code",
@@ -1286,7 +1308,7 @@ fun ConvertPageUi(
                                     }
                                 }
                                 AnimatedVisibility(visible = !userLoggedIn && selectedSourceApp.intValue == 3) {
-                                    AnimatedVisibility(visible = kugouLoginQrCode == null) {
+                                    AnimatedVisibility(visible = loginQrCode == null) {
                                         Column(
                                             modifier = Modifier.fillMaxWidth(),
                                             horizontalAlignment = Alignment.CenterHorizontally
@@ -1299,15 +1321,15 @@ fun ConvertPageUi(
                                             Spacer(modifier = Modifier.height(8.dp))
                                         }
                                     }
-                                    AnimatedVisibility(visible = kugouLoginQrCode != null) {
+                                    AnimatedVisibility(visible = loginQrCode != null) {
                                         Column(
                                             modifier = Modifier.fillMaxWidth(),
                                             horizontalAlignment = Alignment.CenterHorizontally
                                         ) {
-                                            kugouLoginQrCode?.let {
+                                            loginQrCode?.let {
                                                 Image(
                                                     bitmap = it.asImageBitmap(),
-                                                    contentDescription = "Kugou Login QR Code",
+                                                    contentDescription = "Login QR Code",
                                                     contentScale = ContentScale.Fit
                                                 )
                                             }
@@ -1360,7 +1382,9 @@ fun ConvertPageUi(
                                     if (selectedLoginMethod.intValue != 2)
                                         showDialogProgressBar.value = true
                                     convertPage.loginUserId.value = ""
-                                    coroutine.launch {
+                                    coroutine.launch(Dispatchers.IO) {
+                                        if (selectedSourceApp.intValue == 5)
+                                            convertPage.lunaLogout()
                                         dataStore.edit { settings ->
                                             settings[DataStoreConstants.NETEASE_USER_ID] = ""
                                             settings[DataStoreConstants.LAST_LOGIN_TIMESTAMP] =
@@ -1383,10 +1407,10 @@ fun ConvertPageUi(
                                         }
 
                                         3 -> {
-                                            kugouLoginQrCode = null
+                                            loginQrCode = null
                                             convertPage.stopGetLoginStatus()
                                             kugouDeviceId = false
-                                            kugouDeviceRelated.clear()
+                                            qrCodeDeviceRelated.clear()
                                             kugouUserRelated.clear()
                                             coroutine.launch(Dispatchers.IO) {
                                                 kugouCurrentIp = Tools().getCurrentIp()
@@ -1397,12 +1421,100 @@ fun ConvertPageUi(
                                             webViewState.value?.loadUrl("https://kuwo.cn/")
                                         }
 
-                                        5 -> {}
+                                        5 -> {
+                                            loginQrCode = null
+                                            convertPage.stopGetLoginStatus()
+                                            qrCodeDeviceRelated.clear()
+                                            convertPage.lunaVerifyRelated.clear()
+                                        }
                                     }
                                     userLoggedIn = false
                                 },
                                 text = stringResource(id = R.string.switch_account_logout),
                                 enableHaptic = enableHaptic.value,
+                                hapticStrength = hapticStrength.intValue
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    if (convertPage.showLunaVerifyDialog.value) {
+        YesNoDialog(
+            onDismiss = { convertPage.showLunaVerifyDialog.value = false },
+            onCancel = { convertPage.showLunaVerifyDialog.value = false },
+            onConfirm = {
+                coroutine.launch(Dispatchers.IO) {
+                    showDialogProgressBar.value = true
+                    qrCodeDeviceRelated["token"]?.let {
+                        if (convertPage.lunaGetVerifyStatus()) {
+                            convertPage.showLunaVerifyDialog.value = false
+                            userLoggedIn = convertPage.lunaGetLoginStatus(token = it, now = true)
+                            convertPage.lunaVerifyRelated.clear()
+                        }
+                    }
+                    showDialogProgressBar.value = false
+                }
+            },
+            title = stringResource(id = R.string.luna_music_sec_verify),
+            content = null,
+            enableHaptic = enableHaptic.value,
+            enableConfirmButton = !showDialogProgressBar.value,
+            hapticStrength = hapticStrength.intValue
+        ) {
+            Box {
+                if (showDialogProgressBar.value) {
+                    LinearProgressIndicator(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .zIndex(1f),
+                        color = SaltTheme.colors.highlight,
+                        trackColor = SaltTheme.colors.background
+                    )
+                }
+                Column {
+                    RoundedColumn {
+                        ItemTitle(text = stringResource(id = R.string.error_details))
+                        ItemContainer {
+                            MarkdownText(
+                                modifier = Modifier
+                                    .fillMaxWidth(),
+                                markdown = stringResource(id = R.string.luna_music_verify_content)
+                                    .replace("#n", "\n")
+                                    .replace("#phone", convertPage.lunaVerifyRelated["phone"] ?: "")
+                                    .replace(
+                                        "#content",
+                                        convertPage.lunaVerifyRelated["content"] ?: ""
+                                    )
+                                    .replace(
+                                        "#target",
+                                        convertPage.lunaVerifyRelated["target"] ?: ""
+                                    ),
+                                style = TextStyle(
+                                    color = SaltTheme.colors.text,
+                                    fontSize = 16.sp,
+                                    lineHeight = 1.5.em
+                                ),
+                                isTextSelectable = true,
+                                disableLinkMovementMethod = true
+                            )
+                        }
+                        ItemContainer {
+                            TextButton(
+                                onClick = {
+                                    val intent = Intent(
+                                        Intent.ACTION_VIEW,
+                                        Uri.parse("sms:${convertPage.lunaVerifyRelated["target"]}")
+                                    )
+                                    intent.putExtra(
+                                        "sms_body",
+                                        convertPage.lunaVerifyRelated["content"]
+                                    )
+                                    context.startActivity(intent)
+                                },
+                                text = stringResource(id = R.string.send_sms),
                                 hapticStrength = hapticStrength.intValue
                             )
                         }
@@ -1678,7 +1790,7 @@ fun ConvertPageUi(
                                                 label = "",
                                                 transitionSpec = {
                                                     fadeIn() togetherWith fadeOut()
-                                                }) { it ->
+                                                }) {
                                                 ItemPopup(
                                                     state = sourceAppPopupMenuState,
                                                     text = stringResource(R.string.select_source_of_songlist),
@@ -3034,7 +3146,9 @@ fun ConvertPageUi(
                                             onClick = {
                                                 CookieManager.getInstance().removeAllCookies(null)
                                                 CookieManager.getInstance().flush()
-                                                coroutine.launch {
+                                                coroutine.launch(Dispatchers.IO) {
+                                                    if (selectedSourceApp.intValue == 5)
+                                                        convertPage.lunaLogout()
                                                     dataStore.edit { settings ->
                                                         settings[DataStoreConstants.NETEASE_USER_ID] =
                                                             ""
@@ -3046,12 +3160,13 @@ fun ConvertPageUi(
                                                             ""
                                                     }
                                                 }
-                                                kugouLoginQrCode = null
+                                                loginQrCode = null
                                                 convertPage.stopGetLoginStatus()
                                                 kugouDeviceId = false
-                                                kugouDeviceRelated.clear()
+                                                qrCodeDeviceRelated.clear()
                                                 kugouUserRelated.clear()
                                                 kugouCurrentIp = ""
+                                                convertPage.lunaVerifyRelated.clear()
                                                 Toast.makeText(
                                                     context,
                                                     context.getString(R.string.logged_out),

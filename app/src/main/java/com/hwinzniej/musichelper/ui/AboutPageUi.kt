@@ -55,6 +55,7 @@ import androidx.compose.ui.zIndex
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.graphics.drawable.toBitmap
 import com.alibaba.fastjson2.JSON
+import com.alibaba.fastjson2.JSONObject
 import com.hwinzniej.musichelper.R
 import com.hwinzniej.musichelper.utils.MyVibrationEffect
 import com.hwinzniej.musichelper.utils.Tools
@@ -298,9 +299,10 @@ fun AboutPageUi(
                                     .get()
                                     .build()
                                 try {
-                                    val response = JSON.parseObject(
-                                        client.newCall(request).execute().body?.string()
-                                    )
+                                    val response: JSONObject
+                                    client.newCall(request).execute().use { responses ->
+                                        response = JSON.parseObject(responses.body?.string())
+                                    }
                                     latestVersion.value =
                                         response.getString("name").replace("v", "")
                                     if (Tools().isVersionNewer(
@@ -323,10 +325,12 @@ fun AboutPageUi(
                                             .url(latestDownloadLink.value)
                                             .head()
                                             .build()
-                                        client.newCall(request).execute().header("Content-Length")
-                                            ?.let {
-                                                updateFileSize.floatValue = it.toFloat()
-                                            }
+                                        client.newCall(request).execute().use {
+                                            it.header("Content-Length")
+                                                ?.let { it1 ->
+                                                    updateFileSize.floatValue = it1.toFloat()
+                                                }
+                                        }
                                         latestDescription.value = latestDescription.value.substring(
                                             0,
                                             latestDescription.value.indexOf("\n[app-")

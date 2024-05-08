@@ -319,6 +319,7 @@ class TagPage(
                 audioFile = AudioFileIO.read(File(it.absolutePath))
                 audioFile.tag.setField(FieldKey.ALBUM_ARTIST, lastAlbumArtist)
                 AudioFileIO.write(audioFile)
+                db.musicDao().updateAlbumArtist(it.id, lastAlbumArtist, System.currentTimeMillis())
             } catch (e: Exception) {
                 completeResult.add(
                     0,
@@ -331,7 +332,6 @@ class TagPage(
                 haveError = true
                 return@forEach
             }
-            db.musicDao().updateAlbumArtist(it.id, lastAlbumArtist, System.currentTimeMillis())
             completeResult.add(
                 0,
                 mapOf(

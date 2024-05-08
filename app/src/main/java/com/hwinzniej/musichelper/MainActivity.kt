@@ -61,6 +61,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.lifecycle.lifecycleScope
 import androidx.room.Room
 import com.alibaba.fastjson2.JSON
+import com.alibaba.fastjson2.JSONObject
 import com.hwinzniej.musichelper.activity.ConvertPage
 import com.hwinzniej.musichelper.activity.ScanPage
 import com.hwinzniej.musichelper.activity.SettingsPage
@@ -398,6 +399,12 @@ private fun Pages(
         arranger.value = preferences[DataStoreConstants.TAG_ARRANGER] ?: true
         sortMethod.intValue = preferences[DataStoreConstants.SORT_METHOD] ?: 0
         slow.value = preferences[DataStoreConstants.SLOW_MODE] ?: false
+        convertPage.lunaInstallId.value =
+            preferences[DataStoreConstants.LUNA_INSTALL_ID] ?: ""
+        convertPage.lunaDeviceId.value =
+            preferences[DataStoreConstants.LUNA_DEVICE_ID] ?: ""
+        convertPage.lunaCookie.value =
+            preferences[DataStoreConstants.LUNA_COOKIE] ?: ""
         coroutineScope.launch(Dispatchers.Default) {
             delay(248L)
             mainPage.isDataLoaded.value = true
@@ -532,9 +539,10 @@ private fun Pages(
                     .get()
                     .build()
                 try {
-                    val response = JSON.parseObject(
-                        client.newCall(request).execute().body?.string()
-                    )
+                    val response: JSONObject
+                    client.newCall(request).execute().use { responses ->
+                        response = JSON.parseObject(responses.body?.string())
+                    }
                     latestVersion.value =
                         response.getString("name").replace("v", "")
                     if (Tools().isVersionNewer(
@@ -557,8 +565,10 @@ private fun Pages(
                             .url(latestDownloadLink.value)
                             .head()
                             .build()
-                        client.newCall(request).execute().header("Content-Length")?.let {
-                            mainPage.updateFileSize.floatValue = it.toFloat()
+                        client.newCall(request).execute().use { responses ->
+                            responses.header("Content-Length")?.let { header ->
+                                mainPage.updateFileSize.floatValue = header.toFloat()
+                            }
                         }
                         latestDescription.value = latestDescription.value.substring(
                             0,
@@ -635,7 +645,6 @@ private fun Pages(
                         mainActivityPageState = pageState,
                         enableHaptic = mainPage.enableHaptic,
                         useRootAccess = convertPage.useRootAccess,
-                        sourceApp = convertPage.sourceAppText,
                         databaseFilePath = convertPage.databaseFilePath,
                         showSelectSourceDialog = convertPage.showSelectSourceDialog,
                         multiSource = convertPage.multiSource,

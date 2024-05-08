@@ -360,4 +360,10 @@
     <string name="unable_get_path">선택한 디렉터리를 가져올 수 없습니다</string>
     <string name="convert_failed">변환 실패</string>
     <string name="convert_success">"성공! 경로: "</string>
+    <string name="failed_get_login_status">로그인에 실패했습니다. 다시 시도하세요</string>
+    <string name="unsupported_auth_method">지원되지 않는 인증 방법의 경우 앱에서 휴대폰 번호를 바인딩한 후 다시 시도하세요</string>
+    <string name="luna_music_sec_verify">Luna 음악 안전 검증</string>
+    <string name="luna_music_verify_content">Luna 음악은 이 로그인을 위험하다고 판단하여 보안 인증이 필요합니다.#n`#phone`를 사용하여 문자 메시지를 보내주세요:#n- 내용: `#content`#n- 받는 사람: `#target`#n#n전송이 성공하면 `확인`을 클릭합니다.#n지역 번호인 경우 `SMS 보내기` 버튼을 클릭하여 SMS 전송 인터페이스로 이동합니다.</string>
+    <string name="send_sms">SMS 보내기</string>
+    <string name="verify_failed">인증에 실패했습니다. SMS가 성공적으로 전송되었는지 확인하세요.</string>
 </resources>

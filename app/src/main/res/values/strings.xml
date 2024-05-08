@@ -366,4 +366,10 @@
     <string name="unable_get_path">Cannot get selected path</string>
     <string name="convert_failed">Convert failed</string>
     <string name="convert_success">"Success! Path: "</string>
+    <string name="failed_get_login_status">Failed to get login status, please try again</string>
+    <string name="unsupported_auth_method">Unsupported authentication methods, please retry after binding your mobile phone number in the app</string>
+    <string name="luna_music_sec_verify">Luna Music Safety Verification</string>
+    <string name="luna_music_verify_content">Luna Music considers this login to be risky and requires security verification.#nPlease use `#phone` and send a text message:#n- Content: `#content`#n- To: `#target`.#n#nAfter sending successfully, click `OK`.#nIf it is a local number, click `Send SMS` button to jump to the SMS sending interface.</string>
+    <string name="send_sms">Send SMS</string>
+    <string name="verify_failed">Authentication failed, please check if the SMS was sent successfully.</string>
 </resources>
