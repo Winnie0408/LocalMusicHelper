@@ -210,6 +210,14 @@ fun ConvertPageUi(
     }
 
     BackHandler(enabled = (currentPage.intValue != 0 && mainActivityPageState.currentPage == 1)) {
+        if (showLoadingProgressBar.value || showNumberProgressBar.value || showDialogProgressBar.value) {
+            Toast.makeText(
+                context,
+                context.getString(R.string.wait_operate_end),
+                Toast.LENGTH_SHORT
+            ).show()
+            return@BackHandler
+        }
         if (convertResult.isEmpty()) {
             if (currentPage.intValue == 3) {
                 init(500L)
@@ -984,6 +992,8 @@ fun ConvertPageUi(
                                                 qrCodeDeviceRelated["token"]?.let {
                                                     userLoggedIn =
                                                         convertPage.lunaGetLoginStatus(token = it)
+                                                    if (userLoggedIn)
+                                                        convertPage.lunaVerifyRelated.clear()
                                                 }
                                                 showDialogProgressBar.value = false
                                             }
@@ -1676,6 +1686,14 @@ fun ConvertPageUi(
     ) {
         TitleBar(
             onBack = {
+                if (showLoadingProgressBar.value || showNumberProgressBar.value || showDialogProgressBar.value) {
+                    Toast.makeText(
+                        context,
+                        context.getString(R.string.wait_operate_end),
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    return@TitleBar
+                }
                 if (convertResult.isEmpty()) {
                     MyVibrationEffect(context, enableHaptic.value, hapticStrength.intValue).click()
                     if (currentPage.intValue == 3) {
@@ -1914,13 +1932,6 @@ fun ConvertPageUi(
                                                             }
                                                             sourceAppPopupMenuState.dismiss()
                                                             databaseFileName.value = ""
-                                                            selectedMethod.intValue = 1
-                                                            coroutine.launch {
-                                                                dataStore.edit { settings ->
-                                                                    settings[DataStoreConstants.GET_PLAYLIST_METHOD] =
-                                                                        1
-                                                                }
-                                                            }
                                                         },
                                                         selected = selectedSourceApp.intValue == 5,
                                                         text = stringResource(R.string.source_luna_music),
@@ -1934,34 +1945,41 @@ fun ConvertPageUi(
                                                 state = methodPopupMenuState,
                                                 text = stringResource(R.string.way_to_get_song_list),
                                                 selectedItem = when (selectedMethod.intValue) {
-                                                    0 -> stringResource(R.string.database)
+                                                    0 -> if (selectedSourceApp.intValue == 5)
+                                                        stringResource(R.string.json_file)
+                                                    else
+                                                        stringResource(R.string.database)
+
                                                     1 -> stringResource(R.string.online)
                                                     else -> ""
                                                 },
                                                 popupWidth = 165,
                                             ) {
-                                                if (selectedSourceApp.intValue != 5)
-                                                    PopupMenuItem(
-                                                        onClick = {
-                                                            MyVibrationEffect(
-                                                                context,
-                                                                enableHaptic.value,
-                                                                hapticStrength.intValue
-                                                            ).click()
-                                                            selectedMethod.intValue = 0
-                                                            coroutine.launch {
-                                                                dataStore.edit { settings ->
-                                                                    settings[DataStoreConstants.GET_PLAYLIST_METHOD] =
-                                                                        0
-                                                                }
+                                                PopupMenuItem(
+                                                    onClick = {
+                                                        MyVibrationEffect(
+                                                            context,
+                                                            enableHaptic.value,
+                                                            hapticStrength.intValue
+                                                        ).click()
+                                                        selectedMethod.intValue = 0
+                                                        coroutine.launch {
+                                                            dataStore.edit { settings ->
+                                                                settings[DataStoreConstants.GET_PLAYLIST_METHOD] =
+                                                                    0
                                                             }
-                                                            methodPopupMenuState.dismiss()
-                                                        },
-                                                        selected = selectedMethod.intValue == 0,
-                                                        text = stringResource(R.string.database),
-                                                        iconPainter = painterResource(id = R.drawable.database),
-                                                        iconColor = SaltTheme.colors.text
-                                                    )
+                                                        }
+                                                        methodPopupMenuState.dismiss()
+                                                    },
+                                                    selected = selectedMethod.intValue == 0,
+                                                    text = if (selectedSourceApp.intValue == 5)
+                                                        stringResource(R.string.json_file)
+                                                    else stringResource(R.string.database),
+                                                    iconPainter = if (selectedSourceApp.intValue == 5)
+                                                        painterResource(id = R.drawable.json_file)
+                                                    else painterResource(id = R.drawable.database),
+                                                    iconColor = SaltTheme.colors.text
+                                                )
                                                 PopupMenuItem(
                                                     onClick = {
                                                         MyVibrationEffect(
@@ -1987,28 +2005,41 @@ fun ConvertPageUi(
                                             AnimatedVisibility(
                                                 visible = (selectedSourceApp.intValue != 0) && !useRootAccess.value && (selectedMethod.intValue == 0)
                                             ) {
-                                                Item(
-                                                    onClick = { convertPage.selectDatabaseFile() },
-                                                    text = stringResource(R.string.select_database_file_match_to_source).replace(
-                                                        "#",
-                                                        when (selectedSourceApp.intValue) {
-                                                            1 -> stringResource(R.string.source_netease_cloud_music)
-                                                            2 -> stringResource(R.string.source_qq_music)
-                                                            3 -> stringResource(R.string.source_kugou_music)
-                                                            4 -> stringResource(R.string.source_kuwo_music)
-                                                            5 -> stringResource(R.string.source_luna_music)
-                                                            else -> ""
-                                                        }
+                                                Column {
+                                                    Item(
+                                                        onClick = {
+                                                            if (selectedSourceApp.intValue == 5)
+                                                                convertPage.selectJsonFileDir()
+                                                            else
+                                                                convertPage.selectDatabaseFile()
+                                                        },
+                                                        text =
+                                                        if (selectedSourceApp.intValue == 5)
+                                                            stringResource(R.string.select_json_file_dir_match_to_source).replace(
+                                                                "#",
+                                                                stringResource(R.string.source_luna_music)
+                                                            )
+                                                        else
+                                                            stringResource(R.string.select_database_file_match_to_source).replace(
+                                                                "#",
+                                                                when (selectedSourceApp.intValue) {
+                                                                    1 -> stringResource(R.string.source_netease_cloud_music)
+                                                                    2 -> stringResource(R.string.source_qq_music)
+                                                                    3 -> stringResource(R.string.source_kugou_music)
+                                                                    4 -> stringResource(R.string.source_kuwo_music)
+                                                                    else -> ""
+                                                                }
+                                                            )
                                                     )
-                                                )
-                                            }
-                                            AnimatedVisibility(
-                                                visible = (databaseFileName.value != "") && !useRootAccess.value
-                                            ) {
-                                                ItemValue(
-                                                    text = stringResource(R.string.you_have_selected),
-                                                    rightSub = databaseFileName.value
-                                                )
+                                                    AnimatedVisibility(
+                                                        visible = (databaseFileName.value != "") && !useRootAccess.value
+                                                    ) {
+                                                        ItemValue(
+                                                            text = stringResource(R.string.you_have_selected),
+                                                            rightSub = databaseFileName.value
+                                                        )
+                                                    }
+                                                }
                                             }
                                         }
 
@@ -2030,12 +2061,7 @@ fun ConvertPageUi(
                                             AnimatedVisibility(
                                                 visible = useCustomResultFile.value
                                             ) {
-                                                Column(
-                                                    modifier = Modifier
-                                                        .weight(1f)
-                                                        .fillMaxSize()
-                                                        .background(color = SaltTheme.colors.subBackground)
-                                                ) {
+                                                Column {
                                                     Item(
                                                         onClick = { convertPage.selectResultFile() },
                                                         text = stringResource(R.string.select_result_file_item_title).replace(
@@ -2140,7 +2166,7 @@ fun ConvertPageUi(
                                             )
                                         )
                                         AnimatedVisibility(
-                                            visible = (convertPage.sourcePlaylistFileName.value.isNotBlank())
+                                            visible = convertPage.sourcePlaylistFileName.value.isNotBlank()
                                         ) {
                                             ItemValue(
                                                 text = stringResource(R.string.you_have_selected),
@@ -2301,6 +2327,32 @@ fun ConvertPageUi(
                         ) {
                             RoundedColumn {
                                 ItemTitle(text = stringResource(R.string.select_needed_musiclist))
+                                AnimatedVisibility(
+                                    visible = playlistEnabled.isEmpty()
+                                ) {
+                                    ItemContainer {
+                                        Column(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalAlignment = Alignment.CenterHorizontally
+                                        ) {
+                                            AnimatedContent(
+                                                targetState = showLoadingProgressBar.value,
+                                                label = "",
+                                                transitionSpec = {
+                                                    fadeIn() togetherWith fadeOut()
+                                                }) {
+                                                Text(
+                                                    text = if (it)
+                                                        stringResource(id = R.string.loading)
+                                                    else
+                                                        stringResource(id = R.string.no_playlist_found),
+                                                    fontSize = 16.sp,
+                                                    color = SaltTheme.colors.subText
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
                                 AnimatedVisibility(
                                     visible = playlistEnabled.isNotEmpty()
                                 ) {

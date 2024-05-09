@@ -4,7 +4,7 @@
     <string name="scanning_try_again_later">Scanning, please try again later.</string>
     <string name="result_file_name">#_Export</string>
     <string name="request_permission_toast">Permissions are required to continue.</string>
-    <string name="selected_directory_path">"Selected Directory: "</string>
+    <string name="selected_directory_path">"Selected Directory"</string>
     <string name="scan_complete">Done</string>
     <string name="file_conflict_dialog_title">Conflict detected</string>
     <string name="file_conflict_dialog_content">"Existence of results from last scan! #nPlease select your action: "</string>
@@ -49,7 +49,7 @@
     <string name="import_database">Import database</string>
     <string name="select_database_file_match_to_source">Select the database file of #</string>
     <string name="source_default">the corresponding app</string>
-    <string name="you_have_selected">File selected</string>
+    <string name="you_have_selected">Selected</string>
     <string name="next_step_text">Next</string>
     <string name="please_select_source_app">Please select source App</string>
     <string name="use_custom_result_file">Use custom music output file</string>
@@ -372,4 +372,11 @@
     <string name="luna_music_verify_content">Luna Music considers this login to be risky and requires security verification.#nPlease use `#phone` and send a text message:#n- Content: `#content`#n- To: `#target`.#n#nAfter sending successfully, click `OK`.#nIf it is a local number, click `Send SMS` button to jump to the SMS sending interface.</string>
     <string name="send_sms">Send SMS</string>
     <string name="verify_failed">Authentication failed, please check if the SMS was sent successfully.</string>
+    <string name="json_file_dir">Directory of JSON files</string>
+    <string name="json_file">JSON files</string>
+    <string name="select_json_file_dir_match_to_source">Select the directory where the JSON file for #</string>
+    <string name="failed_to_get_file_from_dir">Failed to get file from directory</string>
+    <string name="no_playlist_found">No playlist data</string>
+    <string name="loading">Loading…</string>
+    <string name="wait_operate_end">Please wait for the operation to complete</string>
 </resources>

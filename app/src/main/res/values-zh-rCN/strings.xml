@@ -4,7 +4,7 @@
     <string name="scan_result_hint">扫描过程将会显示在这里。</string>
     <string name="scanning_try_again_later">正在扫描中，请稍后再试。</string>
     <string name="request_permission_toast">需要权限才能继续操作</string>
-    <string name="selected_directory_path">选择的目录：</string>
+    <string name="selected_directory_path">选择的目录</string>
     <string name="scan_complete">扫描完成</string>
     <string name="file_conflict_dialog_content">存在上次扫描的结果！#n请选择您的操作：</string>
     <string name="file_conflict_dialog_title">检测到冲突</string>
@@ -366,4 +366,11 @@
     <string name="luna_music_verify_content">汽水音乐认为本次登录存在风险，需要进行安全验证。#n请使用`#phone`，发送短信：#n- 内容：`#content`#n- 收信人：`#target`#n#n发送成功后，请点击`确定 `按钮。#n如果是本机号码，点击`发送短信 `按钮，即可跳转到短信发送界面。</string>
     <string name="send_sms">发送短信</string>
     <string name="verify_failed">认证失败，请检查短信是否发送成功</string>
+    <string name="json_file_dir">JSON文件目录</string>
+    <string name="json_file">JSON文件</string>
+    <string name="select_json_file_dir_match_to_source">选择#的JSON文件所在目录</string>
+    <string name="failed_to_get_file_from_dir">从目录中获取文件失败</string>
+    <string name="no_playlist_found">无歌单数据</string>
+    <string name="loading">加载中…</string>
+    <string name="wait_operate_end">请等待操作完成</string>
 </resources>

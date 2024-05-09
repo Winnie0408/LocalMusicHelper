@@ -104,6 +104,7 @@ import java.util.Locale
 class MainActivity : ComponentActivity() {
 
     private lateinit var openDirectoryLauncher: ActivityResultLauncher<Uri?>
+    private lateinit var openLunaJSONDirLauncher: ActivityResultLauncher<Uri?>
     private lateinit var openEncryptDirectoryLauncher: ActivityResultLauncher<Uri?>
     private lateinit var openDecryptDirectoryLauncher: ActivityResultLauncher<Uri?>
     private lateinit var openMusicPlatformSqlFileLauncher: ActivityResultLauncher<Array<String>>
@@ -155,6 +156,10 @@ class MainActivity : ComponentActivity() {
         openDirectoryLauncher =
             registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
                 scanPage.handleUri(uri)
+            }
+        openLunaJSONDirLauncher =
+            registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
+                convertPage.handelLunaDirUri(uri)
             }
         openEncryptDirectoryLauncher =
             registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
@@ -214,6 +219,7 @@ class MainActivity : ComponentActivity() {
                 openMusicPlatformSqlFileLauncher = openMusicPlatformSqlFileLauncher,
                 openResultSqlFileLauncher = openResultSqlFileLauncher,
                 openPlaylistFileLauncher = openPlaylistFileLauncher,
+                openLunaJSONDirLauncher = openLunaJSONDirLauncher,
                 db = db,
                 componentActivity = this,
                 encryptServer = settingsPage.encryptServer,

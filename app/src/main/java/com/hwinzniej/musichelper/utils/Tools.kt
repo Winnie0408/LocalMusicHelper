@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.net.Uri
 import android.provider.OpenableColumns
+import androidx.documentfile.provider.DocumentFile
 import com.alibaba.fastjson2.JSON
 import com.alibaba.fastjson2.JSONObject
 import com.google.zxing.BarcodeFormat
@@ -77,6 +78,45 @@ class Tools {
         return outputFile.absolutePath
     }
 
+    fun copyFilesToExternalFilesDir(
+        uri: Uri,
+        context: Context,
+        dirName: String,
+        clean: Boolean = false
+    ): String {
+        val directory = DocumentFile.fromTreeUri(context, uri)
+        val files = directory?.listFiles()
+        if (clean) {
+            val externalFilesDir =
+                File("${context.getExternalFilesDir(null)?.absolutePath}/${dirName}")
+            if (externalFilesDir.isDirectory)
+                externalFilesDir.listFiles()?.forEach { file ->
+                    file.delete()
+                }
+        }
+
+        files?.forEach { file ->
+            if (file.isFile) {
+                val inputStream: InputStream? = context.contentResolver.openInputStream(file.uri)
+                val outputFile = File(
+                    "${context.getExternalFilesDir(null)?.absolutePath}/${dirName}",
+                    file.name ?: ""
+                )
+                if (outputFile.parentFile?.exists() == false) {
+                    outputFile.parentFile?.mkdirs()
+                }
+                val outputStream: OutputStream = FileOutputStream(outputFile)
+
+                inputStream?.use { input ->
+                    outputStream.use { output ->
+                        input.copyTo(output)
+                    }
+                }
+            }
+        }
+        return directory?.name ?: ""
+    }
+
     fun deleteOldFiles(context: Context) {
         val directory = context.getExternalFilesDir(null)
         val currentTime = System.currentTimeMillis()
@@ -86,7 +126,7 @@ class Tools {
             val fileAgeInDays = TimeUnit.MILLISECONDS.toDays(fileAge)
 
             if (fileAgeInDays > 3) {
-                file.delete()
+                file.deleteRecursively()
             }
         }
     }
@@ -381,10 +421,9 @@ class Tools {
             )
             .get()
             .build()
-
-        return JSON.parseObject(
-            client.newCall(request).execute().body?.string()
-        )
+        client.newCall(request).execute().use {
+            return JSON.parseObject(it.body?.string())
+        }
     }
 
     fun copyAssetFileToExternalFilesDir(context: Context, filename: String) {
@@ -399,7 +438,7 @@ class Tools {
             if (outFile.exists()) {
                 outFile.delete()
             }
-            outputStream = FileOutputStream(outFile)
+            outputStream = FileOutputStream(outFile, false)
 
             val buffer = ByteArray(1024)
             var read: Int
@@ -507,18 +546,25 @@ class Tools {
     }
 
     fun getCurrentIp(): String {
-        val client = OkHttpClient()
-        var request = Request.Builder()
-        request = request.url("https://myip.ipip.net/s").get()
-        var currentIp =
-            client.newCall(request.build()).execute().body?.string()?.replace("\n", "")
-        if (currentIp == null) {
-            request = Request.Builder()
-            request = request.url("https://ip.3322.net").get()
-            currentIp =
-                client.newCall(request.build()).execute().body?.string()?.replace("\n", "")
-            if (currentIp == null)
-                currentIp = "1.180.115.20"
+        var currentIp: String
+        try {
+            val client = OkHttpClient()
+            var request = Request.Builder()
+            request = request.url("https://myip.ipip.net/s").get()
+            client.newCall(request.build()).execute().use {
+                currentIp = it.body?.string()?.replace("\n", "") ?: ""
+            }
+            if (currentIp.isBlank()) {
+                request = Request.Builder()
+                request = request.url("https://ip.3322.net").get()
+                client.newCall(request.build()).execute().use {
+                    currentIp = it.body?.string()?.replace("\n", "") ?: ""
+                }
+                if (currentIp.isBlank())
+                    currentIp = "1.180.115.20"
+            }
+        } catch (e: Exception) {
+            currentIp = "1.180.115.20"
         }
         return currentIp
     }

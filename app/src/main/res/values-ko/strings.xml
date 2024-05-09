@@ -145,7 +145,7 @@
     <string name="select_source_dialog_title">소스 선택</string>
     <string name="select_source_item_title">태그 정보의 소스 선택</string>
     <string name="select_source_of_songlist">플레이리스트 소스 플랫폼</string>
-    <string name="selected_directory_path">"선택한 디렉토리: "</string>
+    <string name="selected_directory_path">"선택한 디렉토리"</string>
     <string name="set_similarity_dialog_title">유사성 임계값 설정</string>
     <string name="set_similarity_item">유사성 임계값</string>
     <string name="settings_function_name">설정</string>
@@ -187,7 +187,7 @@
     <string name="visit_the_link_below">아래 링크를 방문하시겠습니까?</string>
     <string name="will_open_in_browser">브라우저에서 열립니다.</string>
     <string name="with_root_access">루트 액세스는 필요한 파일을 가져오는 데 사용됩니다</string>
-    <string name="you_have_selected">선택한 파일</string>
+    <string name="you_have_selected">선택됨</string>
     <string name="temporarily_unavailable">(일시적으로 사용할 수 없습니다)</string>
     <string name="open_source_gitee">Gitee에서 이 프로젝트 보기</string>
     <string name="no_music_found">⚠️ 선택한 디렉토리에 지원되는 음악 파일이 없습니다</string>
@@ -366,4 +366,11 @@
     <string name="luna_music_verify_content">Luna 음악은 이 로그인을 위험하다고 판단하여 보안 인증이 필요합니다.#n`#phone`를 사용하여 문자 메시지를 보내주세요:#n- 내용: `#content`#n- 받는 사람: `#target`#n#n전송이 성공하면 `확인`을 클릭합니다.#n지역 번호인 경우 `SMS 보내기` 버튼을 클릭하여 SMS 전송 인터페이스로 이동합니다.</string>
     <string name="send_sms">SMS 보내기</string>
     <string name="verify_failed">인증에 실패했습니다. SMS가 성공적으로 전송되었는지 확인하세요.</string>
+    <string name="json_file_dir">JSON 파일 디렉토리</string>
+    <string name="json_file">JSON 파일</string>
+    <string name="select_json_file_dir_match_to_source">#의 JSON 파일이 있는 디렉터리를 선택</string>
+    <string name="failed_to_get_file_from_dir">디렉토리에서 파일을 가져오지 못했습니다</string>
+    <string name="no_playlist_found">노래 목록 데이터가 없습니다</string>
+    <string name="loading">로딩 중…</string>
+    <string name="wait_operate_end">작업이 완료될 때까지 기다려주세요</string>
 </resources>

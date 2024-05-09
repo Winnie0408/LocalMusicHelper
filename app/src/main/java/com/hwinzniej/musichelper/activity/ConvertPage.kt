@@ -68,6 +68,7 @@ class ConvertPage(
     private val openMusicPlatformSqlFileLauncher: ActivityResultLauncher<Array<String>>,
     private val openResultSqlFileLauncher: ActivityResultLauncher<Array<String>>,
     private val openPlaylistFileLauncher: ActivityResultLauncher<Array<String>>,
+    private val openLunaJSONDirLauncher: ActivityResultLauncher<Uri?>,
     val db: MusicDatabase,
     componentActivity: ComponentActivity,
     val encryptServer: MutableState<String>,
@@ -95,7 +96,6 @@ class ConvertPage(
     var enableAlbumNameMatch = mutableStateOf(true)
     var similarity = mutableFloatStateOf(85f)
     var useRootAccess = mutableStateOf(false)
-    var sourceAppText = mutableStateOf("")
     private var playlistId = mutableStateListOf<String>()
     var playlistName = mutableStateListOf<String>()
     var playlistEnabled = mutableStateListOf<Int>()
@@ -245,6 +245,34 @@ class ConvertPage(
         }
     }
 
+    fun selectJsonFileDir() {
+        try {
+            openLunaJSONDirLauncher.launch(null)
+        } catch (_: Exception) {
+            Toast.makeText(
+                context,
+                context.getString(R.string.unable_start_documentsui),
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+    }
+
+    fun handelLunaDirUri(uri: Uri?) {
+        if (uri == null) {
+            return
+        }
+        try {
+            lifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+                val temp = Tools().copyFilesToExternalFilesDir(uri, context, "lunaJsonDir", true)
+                delay(200L) //播放动画
+                databaseFileName.value = temp
+            }
+        } catch (e: Exception) {
+            Toast.makeText(context, R.string.failed_to_get_file_from_dir, Toast.LENGTH_SHORT).show()
+            return
+        }
+    }
+
     fun handleUri(uri: Uri?, code: Int) {
         if (uri == null) {
             return
@@ -304,16 +332,15 @@ class ConvertPage(
             loadingProgressSema.acquire()
             loadingProgressSema.acquire()
             if (selectedMethod.intValue == 0) {
-                MyVibrationEffect(
-                    context,
-                    (context as MainActivity).enableHaptic.value,
-                    context.hapticStrength.intValue
-                ).done()
+//                MyVibrationEffect(
+//                    context,
+//                    (context as MainActivity).enableHaptic.value,
+//                    context.hapticStrength.intValue
+//                ).done()
                 if (haveError) {
                     showLoadingProgressBar.value = false
                 } else {
                     showLoadingProgressBar.value = true
-                    currentPage.intValue = 1
                     delay(500L)
                     databaseSummary()
                 }
@@ -345,6 +372,7 @@ class ConvertPage(
                         }\n"
                     errorDialogCustomAction.value = {}
                     showErrorDialog.value = true
+                    currentPage.intValue = 0
                     loadingProgressSema.release()
                     haveError = true
                     return@launch
@@ -372,6 +400,7 @@ class ConvertPage(
                     errorDialogCustomAction.value = {}
                     showErrorDialog.value = true
                     haveError = true
+                    currentPage.intValue = 0
                 } finally {
                     db?.close()
                     loadingProgressSema.release()
@@ -392,6 +421,7 @@ class ConvertPage(
                         errorDialogCustomAction.value = {}
                         showErrorDialog.value = true
                         haveError = true
+                        currentPage.intValue = 0
                     }
                 } catch (e: Exception) {
                     errorDialogTitle.value =
@@ -405,6 +435,7 @@ class ConvertPage(
                     errorDialogCustomAction.value = {}
                     showErrorDialog.value = true
                     haveError = true
+                    currentPage.intValue = 0
                 } finally {
                     loadingProgressSema.release()
                 }
@@ -442,6 +473,7 @@ class ConvertPage(
                 errorDialogCustomAction.value = {}
                 showErrorDialog.value = true
                 haveError = true
+                currentPage.intValue = 0
                 loadingProgressSema.release()
                 return@launch
             }
@@ -459,14 +491,31 @@ class ConvertPage(
                 if (!dir.exists())
                     dir.mkdirs()
 
-                val copyResult = Tools().execShellCmd(
-                    "cp -f '/data/data/${appExists.split(":")[1]}/databases/${
-                        sourceApp.databaseName
-                    }' '${dir.absolutePath}/${sourceApp.sourceEng}_temp.db'"
-                )
+                val copyResult = if (selectedSourceApp.intValue == 5) {
+                    val tempDir =
+                        File(context.getExternalFilesDir(null)?.absolutePath + "/lunaJsonDir")
+                    if (!tempDir.exists()) {
+                        tempDir.mkdirs()
+                    }
+                    val tempPath = context.getExternalFilesDir(null)?.absolutePath
+                    Tools().execShellCmd(
+                        "find '/data/data/${appExists.split(":")[1]}/cache/NetCacheLoader' -type f -exec cp {} '${
+                            tempPath
+                        }/lunaJsonDir' \\; && chmod -R 777 '${tempPath}/lunaJsonDir'"
+                    )
+                } else {
+                    Tools().execShellCmd(
+                        "cp -f '/data/data/${appExists.split(":")[1]}/databases/${
+                            sourceApp.databaseName
+                        }' '${dir.absolutePath}/${sourceApp.sourceEng}_temp.db' && chmod 777 '${dir.absolutePath}/${sourceApp.sourceEng}_temp.db'"
+                    )
+                }
 
                 if (copyResult == "") {
                     databaseFilePath.value = "${dir.absolutePath}/${sourceApp.sourceEng}_temp.db"
+                    if (selectedSourceApp.intValue == 5) {
+                        lunaJsonToDatabase()
+                    }
                     loadingProgressSema.release()
                 } else {
                     errorDialogTitle.value =
@@ -481,6 +530,7 @@ class ConvertPage(
                     showErrorDialog.value = true
                     haveError = true
                     loadingProgressSema.release()
+                    currentPage.intValue = 0
                     return
                 }
             } else {
@@ -509,11 +559,21 @@ class ConvertPage(
                         R.string.read_failed
                     )
                 }:\n  - ${
-                    context.getString(R.string.app_not_installed).replace("#", sourceAppText.value)
+                    context.getString(R.string.app_not_installed).replace(
+                        "#", when (selectedSourceApp.intValue) {
+                            1 -> context.getString(R.string.source_netease_cloud_music)
+                            2 -> context.getString(R.string.source_qq_music)
+                            3 -> context.getString(R.string.source_kugou_music)
+                            4 -> context.getString(R.string.source_kuwo_music)
+                            5 -> context.getString(R.string.source_luna_music)
+                            else -> ""
+                        }
+                    )
                 }\n"
             errorDialogCustomAction.value = {}
             showErrorDialog.value = true
             haveError = true
+            currentPage.intValue = 0
             loadingProgressSema.release()
         }
     }
@@ -538,6 +598,7 @@ class ConvertPage(
                     showErrorDialog.value = true
                     loadingProgressSema.release()
                     haveError = true
+                    currentPage.intValue = 0
                     return@launch
                 }
 
@@ -549,30 +610,34 @@ class ConvertPage(
             }
             if (selectedMethod.intValue == 0) {
                 if (sourceApp.sourceEng != "") {
+                    currentPage.intValue = 1
                     if (useRootAccess.value)
                         checkAppStatusWithRoot()
                     else {
-                        if (databaseFilePath.value.isEmpty()) {
-                            errorDialogTitle.value =
-                                context.getString(R.string.error_while_getting_data_dialog_title)
-                            errorDialogContent.value +=
-                                "- ${context.getString(R.string.database_file)} ${
-                                    context.getString(
-                                        R.string.read_failed
-                                    )
-                                }:\n  - ${
-                                    context.getString(
-                                        R.string.please_select_database_file
-                                    )
-                                }\n"
-                            errorDialogCustomAction.value = {}
-                            showErrorDialog.value = true
-                            loadingProgressSema.release()
-                            haveError = true
-                            return@launch
-                        }
                         var db: SQLiteDatabase? = null
                         try {
+                            if (selectedSourceApp.intValue == 5) {
+                                lunaJsonToDatabase()
+                            }
+                            if (databaseFilePath.value.isEmpty()) {
+                                errorDialogTitle.value =
+                                    context.getString(R.string.error_while_getting_data_dialog_title)
+                                errorDialogContent.value +=
+                                    "- ${context.getString(R.string.database_file)} ${
+                                        context.getString(
+                                            R.string.read_failed
+                                        )
+                                    }:\n  - ${
+                                        context.getString(
+                                            R.string.please_select_database_file
+                                        )
+                                    }\n"
+                                errorDialogCustomAction.value = {}
+                                showErrorDialog.value = true
+                                currentPage.intValue = 0
+                                haveError = true
+                                return@launch
+                            }
                             db = SQLiteDatabase.openDatabase(
                                 databaseFilePath.value,
                                 null,
@@ -615,6 +680,7 @@ class ConvertPage(
                             errorDialogCustomAction.value = {}
                             showErrorDialog.value = true
                             haveError = true
+                            currentPage.intValue = 0
                         } finally {
                             db?.close()
                             loadingProgressSema.release()
@@ -637,6 +703,7 @@ class ConvertPage(
                     errorDialogCustomAction.value = {}
                     showErrorDialog.value = true
                     haveError = true
+                    currentPage.intValue = 0
                     loadingProgressSema.release()
                 }
             } else {
@@ -1872,7 +1939,7 @@ class ConvertPage(
                                         if (songArtists.isBlank() || songArtists == "null") {
                                             songArtists = context.getString(R.string.unknown)
                                         }
-                                        if (songAlbum == null || songAlbum.isBlank() || songAlbum == "null") {
+                                        if (songAlbum.isNullOrBlank() || songAlbum == "null") {
                                             songAlbum = context.getString(R.string.unknown)
                                         }
                                         db.execSQL(
@@ -1940,7 +2007,7 @@ class ConvertPage(
                                                 songArtists =
                                                     context.getString(R.string.unknown)
                                             }
-                                            if (songAlbum == null || songAlbum.isBlank() || songAlbum == "null") {
+                                            if (songAlbum.isNullOrBlank() || songAlbum == "null") {
                                                 songAlbum = context.getString(R.string.unknown)
                                             }
                                             db.execSQL(
@@ -2019,7 +2086,7 @@ class ConvertPage(
                                                 songArtists =
                                                     context.getString(R.string.unknown)
                                             }
-                                            if (songAlbum == null || songAlbum.isBlank() || songAlbum == "null") {
+                                            if (songAlbum.isNullOrBlank() || songAlbum == "null") {
                                                 songAlbum = context.getString(R.string.unknown)
                                             }
                                             db.execSQL(
@@ -2126,7 +2193,7 @@ class ConvertPage(
                                                 songArtists =
                                                     context.getString(R.string.unknown)
                                             }
-                                            if (songAlbum == null || songAlbum.isBlank() || songAlbum == "null") {
+                                            if (songAlbum.isNullOrBlank() || songAlbum == "null") {
                                                 songAlbum = context.getString(R.string.unknown)
                                             }
                                             db.execSQL(
@@ -2229,7 +2296,7 @@ class ConvertPage(
                                                 songArtists =
                                                     context.getString(R.string.unknown)
                                             }
-                                            if (songAlbum == null || songAlbum.isBlank() || songAlbum == "null") {
+                                            if (songAlbum.isNullOrBlank() || songAlbum == "null") {
                                                 songAlbum = context.getString(R.string.unknown)
                                             }
                                             db.execSQL(
@@ -3404,6 +3471,108 @@ class ConvertPage(
         dataStore.edit {
             it[DataStoreConstants.LUNA_COOKIE] = ""
         }
+    }
+
+    private fun lunaJsonToDatabase() {
+        val dirPath = context.getExternalFilesDir(null)?.absolutePath + "/lunaJsonDir"
+        val dir = File(dirPath)
+        if (!dir.exists())
+            return
+        val files = dir.listFiles()
+        if (files == null || files.isEmpty())
+            return
+        Tools().copyAssetFileToExternalFilesDir(context, "QQMusic")
+        val databaseFile = File(context.getExternalFilesDir(null), "QQMusic")
+        val db = SQLiteDatabase.openDatabase(
+            databaseFile.absolutePath,
+            null,
+            SQLiteDatabase.OPEN_READWRITE
+        )
+        databaseFilePath.value = databaseFile.absolutePath
+        files.forEach { file ->
+            val content = file.readText()
+
+            val json: JSONObject
+            try {
+                json = JSON.parseObject(content)
+            } catch (_: Exception) {
+                return@forEach
+            }
+
+            if (json.containsKey("media_resources")) {
+                // 歌单详情
+                json.getJSONArray("media_resources").forEachIndexed { index, it ->
+                    val song = (it as JSONObject).getJSONObject("entity")
+                        .getJSONObject("track_wrapper")
+                        .getJSONObject("track")
+                    val playlistId = json.getJSONObject("playlist").getString("id")
+                    val songId = song.getString("id")
+                    val songName = song.getString("name")
+
+                    val songArtistsBuilder = StringBuilder()
+                    song.getJSONArray("artists").forEach { it1 ->
+                        val artistsInfo = it1 as JSONObject
+                        songArtistsBuilder.append(artistsInfo.getString("name"))
+                        songArtistsBuilder.append("/")
+                    }
+                    songArtistsBuilder.deleteCharAt(songArtistsBuilder.length - 1)
+                    var songArtists = songArtistsBuilder.toString()
+
+                    var songAlbum = song.getJSONObject("album").getString("name")
+                    if (songArtists.isBlank() || songArtists == "null") {
+                        songArtists = context.getString(R.string.unknown)
+                    }
+                    if (songAlbum.isNullOrBlank() || songAlbum == "null") {
+                        songAlbum = context.getString(R.string.unknown)
+                    }
+                    db.execSQL(
+                        "INSERT INTO ${sourceApp.songListSongInfoTableName} (${sourceApp.songListSongInfoPlaylistId}, ${sourceApp.songListSongInfoSongId}, ${sourceApp.sortField}) VALUES (?, ?, ?)",
+                        arrayOf(
+                            playlistId,
+                            songId,
+                            index
+                        )
+                    )
+
+                    db.rawQuery(
+                        "SELECT COUNT(*) FROM ${sourceApp.songInfoTableName} WHERE ${sourceApp.songInfoSongId} = ?",
+                        arrayOf(songId)
+                    ).use { cursor ->
+                        cursor.moveToFirst()
+                        if (cursor.getInt(0) == 0) {
+                            db.execSQL(
+                                "INSERT INTO ${sourceApp.songInfoTableName} (${sourceApp.songInfoSongId}, ${sourceApp.songInfoSongName}, ${sourceApp.songInfoSongArtist}, ${sourceApp.songInfoSongAlbum}) VALUES (?, ?, ?, ?)",
+                                arrayOf(
+                                    songId,
+                                    songName,
+                                    songArtists,
+                                    songAlbum
+                                )
+                            )
+                        }
+                    }
+                }
+            } else if (json.containsKey("playlists")) {
+                // 歌单列表
+                val playlistInfo =
+                    json.getJSONArray("playlists")
+                playlistInfo.forEach pForEach@{
+                    val playlist = it as JSONObject
+                    if (!playlist.containsKey("count_tracks") || playlist.getInteger("count_tracks") == 0) {
+                        return@pForEach
+                    }
+                    db.execSQL(
+                        "INSERT INTO ${sourceApp.songListTableName} (${sourceApp.songListId}, ${sourceApp.songListName}, ${sourceApp.musicNum}) VALUES (?, ?, ?)",
+                        arrayOf(
+                            playlist.getString("id"),
+                            playlist.getString("title"),
+                            playlist.getInteger("count_tracks")
+                        )
+                    )
+                }
+            } else return@forEach
+        }
+        db.close()
     }
 }
 
