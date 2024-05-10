@@ -379,4 +379,6 @@
     <string name="no_playlist_found">No playlist data</string>
     <string name="loading">Loading…</string>
     <string name="wait_operate_end">Please wait for the operation to complete</string>
+    <string name="please_select_playlist_file">Please select playlist file</string>
+    <string name="home_screen">Launch page</string>
 </resources>

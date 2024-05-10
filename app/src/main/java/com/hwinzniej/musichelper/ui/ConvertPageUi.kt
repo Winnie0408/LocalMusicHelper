@@ -166,8 +166,6 @@ fun ConvertPageUi(
     var selectedFilterIndex by remember { mutableIntStateOf(0) }
     var showOriginalSonglist by remember { mutableIntStateOf(1) }
     val originalSonglistPopupMenuState = rememberPopupState()
-    var selectedTargetApp by remember { mutableIntStateOf(0) }
-    var selectedSourceLocalApp by remember { mutableIntStateOf(2) }
     val targetAppPopupMenuState = rememberPopupState()
     val sourceLocalAppPopupMenuState = rememberPopupState()
     var selectedMultiSourceApp by remember { mutableIntStateOf(-1) }
@@ -178,7 +176,6 @@ fun ConvertPageUi(
     var kugouCurrentIp by remember { mutableStateOf("") }
     val kugouUserRelated = remember { mutableStateMapOf<String, String>() }
     val convertModePopupMenuState = rememberPopupState()
-    val selectedConvertMode = remember { mutableIntStateOf(1) }
 
     fun init(delay: Long = 0L) {
         coroutine.launch {
@@ -202,9 +199,7 @@ fun ConvertPageUi(
             selectedSongIndex = -1
             selectedSearchResult = -1
             showOriginalSonglist = 1
-            selectedTargetApp = 0
             selectedMultiSourceApp = -1
-            selectedSourceLocalApp = 2
             convertPage.sourcePlaylistFileName.value = ""
         }
     }
@@ -607,7 +602,7 @@ fun ConvertPageUi(
                     saveCautionSongs,
                     saveManualSongs,
                     "${playlistName[playlistEnabled.indexOfFirst { it == 1 }]}${
-                        when (selectedTargetApp) {
+                        when (convertPage.selectedTargetApp.intValue) {
                             0 -> ".txt"
                             1 -> ".m3u"
                             2 -> ".m3u8"
@@ -1755,7 +1750,7 @@ fun ConvertPageUi(
                                     state = convertModePopupMenuState,
                                     text = stringResource(R.string.choose_convert_mode),
                                     sub = null,
-                                    selectedItem = when (selectedConvertMode.intValue) {
+                                    selectedItem = when (convertPage.convertMode.intValue) {
                                         1 -> stringResource(R.string.online_to_local)
                                         2 -> stringResource(R.string.local_to_local)
                                         else -> ""
@@ -1770,11 +1765,15 @@ fun ConvertPageUi(
                                                 enableHaptic.value,
                                                 hapticStrength.intValue
                                             ).click()
-                                            selectedConvertMode.intValue = 1
+                                            coroutine.launch {
+                                                dataStore.edit { settings ->
+                                                    settings[DataStoreConstants.CONVERT_MODE] = 1
+                                                }
+                                            }
                                             convertModePopupMenuState.dismiss()
                                             init()
                                         },
-                                        selected = selectedConvertMode.intValue == 1,
+                                        selected = convertPage.convertMode.intValue == 1,
                                         text = stringResource(R.string.online_to_local),
                                     )
                                     PopupMenuItem(
@@ -1784,17 +1783,21 @@ fun ConvertPageUi(
                                                 enableHaptic.value,
                                                 hapticStrength.intValue
                                             ).click()
-                                            selectedConvertMode.intValue = 2
+                                            coroutine.launch {
+                                                dataStore.edit { settings ->
+                                                    settings[DataStoreConstants.CONVERT_MODE] = 2
+                                                }
+                                            }
                                             convertModePopupMenuState.dismiss()
                                             init()
                                         },
-                                        selected = selectedConvertMode.intValue == 2,
+                                        selected = convertPage.convertMode.intValue == 2,
                                         text = stringResource(R.string.local_to_local),
                                     )
                                 }
                             }
                             AnimatedContent(
-                                targetState = selectedConvertMode.intValue,
+                                targetState = convertPage.convertMode.intValue,
                                 label = "",
                                 transitionSpec = {
                                     fadeIn() togetherWith fadeOut()
@@ -2036,7 +2039,8 @@ fun ConvertPageUi(
                                                     ) {
                                                         ItemValue(
                                                             text = stringResource(R.string.you_have_selected),
-                                                            rightSub = databaseFileName.value
+                                                            rightSub = databaseFileName.value,
+                                                            rightSubWeight = 2f
                                                         )
                                                     }
                                                 }
@@ -2074,7 +2078,8 @@ fun ConvertPageUi(
                                                     ) {
                                                         ItemValue(
                                                             text = stringResource(R.string.you_have_selected),
-                                                            rightSub = customResultFileName.value
+                                                            rightSub = customResultFileName.value,
+                                                            rightSubWeight = 2f
                                                         )
                                                     }
                                                 }
@@ -2087,7 +2092,7 @@ fun ConvertPageUi(
                                         ItemPopup(
                                             state = sourceLocalAppPopupMenuState,
                                             text = stringResource(R.string.source_music_player),
-                                            selectedItem = when (selectedSourceLocalApp) {
+                                            selectedItem = when (convertPage.selectedSourceLocalApp.intValue) {
                                                 0 -> "Salt Player"
                                                 1 -> "APlayer"
                                                 2 -> "Poweramp"
@@ -2102,10 +2107,15 @@ fun ConvertPageUi(
                                                         enableHaptic.value,
                                                         hapticStrength.intValue
                                                     ).click()
-                                                    selectedSourceLocalApp = 0
+                                                    coroutine.launch {
+                                                        dataStore.edit { settings ->
+                                                            settings[DataStoreConstants.SELECTED_SOURCE_APP] =
+                                                                0
+                                                        }
+                                                    }
                                                     sourceLocalAppPopupMenuState.dismiss()
                                                 },
-                                                selected = selectedSourceLocalApp == 0,
+                                                selected = convertPage.selectedSourceLocalApp.intValue == 0,
                                                 text = "Salt Player",
                                                 iconPainter = painterResource(id = R.drawable.saltplayer),
                                                 iconColor = SaltTheme.colors.text,
@@ -2123,10 +2133,15 @@ fun ConvertPageUi(
                                                         enableHaptic.value,
                                                         hapticStrength.intValue
                                                     ).click()
-                                                    selectedSourceLocalApp = 1
+                                                    coroutine.launch {
+                                                        dataStore.edit { settings ->
+                                                            settings[DataStoreConstants.SELECTED_SOURCE_APP] =
+                                                                1
+                                                        }
+                                                    }
                                                     sourceLocalAppPopupMenuState.dismiss()
                                                 },
-                                                selected = selectedSourceLocalApp == 1,
+                                                selected = convertPage.selectedSourceLocalApp.intValue == 1,
                                                 text = "APlayer",
                                                 iconPainter = painterResource(id = R.drawable.aplayer),
                                                 iconColor = SaltTheme.colors.text,
@@ -2139,10 +2154,15 @@ fun ConvertPageUi(
                                                         enableHaptic.value,
                                                         hapticStrength.intValue
                                                     ).click()
-                                                    selectedSourceLocalApp = 2
+                                                    coroutine.launch {
+                                                        dataStore.edit { settings ->
+                                                            settings[DataStoreConstants.SELECTED_SOURCE_APP] =
+                                                                2
+                                                        }
+                                                    }
                                                     sourceLocalAppPopupMenuState.dismiss()
                                                 },
-                                                selected = selectedSourceLocalApp == 2,
+                                                selected = convertPage.selectedSourceLocalApp.intValue == 2,
                                                 text = "Poweramp",
                                                 iconPainter = painterResource(id = R.drawable.poweramp),
                                                 iconColor = SaltTheme.colors.text,
@@ -2151,13 +2171,11 @@ fun ConvertPageUi(
                                         }
                                         Item(
                                             onClick = {
-                                                convertPage.selectPlaylistFile(
-                                                    selectedSourceLocalApp
-                                                )
+                                                convertPage.selectPlaylistFile()
                                             },
                                             text = stringResource(R.string.select_playlist_file_match_to_source).replace(
                                                 "#",
-                                                when (selectedSourceLocalApp) {
+                                                when (convertPage.selectedSourceLocalApp.intValue) {
                                                     0 -> "Salt Player"
                                                     1 -> "APlayer"
                                                     2 -> "Poweramp"
@@ -2170,7 +2188,8 @@ fun ConvertPageUi(
                                         ) {
                                             ItemValue(
                                                 text = stringResource(R.string.you_have_selected),
-                                                rightSub = convertPage.sourcePlaylistFileName.value
+                                                rightSub = convertPage.sourcePlaylistFileName.value,
+                                                rightSubWeight = 2f
                                             )
                                         }
                                     }
@@ -2182,7 +2201,7 @@ fun ConvertPageUi(
                                 ItemPopup(
                                     state = targetAppPopupMenuState,
                                     text = stringResource(R.string.using_player),
-                                    selectedItem = when (selectedTargetApp) {
+                                    selectedItem = when (convertPage.selectedTargetApp.intValue) {
                                         0 -> "Salt Player"
                                         1 -> "APlayer"
                                         2 -> "Poweramp"
@@ -2197,10 +2216,15 @@ fun ConvertPageUi(
                                                 enableHaptic.value,
                                                 hapticStrength.intValue
                                             ).click()
-                                            selectedTargetApp = 0
+                                            coroutine.launch {
+                                                dataStore.edit { settings ->
+                                                    settings[DataStoreConstants.SELECTED_TARGET_APP] =
+                                                        0
+                                                }
+                                            }
                                             targetAppPopupMenuState.dismiss()
                                         },
-                                        selected = selectedTargetApp == 0,
+                                        selected = convertPage.selectedTargetApp.intValue == 0,
                                         text = "Salt Player",
                                         iconPainter = painterResource(id = R.drawable.saltplayer),
                                         iconColor = SaltTheme.colors.text,
@@ -2218,10 +2242,15 @@ fun ConvertPageUi(
                                                 enableHaptic.value,
                                                 hapticStrength.intValue
                                             ).click()
-                                            selectedTargetApp = 1
+                                            coroutine.launch {
+                                                dataStore.edit { settings ->
+                                                    settings[DataStoreConstants.SELECTED_TARGET_APP] =
+                                                        1
+                                                }
+                                            }
                                             targetAppPopupMenuState.dismiss()
                                         },
-                                        selected = selectedTargetApp == 1,
+                                        selected = convertPage.selectedTargetApp.intValue == 1,
                                         text = "APlayer",
                                         iconPainter = painterResource(id = R.drawable.aplayer),
                                         iconColor = SaltTheme.colors.text,
@@ -2234,10 +2263,15 @@ fun ConvertPageUi(
                                                 enableHaptic.value,
                                                 hapticStrength.intValue
                                             ).click()
-                                            selectedTargetApp = 2
+                                            coroutine.launch {
+                                                dataStore.edit { settings ->
+                                                    settings[DataStoreConstants.SELECTED_TARGET_APP] =
+                                                        2
+                                                }
+                                            }
                                             targetAppPopupMenuState.dismiss()
                                         },
-                                        selected = selectedTargetApp == 2,
+                                        selected = convertPage.selectedTargetApp.intValue == 2,
                                         text = "Poweramp",
                                         iconPainter = painterResource(id = R.drawable.poweramp),
                                         iconColor = SaltTheme.colors.text,
@@ -2255,11 +2289,11 @@ fun ConvertPageUi(
                                 ItemContainer {
                                     TextButton(
                                         onClick = {
-                                            if (selectedConvertMode.intValue == 1) {
+                                            if (convertPage.convertMode.intValue == 1) {
                                                 selectedMultiSourceApp = -1
                                                 convertPage.requestPermission()
                                             } else {
-                                                if (selectedSourceLocalApp == selectedTargetApp) {
+                                                if (convertPage.selectedSourceLocalApp.intValue == convertPage.selectedTargetApp.intValue) {
                                                     Toast.makeText(
                                                         context,
                                                         context.getString(R.string.source_target_same),
@@ -2269,15 +2303,23 @@ fun ConvertPageUi(
                                                         context,
                                                         enableHaptic.value,
                                                         hapticStrength.intValue
-                                                    ).done()
+                                                    ).dialog()
+                                                } else if (convertPage.sourcePlaylistFileName.value.isBlank()) {
+                                                    Toast.makeText(
+                                                        context,
+                                                        context.getString(R.string.please_select_playlist_file),
+                                                        Toast.LENGTH_SHORT
+                                                    ).show()
+                                                    MyVibrationEffect(
+                                                        context,
+                                                        enableHaptic.value,
+                                                        hapticStrength.intValue
+                                                    ).dialog()
                                                 } else {
                                                     coroutine.launch(Dispatchers.IO) {
                                                         showDialogProgressBar.value = true
                                                         val convertSuccess =
-                                                            convertPage.convertLocalPlaylist(
-                                                                sourceApp = selectedSourceLocalApp,
-                                                                targetApp = selectedTargetApp
-                                                            )
+                                                            convertPage.convertLocalPlaylist()
                                                         if (convertSuccess.isBlank()) {
                                                             withContext(Dispatchers.Main) {
                                                                 Toast.makeText(
@@ -2294,6 +2336,8 @@ fun ConvertPageUi(
                                                                     Toast.LENGTH_LONG
                                                                 ).show()
                                                             }
+                                                            convertPage.sourcePlaylistFileName.value =
+                                                                ""
                                                         }
                                                         MyVibrationEffect(
                                                             context,
@@ -2305,7 +2349,7 @@ fun ConvertPageUi(
                                                 }
                                             }
                                         },
-                                        text = if (selectedConvertMode.intValue == 1) stringResource(
+                                        text = if (convertPage.convertMode.intValue == 1) stringResource(
                                             R.string.next_step_text
                                         ) else stringResource(R.string.start_text),
                                         enabled = !it,
@@ -3247,10 +3291,10 @@ fun ConvertPageUi(
                                     )
                                     Spacer(modifier = Modifier.width(12.dp))
                                     TextButton(
-                                        onClick = { convertPage.launchLocalPlayer(selectedTargetApp) },
+                                        onClick = { convertPage.launchLocalPlayer() },
                                         modifier = Modifier.weight(1f),
                                         text = stringResource(id = R.string.open_other_app).replace(
-                                            "#", when (selectedTargetApp) {
+                                            "#", when (convertPage.selectedTargetApp.intValue) {
                                                 0 -> "Salt Player"
                                                 1 -> "APlayer"
                                                 2 -> "Poweramp"

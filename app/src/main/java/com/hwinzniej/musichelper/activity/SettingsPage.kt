@@ -4,6 +4,7 @@ import android.content.Context
 import android.net.Uri
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.datastore.core.DataStore
@@ -27,14 +28,15 @@ class SettingsPage(
     val openUmExecutableFileLauncher: ActivityResultLauncher<Array<String>>,
     val dataStore: DataStore<Preferences>,
 ) {
-    var enableAutoCheckUpdate = mutableStateOf(true)
-    var encryptServer = mutableStateOf("")
-    var serverPing = mutableStateMapOf(
+    val enableAutoCheckUpdate = mutableStateOf(true)
+    val encryptServer = mutableStateOf("")
+    val serverPing = mutableStateMapOf(
         0 to context.getString(R.string.pinging),
         1 to context.getString(R.string.pinging),
         2 to context.getString(R.string.pinging)
     )
-    var showDialogProgressBar = mutableStateOf(false)
+    val showDialogProgressBar = mutableStateOf(false)
+    val initialPage = mutableIntStateOf(0)
 
     fun checkServerPing() {
         lifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {

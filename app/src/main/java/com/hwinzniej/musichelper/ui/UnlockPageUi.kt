@@ -1,5 +1,7 @@
 package com.hwinzniej.musichelper.ui
 
+import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
@@ -24,7 +26,6 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -53,7 +54,6 @@ fun UnlockPageUi(
     settingsPage: SettingsPage,
     hapticStrength: MutableIntState
 ) {
-    val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
     var inputPath by remember { mutableStateOf("") }
     var outputPath by remember { mutableStateOf("") }
@@ -61,6 +61,14 @@ fun UnlockPageUi(
     var overwriteOutputFile by remember { mutableStateOf(true) }
     var umSupportOverWrite by remember { mutableStateOf(false) }
     var showInputOutputPathNotSameDialog by remember { mutableStateOf(false) }
+
+    BackHandler(enabled = unlockPage.showLoadingProgressBar.value) {
+        Toast.makeText(
+            context,
+            context.getString(R.string.wait_operate_end),
+            Toast.LENGTH_SHORT
+        ).show()
+    }
 
     LaunchedEffect(key1 = settingsPage.umSupportOverWrite.value) {
         umSupportOverWrite = settingsPage.umSupportOverWrite.value

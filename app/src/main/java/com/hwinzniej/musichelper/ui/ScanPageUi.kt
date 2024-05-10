@@ -1,5 +1,7 @@
 package com.hwinzniej.musichelper.ui
 
+import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
@@ -57,6 +59,15 @@ fun ScanPageUi(
     hapticStrength: MutableIntState
 ) {
     val context = LocalContext.current
+
+    BackHandler(enabled = showLoadingProgressBar.value) {
+        Toast.makeText(
+            context,
+            context.getString(R.string.wait_operate_end),
+            Toast.LENGTH_SHORT
+        ).show()
+    }
+
     if (showConflictDialog.value) {
         YesNoDialog(
             onDismiss = { showConflictDialog.value = false },

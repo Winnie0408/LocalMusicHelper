@@ -100,6 +100,14 @@ fun AboutPageUi(
 
 
     BackHandler(enabled = settingsPageState.currentPage == 1) {
+        if (showLoadingProgressBar) {
+            Toast.makeText(
+                context,
+                context.getString(R.string.wait_operate_end),
+                Toast.LENGTH_SHORT
+            ).show()
+            return@BackHandler
+        }
         coroutineScope.launch {
             settingsPageState.animateScrollToPage(
                 0, animationSpec = spring(2f)
@@ -384,7 +392,7 @@ fun AboutPageUi(
                     Item(
                         onClick = {
                             yesDialogCustomContent = {
-                                val currentTheme = SaltTheme.colors.text.red
+                                val isDarkTheme = SaltTheme.colors.text.red
                                 Column(
                                     modifier = Modifier
                                         .heightIn(
@@ -393,20 +401,13 @@ fun AboutPageUi(
                                         )
                                 ) {
                                     AndroidView(factory = { WebView(context) }) { webView ->
-                                        val licensesHtml = if (currentTheme < 0.5f) {
-                                            context.assets.open("licenses.html")
-                                                .use { inputStream ->
-                                                    inputStream.bufferedReader().use {
-                                                        it.readText()
-                                                    }
-                                                }
-                                        } else {
-                                            context.assets.open("licenses_dark.html")
-                                                .use { inputStream ->
-                                                    inputStream.bufferedReader().use {
-                                                        it.readText()
-                                                    }
-                                                }
+                                        val licensesHtml = context.assets.open(
+                                            if (isDarkTheme < 0.5f) "licenses.html"
+                                            else "licenses_dark.html"
+                                        ).use { inputStream ->
+                                            inputStream.bufferedReader().use {
+                                                it.readText()
+                                            }
                                         }
                                         webView.setBackgroundColor(0)
                                         webView.settings.javaScriptEnabled = false

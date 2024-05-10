@@ -373,4 +373,6 @@
     <string name="no_playlist_found">노래 목록 데이터가 없습니다</string>
     <string name="loading">로딩 중…</string>
     <string name="wait_operate_end">작업이 완료될 때까지 기다려주세요</string>
+    <string name="please_select_playlist_file">플레이리스트파일을 선택하십시오</string>
+    <string name="home_screen">시작 페이지</string>
 </resources>

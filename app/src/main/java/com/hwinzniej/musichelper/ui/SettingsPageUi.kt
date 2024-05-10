@@ -68,9 +68,14 @@ fun SettingsPageUi(
     hapticStrength: MutableIntState
 ) {
     val context = LocalContext.current
+    val targetSdkVersion = context.packageManager.getApplicationInfo(
+        context.packageName,
+        0
+    ).targetSdkVersion
     val themeModePopupMenuState = rememberPopupState()
     val languagePopupMenuState = rememberPopupState()
     val hapticStrengthPopupMenuState = rememberPopupState()
+    val initialPagePopupMenuState = rememberPopupState()
     val coroutineScope = rememberCoroutineScope()
     var showSelectEncryptServerDialog by remember { mutableStateOf(false) }
     var umFileLegal by remember { mutableStateOf(false) }
@@ -94,11 +99,10 @@ fun SettingsPageUi(
             onDismiss = { showSelectEncryptServerDialog = false },
             onCancel = { showSelectEncryptServerDialog = false },
             onConfirm = {
-                encryptServer.value = selectedEncryptServer
                 coroutineScope.launch(Dispatchers.IO) {
                     dataStore.edit { settings ->
                         settings[DataStoreConstants.KEY_ENCRYPT_SERVER] =
-                            encryptServer.value
+                            selectedEncryptServer
                     }
                 }
                 showSelectEncryptServerDialog = false
@@ -223,7 +227,7 @@ fun SettingsPageUi(
                 ItemPopup(
                     state = themeModePopupMenuState,
                     iconPainter = painterResource(id = R.drawable.app_theme),
-                    iconPaddingValues = PaddingValues(all = 2.dp),
+                    iconPaddingValues = PaddingValues(all = 1.8.dp),
                     iconColor = SaltTheme.colors.text,
                     text = stringResource(R.string.theme_mode_switcher_text),
                     selectedItem = when (selectedThemeMode.intValue) {
@@ -291,6 +295,131 @@ fun SettingsPageUi(
                         iconPainter = painterResource(id = R.drawable.dark_color),
                         iconColor = SaltTheme.colors.text,
                         iconPaddingValues = PaddingValues(all = 1.dp)
+                    )
+                }
+                ItemPopup(
+                    state = initialPagePopupMenuState,
+                    iconPainter = painterResource(id = R.drawable.home_screen),
+                    iconPaddingValues = PaddingValues(all = 1.5.dp),
+                    iconColor = SaltTheme.colors.text,
+                    text = stringResource(R.string.home_screen),
+                    selectedItem = if (targetSdkVersion <= 28) {
+                        when (settingsPage.initialPage.intValue) {
+                            0 -> stringResource(R.string.scan_function_name)
+                            1 -> stringResource(R.string.convert_function_name)
+                            2 -> stringResource(R.string.tag_function_name)
+                            3 -> stringResource(R.string.unlock_function_name)
+                            4 -> stringResource(R.string.settings_function_name)
+                            else -> ""
+                        }
+                    } else {
+                        when (settingsPage.initialPage.intValue) {
+                            0 -> stringResource(R.string.scan_function_name)
+                            1 -> stringResource(R.string.convert_function_name)
+                            2 -> stringResource(R.string.tag_function_name)
+                            3 -> stringResource(R.string.settings_function_name)
+                            else -> ""
+                        }
+                    },
+                    popupWidth = 150
+                ) {
+                    PopupMenuItem(
+                        onClick = {
+                            MyVibrationEffect(
+                                context,
+                                enableHaptic.value,
+                                hapticStrength.intValue
+                            ).click()
+                            coroutineScope.launch {
+                                dataStore.edit { settings ->
+                                    settings[DataStoreConstants.INITIAL_PAGE] = 0
+                                }
+                            }
+                            initialPagePopupMenuState.dismiss()
+                        },
+                        selected = settingsPage.initialPage.intValue == 0,
+                        text = stringResource(R.string.scan_function_name),
+                        iconPainter = painterResource(id = R.drawable.scan),
+                        iconColor = SaltTheme.colors.text
+                    )
+                    PopupMenuItem(
+                        onClick = {
+                            MyVibrationEffect(
+                                context,
+                                enableHaptic.value,
+                                hapticStrength.intValue
+                            ).click()
+                            coroutineScope.launch {
+                                dataStore.edit { settings ->
+                                    settings[DataStoreConstants.INITIAL_PAGE] = 1
+                                }
+                            }
+                            initialPagePopupMenuState.dismiss()
+                        },
+                        selected = settingsPage.initialPage.intValue == 1,
+                        text = stringResource(R.string.convert_function_name),
+                        iconPainter = painterResource(id = R.drawable.convert),
+                        iconColor = SaltTheme.colors.text
+                    )
+                    PopupMenuItem(
+                        onClick = {
+                            MyVibrationEffect(
+                                context,
+                                enableHaptic.value,
+                                hapticStrength.intValue
+                            ).click()
+                            coroutineScope.launch {
+                                dataStore.edit { settings ->
+                                    settings[DataStoreConstants.INITIAL_PAGE] = 2
+                                }
+                            }
+                            initialPagePopupMenuState.dismiss()
+                        },
+                        selected = settingsPage.initialPage.intValue == 2,
+                        text = stringResource(R.string.tag_function_name),
+                        iconPainter = painterResource(id = R.drawable.tag),
+                        iconColor = SaltTheme.colors.text
+                    )
+                    if (targetSdkVersion <= 28) {
+                        PopupMenuItem(
+                            onClick = {
+                                MyVibrationEffect(
+                                    context,
+                                    enableHaptic.value,
+                                    hapticStrength.intValue
+                                ).click()
+                                coroutineScope.launch {
+                                    dataStore.edit { settings ->
+                                        settings[DataStoreConstants.INITIAL_PAGE] = 3
+                                    }
+                                }
+                                initialPagePopupMenuState.dismiss()
+                            },
+                            selected = settingsPage.initialPage.intValue == 3,
+                            text = stringResource(R.string.unlock_function_name),
+                            iconPainter = painterResource(id = R.drawable.um),
+                            iconColor = SaltTheme.colors.text
+                        )
+                    }
+                    PopupMenuItem(
+                        onClick = {
+                            MyVibrationEffect(
+                                context,
+                                enableHaptic.value,
+                                hapticStrength.intValue
+                            ).click()
+                            coroutineScope.launch {
+                                dataStore.edit { settings ->
+                                    settings[DataStoreConstants.INITIAL_PAGE] =
+                                        if (targetSdkVersion <= 28) 4 else 3
+                                }
+                            }
+                            initialPagePopupMenuState.dismiss()
+                        },
+                        selected = settingsPage.initialPage.intValue == if (targetSdkVersion <= 28) 4 else 3,
+                        text = stringResource(R.string.settings_function_name),
+                        iconPainter = painterResource(id = R.drawable.settings),
+                        iconColor = SaltTheme.colors.text
                     )
                 }
             }

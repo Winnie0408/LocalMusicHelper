@@ -373,4 +373,6 @@
     <string name="no_playlist_found">无歌单数据</string>
     <string name="loading">加载中…</string>
     <string name="wait_operate_end">请等待操作完成</string>
+    <string name="please_select_playlist_file">请选择歌单文件</string>
+    <string name="home_screen">启动页</string>
 </resources>

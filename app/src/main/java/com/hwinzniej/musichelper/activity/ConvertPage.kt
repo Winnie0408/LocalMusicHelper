@@ -119,6 +119,9 @@ class ConvertPage(
     var lunaCookie = mutableStateOf("")
     var showLunaVerifyDialog = mutableStateOf(false)
     var lunaVerifyRelated = mutableStateMapOf<String, String>()
+    val convertMode = mutableIntStateOf(1)
+    val selectedSourceLocalApp = mutableIntStateOf(2)
+    val selectedTargetApp = mutableIntStateOf(0)
 
     /**
      * 请求存储权限
@@ -224,11 +227,11 @@ class ConvertPage(
         }
     }
 
-    fun selectPlaylistFile(selectedSourceLocalApp: Int) {
+    fun selectPlaylistFile() {
         try {
             openPlaylistFileLauncher.launch(
                 arrayOf(
-                    when (selectedSourceLocalApp) {
+                    when (selectedSourceLocalApp.intValue) {
                         0 -> "text/plain"
                         1 -> "audio/x-mpegurl"
                         2 -> "audio/x-mpegurl"
@@ -501,13 +504,13 @@ class ConvertPage(
                     Tools().execShellCmd(
                         "find '/data/data/${appExists.split(":")[1]}/cache/NetCacheLoader' -type f -exec cp {} '${
                             tempPath
-                        }/lunaJsonDir' \\; && chmod -R 777 '${tempPath}/lunaJsonDir'"
+                        }/lunaJsonDir' \\; && chmod -R +r '${tempPath}/lunaJsonDir'"
                     )
                 } else {
                     Tools().execShellCmd(
                         "cp -f '/data/data/${appExists.split(":")[1]}/databases/${
                             sourceApp.databaseName
-                        }' '${dir.absolutePath}/${sourceApp.sourceEng}_temp.db' && chmod 777 '${dir.absolutePath}/${sourceApp.sourceEng}_temp.db'"
+                        }' '${dir.absolutePath}/${sourceApp.sourceEng}_temp.db' && chmod +r '${dir.absolutePath}/${sourceApp.sourceEng}_temp.db'"
                     )
                 }
 
@@ -2918,14 +2921,17 @@ class ConvertPage(
         }
     }
 
-    fun launchLocalPlayer(targetApp: Int) {
+    fun launchLocalPlayer() {
         val targetAppList = listOf(
             arrayOf("com.salt.music", "com.salt.music.ui.MainActivity"),
             arrayOf("remix.myplayer", "remix.myplayer.ui.activity.MainActivity"),
             arrayOf("com.maxmpz.audioplayer", "com.maxmpz.audioplayer.MainActivity"),
         )
         val intent = Intent(Intent.ACTION_MAIN).apply {
-            setClassName(targetAppList[targetApp][0], targetAppList[targetApp][1])
+            setClassName(
+                targetAppList[selectedTargetApp.intValue][0],
+                targetAppList[selectedTargetApp.intValue][1]
+            )
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         }
         try {
@@ -2934,7 +2940,7 @@ class ConvertPage(
             Toast.makeText(
                 context,
                 context.getString(R.string.other_app_not_installed).replace(
-                    "#", when (targetApp) {
+                    "#", when (selectedTargetApp.intValue) {
                         0 -> "Salt Player"
                         1 -> "APlayer"
                         2 -> "Poweramp"
@@ -3229,10 +3235,7 @@ class ConvertPage(
         return result
     }
 
-    fun convertLocalPlaylist(
-        sourceApp: Int,
-        targetApp: Int,
-    ): String {
+    fun convertLocalPlaylist(): String {
         val targetFile = File(
             "${Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)}/${
                 context.getString(
@@ -3247,7 +3250,7 @@ class ConvertPage(
                     sourcePlaylistFileName.value.lastIndexOf(".")
                 )
             }.${
-                when (targetApp) {
+                when (selectedTargetApp.intValue) {
                     0 -> "txt"
                     1 -> "m3u"
                     2 -> "m3u8"
@@ -3260,7 +3263,7 @@ class ConvertPage(
         if (targetFile.parentFile?.exists() == false)
             targetFile.parentFile?.mkdirs()
         val sourceFile = File(sourcePlaylistFilePath)
-        when (sourceApp) {
+        when (selectedSourceApp.intValue) {
             0 -> { //来源：Salt Player
                 sourceFile.copyTo(targetFile, true)
                 return targetFile.absolutePath.replace("/storage/emulated/0/", "")
@@ -3272,10 +3275,11 @@ class ConvertPage(
             }
 
             2 -> { //来源：Poweramp
-                val extRegex = "#.*((\\r\\n)|\\r|\\n)".toRegex()
                 var powerampPlaylist = sourceFile.readText()
-                powerampPlaylist = extRegex.replace(powerampPlaylist, "")
-                powerampPlaylist = powerampPlaylist.replace("primary/", "/storage/emulated/0/")
+                powerampPlaylist = powerampPlaylist
+                    .replace("#.*((\\r\\n)|\\r|\\n)".toRegex(), "")
+                    .replace("(\\r\\n)|\\r".toRegex(), "\n")
+                    .replace("primary/", "/storage/emulated/0/")
                 val fileWriter = FileWriter(targetFile, true)
                 fileWriter.write(powerampPlaylist)
                 fileWriter.close()

@@ -508,7 +508,13 @@ fun TagPageUi(
 
         YesNoDialog(
             onDismiss = {
-                if (!showDialogProgressBar) {
+                if (showDialogProgressBar) {
+                    Toast.makeText(
+                        context,
+                        context.getString(R.string.wait_operate_end),
+                        Toast.LENGTH_SHORT
+                    ).show()
+                } else {
                     if (completeDone) {
                         coroutineScope.launch(Dispatchers.IO) {
                             tagPage.getMusicList(songList, sortMethod.intValue, selectedSongList)
@@ -520,7 +526,13 @@ fun TagPageUi(
                 }
             },
             onCancel = {
-                if (!showDialogProgressBar) {
+                if (showDialogProgressBar) {
+                    Toast.makeText(
+                        context,
+                        context.getString(R.string.wait_operate_end),
+                        Toast.LENGTH_SHORT
+                    ).show()
+                } else {
                     if (completeDone) {
                         coroutineScope.launch(Dispatchers.IO) {
                             tagPage.getMusicList(songList, sortMethod.intValue, selectedSongList)

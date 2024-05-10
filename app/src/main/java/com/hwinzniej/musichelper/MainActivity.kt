@@ -38,11 +38,13 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -253,7 +255,7 @@ class MainActivity : ComponentActivity() {
                     dynamicDarkColorScheme(this)
                 ) else darkSaltColors()
 
-                2 ->
+                2 -> {
                     if (isSystemInDarkTheme())
                         if (enableDynamicColor.value) saltColorsByColorScheme(
                             dynamicDarkColorScheme(this)
@@ -262,6 +264,7 @@ class MainActivity : ComponentActivity() {
                         if (enableDynamicColor.value) saltColorsByColorScheme(
                             dynamicLightColorScheme(this)
                         ) else lightSaltColors()
+                }
 
                 else -> if (enableDynamicColor.value) saltColorsByColorScheme(
                     dynamicLightColorScheme(this)
@@ -357,7 +360,6 @@ private fun Pages(
             listOf("0", "1", "2", "3", "4")
         else
             listOf("0", "1", "2", "3")
-    val pageState = rememberPagerState(pageCount = { pages.size })
     val coroutineScope = rememberCoroutineScope()
     val settingsPages = listOf("0", "1")
     val settingsPageState = rememberPagerState(pageCount = { settingsPages.size })
@@ -373,8 +375,12 @@ private fun Pages(
     val arranger = remember { mutableStateOf(true) }
     val slow = remember { mutableStateOf(false) }
     val sortMethod = remember { mutableIntStateOf(0) }
+    var loadUI by remember { mutableStateOf(false) }
 
     mainPage.dataStore.data.collectAsState(initial = null).value?.let { preferences ->
+        settingsPage.initialPage.intValue =
+            preferences[DataStoreConstants.INITIAL_PAGE] ?: 0
+        loadUI = true
         mainPage.enableDynamicColor.value =
             preferences[DataStoreConstants.KEY_ENABLE_DYNAMIC_COLOR] ?: false
         mainPage.selectedThemeMode.intValue = preferences[DataStoreConstants.KEY_THEME_MODE] ?: 2
@@ -411,6 +417,13 @@ private fun Pages(
             preferences[DataStoreConstants.LUNA_DEVICE_ID] ?: ""
         convertPage.lunaCookie.value =
             preferences[DataStoreConstants.LUNA_COOKIE] ?: ""
+        convertPage.convertMode.intValue =
+            preferences[DataStoreConstants.CONVERT_MODE] ?: 1
+        convertPage.selectedSourceLocalApp.intValue =
+            preferences[DataStoreConstants.SELECTED_SOURCE_APP] ?: 2
+        convertPage.selectedTargetApp.intValue =
+            preferences[DataStoreConstants.SELECTED_TARGET_APP] ?: 0
+
         coroutineScope.launch(Dispatchers.Default) {
             delay(248L)
             mainPage.isDataLoaded.value = true
@@ -430,7 +443,6 @@ private fun Pages(
             resources.displayMetrics
         )
     }
-
 
     if (showNewVersionAvailableDialog.value) {
         YesNoDialog(
@@ -531,7 +543,7 @@ private fun Pages(
         }
     }
 
-    LaunchedEffect(key1 = checkUpdate.value) { // TODO targetSdk版本不同，更新包下载地址不同
+    LaunchedEffect(key1 = checkUpdate.value) {
         if (checkUpdate.value) {
             coroutineScope.launch(Dispatchers.IO) {
                 checkUpdate.value = false
@@ -595,91 +607,96 @@ private fun Pages(
         }
     }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .systemBarsPadding()
-            .background(SaltTheme.colors.background)
-    ) {
-        HorizontalPager(
-            state = pageState,
+    if (loadUI) {
+        val pageState = rememberPagerState(
+            initialPage = settingsPage.initialPage.intValue,
+            pageCount = { pages.size }
+        )
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(bottom = 56.dp),
-            beyondBoundsPageCount = 2
-        ) { page ->
-            when (page) {
-                0 -> {
-                    ScanPageUi(
-                        scanPage = scanPage,
-                        scanResult = scanPage.scanResult,
-                        showLoadingProgressBar = scanPage.showLoadingProgressBar,
-                        progressPercent = scanPage.progressPercent,
-                        showConflictDialog = scanPage.showConflictDialog,
-                        exportResultFile = scanPage.exportResultFile,
-                        selectedExportFormat = scanPage.selectedExportFormat,
-                        enableHaptic = mainPage.enableHaptic,
-                        hapticStrength = mainPage.hapticStrength,
-                    )
-                }
+                .systemBarsPadding()
+                .background(SaltTheme.colors.background)
+        ) {
+            HorizontalPager(
+                state = pageState,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(bottom = 56.dp),
+                beyondBoundsPageCount = 2
+            ) { page ->
+                when (page) {
+                    0 -> {
+                        ScanPageUi(
+                            scanPage = scanPage,
+                            scanResult = scanPage.scanResult,
+                            showLoadingProgressBar = scanPage.showLoadingProgressBar,
+                            progressPercent = scanPage.progressPercent,
+                            showConflictDialog = scanPage.showConflictDialog,
+                            exportResultFile = scanPage.exportResultFile,
+                            selectedExportFormat = scanPage.selectedExportFormat,
+                            enableHaptic = mainPage.enableHaptic,
+                            hapticStrength = mainPage.hapticStrength,
+                        )
+                    }
 
-                1 -> {
-                    ConvertPageUi(
-                        convertPage = convertPage,
-                        selectedSourceApp = convertPage.selectedSourceApp,
-                        databaseFileName = convertPage.databaseFileName,
-                        useCustomResultFile = convertPage.useCustomResultFile,
-                        customResultFileName = convertPage.customResultFileName,
-                        showLoadingProgressBar = convertPage.showLoadingProgressBar,
-                        showErrorDialog = convertPage.showErrorDialog,
-                        errorDialogTitle = convertPage.errorDialogTitle,
-                        errorDialogContent = convertPage.errorDialogContent,
-                        playlistName = convertPage.playlistName,
-                        playlistEnabled = convertPage.playlistEnabled,
-                        playlistSum = convertPage.playlistSum,
-                        currentPage = convertPage.currentPage,
-                        selectedMatchingMode = convertPage.selectedMatchingMode,
-                        enableBracketRemoval = convertPage.enableBracketRemoval,
-                        enableArtistNameMatch = convertPage.enableArtistNameMatch,
-                        enableAlbumNameMatch = convertPage.enableAlbumNameMatch,
-                        similarity = convertPage.similarity,
-                        convertResult = convertPage.convertResult,
-                        inputSearchWords = convertPage.inputSearchWords,
-                        searchResult = convertPage.searchResult,
-                        showDialogProgressBar = convertPage.showDialogProgressBar,
-                        showSaveDialog = convertPage.showSaveDialog,
-                        mainActivityPageState = pageState,
-                        enableHaptic = mainPage.enableHaptic,
-                        useRootAccess = convertPage.useRootAccess,
-                        databaseFilePath = convertPage.databaseFilePath,
-                        showSelectSourceDialog = convertPage.showSelectSourceDialog,
-                        multiSource = convertPage.multiSource,
-                        showNumberProgressBar = convertPage.showNumberProgressBar,
-                        selectedMethod = convertPage.selectedMethod,
-                        selectedLoginMethod = convertPage.selectedLoginMethod,
-                        showLoginDialog = convertPage.showLoginDialog,
-                        dataStore = mainPage.dataStore,
-                        showSongNumMismatchDialog = convertPage.showSongNumMismatchDialog,
-                        hapticStrength = mainPage.hapticStrength,
-                    )
-                }
+                    1 -> {
+                        ConvertPageUi(
+                            convertPage = convertPage,
+                            selectedSourceApp = convertPage.selectedSourceApp,
+                            databaseFileName = convertPage.databaseFileName,
+                            useCustomResultFile = convertPage.useCustomResultFile,
+                            customResultFileName = convertPage.customResultFileName,
+                            showLoadingProgressBar = convertPage.showLoadingProgressBar,
+                            showErrorDialog = convertPage.showErrorDialog,
+                            errorDialogTitle = convertPage.errorDialogTitle,
+                            errorDialogContent = convertPage.errorDialogContent,
+                            playlistName = convertPage.playlistName,
+                            playlistEnabled = convertPage.playlistEnabled,
+                            playlistSum = convertPage.playlistSum,
+                            currentPage = convertPage.currentPage,
+                            selectedMatchingMode = convertPage.selectedMatchingMode,
+                            enableBracketRemoval = convertPage.enableBracketRemoval,
+                            enableArtistNameMatch = convertPage.enableArtistNameMatch,
+                            enableAlbumNameMatch = convertPage.enableAlbumNameMatch,
+                            similarity = convertPage.similarity,
+                            convertResult = convertPage.convertResult,
+                            inputSearchWords = convertPage.inputSearchWords,
+                            searchResult = convertPage.searchResult,
+                            showDialogProgressBar = convertPage.showDialogProgressBar,
+                            showSaveDialog = convertPage.showSaveDialog,
+                            mainActivityPageState = pageState,
+                            enableHaptic = mainPage.enableHaptic,
+                            useRootAccess = convertPage.useRootAccess,
+                            databaseFilePath = convertPage.databaseFilePath,
+                            showSelectSourceDialog = convertPage.showSelectSourceDialog,
+                            multiSource = convertPage.multiSource,
+                            showNumberProgressBar = convertPage.showNumberProgressBar,
+                            selectedMethod = convertPage.selectedMethod,
+                            selectedLoginMethod = convertPage.selectedLoginMethod,
+                            showLoginDialog = convertPage.showLoginDialog,
+                            dataStore = mainPage.dataStore,
+                            showSongNumMismatchDialog = convertPage.showSongNumMismatchDialog,
+                            hapticStrength = mainPage.hapticStrength,
+                        )
+                    }
 
-                2 -> {
-                    TagPageUi(
-                        tagPage = tagPage,
-                        enableHaptic = mainPage.enableHaptic,
-                        hapticStrength = mainPage.hapticStrength,
-                        scanPage = scanPage,
-                        pageState = pageState,
-                        overwrite = overwrite,
-                        lyricist = lyricist,
-                        composer = composer,
-                        arranger = arranger,
-                        sortMethod = sortMethod,
-                        dataStore = mainPage.dataStore,
-                        slow = slow
-                    )
-                }
+                    2 -> {
+                        TagPageUi(
+                            tagPage = tagPage,
+                            enableHaptic = mainPage.enableHaptic,
+                            hapticStrength = mainPage.hapticStrength,
+                            scanPage = scanPage,
+                            pageState = pageState,
+                            overwrite = overwrite,
+                            lyricist = lyricist,
+                            composer = composer,
+                            arranger = arranger,
+                            sortMethod = sortMethod,
+                            dataStore = mainPage.dataStore,
+                            slow = slow
+                        )
+                    }
 
 //                2 -> {
 //                    ProcessPageUi(
@@ -699,168 +716,168 @@ private fun Pages(
 //                    )
 //                }
 
-                3 -> {
-                    if (targetSdkVersion <= 28) {
-                        UnlockPageUi(
-                            unlockPage = unlockPage,
-                            enableHaptic = mainPage.enableHaptic,
-                            settingsPage = settingsPage,
-                            hapticStrength = mainPage.hapticStrength,
-                        )
-                    } else {
-                        HorizontalPager(
-                            state = settingsPageState,
-                            modifier = Modifier
-                                .fillMaxSize(),
-                            userScrollEnabled = false,
-                            beyondBoundsPageCount = 1
-                        ) { settingPage ->
-                            when (settingPage) {
-                                0 -> {
-                                    SettingsPageUi(
-                                        settingsPage = settingsPage,
-                                        enableDynamicColor = mainPage.enableDynamicColor,
-                                        selectedThemeMode = mainPage.selectedThemeMode,
-                                        selectedLanguage = mainPage.language,
-                                        useRootAccess = convertPage.useRootAccess,
-                                        enableAutoCheckUpdate = settingsPage.enableAutoCheckUpdate,
-                                        settingsPageState = settingsPageState,
-                                        enableHaptic = mainPage.enableHaptic,
-                                        dataStore = mainPage.dataStore,
-                                        encryptServer = settingsPage.encryptServer,
-                                        hapticStrength = mainPage.hapticStrength,
-                                    )
-                                }
+                    3 -> {
+                        if (targetSdkVersion <= 28) {
+                            UnlockPageUi(
+                                unlockPage = unlockPage,
+                                enableHaptic = mainPage.enableHaptic,
+                                settingsPage = settingsPage,
+                                hapticStrength = mainPage.hapticStrength,
+                            )
+                        } else {
+                            HorizontalPager(
+                                state = settingsPageState,
+                                modifier = Modifier
+                                    .fillMaxSize(),
+                                userScrollEnabled = false,
+                                beyondBoundsPageCount = 1
+                            ) { settingPage ->
+                                when (settingPage) {
+                                    0 -> {
+                                        SettingsPageUi(
+                                            settingsPage = settingsPage,
+                                            enableDynamicColor = mainPage.enableDynamicColor,
+                                            selectedThemeMode = mainPage.selectedThemeMode,
+                                            selectedLanguage = mainPage.language,
+                                            useRootAccess = convertPage.useRootAccess,
+                                            enableAutoCheckUpdate = settingsPage.enableAutoCheckUpdate,
+                                            settingsPageState = settingsPageState,
+                                            enableHaptic = mainPage.enableHaptic,
+                                            dataStore = mainPage.dataStore,
+                                            encryptServer = settingsPage.encryptServer,
+                                            hapticStrength = mainPage.hapticStrength,
+                                        )
+                                    }
 
-                                1 -> {
-                                    AboutPageUi(
-                                        settingsPageState = settingsPageState,
-                                        showNewVersionAvailableDialog = showNewVersionAvailableDialog,
-                                        latestVersion = latestVersion,
-                                        latestDescription = latestDescription,
-                                        latestDownloadLink = latestDownloadLink,
-                                        enableHaptic = mainPage.enableHaptic,
-                                        language = mainPage.language,
-                                        updateFileSize = mainPage.updateFileSize,
-                                        hapticStrength = mainPage.hapticStrength,
-                                    )
+                                    1 -> {
+                                        AboutPageUi(
+                                            settingsPageState = settingsPageState,
+                                            showNewVersionAvailableDialog = showNewVersionAvailableDialog,
+                                            latestVersion = latestVersion,
+                                            latestDescription = latestDescription,
+                                            latestDownloadLink = latestDownloadLink,
+                                            enableHaptic = mainPage.enableHaptic,
+                                            language = mainPage.language,
+                                            updateFileSize = mainPage.updateFileSize,
+                                            hapticStrength = mainPage.hapticStrength,
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    4 -> {
+                        if (targetSdkVersion <= 28) {
+                            HorizontalPager(
+                                state = settingsPageState,
+                                modifier = Modifier
+                                    .fillMaxSize(),
+                                userScrollEnabled = false,
+                                beyondBoundsPageCount = 0  //保证切换语言后，页面自动应用新语言
+                            ) { settingPage ->
+                                when (settingPage) {
+                                    0 -> {
+                                        SettingsPageUi(
+                                            settingsPage = settingsPage,
+                                            enableDynamicColor = mainPage.enableDynamicColor,
+                                            selectedThemeMode = mainPage.selectedThemeMode,
+                                            selectedLanguage = mainPage.language,
+                                            useRootAccess = convertPage.useRootAccess,
+                                            enableAutoCheckUpdate = settingsPage.enableAutoCheckUpdate,
+                                            settingsPageState = settingsPageState,
+                                            enableHaptic = mainPage.enableHaptic,
+                                            dataStore = mainPage.dataStore,
+                                            encryptServer = settingsPage.encryptServer,
+                                            hapticStrength = mainPage.hapticStrength,
+                                        )
+                                    }
+
+                                    1 -> {
+                                        AboutPageUi(
+                                            settingsPageState = settingsPageState,
+                                            showNewVersionAvailableDialog = showNewVersionAvailableDialog,
+                                            latestVersion = latestVersion,
+                                            latestDescription = latestDescription,
+                                            latestDownloadLink = latestDownloadLink,
+                                            enableHaptic = mainPage.enableHaptic,
+                                            language = mainPage.language,
+                                            updateFileSize = mainPage.updateFileSize,
+                                            hapticStrength = mainPage.hapticStrength,
+                                        )
+                                    }
                                 }
                             }
                         }
                     }
                 }
 
-                4 -> {
-                    if (targetSdkVersion <= 28) {
-                        HorizontalPager(
-                            state = settingsPageState,
-                            modifier = Modifier
-                                .fillMaxSize(),
-                            userScrollEnabled = false,
-                            beyondBoundsPageCount = 0  //保证切换语言后，页面自动应用新语言
-                        ) { settingPage ->
-                            when (settingPage) {
-                                0 -> {
-                                    SettingsPageUi(
-                                        settingsPage = settingsPage,
-                                        enableDynamicColor = mainPage.enableDynamicColor,
-                                        selectedThemeMode = mainPage.selectedThemeMode,
-                                        selectedLanguage = mainPage.language,
-                                        useRootAccess = convertPage.useRootAccess,
-                                        enableAutoCheckUpdate = settingsPage.enableAutoCheckUpdate,
-                                        settingsPageState = settingsPageState,
-                                        enableHaptic = mainPage.enableHaptic,
-                                        dataStore = mainPage.dataStore,
-                                        encryptServer = settingsPage.encryptServer,
-                                        hapticStrength = mainPage.hapticStrength,
-                                    )
-                                }
-
-                                1 -> {
-                                    AboutPageUi(
-                                        settingsPageState = settingsPageState,
-                                        showNewVersionAvailableDialog = showNewVersionAvailableDialog,
-                                        latestVersion = latestVersion,
-                                        latestDescription = latestDescription,
-                                        latestDownloadLink = latestDownloadLink,
-                                        enableHaptic = mainPage.enableHaptic,
-                                        language = mainPage.language,
-                                        updateFileSize = mainPage.updateFileSize,
-                                        hapticStrength = mainPage.hapticStrength,
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
             }
 
-        }
-
-        BottomBar(modifier = Modifier.align(Alignment.BottomCenter)) {
-            BottomBarItem(
-                state = pageState.currentPage == 0,
-                onClick = {
-                    MyVibrationEffect(
-                        context,
-                        mainPage.enableHaptic.value,
-                        mainPage.hapticStrength.intValue
-                    ).click()
-                    coroutineScope.launch {
-                        settingsPageState.scrollToPage(0)
-                    }
-                    coroutineScope.launch {
-                        pageState.animateScrollToPage(
-                            0,
-                            animationSpec = spring(2f)
-                        )
-                    }
-                },
-                painter = painterResource(id = R.drawable.scan),
-                text = stringResource(R.string.scan_function_name)
-            )
-            BottomBarItem(
-                state = pageState.currentPage == 1,
-                onClick = {
-                    MyVibrationEffect(
-                        context,
-                        mainPage.enableHaptic.value,
-                        mainPage.hapticStrength.intValue
-                    ).click()
-                    coroutineScope.launch {
-                        settingsPageState.scrollToPage(0)
-                    }
-                    coroutineScope.launch {
-                        pageState.animateScrollToPage(
-                            1,
-                            animationSpec = spring(2f)
-                        )
-                    }
-                },
-                painter = painterResource(id = R.drawable.convert),
-                text = stringResource(R.string.convert_function_name)
-            )
-            BottomBarItem(
-                state = pageState.currentPage == 2,
-                onClick = {
-                    MyVibrationEffect(
-                        context,
-                        mainPage.enableHaptic.value,
-                        mainPage.hapticStrength.intValue
-                    ).click()
-                    coroutineScope.launch {
-                        settingsPageState.scrollToPage(0)
-                    }
-                    coroutineScope.launch {
-                        pageState.animateScrollToPage(
-                            2,
-                            animationSpec = spring(2f)
-                        )
-                    }
-                },
-                painter = painterResource(id = R.drawable.tag),
-                text = stringResource(R.string.tag_function_name)
-            )
+            BottomBar(modifier = Modifier.align(Alignment.BottomCenter)) {
+                BottomBarItem(
+                    state = pageState.currentPage == 0,
+                    onClick = {
+                        MyVibrationEffect(
+                            context,
+                            mainPage.enableHaptic.value,
+                            mainPage.hapticStrength.intValue
+                        ).click()
+                        coroutineScope.launch {
+                            settingsPageState.scrollToPage(0)
+                        }
+                        coroutineScope.launch {
+                            pageState.animateScrollToPage(
+                                0,
+                                animationSpec = spring(2f)
+                            )
+                        }
+                    },
+                    painter = painterResource(id = R.drawable.scan),
+                    text = stringResource(R.string.scan_function_name)
+                )
+                BottomBarItem(
+                    state = pageState.currentPage == 1,
+                    onClick = {
+                        MyVibrationEffect(
+                            context,
+                            mainPage.enableHaptic.value,
+                            mainPage.hapticStrength.intValue
+                        ).click()
+                        coroutineScope.launch {
+                            settingsPageState.scrollToPage(0)
+                        }
+                        coroutineScope.launch {
+                            pageState.animateScrollToPage(
+                                1,
+                                animationSpec = spring(2f)
+                            )
+                        }
+                    },
+                    painter = painterResource(id = R.drawable.convert),
+                    text = stringResource(R.string.convert_function_name)
+                )
+                BottomBarItem(
+                    state = pageState.currentPage == 2,
+                    onClick = {
+                        MyVibrationEffect(
+                            context,
+                            mainPage.enableHaptic.value,
+                            mainPage.hapticStrength.intValue
+                        ).click()
+                        coroutineScope.launch {
+                            settingsPageState.scrollToPage(0)
+                        }
+                        coroutineScope.launch {
+                            pageState.animateScrollToPage(
+                                2,
+                                animationSpec = spring(2f)
+                            )
+                        }
+                    },
+                    painter = painterResource(id = R.drawable.tag),
+                    text = stringResource(R.string.tag_function_name)
+                )
 //            BottomBarItem(
 //                state = pageState.currentPage == 2,
 //                onClick = {
@@ -878,9 +895,34 @@ private fun Pages(
 //                painter = painterResource(id = R.drawable.ic_launcher_foreground),
 //                text = stringResource(R.string.process_function_name)
 //            )
-            if (targetSdkVersion <= 28) {
+                if (targetSdkVersion <= 28) {
+                    BottomBarItem(
+                        state = pageState.currentPage == 3,
+                        onClick = {
+                            MyVibrationEffect(
+                                context,
+                                mainPage.enableHaptic.value,
+                                mainPage.hapticStrength.intValue
+                            ).click()
+                            coroutineScope.launch {
+                                settingsPageState.scrollToPage(0)
+                            }
+                            coroutineScope.launch {
+                                pageState.animateScrollToPage(
+                                    3,
+                                    animationSpec = spring(2f)
+                                )
+                            }
+                        },
+                        painter = painterResource(id = R.drawable.um),
+                        text = stringResource(R.string.unlock_function_name)
+                    )
+                }
                 BottomBarItem(
-                    state = pageState.currentPage == 3,
+                    state = if (targetSdkVersion <= 28)
+                        pageState.currentPage == 4
+                    else
+                        pageState.currentPage == 3,
                     onClick = {
                         MyVibrationEffect(
                             context,
@@ -888,49 +930,25 @@ private fun Pages(
                             mainPage.hapticStrength.intValue
                         ).click()
                         coroutineScope.launch {
-                            settingsPageState.scrollToPage(0)
+                            settingsPageState.animateScrollToPage(
+                                0,
+                                animationSpec = spring(2f)
+                            )
                         }
                         coroutineScope.launch {
                             pageState.animateScrollToPage(
-                                3,
+                                if (targetSdkVersion <= 28)
+                                    4
+                                else
+                                    3,
                                 animationSpec = spring(2f)
                             )
                         }
                     },
-                    painter = painterResource(id = R.drawable.unlock),
-                    text = stringResource(R.string.unlock_function_name)
+                    painter = painterResource(id = R.drawable.settings),
+                    text = stringResource(R.string.settings_function_name)
                 )
             }
-            BottomBarItem(
-                state = if (targetSdkVersion <= 28)
-                    pageState.currentPage == 4
-                else
-                    pageState.currentPage == 3,
-                onClick = {
-                    MyVibrationEffect(
-                        context,
-                        mainPage.enableHaptic.value,
-                        mainPage.hapticStrength.intValue
-                    ).click()
-                    coroutineScope.launch {
-                        settingsPageState.animateScrollToPage(
-                            0,
-                            animationSpec = spring(2f)
-                        )
-                    }
-                    coroutineScope.launch {
-                        pageState.animateScrollToPage(
-                            if (targetSdkVersion <= 28)
-                                4
-                            else
-                                3,
-                            animationSpec = spring(2f)
-                        )
-                    }
-                },
-                painter = painterResource(id = R.drawable.settings),
-                text = stringResource(R.string.settings_function_name)
-            )
         }
     }
 }

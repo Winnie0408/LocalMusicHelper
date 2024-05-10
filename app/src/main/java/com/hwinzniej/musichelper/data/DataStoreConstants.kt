@@ -32,4 +32,8 @@ object DataStoreConstants {
     val LUNA_DEVICE_ID = stringPreferencesKey("luna_device_id")
     val LUNA_INSTALL_ID = stringPreferencesKey("luna_install_id")
     val LUNA_COOKIE = stringPreferencesKey("luna_cookie")
+    val CONVERT_MODE = intPreferencesKey("convert_mode")
+    val SELECTED_TARGET_APP = intPreferencesKey("selected_target_app")
+    val SELECTED_SOURCE_APP = intPreferencesKey("selected_source_app")
+    val INITIAL_PAGE = intPreferencesKey("initial_page")
 }
