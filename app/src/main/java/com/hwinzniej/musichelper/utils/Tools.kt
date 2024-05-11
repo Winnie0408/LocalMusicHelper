@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.net.Uri
 import android.provider.OpenableColumns
+import android.util.DisplayMetrics
 import androidx.documentfile.provider.DocumentFile
 import com.alibaba.fastjson2.JSON
 import com.alibaba.fastjson2.JSONObject
@@ -23,6 +24,8 @@ import java.io.RandomAccessFile
 import java.security.MessageDigest
 import java.util.Locale
 import java.util.concurrent.TimeUnit
+import kotlin.math.pow
+import kotlin.math.sqrt
 import kotlin.random.Random
 
 class Tools {
@@ -599,6 +602,15 @@ class Tools {
         client.newCall(request).execute().use { response ->
             return response.header("Location") ?: shortUrl
         }
+    }
+
+    fun isTablet(displayMetrics: DisplayMetrics): Boolean {
+        val screenWidthInches = displayMetrics.widthPixels / displayMetrics.xdpi
+        val screenHeightInches = displayMetrics.heightPixels / displayMetrics.ydpi
+        val diagonalInches = sqrt(
+            screenWidthInches.toDouble().pow(2.0) + screenHeightInches.toDouble().pow(2.0)
+        )
+        return diagonalInches >= 7
     }
 
 }

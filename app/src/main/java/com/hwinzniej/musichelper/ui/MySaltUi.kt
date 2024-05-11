@@ -31,7 +31,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -1079,6 +1078,63 @@ fun FloatingActionButton(
                 }
             }
         }
+    }
+}
+
+@UnstableSaltApi
+@Composable
+fun BottomBarLand(
+    modifier: Modifier = Modifier,
+    backgroundColor: Color = SaltTheme.colors.subBackground,
+    isTablet: Boolean = false,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    Column(
+        modifier = modifier
+            .fillMaxHeight()
+            .width(56.dp)
+            .background(color = backgroundColor)
+    ) {
+        Spacer(modifier = Modifier.weight(if (isTablet) 2.5f else 0.5f))
+        content()
+        Spacer(modifier = Modifier.weight(if (isTablet) 2.5f else 0.5f))
+    }
+}
+
+@UnstableSaltApi
+@Composable
+fun ColumnScope.BottomBarItemLand(
+    state: Boolean,
+    onClick: () -> Unit,
+    painter: Painter,
+    text: String
+) {
+    Column(
+        modifier = Modifier
+            .weight(1f)
+            .fillMaxSize()
+            .fadeClickable {
+                onClick()
+            },
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        val color =
+            if (state) SaltTheme.colors.highlight else SaltTheme.colors.subText.copy(alpha = 0.5f)
+        Icon(
+            modifier = Modifier
+                .size(24.dp),
+            painter = painter,
+            contentDescription = null,
+            tint = color
+        )
+        Spacer(modifier = Modifier.height(2.dp))
+        Text(
+            text = text,
+            color = color,
+            fontSize = 10.sp,
+            style = SaltTheme.textStyles.sub
+        )
     }
 }
 

@@ -3,11 +3,14 @@ package com.hwinzniej.musichelper
 import android.annotation.SuppressLint
 import android.app.DownloadManager
 import android.content.Context
+import android.content.res.Configuration
 import android.content.res.Resources
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
+import android.view.Surface
+import android.view.WindowManager
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
@@ -15,15 +18,26 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateDp
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.updateTransition
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -48,6 +62,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
@@ -72,6 +87,8 @@ import com.hwinzniej.musichelper.activity.UnlockPage
 import com.hwinzniej.musichelper.data.DataStoreConstants
 import com.hwinzniej.musichelper.data.database.MusicDatabase
 import com.hwinzniej.musichelper.ui.AboutPageUi
+import com.hwinzniej.musichelper.ui.BottomBarItemLand
+import com.hwinzniej.musichelper.ui.BottomBarLand
 import com.hwinzniej.musichelper.ui.ConvertPageUi
 import com.hwinzniej.musichelper.ui.ItemTitle
 import com.hwinzniej.musichelper.ui.ItemValue
@@ -271,12 +288,14 @@ class MainActivity : ComponentActivity() {
                 ) else lightSaltColors()
             }
             WindowCompat.setDecorFitsSystemWindows(window, false)
+            val isDarkTheme =
+                (selectedThemeMode.intValue == 2 && isSystemInDarkTheme()) || selectedThemeMode.intValue == 1
             CompositionLocalProvider {
                 SaltTheme(
-                    configs = saltConfigs(isSystemInDarkTheme()),
+                    configs = saltConfigs(isDarkTheme = isDarkTheme),
                     colors = colors
                 ) {
-                    TransparentSystemBars(dark = isSystemInDarkTheme() || (selectedThemeMode.intValue == 1))
+                    TransparentSystemBars(dark = isDarkTheme)
                     Pages(
                         mainPage = this,
                         scanPage = scanPage,
@@ -312,8 +331,8 @@ class MainActivity : ComponentActivity() {
 
     @Composable
     fun TransparentSystemBars(dark: Boolean) {
-        val statusBarColor = SaltTheme.colors.background.toArgb()
-        val navigationBarColor = SaltTheme.colors.subBackground.toArgb()
+        val statusBarColor = Color.Transparent.toArgb()
+        val navigationBarColor = Color.Transparent.toArgb()
         SideEffect {
             if (dark) {
                 enableEdgeToEdge(
@@ -351,6 +370,10 @@ private fun Pages(
 ) {
     val context = LocalContext.current
     val configuration = LocalConfiguration.current
+    val display = (context.getSystemService(Context.WINDOW_SERVICE) as WindowManager).defaultDisplay
+    var isInLandscape by remember { mutableIntStateOf(-1) }
+    var devicesRotation by remember { mutableIntStateOf(-1) }
+
     val targetSdkVersion = context.packageManager.getApplicationInfo(
         context.packageName,
         0
@@ -428,6 +451,19 @@ private fun Pages(
             delay(248L)
             mainPage.isDataLoaded.value = true
         }
+    }
+
+    LaunchedEffect(Unit) {
+        isInLandscape = configuration.orientation
+        devicesRotation = display.rotation
+    }
+
+    LaunchedEffect(display.rotation) {
+        devicesRotation = display.rotation
+    }
+
+    LaunchedEffect(configuration.orientation) {
+        isInLandscape = configuration.orientation
     }
 
     LaunchedEffect(key1 = mainPage.language.value) {
@@ -607,6 +643,22 @@ private fun Pages(
         }
     }
 
+    val transition = updateTransition(targetState = isInLandscape, label = "transition")
+
+    val paddingStart by transition.animateDp(
+        transitionSpec = { spring(stiffness = 400f) },
+        label = "paddingStart"
+    ) {
+        if (it == Configuration.ORIENTATION_LANDSCAPE) 56.dp else 0.dp
+    }
+
+    val paddingBottom by transition.animateDp(
+        transitionSpec = { spring(stiffness = 400f) },
+        label = "paddingBottom"
+    ) {
+        if (it == Configuration.ORIENTATION_PORTRAIT) 56.dp else 0.dp
+    }
+
     if (loadUI) {
         val pageState = rememberPagerState(
             initialPage = settingsPage.initialPage.intValue,
@@ -615,14 +667,17 @@ private fun Pages(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .systemBarsPadding()
-                .background(SaltTheme.colors.background)
         ) {
             HorizontalPager(
                 state = pageState,
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(bottom = 56.dp),
+                    .background(SaltTheme.colors.background)
+                    .systemBarsPadding()
+                    .padding(
+                        start = paddingStart,
+                        bottom = paddingBottom
+                    ),
                 beyondBoundsPageCount = 2
             ) { page ->
                 when (page) {
@@ -811,73 +866,246 @@ private fun Pages(
                         }
                     }
                 }
-
             }
 
-            BottomBar(modifier = Modifier.align(Alignment.BottomCenter)) {
-                BottomBarItem(
-                    state = pageState.currentPage == 0,
-                    onClick = {
-                        MyVibrationEffect(
-                            context,
-                            mainPage.enableHaptic.value,
-                            mainPage.hapticStrength.intValue
-                        ).click()
-                        coroutineScope.launch {
-                            settingsPageState.scrollToPage(0)
-                        }
-                        coroutineScope.launch {
-                            pageState.animateScrollToPage(
-                                0,
-                                animationSpec = spring(2f)
+            AnimatedVisibility(
+                visible = isInLandscape == Configuration.ORIENTATION_LANDSCAPE,
+                enter = fadeIn() + slideInHorizontally(
+                    animationSpec = spring(stiffness = 400f)
+                ),
+                exit = fadeOut() + slideOutHorizontally(
+                    animationSpec = spring(stiffness = 400f)
+                ),
+            ) {
+                Column(
+                    modifier =
+                    if (devicesRotation == Surface.ROTATION_270)
+                        Modifier
+                            .background(SaltTheme.colors.subBackground)
+                            .navigationBarsPadding()
+                    else
+                        Modifier.background(SaltTheme.colors.subBackground)
+                ) {
+                    BottomBarLand(
+                        isTablet = Tools().isTablet(context.resources.displayMetrics)
+                    ) {
+                        BottomBarItemLand(
+                            state = pageState.currentPage == 0,
+                            onClick = {
+                                MyVibrationEffect(
+                                    context,
+                                    mainPage.enableHaptic.value,
+                                    mainPage.hapticStrength.intValue
+                                ).click()
+                                coroutineScope.launch {
+                                    settingsPageState.scrollToPage(0)
+                                }
+                                coroutineScope.launch {
+                                    pageState.animateScrollToPage(
+                                        0,
+                                        animationSpec = spring(2f)
+                                    )
+                                }
+                            },
+                            painter = painterResource(id = R.drawable.scan),
+                            text = stringResource(R.string.scan_function_name)
+                        )
+                        BottomBarItemLand(
+                            state = pageState.currentPage == 1,
+                            onClick = {
+                                MyVibrationEffect(
+                                    context,
+                                    mainPage.enableHaptic.value,
+                                    mainPage.hapticStrength.intValue
+                                ).click()
+                                coroutineScope.launch {
+                                    settingsPageState.scrollToPage(0)
+                                }
+                                coroutineScope.launch {
+                                    pageState.animateScrollToPage(
+                                        1,
+                                        animationSpec = spring(2f)
+                                    )
+                                }
+                            },
+                            painter = painterResource(id = R.drawable.convert),
+                            text = stringResource(R.string.convert_function_name)
+                        )
+                        BottomBarItemLand(
+                            state = pageState.currentPage == 2,
+                            onClick = {
+                                MyVibrationEffect(
+                                    context,
+                                    mainPage.enableHaptic.value,
+                                    mainPage.hapticStrength.intValue
+                                ).click()
+                                coroutineScope.launch {
+                                    settingsPageState.scrollToPage(0)
+                                }
+                                coroutineScope.launch {
+                                    pageState.animateScrollToPage(
+                                        2,
+                                        animationSpec = spring(2f)
+                                    )
+                                }
+                            },
+                            painter = painterResource(id = R.drawable.tag),
+                            text = stringResource(R.string.tag_function_name)
+                        )
+//            BottomBarItemLand(
+//                state = pageState.currentPage == 2,
+//                onClick = {
+//                    coroutineScope.launch {
+//                        pageState.animateScrollToPage(
+//                            2,
+//                            animationSpec = spring(2f)
+//                        )
+//                        settingsPageState.animateScrollToPage(
+//                            0,
+//                            animationSpec = spring(2f)
+//                        )
+//                    }
+//                },
+//                painter = painterResource(id = R.drawable.ic_launcher_foreground),
+//                text = stringResource(R.string.process_function_name)
+//            )
+                        if (targetSdkVersion <= 28) {
+                            BottomBarItemLand(
+                                state = pageState.currentPage == 3,
+                                onClick = {
+                                    MyVibrationEffect(
+                                        context,
+                                        mainPage.enableHaptic.value,
+                                        mainPage.hapticStrength.intValue
+                                    ).click()
+                                    coroutineScope.launch {
+                                        settingsPageState.scrollToPage(0)
+                                    }
+                                    coroutineScope.launch {
+                                        pageState.animateScrollToPage(
+                                            3,
+                                            animationSpec = spring(2f)
+                                        )
+                                    }
+                                },
+                                painter = painterResource(id = R.drawable.um),
+                                text = stringResource(R.string.unlock_function_name)
                             )
                         }
-                    },
-                    painter = painterResource(id = R.drawable.scan),
-                    text = stringResource(R.string.scan_function_name)
-                )
-                BottomBarItem(
-                    state = pageState.currentPage == 1,
-                    onClick = {
-                        MyVibrationEffect(
-                            context,
-                            mainPage.enableHaptic.value,
-                            mainPage.hapticStrength.intValue
-                        ).click()
-                        coroutineScope.launch {
-                            settingsPageState.scrollToPage(0)
-                        }
-                        coroutineScope.launch {
-                            pageState.animateScrollToPage(
-                                1,
-                                animationSpec = spring(2f)
-                            )
-                        }
-                    },
-                    painter = painterResource(id = R.drawable.convert),
-                    text = stringResource(R.string.convert_function_name)
-                )
-                BottomBarItem(
-                    state = pageState.currentPage == 2,
-                    onClick = {
-                        MyVibrationEffect(
-                            context,
-                            mainPage.enableHaptic.value,
-                            mainPage.hapticStrength.intValue
-                        ).click()
-                        coroutineScope.launch {
-                            settingsPageState.scrollToPage(0)
-                        }
-                        coroutineScope.launch {
-                            pageState.animateScrollToPage(
-                                2,
-                                animationSpec = spring(2f)
-                            )
-                        }
-                    },
-                    painter = painterResource(id = R.drawable.tag),
-                    text = stringResource(R.string.tag_function_name)
-                )
+                        BottomBarItemLand(
+                            state = if (targetSdkVersion <= 28)
+                                pageState.currentPage == 4
+                            else
+                                pageState.currentPage == 3,
+                            onClick = {
+                                MyVibrationEffect(
+                                    context,
+                                    mainPage.enableHaptic.value,
+                                    mainPage.hapticStrength.intValue
+                                ).click()
+                                coroutineScope.launch {
+                                    settingsPageState.animateScrollToPage(
+                                        0,
+                                        animationSpec = spring(2f)
+                                    )
+                                }
+                                coroutineScope.launch {
+                                    pageState.animateScrollToPage(
+                                        if (targetSdkVersion <= 28)
+                                            4
+                                        else
+                                            3,
+                                        animationSpec = spring(2f)
+                                    )
+                                }
+                            },
+                            painter = painterResource(id = R.drawable.settings),
+                            text = stringResource(R.string.settings_function_name)
+                        )
+                    }
+                }
+            }
+            AnimatedVisibility(
+                modifier = Modifier.align(Alignment.BottomCenter),
+                visible = isInLandscape == Configuration.ORIENTATION_PORTRAIT,
+                enter = fadeIn() + slideInVertically(
+                    animationSpec = spring(stiffness = 400f),
+                    initialOffsetY = { fullHeight -> fullHeight }
+                ),
+                exit = fadeOut() + slideOutVertically(
+                    animationSpec = spring(stiffness = 400f),
+                    targetOffsetY = { fullHeight -> fullHeight }
+                ),
+            ) {
+                Row(
+                    modifier = Modifier
+                        .background(SaltTheme.colors.subBackground)
+                        .navigationBarsPadding()
+                ) {
+                    BottomBar {
+                        BottomBarItem(
+                            state = pageState.currentPage == 0,
+                            onClick = {
+                                MyVibrationEffect(
+                                    context,
+                                    mainPage.enableHaptic.value,
+                                    mainPage.hapticStrength.intValue
+                                ).click()
+                                coroutineScope.launch {
+                                    settingsPageState.scrollToPage(0)
+                                }
+                                coroutineScope.launch {
+                                    pageState.animateScrollToPage(
+                                        0,
+                                        animationSpec = spring(2f)
+                                    )
+                                }
+                            },
+                            painter = painterResource(id = R.drawable.scan),
+                            text = stringResource(R.string.scan_function_name)
+                        )
+                        BottomBarItem(
+                            state = pageState.currentPage == 1,
+                            onClick = {
+                                MyVibrationEffect(
+                                    context,
+                                    mainPage.enableHaptic.value,
+                                    mainPage.hapticStrength.intValue
+                                ).click()
+                                coroutineScope.launch {
+                                    settingsPageState.scrollToPage(0)
+                                }
+                                coroutineScope.launch {
+                                    pageState.animateScrollToPage(
+                                        1,
+                                        animationSpec = spring(2f)
+                                    )
+                                }
+                            },
+                            painter = painterResource(id = R.drawable.convert),
+                            text = stringResource(R.string.convert_function_name)
+                        )
+                        BottomBarItem(
+                            state = pageState.currentPage == 2,
+                            onClick = {
+                                MyVibrationEffect(
+                                    context,
+                                    mainPage.enableHaptic.value,
+                                    mainPage.hapticStrength.intValue
+                                ).click()
+                                coroutineScope.launch {
+                                    settingsPageState.scrollToPage(0)
+                                }
+                                coroutineScope.launch {
+                                    pageState.animateScrollToPage(
+                                        2,
+                                        animationSpec = spring(2f)
+                                    )
+                                }
+                            },
+                            painter = painterResource(id = R.drawable.tag),
+                            text = stringResource(R.string.tag_function_name)
+                        )
 //            BottomBarItem(
 //                state = pageState.currentPage == 2,
 //                onClick = {
@@ -895,59 +1123,61 @@ private fun Pages(
 //                painter = painterResource(id = R.drawable.ic_launcher_foreground),
 //                text = stringResource(R.string.process_function_name)
 //            )
-                if (targetSdkVersion <= 28) {
-                    BottomBarItem(
-                        state = pageState.currentPage == 3,
-                        onClick = {
-                            MyVibrationEffect(
-                                context,
-                                mainPage.enableHaptic.value,
-                                mainPage.hapticStrength.intValue
-                            ).click()
-                            coroutineScope.launch {
-                                settingsPageState.scrollToPage(0)
-                            }
-                            coroutineScope.launch {
-                                pageState.animateScrollToPage(
-                                    3,
-                                    animationSpec = spring(2f)
-                                )
-                            }
-                        },
-                        painter = painterResource(id = R.drawable.um),
-                        text = stringResource(R.string.unlock_function_name)
-                    )
+                        if (targetSdkVersion <= 28) {
+                            BottomBarItem(
+                                state = pageState.currentPage == 3,
+                                onClick = {
+                                    MyVibrationEffect(
+                                        context,
+                                        mainPage.enableHaptic.value,
+                                        mainPage.hapticStrength.intValue
+                                    ).click()
+                                    coroutineScope.launch {
+                                        settingsPageState.scrollToPage(0)
+                                    }
+                                    coroutineScope.launch {
+                                        pageState.animateScrollToPage(
+                                            3,
+                                            animationSpec = spring(2f)
+                                        )
+                                    }
+                                },
+                                painter = painterResource(id = R.drawable.um),
+                                text = stringResource(R.string.unlock_function_name)
+                            )
+                        }
+                        BottomBarItem(
+                            state = if (targetSdkVersion <= 28)
+                                pageState.currentPage == 4
+                            else
+                                pageState.currentPage == 3,
+                            onClick = {
+                                MyVibrationEffect(
+                                    context,
+                                    mainPage.enableHaptic.value,
+                                    mainPage.hapticStrength.intValue
+                                ).click()
+                                coroutineScope.launch {
+                                    settingsPageState.animateScrollToPage(
+                                        0,
+                                        animationSpec = spring(2f)
+                                    )
+                                }
+                                coroutineScope.launch {
+                                    pageState.animateScrollToPage(
+                                        if (targetSdkVersion <= 28)
+                                            4
+                                        else
+                                            3,
+                                        animationSpec = spring(2f)
+                                    )
+                                }
+                            },
+                            painter = painterResource(id = R.drawable.settings),
+                            text = stringResource(R.string.settings_function_name)
+                        )
+                    }
                 }
-                BottomBarItem(
-                    state = if (targetSdkVersion <= 28)
-                        pageState.currentPage == 4
-                    else
-                        pageState.currentPage == 3,
-                    onClick = {
-                        MyVibrationEffect(
-                            context,
-                            mainPage.enableHaptic.value,
-                            mainPage.hapticStrength.intValue
-                        ).click()
-                        coroutineScope.launch {
-                            settingsPageState.animateScrollToPage(
-                                0,
-                                animationSpec = spring(2f)
-                            )
-                        }
-                        coroutineScope.launch {
-                            pageState.animateScrollToPage(
-                                if (targetSdkVersion <= 28)
-                                    4
-                                else
-                                    3,
-                                animationSpec = spring(2f)
-                            )
-                        }
-                    },
-                    painter = painterResource(id = R.drawable.settings),
-                    text = stringResource(R.string.settings_function_name)
-                )
             }
         }
     }

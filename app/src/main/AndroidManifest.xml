@@ -2,6 +2,13 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.ACCESS_SUPERUSER" />
+
     <application
         android:name=".utils.MyDataStore"
         android:allowBackup="true"
@@ -13,9 +20,14 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.MusicHelper"
         tools:targetApi="31">
+        <meta-data
+            android:name="android.max_aspect"
+            android:value="2.5" />
         <activity
             android:name=".MainActivity"
+            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|uiMode"
             android:exported="true"
+            android:resizeableActivity="true"
             android:theme="@style/Theme.PlaylistNB.Starting">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -31,13 +43,7 @@
         <package android:name="com.kugou.android" />
         <package android:name="cn.kuwo.player" />
         <package android:name="com.hihonor.cloudmusic" />
+        <package android:name="com.luna.music" />
     </queries>
-
-    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.VIBRATE" />
-    <uses-permission android:name="android.permission.ACCESS_SUPERUSER" />
 
 </manifest>

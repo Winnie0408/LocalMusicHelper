@@ -392,7 +392,7 @@ fun AboutPageUi(
                     Item(
                         onClick = {
                             yesDialogCustomContent = {
-                                val isDarkTheme = SaltTheme.colors.text.red
+                                val isDarkTheme = SaltTheme.configs.isDarkTheme
                                 Column(
                                     modifier = Modifier
                                         .heightIn(
@@ -402,8 +402,8 @@ fun AboutPageUi(
                                 ) {
                                     AndroidView(factory = { WebView(context) }) { webView ->
                                         val licensesHtml = context.assets.open(
-                                            if (isDarkTheme < 0.5f) "licenses.html"
-                                            else "licenses_dark.html"
+                                            if (isDarkTheme) "licenses_dark.html"
+                                            else "licenses.html"
                                         ).use { inputStream ->
                                             inputStream.bufferedReader().use {
                                                 it.readText()
