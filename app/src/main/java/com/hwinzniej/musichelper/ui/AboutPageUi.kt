@@ -449,12 +449,12 @@ fun AboutPageUi(
                             yesNoDialogOnConfirm = {
                                 context.startActivity(Intent(Intent.ACTION_VIEW).apply {
                                     data = Uri.parse(
-                                        "https://saltconv.hwinzniej.top:45999"
+                                        "https://saltconv.hwinzniej.top:8443"
                                     )
                                 })
                             }
                             yesNoDialogTitle = context.getString(R.string.visit_the_link_below)
-                            yesNoDialogContent = "https://saltconv.hwinzniej.top:45999"
+                            yesNoDialogContent = "https://saltconv.hwinzniej.top:8443"
                             showYesNoDialog = true
                         },
                         text = stringResource(id = R.string.pc_salt_converter),

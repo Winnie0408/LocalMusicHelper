@@ -3263,7 +3263,7 @@ class ConvertPage(
         if (targetFile.parentFile?.exists() == false)
             targetFile.parentFile?.mkdirs()
         val sourceFile = File(sourcePlaylistFilePath)
-        when (selectedSourceApp.intValue) {
+        when (selectedSourceLocalApp.intValue) {
             0 -> { //来源：Salt Player
                 sourceFile.copyTo(targetFile, true)
                 return targetFile.absolutePath.replace("/storage/emulated/0/", "")

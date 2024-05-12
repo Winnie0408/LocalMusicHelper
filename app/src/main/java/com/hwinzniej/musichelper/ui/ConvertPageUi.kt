@@ -1835,7 +1835,6 @@ fun ConvertPageUi(
                                                                 enableHaptic.value,
                                                                 hapticStrength.intValue
                                                             ).click()
-                                                            selectedSourceApp.intValue = 1
                                                             coroutine.launch {
                                                                 dataStore.edit { settings ->
                                                                     settings[DataStoreConstants.PLAYLIST_SOURCE_PLATFORM] =
@@ -1857,7 +1856,6 @@ fun ConvertPageUi(
                                                                 enableHaptic.value,
                                                                 hapticStrength.intValue
                                                             ).click()
-                                                            selectedSourceApp.intValue = 2
                                                             coroutine.launch {
                                                                 dataStore.edit { settings ->
                                                                     settings[DataStoreConstants.PLAYLIST_SOURCE_PLATFORM] =
@@ -1880,7 +1878,6 @@ fun ConvertPageUi(
                                                                 enableHaptic.value,
                                                                 hapticStrength.intValue
                                                             ).click()
-                                                            selectedSourceApp.intValue = 3
                                                             coroutine.launch {
                                                                 dataStore.edit { settings ->
                                                                     settings[DataStoreConstants.PLAYLIST_SOURCE_PLATFORM] =
@@ -1903,7 +1900,6 @@ fun ConvertPageUi(
                                                                 enableHaptic.value,
                                                                 hapticStrength.intValue
                                                             ).click()
-                                                            selectedSourceApp.intValue = 4
                                                             coroutine.launch {
                                                                 dataStore.edit { settings ->
                                                                     settings[DataStoreConstants.PLAYLIST_SOURCE_PLATFORM] =
@@ -1926,7 +1922,6 @@ fun ConvertPageUi(
                                                                 enableHaptic.value,
                                                                 hapticStrength.intValue
                                                             ).click()
-                                                            selectedSourceApp.intValue = 5
                                                             coroutine.launch {
                                                                 dataStore.edit { settings ->
                                                                     settings[DataStoreConstants.PLAYLIST_SOURCE_PLATFORM] =

@@ -447,15 +447,9 @@ private fun Pages(
         convertPage.selectedTargetApp.intValue =
             preferences[DataStoreConstants.SELECTED_TARGET_APP] ?: 0
 
-        coroutineScope.launch(Dispatchers.Default) {
-            delay(248L)
+        coroutineScope.launch(Dispatchers.Main) {
             mainPage.isDataLoaded.value = true
         }
-    }
-
-    LaunchedEffect(Unit) {
-        isInLandscape = configuration.orientation
-        devicesRotation = display.rotation
     }
 
     LaunchedEffect(display.rotation) {
