@@ -64,7 +64,7 @@
     <string name="error">错误</string>
     <string name="please_select_at_least_one_playlist">请至少选择1个歌单</string>
     <string name="read_failed">读取失败</string>
-    <string name="use_scan_fun_first">请先在扫描页进行一次音乐扫描</string>
+    <string name="use_scan_fun_first">请先在扫描页进行一次音乐扫描。</string>
     <string name="error_details">详情</string>
     <string name="in_total">共 # 个</string>
     <string name="user_selected">已选：# 个</string>
@@ -262,7 +262,7 @@
     <string name="please_input_playlist_id">请输入数据</string>
     <string name="wrong_input_playlist_data">歌单信息输入错误，请检查</string>
     <string name="playlist_already_exists">输入的歌单已存在</string>
-    <string name="choose_string_encrypt_server">请求字符串的加密服务器#n仅在歌单来源为网易云音乐或酷我音乐时使用</string>
+    <string name="choose_string_encrypt_server">请求字符串的加密服务器#n当歌单来源为网易云音乐、酷我音乐、Spotify时将会使用</string>
     <string name="unknown">未知</string>
     <string name="playlist_song_num_not_match_solution1">在网易云音乐中找到当前歌单，全选歌曲并添加到自己创建的歌单中，重新开始转换操作。</string>
     <string name="unlock_options">解锁选项</string>
@@ -375,4 +375,12 @@
     <string name="wait_operate_end">请等待操作完成</string>
     <string name="please_select_playlist_file">请选择歌单文件</string>
     <string name="home_screen">启动页</string>
+    <string name="spotify_token_error">Spotify API token获取失败，请重试。</string>
+    <string name="spotify_token_cf">Cloudflare不支持本操作，请在设置中将`加密服务器`更换为其他服务器。</string>
+    <string name="get_spotify_user_info_failed">获取Spotify用户信息失败</string>
+    <string name="spotify_user_id_wrong">输入的Spotify用户ID不正确</string>
+    <string name="spotify_user_id_login">用户ID</string>
+    <string name="spotify_user_id">Spotify用户ID</string>
+    <string name="spotify_abnormal_song_num">忽略了歌单中 # 个状态异常的音乐</string>
+    <string name="not_convert_any_playlist">未转换任何歌单</string>
 </resources>

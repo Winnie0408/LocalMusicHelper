@@ -36,4 +36,5 @@ object DataStoreConstants {
     val SELECTED_TARGET_APP = intPreferencesKey("selected_target_app")
     val SELECTED_SOURCE_APP = intPreferencesKey("selected_source_app")
     val INITIAL_PAGE = intPreferencesKey("initial_page")
+    val SPOTIFY_USER_ID = stringPreferencesKey("spotify_user_id")
 }

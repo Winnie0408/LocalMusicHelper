@@ -416,7 +416,7 @@ private fun Pages(
             preferences[DataStoreConstants.KEY_USE_ROOT_ACCESS] ?: false
         settingsPage.encryptServer.value =
             preferences[DataStoreConstants.KEY_ENCRYPT_SERVER] ?: "cf"
-        convertPage.loginUserId.value =
+        convertPage.neteaseUserId.value =
             preferences[DataStoreConstants.NETEASE_USER_ID] ?: ""
         convertPage.lastLoginTimestamp.longValue =
             preferences[DataStoreConstants.LAST_LOGIN_TIMESTAMP] ?: 0L
@@ -446,6 +446,8 @@ private fun Pages(
             preferences[DataStoreConstants.SELECTED_SOURCE_APP] ?: 2
         convertPage.selectedTargetApp.intValue =
             preferences[DataStoreConstants.SELECTED_TARGET_APP] ?: 0
+        convertPage.spotifyUserId.value =
+            preferences[DataStoreConstants.SPOTIFY_USER_ID] ?: ""
 
         coroutineScope.launch(Dispatchers.Main) {
             mainPage.isDataLoaded.value = true

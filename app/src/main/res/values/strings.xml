@@ -65,7 +65,7 @@
     <string name="error">Error</string>
     <string name="please_select_at_least_one_playlist">Please select at least one song list</string>
     <string name="read_failed">read failed</string>
-    <string name="use_scan_fun_first">Please run a music scan on the scan page first</string>
+    <string name="use_scan_fun_first">Please run a music scan on the scan page first.</string>
     <string name="error_details">Details</string>
     <string name="in_total">Total: #</string>
     <string name="user_selected">Selected: #</string>
@@ -266,7 +266,7 @@
     <string name="please_input_playlist_id">Please input data</string>
     <string name="wrong_input_playlist_data">Playlist info input error</string>
     <string name="playlist_already_exists">Inputted playlist already exists</string>
-    <string name="choose_string_encrypt_server">Encrypted server for request strings#nOnly used when selecting NetEase Cloud Music or Kuwo Music</string>
+    <string name="choose_string_encrypt_server">Encrypted server for the request string#nWill be used when the source of the song list is NetEase Cloud Music, Kuwo Music, Spotify</string>
     <string name="unknown">Unknown</string>
     <string name="playlist_song_num_not_match_solution1">Find the current song list in Netease Cloud Music, select all the songs and add them to the song list you created and start the conversion operation from the beginning.</string>
     <string name="unlock_function_name" translatable="false">UM</string>
@@ -381,4 +381,13 @@
     <string name="wait_operate_end">Please wait for the operation to complete</string>
     <string name="please_select_playlist_file">Please select playlist file</string>
     <string name="home_screen">Launch page</string>
+    <string name="source_spotify" translatable="false">Spotify</string>
+    <string name="spotify_token_error">Spotify API token get failed, please try again.</string>
+    <string name="spotify_token_cf">Cloudflare does not support this operation, please change the `Encryption Server` to another server in the settings.</string>
+    <string name="get_spotify_user_info_failed">Failed to get Spotify user info</string>
+    <string name="spotify_user_id_wrong">Incorrect Spotify user ID entered</string>
+    <string name="spotify_user_id_login">User ID</string>
+    <string name="spotify_user_id">Spotify user ID</string>
+    <string name="spotify_abnormal_song_num">Ignored # music in the playlist with abnormal status</string>
+    <string name="not_convert_any_playlist">No song list has been converted</string>
 </resources>

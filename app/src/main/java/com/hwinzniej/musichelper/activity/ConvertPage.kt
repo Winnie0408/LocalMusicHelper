@@ -108,7 +108,7 @@ class ConvertPage(
     var selectedLoginMethod = mutableIntStateOf(2)
     var cookie = mutableStateOf("")
     var showLoginDialog = mutableStateOf(false)
-    var loginUserId = mutableStateOf("")
+    var neteaseUserId = mutableStateOf("")
     var errorDialogCustomAction = mutableStateOf({})
     var lastLoginTimestamp = mutableLongStateOf(0L)
     var showSongNumMismatchDialog = mutableStateOf(false)
@@ -122,6 +122,7 @@ class ConvertPage(
     val convertMode = mutableIntStateOf(1)
     val selectedSourceLocalApp = mutableIntStateOf(2)
     val selectedTargetApp = mutableIntStateOf(0)
+    val spotifyUserId = mutableStateOf("")
 
     /**
      * 请求存储权限
@@ -569,6 +570,7 @@ class ConvertPage(
                             3 -> context.getString(R.string.source_kugou_music)
                             4 -> context.getString(R.string.source_kuwo_music)
                             5 -> context.getString(R.string.source_luna_music)
+                            6 -> context.getString(R.string.source_spotify)
                             else -> ""
                         }
                     )
@@ -610,6 +612,7 @@ class ConvertPage(
                 3 -> sourceApp.init("KugouMusic")
                 4 -> sourceApp.init("KuwoMusic")
                 5 -> sourceApp.init("LunaMusic")
+                6 -> sourceApp.init("Spotify")
             }
             if (selectedMethod.intValue == 0) {
                 if (sourceApp.sourceEng != "") {
@@ -665,6 +668,7 @@ class ConvertPage(
                                                 3 -> context.getString(R.string.source_kugou_music)
                                                 4 -> context.getString(R.string.source_kuwo_music)
                                                 5 -> context.getString(R.string.source_luna_music)
+                                                6 -> context.getString(R.string.source_spotify)
                                                 else -> ""
                                             }
                                         )
@@ -761,6 +765,7 @@ class ConvertPage(
                     3 -> "https://thirdsso.kugou.com/v2/favorite/selfv2/list"
                     4 -> ""
                     5 -> "https://api.qishui.com/luna/pc/me/playlist"
+                    6 -> "https://api.spotify.com/v1/users"
                     else -> ""
                 }
                 val client = OkHttpClient()
@@ -768,15 +773,15 @@ class ConvertPage(
                 when (selectedSourceApp.intValue) {
                     1 -> {
                         if (cookie.value.contains("\\buid=\\d+".toRegex())) {
-                            loginUserId.value =
+                            neteaseUserId.value =
                                 "\\buid=\\d+".toRegex().find(cookie.value)?.value?.substring(4)!!
                             cookie.value = "uid=\\d+;?\\s?".toRegex().replace(cookie.value, "")
                         }
                         dataStore.edit { settings ->
-                            settings[DataStoreConstants.NETEASE_USER_ID] = loginUserId.value
+                            settings[DataStoreConstants.NETEASE_USER_ID] = neteaseUserId.value
                         }
                         val encrypted = Tools().encryptString(
-                            """{"limit":100,"offset":0,"uid":${loginUserId.value}}""",
+                            """{"limit":100,"offset":0,"uid":${neteaseUserId.value}}""",
                             "netease",
                             encryptServer.value
                         )
@@ -867,6 +872,38 @@ class ConvertPage(
                             .addHeader("Host", "api.qishui.com")
                             .addHeader("User-Agent", "LunaPC/1.6.3(11741945)")
                             .addHeader("Accept", "*/*")
+                            .addHeader("Connection", "keep-alive")
+                            .get()
+                    }
+
+                    6 -> {
+                        var spotifyToken = ""
+                        if (selectedSourceApp.intValue == 6) {
+                            if (encryptServer.value == "cf") {
+                                throw Exception(context.getString(R.string.spotify_token_cf))
+                            }
+                            try {
+                                spotifyToken = Tools().encryptString(
+                                    "0248",
+                                    "spotify",
+                                    encryptServer.value
+                                )?.getString("token").toString()
+                            } catch (e: Exception) {
+                                showLoadingProgressBar.value = false
+                                withContext(Dispatchers.Main) {
+                                    Toast.makeText(
+                                        context,
+                                        context.getString(R.string.spotify_token_error),
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+                                return@launch
+                            }
+                        }
+                        request = request
+                            .url("${url}/${spotifyUserId.value}/playlists?offset=0&limit=100")
+                            .addHeader("Authorization", "Bearer ${spotifyToken}")
+                            .addHeader("Accept", "application/json")
                             .addHeader("Connection", "keep-alive")
                             .get()
                     }
@@ -1152,6 +1189,48 @@ class ConvertPage(
                         }
                         db.close()
                     }
+
+                    6 -> {
+                        Tools().copyAssetFileToExternalFilesDir(
+                            context,
+                            "QQMusic"
+                        )
+                        val databaseFile =
+                            File(context.getExternalFilesDir(null), "QQMusic")
+                        val db = SQLiteDatabase.openDatabase(
+                            databaseFile.absolutePath,
+                            null,
+                            SQLiteDatabase.OPEN_READWRITE
+                        )
+                        databaseFilePath.value = databaseFile.absolutePath
+                        val playlistInfo =
+                            response.getJSONArray("items")
+                        playlistInfo.forEach {
+                            val playlist = it as JSONObject
+                            if (!playlist.containsKey("tracks") || playlist.getJSONObject("tracks")
+                                    .getInteger("total") == 0
+                            ) {
+                                emptyPlaylistNum++
+                                return@forEach
+                            }
+                            innerPlaylistId.add(playlist.getString("id"))
+                            innerPlaylistName.add(playlist.getString("name"))
+                            innerPlaylistSum.add(
+                                playlist.getJSONObject("tracks").getInteger("total")
+                            )
+                            innerPlaylistEnabled.add(0)
+                            innerPlaylistShow.add(true)
+                            db.execSQL(
+                                "INSERT INTO ${sourceApp.songListTableName} (${sourceApp.songListId}, ${sourceApp.songListName}, ${sourceApp.musicNum}) VALUES (?, ?, ?)",
+                                arrayOf(
+                                    playlist.getString("id"),
+                                    playlist.getString("name"),
+                                    playlist.getJSONObject("tracks").getInteger("total")
+                                )
+                            )
+                        }
+                        db.close()
+                    }
                 }
                 if (innerPlaylistId.size == 0) {
                     throw Exception(
@@ -1163,6 +1242,7 @@ class ConvertPage(
                                     3 -> context.getString(R.string.source_kugou_music)
                                     4 -> context.getString(R.string.source_kuwo_music)
                                     5 -> context.getString(R.string.source_luna_music)
+                                    6 -> context.getString(R.string.source_spotify)
                                     else -> ""
                                 }
                             )
@@ -1230,6 +1310,7 @@ class ConvertPage(
                 3 -> ""
                 4 -> "https://kuwo.cn/api/www/playlist/playListInfo"
                 5 -> "https://api.qishui.com/luna/pc/playlist/detail"
+                6 -> "https://api.spotify.com/v1/playlists"
                 else -> ""
             }
             val client = OkHttpClient()
@@ -1633,6 +1714,103 @@ class ConvertPage(
                             customPlaylistInput.value = ""
                         }
                     }
+
+                    6 -> {
+                        if (customPlaylistInput.value.contains("http"))
+                            customPlaylistId = "playlist/\\w+".toRegex()
+                                .find(customPlaylistId)?.value?.substring(9)
+                        var spotifyToken = ""
+                        if (selectedSourceApp.intValue == 6) {
+                            if (encryptServer.value == "cf") {
+                                throw Exception(context.getString(R.string.spotify_token_cf))
+                            }
+                            try {
+                                spotifyToken = Tools().encryptString(
+                                    "0248",
+                                    "spotify",
+                                    encryptServer.value
+                                )?.getString("token").toString()
+                            } catch (e: Exception) {
+                                showDialogProgressBar.value = false
+                                MyVibrationEffect(
+                                    context,
+                                    (context as MainActivity).enableHaptic.value,
+                                    context.hapticStrength.intValue
+                                ).done()
+                                withContext(Dispatchers.Main) {
+                                    Toast.makeText(
+                                        context,
+                                        context.getString(R.string.spotify_token_error),
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+                                return
+                            }
+                        }
+                        request = request
+                            .url("${url}/${customPlaylistId}")
+                            .addHeader("Authorization", "Bearer ${spotifyToken}")
+                            .addHeader("Accept", "application/json")
+                            .addHeader("Connection", "keep-alive")
+                            .get()
+
+                        val response: JSONObject
+                        client.newCall(request.build()).execute().use { responses ->
+                            response = JSON.parseObject(responses.body?.string())
+                        }
+                        if (response.containsKey("error")) {
+                            throw IllegalStateException(context.getString(R.string.wrong_input_playlist_data))
+                        }
+                        if (playlistId.size == 0) {
+                            Tools().copyAssetFileToExternalFilesDir(
+                                context,
+                                "QQMusic"
+                            )
+                        }
+                        val databaseFile =
+                            File(context.getExternalFilesDir(null), "QQMusic")
+                        val db = SQLiteDatabase.openDatabase(
+                            databaseFile.absolutePath,
+                            null,
+                            SQLiteDatabase.OPEN_READWRITE
+                        )
+                        databaseFilePath.value = databaseFile.absolutePath
+
+                        val playlistInfo = response.getJSONObject("items")
+                        val cursor = db.rawQuery(
+                            "SELECT COUNT(*) FROM ${sourceApp.songListTableName} WHERE ${sourceApp.songListId} = ?",
+                            arrayOf(customPlaylistId)
+                        )
+                        cursor.moveToFirst()
+                        if (cursor.getInt(0) != 0) {
+                            cursor.close()
+                            db.close()
+                            throw IllegalStateException(context.getString(R.string.playlist_already_exists))
+                        }
+                        cursor.close()
+                        db.execSQL(
+                            "INSERT INTO ${sourceApp.songListTableName} (${sourceApp.songListId}, ${sourceApp.songListName}, ${sourceApp.musicNum}) VALUES (?, ?, ?)",
+                            arrayOf(
+                                playlistInfo.getString("id"),
+                                playlistInfo.getString("name"),
+                                playlistInfo.getJSONObject("tracks").getInteger("total")
+                            )
+                        )
+                        db.close()
+                        playlistShow.add(0, false)
+                        playlistEnabled.add(0, 0)
+                        playlistId.add(0, playlistInfo.getString("id"))
+                        playlistName.add(0, playlistInfo.getString("name"))
+                        playlistSum.add(0, playlistInfo.getJSONObject("tracks").getInteger("total"))
+                        showCustomPlaylistDialog.value = false
+                        showDialogProgressBar.value = false
+                        MyVibrationEffect(
+                            context,
+                            (context as MainActivity).enableHaptic.value,
+                            context.hapticStrength.intValue
+                        ).done()
+                        customPlaylistInput.value = ""
+                    }
                 }
                 if (playlistShow.size > 1)
                     delay(250L)
@@ -1766,12 +1944,16 @@ class ConvertPage(
                         SQLiteDatabase.OPEN_READONLY
                     )
                     val testCursor = testDb.rawQuery(
-                        "SELECT COUNT(${sourceApp.songListSongInfoSongId}) FROM ${sourceApp.songListSongInfoTableName} WHERE ${sourceApp.songListSongInfoPlaylistId} = '${playlistId[firstIndex1]}'",
-                        null
+                        "SELECT COUNT(${sourceApp.songListSongInfoSongId}) FROM ${sourceApp.songListSongInfoTableName} WHERE ${sourceApp.songListSongInfoPlaylistId} = ?",
+                        arrayOf(
+                            playlistId[firstIndex1]
+                        )
                     )
                     testCursor.moveToFirst()
                     if (testCursor.getInt(0) != playlistSum[firstIndex1]) {
                         showLoadingProgressBar.value = true
+                        testCursor.close()
+                        testDb.close()
 
                         try {
                             val url = when (selectedSourceApp.intValue) {
@@ -1780,7 +1962,31 @@ class ConvertPage(
                                 3 -> "https://gateway.kugou.com/pubsongs/v4/get_other_list_file"
                                 4 -> "https://kuwo.cn/api/www/playlist/playListInfo"
                                 5 -> "https://api.qishui.com/luna/pc/playlist/detail"
+                                6 -> "https://api.spotify.com/v1/playlists"
                                 else -> ""
+                            }
+                            var spotifyToken = ""
+                            if (selectedSourceApp.intValue == 6) {
+                                if (encryptServer.value == "cf") {
+                                    throw Exception(context.getString(R.string.spotify_token_cf))
+                                }
+                                try {
+                                    spotifyToken = Tools().encryptString(
+                                        "0248",
+                                        "spotify",
+                                        encryptServer.value
+                                    )?.getString("token").toString()
+                                } catch (e: Exception) {
+                                    showLoadingProgressBar.value = false
+                                    withContext(Dispatchers.Main) {
+                                        Toast.makeText(
+                                            context,
+                                            context.getString(R.string.spotify_token_error),
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                    }
+                                    return@launch
+                                }
                             }
                             val client = OkHttpClient()
                             var request = Request.Builder()
@@ -1894,6 +2100,15 @@ class ConvertPage(
                                         .addHeader("Host", "api.qishui.com")
                                         .addHeader("User-Agent", "LunaPC/1.6.3(11741945)")
                                         .addHeader("Accept", "*/*")
+                                        .addHeader("Connection", "keep-alive")
+                                        .get()
+                                }
+
+                                6 -> {
+                                    request = request
+                                        .url("${url}/${playlistId[firstIndex1]}/tracks?offset=0&limit=100")
+                                        .addHeader("Authorization", "Bearer ${spotifyToken}")
+                                        .addHeader("Accept", "application/json")
                                         .addHeader("Connection", "keep-alive")
                                         .get()
                                 }
@@ -2322,6 +2537,125 @@ class ConvertPage(
                                         }
                                     db.close()
                                 }
+
+                                6 -> {
+                                    val db = SQLiteDatabase.openDatabase(
+                                        databaseFilePath.value,
+                                        null,
+                                        SQLiteDatabase.OPEN_READWRITE
+                                    )
+                                    db.execSQL("DELETE FROM ${sourceApp.songListSongInfoTableName}")
+                                    db.execSQL("DELETE FROM ${sourceApp.songInfoTableName}")
+                                    try {
+                                        db.execSQL("DELETE FROM sqlite_sequence WHERE name = '${sourceApp.songListSongInfoTableName}'")
+                                        db.execSQL("DELETE FROM sqlite_sequence WHERE name = '${sourceApp.songInfoTableName}'")
+                                    } catch (_: Exception) {
+                                    }
+                                    db.execSQL("VACUUM")
+                                    var times = 1
+                                    var abnormalSongNum = 0
+
+                                    while (true) {
+                                        if (response.getInteger("total") == 0) {
+                                            db.close()
+                                            break
+                                        }
+                                        val playListDetailInfo =
+                                            response.getJSONArray("items")
+
+                                        playListDetailInfo.forEachIndexed { index, it ->
+                                            val song = (it as JSONObject).getJSONObject("track")
+                                            if (song.get("id") == null || song.get("id") == "null") {
+                                                abnormalSongNum++
+                                                return@forEachIndexed
+                                            }
+                                            val playlistId = playlistId[firstIndex1]
+                                            val songId = song.getString("id")
+                                            val songName = song.getString("name")
+                                            val songArtistsBuilder = StringBuilder()
+                                            song.getJSONArray("artists").forEach { it1 ->
+                                                val artistsInfo = it1 as JSONObject
+                                                songArtistsBuilder.append(
+                                                    artistsInfo.getString(
+                                                        "name"
+                                                    )
+                                                )
+                                                songArtistsBuilder.append("/")
+                                            }
+                                            songArtistsBuilder.deleteCharAt(songArtistsBuilder.length - 1)
+                                            var songArtists = songArtistsBuilder.toString()
+                                            var songAlbum =
+                                                song.getJSONObject("album").getString("name")
+
+                                            if (songArtists.isBlank() || songArtists == "null") {
+                                                songArtists =
+                                                    context.getString(R.string.unknown)
+                                            }
+                                            if (songAlbum.isNullOrBlank() || songAlbum == "null") {
+                                                songAlbum = context.getString(R.string.unknown)
+                                            }
+                                            println(songId)
+
+                                            db.execSQL(
+                                                "INSERT INTO ${sourceApp.songListSongInfoTableName} (${sourceApp.songListSongInfoPlaylistId}, ${sourceApp.songListSongInfoSongId}, ${sourceApp.sortField}) VALUES (?, ?, ?)",
+                                                arrayOf(
+                                                    playlistId,
+                                                    songId,
+                                                    (times - 1) * 100 + index
+                                                )
+                                            )
+                                            db.execSQL(
+                                                "INSERT INTO ${sourceApp.songInfoTableName} (${sourceApp.songInfoSongId}, ${sourceApp.songInfoSongName}, ${sourceApp.songInfoSongArtist}, ${sourceApp.songInfoSongAlbum}) VALUES (?, ?, ?, ?)",
+                                                arrayOf(
+                                                    songId,
+                                                    songName,
+                                                    songArtists,
+                                                    songAlbum
+                                                )
+                                            )
+                                        }
+                                        val cursor = db.rawQuery(
+                                            "SELECT COUNT(*) FROM ${sourceApp.songListSongInfoTableName} WHERE ${sourceApp.songListSongInfoPlaylistId} = ?",
+                                            arrayOf(playlistId[firstIndex1])
+                                        )
+                                        cursor.moveToFirst()
+                                        val dbPlaylistSongNum = cursor.getInt(0)
+                                        if (dbPlaylistSongNum + abnormalSongNum ==
+                                            response.getInteger("total")
+                                        ) {
+                                            cursor.close()
+                                            db.close()
+                                            break
+                                        } else {
+                                            times++
+                                            cursor.close()
+                                            request = Request.Builder()
+                                                .url(response.getString("next"))
+                                                .addHeader(
+                                                    "Authorization",
+                                                    "Bearer ${spotifyToken}"
+                                                )
+                                                .addHeader("Accept", "application/json")
+                                                .addHeader("Connection", "keep-alive")
+                                                .get()
+                                            client.newCall(request.build()).execute()
+                                                .use { responses ->
+                                                    response =
+                                                        JSON.parseObject(responses.body?.string())
+                                                }
+                                        }
+                                    }
+                                    if (abnormalSongNum != 0) {
+                                        withContext(Dispatchers.Main) {
+                                            Toast.makeText(
+                                                context,
+                                                context.getString(R.string.spotify_abnormal_song_num)
+                                                    .replace("#", abnormalSongNum.toString()),
+                                                Toast.LENGTH_LONG
+                                            ).show()
+                                        }
+                                    }
+                                }
                             }
                             delay(500L)
                             showNumberProgressBar.value = true
@@ -2337,8 +2671,6 @@ class ConvertPage(
                             return@launch
                         }
                     }
-                    testCursor.close()
-                    testDb.close()
                 }
             }
 
@@ -2386,8 +2718,10 @@ class ConvertPage(
 
             val db = SQLiteDatabase.openOrCreateDatabase(File(databaseFilePath.value), null)
             val cursor = db.rawQuery(
-                "SELECT ${sourceApp.songListSongInfoSongId} FROM ${sourceApp.songListSongInfoTableName} WHERE ${sourceApp.songListSongInfoPlaylistId} = '${playlistId[firstIndex1]}' ORDER BY ${sourceApp.sortField}",
-                null
+                "SELECT ${sourceApp.songListSongInfoSongId} FROM ${sourceApp.songListSongInfoTableName} WHERE ${sourceApp.songListSongInfoPlaylistId} = ? ORDER BY ${sourceApp.sortField}",
+                arrayOf(
+                    playlistId[firstIndex1]
+                )
             )
             val totalNum = cursor.count
             if (totalNum != playlistSum[firstIndex1]) {
@@ -2404,6 +2738,7 @@ class ConvertPage(
                                     3 -> context.getString(R.string.source_kugou_music)
                                     4 -> context.getString(R.string.source_kuwo_music)
                                     5 -> context.getString(R.string.source_luna_music)
+                                    6 -> context.getString(R.string.source_spotify)
                                     else -> ""
                                 }
                             )
@@ -2484,8 +2819,10 @@ class ConvertPage(
                 val trackId =
                     cursor.getString(cursor.getColumnIndexOrThrow(sourceApp.songListSongInfoSongId))
                 val songInfoCursor = db.rawQuery(
-                    "SELECT ${sourceApp.songInfoSongName} , ${sourceApp.songInfoSongArtist} , ${sourceApp.songInfoSongAlbum} FROM ${sourceApp.songInfoTableName} WHERE ${sourceApp.songInfoSongId} = $trackId",
-                    null
+                    "SELECT ${sourceApp.songInfoSongName} , ${sourceApp.songInfoSongArtist} , ${sourceApp.songInfoSongAlbum} FROM ${sourceApp.songInfoTableName} WHERE ${sourceApp.songInfoSongId} = ?",
+                    arrayOf(
+                        trackId
+                    )
                 )
                 songInfoCursor.moveToFirst()
                 songName =
@@ -2980,12 +3317,13 @@ class ConvertPage(
             val temp = when (selectedSourceApp.intValue) {
                 1 -> "${
                     CookieManager.getInstance().getCookie("music.163.com")
-                }; uid=${loginUserId.value}"
+                }; uid=${neteaseUserId.value}"
 
                 2 -> CookieManager.getInstance().getCookie("y.qq.com")
                 3 -> "KUGOU"
                 4 -> CookieManager.getInstance().getCookie("kuwo.cn")
                 5 -> lunaCookie.value
+                6 -> spotifyUserId.value
                 else -> ""
             }
             if (temp == null || temp.isBlank()) {
@@ -3011,6 +3349,8 @@ class ConvertPage(
                 5 -> {
                     temp.contains("\\bsessionid(_ss)?=\\w+".toRegex())
                 }
+
+                6 -> "\\w+".toRegex().matches(temp)
 
                 else -> false
             }
@@ -3577,6 +3917,84 @@ class ConvertPage(
             } else return@forEach
         }
         db.close()
+    }
+
+    suspend fun spotifyTestUserExist(inputSpotifyUserId: String): Boolean {
+        showDialogProgressBar.value = true
+        if (spotifyUserId.value == inputSpotifyUserId) {
+            showDialogProgressBar.value = false
+            return true
+        }
+
+        if (inputSpotifyUserId.isBlank() || !"\\w+".toRegex().matches(inputSpotifyUserId)) {
+            showDialogProgressBar.value = false
+            return false
+        }
+
+        if (encryptServer.value == "cf") {
+            errorDialogTitle.value =
+                context.getString(R.string.error_while_getting_data_dialog_title)
+            errorDialogContent.value =
+                "- ${context.getString(R.string.spotify_token_cf)}\n"
+            errorDialogCustomAction.value = {}
+            showErrorDialog.value = true
+            showDialogProgressBar.value = false
+            return false
+        }
+
+        val spotifyToken: String
+        try {
+            spotifyToken = Tools().encryptString(
+                "0248",
+                "spotify",
+                encryptServer.value
+            )?.getString("token").toString()
+        } catch (e: Exception) {
+            showDialogProgressBar.value = false
+            withContext(Dispatchers.Main) {
+                Toast.makeText(
+                    context,
+                    context.getString(R.string.spotify_token_error),
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+            return false
+        }
+
+        try {
+            val client = OkHttpClient()
+            val url = "https://api.spotify.com/v1/users/${inputSpotifyUserId}"
+            val request = Request.Builder()
+                .url(url)
+                .addHeader("Authorization", "Bearer ${spotifyToken}")
+                .addHeader("Accept", "application/json")
+                .addHeader("Connection", "keep-alive")
+                .get()
+
+            val response: JSONObject
+            client.newCall(request.build()).execute().use { responses ->
+                response = JSON.parseObject(responses.body?.string())
+            }
+            if (response.containsKey("error")) {
+                showDialogProgressBar.value = false
+                return false
+            }
+        } catch (e: Exception) {
+            showDialogProgressBar.value = false
+            withContext(Dispatchers.Main) {
+                Toast.makeText(
+                    context,
+                    context.getString(R.string.spotify_token_error),
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+            return false
+        }
+        showDialogProgressBar.value = false
+        dataStore.edit { settings ->
+            settings[DataStoreConstants.SPOTIFY_USER_ID] = inputSpotifyUserId
+        }
+        return true
     }
 }
 

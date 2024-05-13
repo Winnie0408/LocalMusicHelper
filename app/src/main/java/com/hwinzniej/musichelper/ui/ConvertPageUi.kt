@@ -816,7 +816,7 @@ fun ConvertPageUi(
                     }
 
                     if (cookieValid) {
-                        if (selectedSourceApp.intValue == 1 && convertPage.loginUserId.value == "") {
+                        if (selectedSourceApp.intValue == 1 && convertPage.neteaseUserId.value == "") {
                             needNcmUserId = true
                             showDialogProgressBar.value = true
                             webViewState.value?.onResume()
@@ -841,49 +841,55 @@ fun ConvertPageUi(
                         return@YesNoDialog
                     }
                 } else {
-                    val inputValid = when (selectedSourceApp.intValue) {
-                        1 -> {
-                            userInput.contains("\\bMUSIC_U=\\w+".toRegex()) &&
-                                    userInput.contains("\\b__csrf=\\w+".toRegex()) &&
-                                    userInput.contains("\\buid=\\d+".toRegex())
+                    coroutine.launch(Dispatchers.IO) {
+                        val inputValid = when (selectedSourceApp.intValue) {
+                            1 -> {
+                                userInput.contains("\\bMUSIC_U=\\w+".toRegex()) &&
+                                        userInput.contains("\\b__csrf=\\w+".toRegex()) &&
+                                        userInput.contains("\\buid=\\d+".toRegex())
+                            }
+
+                            2 -> {
+                                (userInput.contains("\\buin=\\d+".toRegex())
+                                        ||
+                                        userInput.contains("\\bwxuin=\\d+".toRegex()))
+                                        &&
+                                        userInput.contains("\\bqm_keyst=\\w+".toRegex())
+                            }
+
+                            3 -> userLoggedIn
+                            4 -> userInput.contains("\\bHm_Iuvt.*=\\w+".toRegex())
+                            5 -> {
+                                if (userInput.isBlank())
+                                    true
+                                else
+                                    userInput.contains("\\bsessionid(_ss)?=\\w+".toRegex())
+                            }
+
+                            6 -> convertPage.spotifyTestUserExist(userInput)
+
+                            else -> false
                         }
 
-                        2 -> {
-                            (userInput.contains("\\buin=\\d+".toRegex())
-                                    ||
-                                    userInput.contains("\\bwxuin=\\d+".toRegex()))
-                                    &&
-                                    userInput.contains("\\bqm_keyst=\\w+".toRegex())
+                        if (inputValid) {
+                            convertPage.cookie.value = userInput
+                            destoryWebview()
+                            showLoginDialog.value = false
+                            convertPage.getOnlinePlaylist(
+                                kugouUserRelated = kugouUserRelated,
+                                kugouCurrentIp = kugouCurrentIp
+                            )
+                        } else {
+                            convertPage.cookie.value = ""
+                            withContext(Dispatchers.Main) {
+                                Toast.makeText(
+                                    context,
+                                    context.getString(R.string.no_valid_login_params_found),
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
+                            return@launch
                         }
-
-                        3 -> userLoggedIn
-                        4 -> userInput.contains("\\bHm_Iuvt.*=\\w+".toRegex())
-                        5 -> {
-                            if (userInput.isBlank())
-                                true
-                            else
-                                userInput.contains("\\bsessionid(_ss)?=\\w+".toRegex())
-                        }
-
-                        else -> false
-                    }
-
-                    if (inputValid) {
-                        convertPage.cookie.value = userInput
-                        destoryWebview()
-                        showLoginDialog.value = false
-                        convertPage.getOnlinePlaylist(
-                            kugouUserRelated = kugouUserRelated,
-                            kugouCurrentIp = kugouCurrentIp
-                        )
-                    } else {
-                        convertPage.cookie.value = ""
-                        Toast.makeText(
-                            context,
-                            context.getString(R.string.no_valid_login_params_found),
-                            Toast.LENGTH_SHORT
-                        ).show()
-                        return@YesNoDialog
                     }
                 }
                 destoryWebview()
@@ -895,6 +901,7 @@ fun ConvertPageUi(
                     3 -> stringResource(R.string.source_kugou_music)
                     4 -> stringResource(R.string.source_kuwo_music)
                     5 -> stringResource(R.string.source_luna_music)
+                    6 -> stringResource(R.string.source_spotify)
                     else -> ""
                 }
             ),
@@ -925,91 +932,93 @@ fun ConvertPageUi(
                                     else -> stringResource(R.string.web_login)
                                 }
 
-                                1 -> if (selectedSourceApp.intValue != 3)
-                                    stringResource(R.string.cookie_login)
-                                else
-                                    stringResource(R.string.kugou_wechat_qr_code)
+                                1 -> when (selectedSourceApp.intValue) {
+                                    3 -> stringResource(R.string.kugou_wechat_qr_code)
+                                    6 -> stringResource(R.string.spotify_user_id_login)
+                                    else -> stringResource(R.string.cookie_login)
+                                }
 
                                 else -> ""
                             },
                             popupWidth = 150
                         ) {
-                            PopupMenuItem(
-                                onClick = {
-                                    MyVibrationEffect(
-                                        context,
-                                        enableHaptic.value,
-                                        hapticStrength.intValue
-                                    ).click()
-                                    webViewState.value?.onResume()
-                                    webViewState.value?.resumeTimers()
-                                    userLoggedIn = false
-                                    convertPage.cookie.value = ""
-                                    selectedLoginMethod.intValue = 0
-                                    loginMethodPopupState.dismiss()
-                                    showDialogProgressBar.value = true
-                                    when (selectedSourceApp.intValue) {
-                                        3 -> {
-                                            coroutine.launch(Dispatchers.IO) {
-                                                loginQrCode = null
-                                                convertPage.stopGetLoginStatus()
-                                                kugouDeviceId = false
-                                                qrCodeDeviceRelated.clear()
-                                                kugouUserRelated.clear()
-                                                kugouDeviceId =
-                                                    convertPage.kugouActiveDevice(currentIp = kugouCurrentIp)
-                                            }
-                                        }
-
-                                        4 -> {
-                                            Toast.makeText(
-                                                context,
-                                                context.getString(R.string.kuwo_no_login_click_ok_button),
-                                                Toast.LENGTH_LONG
-                                            ).show()
-                                        }
-
-                                        5 -> {
-                                            coroutine.launch(Dispatchers.IO) {
-                                                loginQrCode = null
-                                                convertPage.stopGetLoginStatus()
-                                                qrCodeDeviceRelated.clear()
-                                                qrCodeDeviceRelated.putAll(
-                                                    convertPage.lunaGetLoginQrCodeUrl()
-                                                )
-                                                loginQrCode =
-                                                    qrCodeDeviceRelated["qrCodeUrl"]?.let {
-                                                        Tools().generateQRCode(
-                                                            content = it
-                                                        )
-                                                    }
-                                                convertPage.lunaVerifyRelated.clear()
-                                                qrCodeDeviceRelated["token"]?.let {
-                                                    userLoggedIn =
-                                                        convertPage.lunaGetLoginStatus(token = it)
-                                                    if (userLoggedIn)
-                                                        convertPage.lunaVerifyRelated.clear()
+                            if (selectedSourceApp.intValue != 6)
+                                PopupMenuItem(
+                                    onClick = {
+                                        MyVibrationEffect(
+                                            context,
+                                            enableHaptic.value,
+                                            hapticStrength.intValue
+                                        ).click()
+                                        webViewState.value?.onResume()
+                                        webViewState.value?.resumeTimers()
+                                        userLoggedIn = false
+                                        convertPage.cookie.value = ""
+                                        selectedLoginMethod.intValue = 0
+                                        loginMethodPopupState.dismiss()
+                                        showDialogProgressBar.value = true
+                                        when (selectedSourceApp.intValue) {
+                                            3 -> {
+                                                coroutine.launch(Dispatchers.IO) {
+                                                    loginQrCode = null
+                                                    convertPage.stopGetLoginStatus()
+                                                    kugouDeviceId = false
+                                                    qrCodeDeviceRelated.clear()
+                                                    kugouUserRelated.clear()
+                                                    kugouDeviceId =
+                                                        convertPage.kugouActiveDevice(currentIp = kugouCurrentIp)
                                                 }
-                                                showDialogProgressBar.value = false
+                                            }
+
+                                            4 -> {
+                                                Toast.makeText(
+                                                    context,
+                                                    context.getString(R.string.kuwo_no_login_click_ok_button),
+                                                    Toast.LENGTH_LONG
+                                                ).show()
+                                            }
+
+                                            5 -> {
+                                                coroutine.launch(Dispatchers.IO) {
+                                                    loginQrCode = null
+                                                    convertPage.stopGetLoginStatus()
+                                                    qrCodeDeviceRelated.clear()
+                                                    qrCodeDeviceRelated.putAll(
+                                                        convertPage.lunaGetLoginQrCodeUrl()
+                                                    )
+                                                    loginQrCode =
+                                                        qrCodeDeviceRelated["qrCodeUrl"]?.let {
+                                                            Tools().generateQRCode(
+                                                                content = it
+                                                            )
+                                                        }
+                                                    convertPage.lunaVerifyRelated.clear()
+                                                    qrCodeDeviceRelated["token"]?.let {
+                                                        userLoggedIn =
+                                                            convertPage.lunaGetLoginStatus(token = it)
+                                                        if (userLoggedIn)
+                                                            convertPage.lunaVerifyRelated.clear()
+                                                    }
+                                                    showDialogProgressBar.value = false
+                                                }
                                             }
                                         }
-                                    }
-                                },
-                                selected = selectedLoginMethod.intValue == 0,
-                                text = when (selectedSourceApp.intValue) {
-                                    3 -> stringResource(R.string.kugou_app_qr_code)
-                                    5 -> stringResource(R.string.luna_app_qr_code)
-                                    else -> stringResource(R.string.web_login)
-                                },
-                                iconPainter =
-                                when (selectedSourceApp.intValue) {
-                                    3 -> painterResource(id = R.drawable.kugou)
-                                    5 -> painterResource(id = R.drawable.luna_music)
-                                    else -> painterResource(id = R.drawable.web_page)
-                                },
-                                iconColor = SaltTheme.colors.text,
-                                iconPaddingValues = PaddingValues(all = 1.dp)
-                            )
+                                    },
+                                    selected = selectedLoginMethod.intValue == 0,
+                                    text = when (selectedSourceApp.intValue) {
+                                        3 -> stringResource(R.string.kugou_app_qr_code)
+                                        5 -> stringResource(R.string.luna_app_qr_code)
+                                        else -> stringResource(R.string.web_login)
+                                    },
+                                    iconPainter =
+                                    when (selectedSourceApp.intValue) {
+                                        3 -> painterResource(id = R.drawable.kugou)
+                                        5 -> painterResource(id = R.drawable.luna_music)
+                                        else -> painterResource(id = R.drawable.web_page)
+                                    },
+                                    iconColor = SaltTheme.colors.text,
+                                    iconPaddingValues = PaddingValues(all = 1.dp)
+                                )
                             PopupMenuItem(
                                 onClick = {
                                     MyVibrationEffect(
@@ -1034,14 +1043,16 @@ fun ConvertPageUi(
                                     }
                                 },
                                 selected = selectedLoginMethod.intValue == 1,
-                                text = if (selectedSourceApp.intValue != 3)
-                                    stringResource(R.string.cookie_login)
-                                else
-                                    stringResource(R.string.kugou_wechat_qr_code),
-                                iconPainter = if (selectedSourceApp.intValue != 3)
-                                    painterResource(id = R.drawable.cookie)
-                                else
-                                    painterResource(id = R.drawable.wechat_app),
+                                text = when (selectedSourceApp.intValue) {
+                                    3 -> stringResource(R.string.kugou_wechat_qr_code)
+                                    6 -> stringResource(R.string.spotify_user_id_login)
+                                    else -> stringResource(R.string.cookie_login)
+                                },
+                                iconPainter = when (selectedSourceApp.intValue) {
+                                    3 -> painterResource(id = R.drawable.wechat_app)
+                                    6 -> painterResource(id = R.drawable.user)
+                                    else -> painterResource(id = R.drawable.cookie)
+                                },
                                 iconColor = SaltTheme.colors.text
                             )
                         }
@@ -1120,7 +1131,7 @@ fun ConvertPageUi(
                                                         """.trimIndent()
                                                             ) { result ->
                                                                 if (result.contains("/user/home\\?id=\\d+".toRegex())) {
-                                                                    convertPage.loginUserId.value =
+                                                                    convertPage.neteaseUserId.value =
                                                                         result.substring(
                                                                             result.indexOf("/user/home?id=") + 14,
                                                                             result.length - 1
@@ -1217,6 +1228,7 @@ fun ConvertPageUi(
                                             3 -> webView.loadUrl("about:blank")
                                             4 -> webView.loadUrl("https://kuwo.cn/")
                                             5 -> webView.loadUrl("about:blank")
+                                            6 -> webView.loadUrl("about:blank")
                                         }
                                     }
                                 }
@@ -1296,6 +1308,7 @@ fun ConvertPageUi(
                                             3 -> ""
                                             4 -> "Hm_Iuvtxxx=xxx"
                                             5 -> "sessionid(_ss)=xxx"
+                                            6 -> stringResource(id = R.string.spotify_user_id)
                                             else -> ""
                                         },
                                         onChange = {
@@ -1386,7 +1399,7 @@ fun ConvertPageUi(
                                 onClick = {
                                     if (selectedLoginMethod.intValue != 2)
                                         showDialogProgressBar.value = true
-                                    convertPage.loginUserId.value = ""
+                                    convertPage.neteaseUserId.value = ""
                                     coroutine.launch(Dispatchers.IO) {
                                         if (selectedSourceApp.intValue == 5)
                                             convertPage.lunaLogout()
@@ -1396,6 +1409,7 @@ fun ConvertPageUi(
                                                 0L
                                             settings[DataStoreConstants.KUGOU_TOKEN] = ""
                                             settings[DataStoreConstants.KUGOU_USER_ID] = ""
+                                            settings[DataStoreConstants.SPOTIFY_USER_ID] = ""
                                         }
                                     }
                                     CookieManager.getInstance().removeAllCookies(null)
@@ -1432,8 +1446,15 @@ fun ConvertPageUi(
                                             qrCodeDeviceRelated.clear()
                                             convertPage.lunaVerifyRelated.clear()
                                         }
+
+                                        6 -> {}
                                     }
                                     userLoggedIn = false
+                                    Toast.makeText(
+                                        context,
+                                        context.getString(R.string.logged_out),
+                                        Toast.LENGTH_SHORT
+                                    ).show()
                                 },
                                 text = stringResource(id = R.string.switch_account_logout),
                                 enableHaptic = enableHaptic.value,
@@ -1824,6 +1845,7 @@ fun ConvertPageUi(
                                                         3 -> stringResource(R.string.source_kugou_music)
                                                         4 -> stringResource(R.string.source_kuwo_music)
                                                         5 -> stringResource(R.string.source_luna_music)
+                                                        6 -> stringResource(R.string.source_spotify)
                                                         else -> ""
                                                     },
                                                     popupWidth = 180
@@ -1937,6 +1959,28 @@ fun ConvertPageUi(
                                                         iconColor = SaltTheme.colors.text,
                                                         iconPaddingValues = PaddingValues(all = 1.5.dp)
                                                     )
+                                                    PopupMenuItem(
+                                                        onClick = {
+                                                            MyVibrationEffect(
+                                                                context,
+                                                                enableHaptic.value,
+                                                                hapticStrength.intValue
+                                                            ).click()
+                                                            coroutine.launch {
+                                                                dataStore.edit { settings ->
+                                                                    settings[DataStoreConstants.PLAYLIST_SOURCE_PLATFORM] =
+                                                                        6
+                                                                }
+                                                            }
+                                                            sourceAppPopupMenuState.dismiss()
+                                                            databaseFileName.value = ""
+                                                        },
+                                                        selected = selectedSourceApp.intValue == 6,
+                                                        text = stringResource(R.string.source_spotify),
+                                                        iconPainter = painterResource(id = R.drawable.spotify),
+                                                        iconColor = SaltTheme.colors.text,
+                                                        iconPaddingValues = PaddingValues(all = 0.5.dp)
+                                                    )
                                                 }
                                             }
                                             ItemPopup(
@@ -1953,31 +1997,32 @@ fun ConvertPageUi(
                                                 },
                                                 popupWidth = 165,
                                             ) {
-                                                PopupMenuItem(
-                                                    onClick = {
-                                                        MyVibrationEffect(
-                                                            context,
-                                                            enableHaptic.value,
-                                                            hapticStrength.intValue
-                                                        ).click()
-                                                        selectedMethod.intValue = 0
-                                                        coroutine.launch {
-                                                            dataStore.edit { settings ->
-                                                                settings[DataStoreConstants.GET_PLAYLIST_METHOD] =
-                                                                    0
+                                                if (selectedSourceApp.intValue != 6)
+                                                    PopupMenuItem(
+                                                        onClick = {
+                                                            MyVibrationEffect(
+                                                                context,
+                                                                enableHaptic.value,
+                                                                hapticStrength.intValue
+                                                            ).click()
+                                                            selectedMethod.intValue = 0
+                                                            coroutine.launch {
+                                                                dataStore.edit { settings ->
+                                                                    settings[DataStoreConstants.GET_PLAYLIST_METHOD] =
+                                                                        0
+                                                                }
                                                             }
-                                                        }
-                                                        methodPopupMenuState.dismiss()
-                                                    },
-                                                    selected = selectedMethod.intValue == 0,
-                                                    text = if (selectedSourceApp.intValue == 5)
-                                                        stringResource(R.string.json_file)
-                                                    else stringResource(R.string.database),
-                                                    iconPainter = if (selectedSourceApp.intValue == 5)
-                                                        painterResource(id = R.drawable.json_file)
-                                                    else painterResource(id = R.drawable.database),
-                                                    iconColor = SaltTheme.colors.text
-                                                )
+                                                            methodPopupMenuState.dismiss()
+                                                        },
+                                                        selected = selectedMethod.intValue == 0,
+                                                        text = if (selectedSourceApp.intValue == 5)
+                                                            stringResource(R.string.json_file)
+                                                        else stringResource(R.string.database),
+                                                        iconPainter = if (selectedSourceApp.intValue == 5)
+                                                            painterResource(id = R.drawable.json_file)
+                                                        else painterResource(id = R.drawable.database),
+                                                        iconColor = SaltTheme.colors.text
+                                                    )
                                                 PopupMenuItem(
                                                     onClick = {
                                                         MyVibrationEffect(
@@ -2704,6 +2749,7 @@ fun ConvertPageUi(
                                                             3 -> stringResource(R.string.source_kugou_music)
                                                             4 -> stringResource(R.string.source_kuwo_music)
                                                             5 -> stringResource(R.string.source_luna_music)
+                                                            6 -> stringResource(R.string.source_spotify)
                                                             else -> ""
                                                         }
                                                     )
@@ -2733,6 +2779,7 @@ fun ConvertPageUi(
                                                                 3 -> stringResource(R.string.source_kugou_music)
                                                                 4 -> stringResource(R.string.source_kuwo_music)
                                                                 5 -> stringResource(R.string.source_luna_music)
+                                                                6 -> stringResource(R.string.source_spotify)
                                                                 else -> ""
                                                             }
                                                         }\n"
@@ -2744,6 +2791,7 @@ fun ConvertPageUi(
                                                         3 -> painterResource(id = R.drawable.kugou)
                                                         4 -> painterResource(id = R.drawable.kuwo)
                                                         5 -> painterResource(id = R.drawable.luna_music)
+                                                        6 -> painterResource(id = R.drawable.spotify)
                                                         else -> painterResource(id = R.drawable.android)
                                                     },
                                                     iconColor = SaltTheme.colors.text,
@@ -2888,6 +2936,7 @@ fun ConvertPageUi(
                                                                 3 -> stringResource(R.string.source_kugou_music)
                                                                 4 -> stringResource(R.string.source_kuwo_music)
                                                                 5 -> stringResource(R.string.source_luna_music)
+                                                                6 -> stringResource(R.string.source_spotify)
                                                                 else -> ""
                                                             }
                                                         )
@@ -3179,39 +3228,52 @@ fun ConvertPageUi(
                                     Spacer(modifier = Modifier.width(16.dp))
                                     Icon(
                                         modifier = Modifier.size(50.dp),
-                                        painter = painterResource(id = R.drawable.ic_check),
+                                        painter =
+                                        if (convertPage.resultFileLocation.size != 0)
+                                            painterResource(id = R.drawable.ic_check)
+                                        else
+                                            painterResource(id = R.drawable.ic_tips),
                                         contentDescription = null,
-                                        tint = colorResource(id = R.color.matched)
+                                        tint =
+                                        if (convertPage.resultFileLocation.size != 0)
+                                            colorResource(id = R.color.matched)
+                                        else
+                                            colorResource(id = R.color.warning)
                                     )
                                     Column(
                                         modifier = Modifier.fillMaxSize(),
                                         horizontalAlignment = Alignment.Start,
                                     ) {
-//                    Text(text = stringResource(id = R.string.all_done))
                                         ItemText(
-                                            text = stringResource(id = R.string.all_done),
+                                            text =
+                                            if (convertPage.resultFileLocation.size != 0)
+                                                stringResource(id = R.string.all_done)
+                                            else
+                                                stringResource(id = R.string.not_convert_any_playlist),
                                             fontSize = 24.sp
                                         )
                                     }
                                 }
                                 Spacer(modifier = Modifier.height(12.dp))
                             }
-                            RoundedColumn {
-                                ItemTitle(text = stringResource(id = R.string.details_of_results))
-                                ItemContainer {
-                                    LazyColumn(
-                                        modifier = Modifier
-                                            .fillMaxSize()
-                                            .heightIn(max = (LocalConfiguration.current.screenHeightDp / 2.2).dp)
-                                            .clip(RoundedCornerShape(12.dp))
-                                            .background(color = SaltTheme.colors.background)
-                                    ) {
-                                        items(convertPage.resultFileLocation.size) { index ->
-                                            ItemText(
-                                                text = convertPage.resultFileLocation[index],
-                                                fontSize = 15.sp,
-                                                verticalPadding = 4.dp
-                                            )
+                            if (convertPage.resultFileLocation.size != 0) {
+                                RoundedColumn {
+                                    ItemTitle(text = stringResource(id = R.string.details_of_results))
+                                    ItemContainer {
+                                        LazyColumn(
+                                            modifier = Modifier
+                                                .fillMaxSize()
+                                                .heightIn(max = (LocalConfiguration.current.screenHeightDp / 2.2).dp)
+                                                .clip(RoundedCornerShape(12.dp))
+                                                .background(color = SaltTheme.colors.background)
+                                        ) {
+                                            items(convertPage.resultFileLocation.size) { index ->
+                                                ItemText(
+                                                    text = convertPage.resultFileLocation[index],
+                                                    fontSize = 15.sp,
+                                                    verticalPadding = 4.dp
+                                                )
+                                            }
                                         }
                                     }
                                 }
@@ -3227,6 +3289,7 @@ fun ConvertPageUi(
                                                 3 -> stringResource(id = R.string.source_kugou_music)
                                                 4 -> stringResource(id = R.string.source_kuwo_music)
                                                 5 -> stringResource(R.string.source_luna_music)
+                                                6 -> stringResource(R.string.source_spotify)
                                                 else -> ""
                                             }
                                         )
@@ -3247,6 +3310,8 @@ fun ConvertPageUi(
                                                         settings[DataStoreConstants.KUGOU_TOKEN] =
                                                             ""
                                                         settings[DataStoreConstants.KUGOU_USER_ID] =
+                                                            ""
+                                                        settings[DataStoreConstants.SPOTIFY_USER_ID] =
                                                             ""
                                                     }
                                                 }
@@ -3272,32 +3337,34 @@ fun ConvertPageUi(
                                 }
                             }
 
-                            ItemContainer {
-                                Row {
-                                    TextButton(
-                                        onClick = { convertPage.copyFolderPathToClipboard() },
-                                        modifier = Modifier.weight(1f),
-                                        text = stringResource(id = R.string.copy_folder_path),
-                                        textColor = SaltTheme.colors.subText,
-                                        backgroundColor = SaltTheme.colors.subBackground,
-                                        enableHaptic = enableHaptic.value,
-                                        hapticStrength = hapticStrength.intValue
-                                    )
-                                    Spacer(modifier = Modifier.width(12.dp))
-                                    TextButton(
-                                        onClick = { convertPage.launchLocalPlayer() },
-                                        modifier = Modifier.weight(1f),
-                                        text = stringResource(id = R.string.open_other_app).replace(
-                                            "#", when (convertPage.selectedTargetApp.intValue) {
-                                                0 -> "Salt Player"
-                                                1 -> "APlayer"
-                                                2 -> "Poweramp"
-                                                else -> ""
-                                            }
-                                        ),
-                                        enableHaptic = enableHaptic.value,
-                                        hapticStrength = hapticStrength.intValue
-                                    )
+                            if (convertPage.resultFileLocation.size != 0) {
+                                ItemContainer {
+                                    Row {
+                                        TextButton(
+                                            onClick = { convertPage.copyFolderPathToClipboard() },
+                                            modifier = Modifier.weight(1f),
+                                            text = stringResource(id = R.string.copy_folder_path),
+                                            textColor = SaltTheme.colors.subText,
+                                            backgroundColor = SaltTheme.colors.subBackground,
+                                            enableHaptic = enableHaptic.value,
+                                            hapticStrength = hapticStrength.intValue
+                                        )
+                                        Spacer(modifier = Modifier.width(12.dp))
+                                        TextButton(
+                                            onClick = { convertPage.launchLocalPlayer() },
+                                            modifier = Modifier.weight(1f),
+                                            text = stringResource(id = R.string.open_other_app).replace(
+                                                "#", when (convertPage.selectedTargetApp.intValue) {
+                                                    0 -> "Salt Player"
+                                                    1 -> "APlayer"
+                                                    2 -> "Poweramp"
+                                                    else -> ""
+                                                }
+                                            ),
+                                            enableHaptic = enableHaptic.value,
+                                            hapticStrength = hapticStrength.intValue
+                                        )
+                                    }
                                 }
                             }
                         }
