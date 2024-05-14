@@ -1776,7 +1776,6 @@ class ConvertPage(
                         )
                         databaseFilePath.value = databaseFile.absolutePath
 
-                        val playlistInfo = response.getJSONObject("items")
                         val cursor = db.rawQuery(
                             "SELECT COUNT(*) FROM ${sourceApp.songListTableName} WHERE ${sourceApp.songListId} = ?",
                             arrayOf(customPlaylistId)
@@ -1791,17 +1790,17 @@ class ConvertPage(
                         db.execSQL(
                             "INSERT INTO ${sourceApp.songListTableName} (${sourceApp.songListId}, ${sourceApp.songListName}, ${sourceApp.musicNum}) VALUES (?, ?, ?)",
                             arrayOf(
-                                playlistInfo.getString("id"),
-                                playlistInfo.getString("name"),
-                                playlistInfo.getJSONObject("tracks").getInteger("total")
+                                response.getString("id"),
+                                response.getString("name"),
+                                response.getJSONObject("tracks").getInteger("total")
                             )
                         )
                         db.close()
                         playlistShow.add(0, false)
                         playlistEnabled.add(0, 0)
-                        playlistId.add(0, playlistInfo.getString("id"))
-                        playlistName.add(0, playlistInfo.getString("name"))
-                        playlistSum.add(0, playlistInfo.getJSONObject("tracks").getInteger("total"))
+                        playlistId.add(0, response.getString("id"))
+                        playlistName.add(0, response.getString("name"))
+                        playlistSum.add(0, response.getJSONObject("tracks").getInteger("total"))
                         showCustomPlaylistDialog.value = false
                         showDialogProgressBar.value = false
                         MyVibrationEffect(
@@ -2594,7 +2593,6 @@ class ConvertPage(
                                             if (songAlbum.isNullOrBlank() || songAlbum == "null") {
                                                 songAlbum = context.getString(R.string.unknown)
                                             }
-                                            println(songId)
 
                                             db.execSQL(
                                                 "INSERT INTO ${sourceApp.songListSongInfoTableName} (${sourceApp.songListSongInfoPlaylistId}, ${sourceApp.songListSongInfoSongId}, ${sourceApp.sortField}) VALUES (?, ?, ?)",

@@ -221,6 +221,7 @@ fun SettingsPageUi(
                     sub = stringResource(R.string.dynamic_color_switcher_sub),
                     enableHaptic = false,
                     iconPainter = painterResource(id = R.drawable.color),
+                    iconPaddingValues = PaddingValues(all = 1.7.dp),
                     iconColor = SaltTheme.colors.text,
                     hapticStrength = hapticStrength.intValue
                 )
@@ -300,7 +301,7 @@ fun SettingsPageUi(
                 ItemPopup(
                     state = initialPagePopupMenuState,
                     iconPainter = painterResource(id = R.drawable.home_screen),
-                    iconPaddingValues = PaddingValues(all = 1.5.dp),
+                    iconPaddingValues = PaddingValues(all = 1.6.dp),
                     iconColor = SaltTheme.colors.text,
                     text = stringResource(R.string.home_screen),
                     selectedItem = if (targetSdkVersion <= 28) {

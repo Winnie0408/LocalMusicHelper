@@ -376,7 +376,7 @@
     <string name="please_select_playlist_file">플레이리스트파일을 선택하십시오</string>
     <string name="home_screen">시작 페이지</string>
     <string name="spotify_token_error">Spotify API 토큰 획득에 실패했습니다. 다시 시도하세요.</string>
-    <string name="spotify_token_cf">Cloudflare는 이 작업을 지원하지 않으므로 설정에서 `암호화 서버`를 다른 서버로 변경하세요.</string>
+    <string name="spotify_token_cf">`Cloudflare`는 이 작업을 지원하지 않으므로 설정에서 `암호화 서버`를 다른 서버로 변경하세요.</string>
     <string name="get_spotify_user_info_failed">Spotify 사용자 정보를 가져오는 데 실패했습니다</string>
     <string name="spotify_user_id_wrong">입력한 Spotify 사용자 ID가 올바르지 않습니다</string>
     <string name="spotify_user_id_login">사용자 ID</string>

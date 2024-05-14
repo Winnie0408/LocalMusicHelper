@@ -484,13 +484,13 @@ class Tools {
         popupWidth: Int,
         screenWidthDp: Int
     ): Float {
-        val temp = (clickOffsetX / density)
+        val temp = (clickOffsetX / (density + 0.245f))
         return if (temp < 42 + popupWidth / 2) {
             16f
         } else if (temp > (screenWidthDp - popupWidth)) {
-            (screenWidthDp - popupWidth - 48).toFloat()
+            (screenWidthDp - popupWidth - 42).toFloat()
         } else {
-            temp - popupWidth + 65
+            temp - popupWidth + 84
         }
     }
 

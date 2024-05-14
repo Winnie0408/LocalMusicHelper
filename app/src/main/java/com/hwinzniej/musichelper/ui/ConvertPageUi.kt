@@ -201,6 +201,7 @@ fun ConvertPageUi(
             showOriginalSonglist = 1
             selectedMultiSourceApp = -1
             convertPage.sourcePlaylistFileName.value = ""
+            convertPage.resultFileLocation.clear()
         }
     }
 

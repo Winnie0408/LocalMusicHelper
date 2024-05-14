@@ -205,7 +205,7 @@ fun BasicDialog(
 
 @UnstableSaltApi
 @Composable
-fun ItemPopup(  //TODO 根据文字长度自动调整宽度；在对话框内点击，右侧弹出位置可能会出界；横屏点击最右侧，却在最左侧弹出
+fun ItemPopup(  //TODO 根据文字长度自动调整宽度
     state: PopupState,
     enabled: Boolean = true,
     iconPainter: Painter? = null,

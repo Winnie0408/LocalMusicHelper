@@ -220,7 +220,7 @@
     <string name="timeout">超时</string>
     <string name="optional_servers">服务器列表</string>
     <string name="get_playlist_failed">获取歌单信息失败</string>
-    <string name="get_playlist_hidden">已隐藏#个空歌单</string>
+    <string name="get_playlist_hidden">已隐藏 # 个空歌单</string>
     <string name="switch_account_logout">切换账号 / 退出登录</string>
     <string name="not_yet_deployed">（暂未启用）</string>
     <string name="unable_start_documentsui">「文件」启动失败</string>
@@ -376,7 +376,7 @@
     <string name="please_select_playlist_file">请选择歌单文件</string>
     <string name="home_screen">启动页</string>
     <string name="spotify_token_error">Spotify API token获取失败，请重试。</string>
-    <string name="spotify_token_cf">Cloudflare不支持本操作，请在设置中将`加密服务器`更换为其他服务器。</string>
+    <string name="spotify_token_cf">`Cloudflare`不支持本操作，请在设置中将`加密服务器`更换为其他服务器。</string>
     <string name="get_spotify_user_info_failed">获取Spotify用户信息失败</string>
     <string name="spotify_user_id_wrong">输入的Spotify用户ID不正确</string>
     <string name="spotify_user_id_login">用户ID</string>

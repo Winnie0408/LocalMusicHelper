@@ -10,5 +10,5 @@
     <color name="matched">#599E5E</color>
     <color name="unmatched">#C94F4F</color>
     <color name="manual">#3D76A7</color>
-    <color name="warning">#C29E4A</color>
+    <color name="warning">#E1A800</color>
 </resources>

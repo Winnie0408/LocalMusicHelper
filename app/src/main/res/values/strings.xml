@@ -383,7 +383,7 @@
     <string name="home_screen">Launch page</string>
     <string name="source_spotify" translatable="false">Spotify</string>
     <string name="spotify_token_error">Spotify API token get failed, please try again.</string>
-    <string name="spotify_token_cf">Cloudflare does not support this operation, please change the `Encryption Server` to another server in the settings.</string>
+    <string name="spotify_token_cf">`Cloudflare` does not support this operation, please change the `Encryption Server` to another server in the settings.</string>
     <string name="get_spotify_user_info_failed">Failed to get Spotify user info</string>
     <string name="spotify_user_id_wrong">Incorrect Spotify user ID entered</string>
     <string name="spotify_user_id_login">User ID</string>
