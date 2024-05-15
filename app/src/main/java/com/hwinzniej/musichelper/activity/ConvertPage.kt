@@ -629,14 +629,26 @@ class ConvertPage(
                                 errorDialogTitle.value =
                                     context.getString(R.string.error_while_getting_data_dialog_title)
                                 errorDialogContent.value +=
-                                    "- ${context.getString(R.string.database_file)} ${
+                                    "- ${
+                                        if (selectedSourceApp.intValue == 5) {
+                                            context.getString(R.string.json_file_dir)
+                                        } else {
+                                            context.getString(R.string.database_file)
+                                        }
+                                    } ${
                                         context.getString(
                                             R.string.read_failed
                                         )
                                     }:\n  - ${
-                                        context.getString(
-                                            R.string.please_select_database_file
-                                        )
+                                        if (selectedSourceApp.intValue == 5) {
+                                            context.getString(
+                                                R.string.not_select_json_dir_or_select_wrong
+                                            )
+                                        } else {
+                                            context.getString(
+                                                R.string.please_select_database_file
+                                            )
+                                        }
                                     }\n"
                                 errorDialogCustomAction.value = {}
                                 showErrorDialog.value = true

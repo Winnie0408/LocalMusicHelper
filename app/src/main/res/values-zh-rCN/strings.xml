@@ -383,4 +383,5 @@
     <string name="spotify_user_id">Spotify用户ID</string>
     <string name="spotify_abnormal_song_num">忽略了歌单中 # 个状态异常的音乐</string>
     <string name="not_convert_any_playlist">未转换任何歌单</string>
+    <string name="not_select_json_dir_or_select_wrong">未选择JSON文件的目录，或JSON文件目录选择错误</string>
 </resources>

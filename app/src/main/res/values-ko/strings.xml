@@ -103,8 +103,8 @@
     <string name="overwrite_original_tag_switch_title">원래 태그 내용 덮어쓰기</string>
     <string name="pc_salt_converter">Salt Converter PC 버전</string>
     <string name="permission_not_granted_toast">필요한 권한이 부여되지 않아 계속할 수 없습니다.</string>
-    <string name="please_select_at_least_one_playlist">적어도 하나의 플레이리스트를 선택하십시오.</string>
-    <string name="please_select_source_app">소스 앱을 선택하십시오.</string>
+    <string name="please_select_at_least_one_playlist">적어도 하나의 플레이리스트를 선택하십시오</string>
+    <string name="please_select_source_app">소스 앱을 선택하십시오</string>
     <string name="preview_convert_result">변환 결과 미리보기</string>
     <string name="process_all_scanned_music_switch_sub">"스캔" 기능에서 스캔한 모든 음악 처리</string>
     <string name="process_all_scanned_music_switch_title">모든 음악 처리</string>
@@ -383,4 +383,5 @@
     <string name="spotify_user_id">Spotify 사용자 ID</string>
     <string name="spotify_abnormal_song_num">노래 목록에서 비정상 상태의 음악 #곡을 무시했습니다</string>
     <string name="not_convert_any_playlist">변환된 노래 목록이 없습니다</string>
+    <string name="not_select_json_dir_or_select_wrong">JSON 파일의 디렉터리가 선택되지 않았거나 JSON 파일의 디렉터리가 잘못 선택되었습니다</string>
 </resources>

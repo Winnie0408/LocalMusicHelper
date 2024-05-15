@@ -1971,6 +1971,8 @@ fun ConvertPageUi(
                                                                 dataStore.edit { settings ->
                                                                     settings[DataStoreConstants.PLAYLIST_SOURCE_PLATFORM] =
                                                                         6
+                                                                    settings[DataStoreConstants.GET_PLAYLIST_METHOD] =
+                                                                        1
                                                                 }
                                                             }
                                                             sourceAppPopupMenuState.dismiss()
