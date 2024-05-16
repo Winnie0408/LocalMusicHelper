@@ -1,0 +1,38 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="1826"
+    android:viewportHeight="1827">
+    <path
+        android:fillColor="#00000000"
+        android:fillType="evenOdd"
+        android:pathData="M549.5,1092.2C585.9,1084.6 659.9,1050.1 687.2,1020.7 714.4,991.3 709,939.7 723.2,922.3 737.4,904.8 749.3,908.5 777.2,923.7 805.1,939 857.7,1023.4 884.8,1038.9 911.9,1054.4 936.3,1054.8 939.5,1016.6 942.8,978.3 887.4,822.9 885.1,778.4 882.8,734 906.1,741.2 925.7,749.9 945.3,758.6 993.7,827.1 1022.8,840.7 1052,854.3 1062.6,846.9 1100.6,831.7 1138.6,816.4 1196.6,784.8 1253.4,752.5"
+        android:strokeWidth="45.8333"
+        android:strokeColor="#000000"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+    <path
+        android:fillColor="#00000000"
+        android:fillType="evenOdd"
+        android:pathData="M798.7,1243.2C736.6,1424.1 539.6,1520.4 358.8,1458.3 177.9,1396.2 81.6,1199.2 143.7,1018.3 204.5,841.2 395.2,744.5 574.1,800.2"
+        android:strokeWidth="100.833"
+        android:strokeColor="#000000"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+    <path
+        android:fillColor="#00000000"
+        android:fillType="evenOdd"
+        android:pathData="M1249.3,1021.9C1431.4,1080.3 1626.4,980 1684.7,797.9 1743.1,615.8 1642.8,420.9 1460.7,362.5 1282.3,305.3 1090.8,400.4 1028.5,577"
+        android:strokeWidth="100.8"
+        android:strokeColor="#000000"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+    <path
+        android:fillColor="#FF000000"
+        android:fillType="evenOdd"
+        android:pathData="M344.2,1155.6C329.2,1091.5 368.9,1027.3 433,1012.2 497.1,997.1 561.3,1036.8 576.4,1100.9 591.5,1165.1 551.8,1229.3 487.7,1244.4 423.5,1259.4 359.3,1219.7 344.2,1155.6Z" />
+    <path
+        android:fillColor="#FF000000"
+        android:fillType="evenOdd"
+        android:pathData="M1212.2,725.8C1197.1,661.7 1236.9,597.5 1301,582.4 1365.1,567.3 1429.3,607.1 1444.4,671.2 1459.5,735.3 1419.7,799.5 1355.6,814.6 1291.5,829.7 1227.3,789.9 1212.2,725.8Z" />
+</vector>

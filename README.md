@@ -3,8 +3,14 @@
     <img src="markdownResources/ic_launcher.png" width = "150" height = "150" alt="cover" />
     <h2>欢迎使用 歌单无界</h2>
 </div>
+<h5 align="center">本工具独立使用即可，也可配合 <a href="https://github.com/Winnie0408/SaltPlayerConverter">椒盐歌单转换助手</a> 用于生成本地歌曲信息，并在电脑、平板等大屏设备上使用。</h5>
 
-[//]: # (    <h3 align="center">本工具独立使用即可，也可配合 <a href="https://github.com/Winnie0408/SaltPlayerConverter">椒盐歌单转换助手</a> 用于生成本地歌曲信息，并在电脑、平板等大屏设备上使用。</h3>)
+## 🧐 仓库访问数
+
+<div align="center">
+    <p>（统计开始于2024.2.9）</p>
+    <img src="https://profile-counter.glitch.me/HWinZnieJ_LocalMusicHelper/count.svg" alt="visit_count" />
+</div>
 
 ## 🌈 项目介绍
 
@@ -14,7 +20,7 @@
 
 现在，已经有大量用户将主力使用的音乐软件从**在线音乐平台**转为了**本地音乐播放器**，虽然歌曲可以很顺利且快速地进行迁移操作，但是无法将自己创建的歌单、或者其他用户的优秀歌单一并进行快速迁移操作，这个项目就是为了解决这个问题而诞生的。
 
-本项目能够将用户保存在网易云音乐、QQ音乐、酷狗音乐、酷我音乐、汽水音乐、Spotify，共6个在线音乐平台的歌单数据，转换成支持的本地音乐播放器 **（目前支持：Salt Player、APlayer、Poweramp）** 可识别的歌单格式，完成歌单的导入操作，方便用户快速从在线音乐平台迁移歌单到本地音乐播放器。同时也支持了Salt Player、APlayer、Poweramp的歌单格式的相互转换，能快速方便地在本地播放器之间迁移歌单数据。
+本项目能够将用户保存在网易云音乐、QQ音乐、酷狗音乐、酷我音乐、汽水音乐、Spotify，共6个在线音乐平台的歌单数据，以及从TuneMyMusic生成的CSV歌单文件，转换成支持的本地音乐播放器 **（目前支持：Salt Player、APlayer、Poweramp）** 可识别的歌单格式，完成歌单的导入操作，方便用户快速从在线音乐平台迁移歌单到本地音乐播放器。同时也支持了Salt Player、APlayer、Poweramp的歌单格式的相互转换，能快速方便地在本地播放器之间迁移歌单数据。
 
 ## 🤖 支持的Android版本
 
@@ -25,7 +31,7 @@
 
 1. 使用Jetpack Compose进行UI设计，界面简洁美观。
 2. 使用[Salt UI](https://github.com/Moriafly/SaltUI)为UI基础组件。
-3. 完全在本地进行歌单数据的转换，不会上传任何数据到服务器。
+3. 完全在本地进行歌单数据的转换，不上传任何无关数据到服务器。
 4. 支持多种在线音乐平台的歌单数据，以及多种本地音乐播放器的歌单格式，可根据需要自行选择。
 5. 保留原歌单的排序方式，不会因为转换而改变原歌单的排序。
 6. 保留对[椒盐歌单转换助手](https://github.com/Winnie0408/SaltPlayerConverter)的支持，生成的结果文件仍可在电脑、平板等大屏设备上使用。
@@ -38,8 +44,9 @@
 13. 支持部分标签的补全功能，可根据歌曲中已有的标签信息自动填充缺失标签信息。
 14. 支持Salt Player、APlayer、Poweramp这3个本地播放器之间的歌单的相互转换。
 15. 提供丰富的，可自定义强度的触觉反馈。
-16. 支持调用[UM Project](https://unlock-music.dev)的可执行文件，可直接在设备上使用UM的功能。（该功能仅供开发者学习研究使用。出于法律法规等相关因素的考虑，**不会公开提供此功能**）
-17. 更多功能特性，等待您的发现！
+16. 支持[TuneMyMusic](https://www.tunemymusic.com)生成的CSV歌单文件，可将其支持的平台（如：TIDAL, Apple Music, YouTube, Amazon Music, Deezer等）中的歌单，转换为本地音乐播放器可识别的歌单格式。
+17. 支持调用[UM Project](https://unlock-music.dev)的可执行文件，可直接在设备上使用UM的功能。（该功能仅供开发者学习研究使用。出于法律法规等相关因素的考虑，**不会公开提供此功能**）
+18. 更多功能特性，等待您的发现！
 
 ## 👀 需要使用的权限
 
@@ -67,6 +74,7 @@
     - [酷我音乐](https://www.kuwo.cn/)
     - [汽水音乐](https://music.douyin.com/qishui)
     - [Spotify](https://open.spotify.com/) **（⚠️由于Spotify中音乐的标题大多使用英语、繁体中文或音乐的原语言，故匹配准确率可能有所降低⚠️）**
+    - [TuneMyMusic](https://www.tunemymusic.com)（仅支持其生成的**CSV**歌单文件）
 - 音乐标签
     - [Windows](https://www.cnblogs.com/vinlxc/p/11347744.html)
     - [Android](https://www.coolapk.com/apk/com.xjcheng.musictageditor)**（推荐）**
@@ -88,8 +96,8 @@
 
 ### 0. 📲 安装应用程序
 
-- 若当前设备有Root权限，直接在本项目的Release中下载最新版本的**app-release.apk**文件，安装即可。
-- 若当前设备没有Root权限，在本项目的Release中下载最新版本的**app-release.apk**文件后：
+- 若当前设备**有**Root权限，直接在本项目的Release中下载最新版本的**app-release.apk**文件，安装即可。
+- 若当前设备**没有**Root权限，在本项目的Release中下载最新版本的**app-release.apk**文件后：
     - 安装在当前设备中：
         - 使用软件提供的在线获取歌单数据功能。**（推荐）**
             - 该方法使用比较简单，直接在软件中登录音乐平台的账号即可。
@@ -101,7 +109,7 @@
         - 可选的虚拟机 **（虚拟机的系统需要Android API Level 26（Android O, 8.0）及以上）**：
         - [VMOS Pro](https://www.coolapk.com/apk/com.vmos.pro)：在手机上使用的虚拟机 ~~（可能需要使用VIP版，详情查看该应用的酷安评论区）~~
         - [MuMu模拟器](https://mumu.163.com)：在电脑上使用的虚拟机
-        - 或其他支持启用Root权限的虚拟机
+        - 其他支持启用Root权限的虚拟机
 
 ### 1. 🛠️ 对应用进行自定义设置
 
@@ -241,12 +249,12 @@
         - 酷狗音乐：仅支持扫描二维码登录。（使用车机版的登录接口，需要使用酷狗APP扫码；或者酷狗账号绑定微信后，微信扫码关注“酷狗智能设备”公众号。）
         - 酷我音乐：`Hm_Iuvt`
         - 汽水音乐：`sessionid`或`sessionid_ss`
-        - Spotify：用户ID（[获取方法](README.md#-获取spotify用户id)）
+        - Spotify：用户ID（需要您[自行获取](README.md#-获取spotify用户id)）
        </details>
 
     - 数据库获取：选择歌单来源App的数据库文件或目录。
-        - 若已安装经过修补的音乐平台APP，点击`文件提供者`左上角的菜单按钮，选择对应的音乐平台，在database或cache目录中，选择对应的文件或目录。
-        - 若使用的是自行提取的数据文件，则点击`文件提供者`左上角的菜单按钮，选择当前设备的名称，选择对应的文件或目录。
+        - 若已安装**经过修补**的音乐平台APP，点击`文件提供者`左上角的菜单按钮，选择对应的音乐平台，在database或cache目录中，选择对应的文件或目录。
+        - 若使用的是**自行提取**的数据文件，点击`文件提供者`左上角的菜单按钮，选择当前设备的名称，选择对应的文件或目录。
 6. 选择使用本软件的扫描结果，还是来自其他设备的扫描结果。
 7. 选择转换后要导入的音乐播放器。
 8. 点击**下一步**按钮，并授予[请求的权限](README.md#-需要使用的权限)（如果未授予的话）。
@@ -496,7 +504,7 @@
 
 专辑：我的少女时代 电影原声大碟
 
-### 总体匹配
+#### 总体匹配
 
 将歌曲的\[歌名\] \[歌手\] \[专辑\]拼接成一个字符串，进行匹配，找到相似度最大的歌曲。表格中将显示整体匹配的相似度。
 
@@ -510,7 +518,7 @@
 
 进行匹配，相似度结果为：89.47%。
 
-### 分离匹配
+#### 分离匹配
 
 将歌曲的\[歌名\] \[歌手\] \[专辑\]分别进行匹配， 找到相似度最大的歌曲。 表格中将显示每个匹配项的相似度。
 
@@ -542,7 +550,7 @@
 
 ### Spotify
 
-似乎该平台音乐的标题大多使用英语、繁体中文或音乐的原语言，故匹配准确率可能有所降低。
+似乎该平台音乐的标题大多使用英语、繁体中文或音乐的原语言，故匹配准确率**可能有所降低**。
 
 ## 🍬 获取网易云音乐UID
 
@@ -596,7 +604,7 @@
 - [酷狗音乐](https://www.123pan.com/s/eoQjVv-1Mbqh.html) 提取码:6vZc
 - [酷我音乐](https://www.123pan.com/s/eoQjVv-1Mbqh.html) 提取码:6vZc
 - [汽水音乐](https://www.123pan.com/s/eoQjVv-1Mbqh.html) 提取码:6vZc
-- Spotify：暂不支持
+- Spotify 暂不支持
 
 ## 🍪 使用浏览器获取音乐平台的Cookie信息
 
@@ -609,12 +617,6 @@
     3. 打开浏览器提供的`开发人员工具`。（Kiwi Browser在右上角的菜单中；电脑端浏览器按`F12`，或在网页任意处右键，选择`检查`）
     4. 切换到开发人员工具的`应用(程序)`选项卡，在左侧找到`Cookie`，并展开，选择出现的网址。
     5. 寻找并获取[需要的值](README.md#43--开始歌单转换的操作)，按照`key1=value1; key2=value2; key3=value3`的格式填入软件，**不需要**填写`path`、`domain`等信息。
-
-## 🧐 访问数
-
-（统计开始于2024.2.9）
-
-![访问数](https://profile-counter.glitch.me/HWinZnieJ_LocalMusicHelper/count.svg)
 
 ## 🌟 星标历史
 

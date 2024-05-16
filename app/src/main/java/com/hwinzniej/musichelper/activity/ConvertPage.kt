@@ -56,7 +56,10 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
+import org.apache.commons.csv.CSVFormat
+import org.apache.commons.csv.CSVParser
 import java.io.File
+import java.io.FileReader
 import java.io.FileWriter
 import java.net.SocketTimeoutException
 import java.time.LocalDate
@@ -68,6 +71,7 @@ class ConvertPage(
     private val openMusicPlatformSqlFileLauncher: ActivityResultLauncher<Array<String>>,
     private val openResultSqlFileLauncher: ActivityResultLauncher<Array<String>>,
     private val openPlaylistFileLauncher: ActivityResultLauncher<Array<String>>,
+    private val openCsvFileLauncher: ActivityResultLauncher<Array<String>>,
     private val openLunaJSONDirLauncher: ActivityResultLauncher<Uri?>,
     val db: MusicDatabase,
     componentActivity: ComponentActivity,
@@ -123,6 +127,7 @@ class ConvertPage(
     val selectedSourceLocalApp = mutableIntStateOf(2)
     val selectedTargetApp = mutableIntStateOf(0)
     val spotifyUserId = mutableStateOf("")
+    private var csvFilePath = ""
 
     /**
      * 请求存储权限
@@ -261,6 +266,18 @@ class ConvertPage(
         }
     }
 
+    fun selectCsvFile() {
+        try {
+            openCsvFileLauncher.launch(arrayOf("text/*"))
+        } catch (_: Exception) {
+            Toast.makeText(
+                context,
+                context.getString(R.string.unable_start_documentsui),
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+    }
+
     fun handelLunaDirUri(uri: Uri?) {
         if (uri == null) {
             return
@@ -311,6 +328,15 @@ class ConvertPage(
                 lifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
                     delay(200L)  //播放动画
                     sourcePlaylistFileName.value = selectedFileName.value
+                }
+            }
+
+            3 -> {
+                csvFilePath =
+                    Tools().fromUriCopyFileToExternalFilesDir(context, uri, selectedFileName.value)
+                lifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
+                    delay(200L)  //播放动画
+                    databaseFileName.value = selectedFileName.value
                 }
             }
         }
@@ -571,6 +597,7 @@ class ConvertPage(
                             4 -> context.getString(R.string.source_kuwo_music)
                             5 -> context.getString(R.string.source_luna_music)
                             6 -> context.getString(R.string.source_spotify)
+                            7 -> context.getString(R.string.tune_my_music)
                             else -> ""
                         }
                     )
@@ -613,41 +640,61 @@ class ConvertPage(
                 4 -> sourceApp.init("KuwoMusic")
                 5 -> sourceApp.init("LunaMusic")
                 6 -> sourceApp.init("Spotify")
+                7 -> sourceApp.init("TuneMyMusic")
             }
             if (selectedMethod.intValue == 0) {
                 if (sourceApp.sourceEng != "") {
                     currentPage.intValue = 1
-                    if (useRootAccess.value)
+                    if (useRootAccess.value && selectedSourceApp.intValue != 7)
                         checkAppStatusWithRoot()
                     else {
                         var db: SQLiteDatabase? = null
                         try {
-                            if (selectedSourceApp.intValue == 5) {
-                                lunaJsonToDatabase()
-                            }
-                            if (databaseFilePath.value.isEmpty()) {
+                            try {
+                                if (selectedSourceApp.intValue == 5) {
+                                    if (!lunaJsonToDatabase())
+                                        throw Exception()
+                                }
+                                if (selectedSourceApp.intValue == 7) {
+                                    if (!tuneMyMusicCsvToDatabase())
+                                        throw Exception()
+                                }
+                                if (databaseFilePath.value.isBlank() || databaseFileName.value.isBlank()) {
+                                    throw Exception()
+                                }
+                            } catch (e: Exception) {
                                 errorDialogTitle.value =
                                     context.getString(R.string.error_while_getting_data_dialog_title)
                                 errorDialogContent.value +=
                                     "- ${
-                                        if (selectedSourceApp.intValue == 5) {
-                                            context.getString(R.string.json_file_dir)
-                                        } else {
-                                            context.getString(R.string.database_file)
+                                        when (selectedSourceApp.intValue) {
+                                            5 -> context.getString(R.string.json_file_dir)
+                                            7 -> context.getString(R.string.csv_file)
+                                            else -> context.getString(R.string.database_file)
                                         }
                                     } ${
                                         context.getString(
                                             R.string.read_failed
                                         )
                                     }:\n  - ${
-                                        if (selectedSourceApp.intValue == 5) {
-                                            context.getString(
-                                                R.string.not_select_json_dir_or_select_wrong
-                                            )
-                                        } else {
-                                            context.getString(
-                                                R.string.please_select_database_file
-                                            )
+                                        when (selectedSourceApp.intValue) {
+                                            5 -> {
+                                                context.getString(
+                                                    R.string.not_select_json_dir_or_select_wrong
+                                                )
+                                            }
+
+                                            7 -> {
+                                                context.getString(
+                                                    R.string.not_select_csv_or_select_wrong
+                                                )
+                                            }
+
+                                            else -> {
+                                                context.getString(
+                                                    R.string.please_select_database_file
+                                                )
+                                            }
                                         }
                                     }\n"
                                 errorDialogCustomAction.value = {}
@@ -681,6 +728,7 @@ class ConvertPage(
                                                 4 -> context.getString(R.string.source_kuwo_music)
                                                 5 -> context.getString(R.string.source_luna_music)
                                                 6 -> context.getString(R.string.source_spotify)
+                                                7 -> context.getString(R.string.tune_my_music)
                                                 else -> ""
                                             }
                                         )
@@ -1255,6 +1303,7 @@ class ConvertPage(
                                     4 -> context.getString(R.string.source_kuwo_music)
                                     5 -> context.getString(R.string.source_luna_music)
                                     6 -> context.getString(R.string.source_spotify)
+                                    7 -> context.getString(R.string.tune_my_music)
                                     else -> ""
                                 }
                             )
@@ -2749,6 +2798,7 @@ class ConvertPage(
                                     4 -> context.getString(R.string.source_kuwo_music)
                                     5 -> context.getString(R.string.source_luna_music)
                                     6 -> context.getString(R.string.source_spotify)
+                                    7 -> context.getString(R.string.tune_my_music)
                                     else -> ""
                                 }
                             )
@@ -3827,14 +3877,14 @@ class ConvertPage(
         }
     }
 
-    private fun lunaJsonToDatabase() {
+    private fun lunaJsonToDatabase(): Boolean {
         val dirPath = context.getExternalFilesDir(null)?.absolutePath + "/lunaJsonDir"
         val dir = File(dirPath)
         if (!dir.exists())
-            return
+            return false
         val files = dir.listFiles()
         if (files == null || files.isEmpty())
-            return
+            return false
         Tools().copyAssetFileToExternalFilesDir(context, "QQMusic")
         val databaseFile = File(context.getExternalFilesDir(null), "QQMusic")
         val db = SQLiteDatabase.openDatabase(
@@ -3843,90 +3893,97 @@ class ConvertPage(
             SQLiteDatabase.OPEN_READWRITE
         )
         databaseFilePath.value = databaseFile.absolutePath
-        files.forEach { file ->
-            val content = file.readText()
+        try {
+            files.forEach { file ->
+                val content = file.readText()
 
-            val json: JSONObject
-            try {
-                json = JSON.parseObject(content)
-            } catch (_: Exception) {
-                return@forEach
-            }
+                val json: JSONObject
+                try {
+                    json = JSON.parseObject(content)
+                } catch (_: Exception) {
+                    return@forEach
+                }
 
-            if (json.containsKey("media_resources")) {
-                // 歌单详情
-                json.getJSONArray("media_resources").forEachIndexed { index, it ->
-                    val song = (it as JSONObject).getJSONObject("entity")
-                        .getJSONObject("track_wrapper")
-                        .getJSONObject("track")
-                    val playlistId = json.getJSONObject("playlist").getString("id")
-                    val songId = song.getString("id")
-                    val songName = song.getString("name")
+                if (json.containsKey("media_resources")) {
+                    // 歌单详情
+                    json.getJSONArray("media_resources").forEachIndexed { index, it ->
+                        val song = (it as JSONObject).getJSONObject("entity")
+                            .getJSONObject("track_wrapper")
+                            .getJSONObject("track")
+                        val playlistId = json.getJSONObject("playlist").getString("id")
+                        val songId = song.getString("id")
+                        val songName = song.getString("name")
 
-                    val songArtistsBuilder = StringBuilder()
-                    song.getJSONArray("artists").forEach { it1 ->
-                        val artistsInfo = it1 as JSONObject
-                        songArtistsBuilder.append(artistsInfo.getString("name"))
-                        songArtistsBuilder.append("/")
-                    }
-                    songArtistsBuilder.deleteCharAt(songArtistsBuilder.length - 1)
-                    var songArtists = songArtistsBuilder.toString()
+                        val songArtistsBuilder = StringBuilder()
+                        song.getJSONArray("artists").forEach { it1 ->
+                            val artistsInfo = it1 as JSONObject
+                            songArtistsBuilder.append(artistsInfo.getString("name"))
+                            songArtistsBuilder.append("/")
+                        }
+                        songArtistsBuilder.deleteCharAt(songArtistsBuilder.length - 1)
+                        var songArtists = songArtistsBuilder.toString()
 
-                    var songAlbum = song.getJSONObject("album").getString("name")
-                    if (songArtists.isBlank() || songArtists == "null") {
-                        songArtists = context.getString(R.string.unknown)
-                    }
-                    if (songAlbum.isNullOrBlank() || songAlbum == "null") {
-                        songAlbum = context.getString(R.string.unknown)
-                    }
-                    db.execSQL(
-                        "INSERT INTO ${sourceApp.songListSongInfoTableName} (${sourceApp.songListSongInfoPlaylistId}, ${sourceApp.songListSongInfoSongId}, ${sourceApp.sortField}) VALUES (?, ?, ?)",
-                        arrayOf(
-                            playlistId,
-                            songId,
-                            index
-                        )
-                    )
+                        var songAlbum = song.getJSONObject("album").getString("name")
+                        if (songArtists.isBlank() || songArtists == "null") {
+                            songArtists = context.getString(R.string.unknown)
+                        }
+                        if (songAlbum.isNullOrBlank() || songAlbum == "null") {
+                            songAlbum = context.getString(R.string.unknown)
+                        }
 
-                    db.rawQuery(
-                        "SELECT COUNT(*) FROM ${sourceApp.songInfoTableName} WHERE ${sourceApp.songInfoSongId} = ?",
-                        arrayOf(songId)
-                    ).use { cursor ->
-                        cursor.moveToFirst()
-                        if (cursor.getInt(0) == 0) {
-                            db.execSQL(
-                                "INSERT INTO ${sourceApp.songInfoTableName} (${sourceApp.songInfoSongId}, ${sourceApp.songInfoSongName}, ${sourceApp.songInfoSongArtist}, ${sourceApp.songInfoSongAlbum}) VALUES (?, ?, ?, ?)",
-                                arrayOf(
-                                    songId,
-                                    songName,
-                                    songArtists,
-                                    songAlbum
-                                )
+                        db.execSQL(
+                            "INSERT INTO ${sourceApp.songListSongInfoTableName} (${sourceApp.songListSongInfoPlaylistId}, ${sourceApp.songListSongInfoSongId}, ${sourceApp.sortField}) VALUES (?, ?, ?)",
+                            arrayOf(
+                                playlistId,
+                                songId,
+                                index
                             )
+                        )
+
+                        db.rawQuery(
+                            "SELECT COUNT(*) FROM ${sourceApp.songInfoTableName} WHERE ${sourceApp.songInfoSongId} = ?",
+                            arrayOf(songId)
+                        ).use { cursor ->
+                            cursor.moveToFirst()
+                            if (cursor.getInt(0) == 0) {
+                                db.execSQL(
+                                    "INSERT INTO ${sourceApp.songInfoTableName} (${sourceApp.songInfoSongId}, ${sourceApp.songInfoSongName}, ${sourceApp.songInfoSongArtist}, ${sourceApp.songInfoSongAlbum}) VALUES (?, ?, ?, ?)",
+                                    arrayOf(
+                                        songId,
+                                        songName,
+                                        songArtists,
+                                        songAlbum
+                                    )
+                                )
+                            }
                         }
                     }
-                }
-            } else if (json.containsKey("playlists")) {
-                // 歌单列表
-                val playlistInfo =
-                    json.getJSONArray("playlists")
-                playlistInfo.forEach pForEach@{
-                    val playlist = it as JSONObject
-                    if (!playlist.containsKey("count_tracks") || playlist.getInteger("count_tracks") == 0) {
-                        return@pForEach
-                    }
-                    db.execSQL(
-                        "INSERT INTO ${sourceApp.songListTableName} (${sourceApp.songListId}, ${sourceApp.songListName}, ${sourceApp.musicNum}) VALUES (?, ?, ?)",
-                        arrayOf(
-                            playlist.getString("id"),
-                            playlist.getString("title"),
-                            playlist.getInteger("count_tracks")
+                } else if (json.containsKey("playlists")) {
+                    // 歌单列表
+                    val playlistInfo =
+                        json.getJSONArray("playlists")
+                    playlistInfo.forEach pForEach@{
+                        val playlist = it as JSONObject
+                        if (!playlist.containsKey("count_tracks") || playlist.getInteger("count_tracks") == 0) {
+                            return@pForEach
+                        }
+                        db.execSQL(
+                            "INSERT INTO ${sourceApp.songListTableName} (${sourceApp.songListId}, ${sourceApp.songListName}, ${sourceApp.musicNum}) VALUES (?, ?, ?)",
+                            arrayOf(
+                                playlist.getString("id"),
+                                playlist.getString("title"),
+                                playlist.getInteger("count_tracks")
+                            )
                         )
-                    )
-                }
-            } else return@forEach
+                    }
+                } else return@forEach
+            }
+        } catch (_: Exception) {
+            return false
+        } finally {
+            db.close()
         }
-        db.close()
+        return true
     }
 
     suspend fun spotifyTestUserExist(inputSpotifyUserId: String): Boolean {
@@ -4003,6 +4060,101 @@ class ConvertPage(
         showDialogProgressBar.value = false
         dataStore.edit { settings ->
             settings[DataStoreConstants.SPOTIFY_USER_ID] = inputSpotifyUserId
+        }
+        return true
+    }
+
+    private fun tuneMyMusicCsvToDatabase(): Boolean {
+        if (csvFilePath.isBlank() || !csvFilePath.endsWith("csv", true)) {
+            return false
+        }
+        val csvFile = File(csvFilePath)
+        if (!csvFile.exists() || !csvFile.canRead()) {
+            return false
+        }
+
+        Tools().copyAssetFileToExternalFilesDir(context, "QQMusic")
+        val databaseFile = File(context.getExternalFilesDir(null), "QQMusic")
+        val db = SQLiteDatabase.openDatabase(
+            databaseFile.absolutePath,
+            null,
+            SQLiteDatabase.OPEN_READWRITE
+        )
+        databaseFilePath.value = databaseFile.absolutePath
+
+        try {
+            val csvMap = mutableListOf<Array<String>>()
+            FileReader(csvFile).use { csvFileReader ->
+                CSVParser(csvFileReader, CSVFormat.DEFAULT).use { parser ->
+                    for (record in parser.records) {
+                        if (record.recordNumber == 1L)
+                            continue
+                        csvMap.add(record.values())
+                    }
+                }
+            }
+
+            val playList = mutableListOf<Map<Int, String>>()
+            var playListIndex = 0
+
+            csvMap.forEachIndexed { index, songInfo ->
+                if (!playList.contains(mapOf(playListIndex to songInfo[3]))) {
+                    playList.add(mapOf(playListIndex to songInfo[3]))
+                }
+
+                val song = songInfo[0]
+                var songArtists = songInfo[1].replace(" & ", "/")
+                var songAlbum = songInfo[2]
+                if (songArtists.isBlank() || songArtists == "null") {
+                    songArtists = context.getString(R.string.unknown)
+                }
+                if (songAlbum.isBlank() || songAlbum == "null") {
+                    songAlbum = context.getString(R.string.unknown)
+                }
+
+                db.execSQL(
+                    "INSERT INTO ${sourceApp.songListSongInfoTableName} (${sourceApp.songListSongInfoPlaylistId}, ${sourceApp.songListSongInfoSongId}, ${sourceApp.sortField}) VALUES (?, ?, ?)",
+                    arrayOf(
+                        playList[playListIndex].keys.first(), // 歌单ID
+                        index, // 歌曲ID
+                        index  // 歌曲顺序
+                    )
+                )
+
+                db.rawQuery(
+                    "SELECT COUNT(*) FROM ${sourceApp.songInfoTableName} WHERE ${sourceApp.songInfoSongId} = ?",
+                    arrayOf(index.toString())
+                ).use { cursor ->
+                    cursor.moveToFirst()
+                    if (cursor.getInt(0) == 0) {
+                        db.execSQL(
+                            "INSERT INTO ${sourceApp.songInfoTableName} (${sourceApp.songInfoSongId}, ${sourceApp.songInfoSongName}, ${sourceApp.songInfoSongArtist}, ${sourceApp.songInfoSongAlbum}) VALUES (?, ?, ?, ?)",
+                            arrayOf(
+                                index, // 歌曲ID
+                                song, // 歌曲名称
+                                songArtists,
+                                songAlbum
+                            )
+                        )
+                    }
+                }
+
+                if (index == csvMap.size - 1 || csvMap[index][3] != csvMap[index + 1][3]) {
+                    db.execSQL(
+                        "INSERT INTO ${sourceApp.songListTableName} (${sourceApp.songListId}, ${sourceApp.songListName}, ${sourceApp.musicNum}) VALUES (?, ?, ?)",
+                        arrayOf(
+                            playList[playListIndex].keys.first(), //歌单ID
+                            songInfo[3], // 歌单名
+                            csvMap.count { it[3] == songInfo[3] } // 歌单歌曲数量
+                        )
+                    )
+                    playListIndex++
+                }
+            }
+        } catch (_: Exception) {
+            return false
+        } finally {
+            db.close()
         }
         return true
     }

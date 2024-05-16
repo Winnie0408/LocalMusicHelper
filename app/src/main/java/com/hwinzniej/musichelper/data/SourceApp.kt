@@ -141,6 +141,26 @@ class SourceApp {
                 songInfoSongAlbum = "albumname"
                 pakageName = "com.spotify.music"
             }
+
+            "TuneMyMusic" -> {
+                sourceEng = "TuneMyMusic"
+                sourceChn = "TuneMyMusic"
+                databaseName = "QQMusic"
+                songListTableName = "User_Folder_table"
+                songListId = "folderid"
+                songListName = "foldername"
+                musicNum = "count"
+                songListSongInfoTableName = "User_Folder_Song_table"
+                songListSongInfoPlaylistId = "folderid"
+                songListSongInfoSongId = "id"
+                songInfoTableName = "Song_table"
+                sortField = "position"
+                songInfoSongId = "id"
+                songInfoSongName = "name"
+                songInfoSongArtist = "singername"
+                songInfoSongAlbum = "albumname"
+                pakageName = "com.tunemymusic.hwinzniej.idontknow"
+            }
         }
     }
 }

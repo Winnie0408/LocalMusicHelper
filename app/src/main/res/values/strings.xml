@@ -373,7 +373,7 @@
     <string name="send_sms">Send SMS</string>
     <string name="verify_failed">Authentication failed, please check if the SMS was sent successfully.</string>
     <string name="json_file_dir">Directory of JSON files</string>
-    <string name="json_file">JSON files</string>
+    <string name="json_file">JSON file</string>
     <string name="select_json_file_dir_match_to_source">Select the directory where the JSON file for #</string>
     <string name="failed_to_get_file_from_dir">Failed to get file from directory</string>
     <string name="no_playlist_found">No playlist data</string>
@@ -391,4 +391,8 @@
     <string name="spotify_abnormal_song_num">Ignored # music in the playlist with abnormal status</string>
     <string name="not_convert_any_playlist">No song list has been converted</string>
     <string name="not_select_json_dir_or_select_wrong">The directory of the JSON file is not selected, or the directory of the JSON file is selected incorrectly</string>
+    <string name="tune_my_music" translatable="false">TuneMyMusic</string>
+    <string name="csv_file">CSV file</string>
+    <string name="not_select_csv_or_select_wrong">No CSV file is selected, or the CSV file is selected incorrectly</string>
+    <string name="select_csv_file_match_to_source">Select the CSV file of #</string>
 </resources>

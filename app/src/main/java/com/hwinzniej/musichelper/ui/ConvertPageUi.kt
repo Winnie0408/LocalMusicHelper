@@ -903,6 +903,7 @@ fun ConvertPageUi(
                     4 -> stringResource(R.string.source_kuwo_music)
                     5 -> stringResource(R.string.source_luna_music)
                     6 -> stringResource(R.string.source_spotify)
+                    7 -> stringResource(R.string.tune_my_music)
                     else -> ""
                 }
             ),
@@ -1838,7 +1839,9 @@ fun ConvertPageUi(
                                                     state = sourceAppPopupMenuState,
                                                     text = stringResource(R.string.select_source_of_songlist),
                                                     sub = if (it)
-                                                        stringResource(R.string.with_root_access)
+                                                        if (selectedSourceApp.intValue == 7)
+                                                            null
+                                                        else stringResource(R.string.with_root_access)
                                                     else null,
                                                     selectedItem = when (selectedSourceApp.intValue) {
                                                         1 -> stringResource(R.string.source_netease_cloud_music)
@@ -1847,9 +1850,10 @@ fun ConvertPageUi(
                                                         4 -> stringResource(R.string.source_kuwo_music)
                                                         5 -> stringResource(R.string.source_luna_music)
                                                         6 -> stringResource(R.string.source_spotify)
+                                                        7 -> stringResource(id = R.string.tune_my_music)
                                                         else -> ""
                                                     },
-                                                    popupWidth = 180
+                                                    popupWidth = 190
                                                 ) {
                                                     PopupMenuItem(
                                                         onClick = {
@@ -1984,16 +1988,41 @@ fun ConvertPageUi(
                                                         iconColor = SaltTheme.colors.text,
                                                         iconPaddingValues = PaddingValues(all = 0.5.dp)
                                                     )
+                                                    PopupMenuItem(
+                                                        onClick = {
+                                                            MyVibrationEffect(
+                                                                context,
+                                                                enableHaptic.value,
+                                                                hapticStrength.intValue
+                                                            ).click()
+                                                            coroutine.launch {
+                                                                dataStore.edit { settings ->
+                                                                    settings[DataStoreConstants.PLAYLIST_SOURCE_PLATFORM] =
+                                                                        7
+                                                                    settings[DataStoreConstants.GET_PLAYLIST_METHOD] =
+                                                                        0
+                                                                }
+                                                            }
+                                                            sourceAppPopupMenuState.dismiss()
+                                                            databaseFileName.value = ""
+                                                        },
+                                                        selected = selectedSourceApp.intValue == 7,
+                                                        text = stringResource(R.string.tune_my_music),
+                                                        iconPainter = painterResource(id = R.drawable.tune_my_music),
+                                                        iconColor = SaltTheme.colors.text,
+                                                        iconPaddingValues = PaddingValues(all = 0.5.dp)
+                                                    )
                                                 }
                                             }
                                             ItemPopup(
                                                 state = methodPopupMenuState,
                                                 text = stringResource(R.string.way_to_get_song_list),
                                                 selectedItem = when (selectedMethod.intValue) {
-                                                    0 -> if (selectedSourceApp.intValue == 5)
-                                                        stringResource(R.string.json_file)
-                                                    else
-                                                        stringResource(R.string.database)
+                                                    0 -> when (selectedSourceApp.intValue) {
+                                                        5 -> stringResource(R.string.json_file)
+                                                        7 -> stringResource(R.string.csv_file)
+                                                        else -> stringResource(R.string.database)
+                                                    }
 
                                                     1 -> stringResource(R.string.online)
                                                     else -> ""
@@ -2018,55 +2047,68 @@ fun ConvertPageUi(
                                                             methodPopupMenuState.dismiss()
                                                         },
                                                         selected = selectedMethod.intValue == 0,
-                                                        text = if (selectedSourceApp.intValue == 5)
-                                                            stringResource(R.string.json_file)
-                                                        else stringResource(R.string.database),
-                                                        iconPainter = if (selectedSourceApp.intValue == 5)
-                                                            painterResource(id = R.drawable.json_file)
-                                                        else painterResource(id = R.drawable.database),
+                                                        text = when (selectedSourceApp.intValue) {
+                                                            5 -> stringResource(R.string.json_file)
+                                                            7 -> stringResource(R.string.csv_file)
+                                                            else -> stringResource(R.string.database)
+                                                        },
+                                                        iconPainter = when (selectedSourceApp.intValue) {
+                                                            5 -> painterResource(id = R.drawable.json_file)
+                                                            7 -> painterResource(id = R.drawable.csv_file)
+                                                            else -> painterResource(id = R.drawable.database)
+                                                        },
                                                         iconColor = SaltTheme.colors.text
                                                     )
-                                                PopupMenuItem(
-                                                    onClick = {
-                                                        MyVibrationEffect(
-                                                            context,
-                                                            enableHaptic.value,
-                                                            hapticStrength.intValue
-                                                        ).click()
-                                                        selectedMethod.intValue = 1
-                                                        coroutine.launch {
-                                                            dataStore.edit { settings ->
-                                                                settings[DataStoreConstants.GET_PLAYLIST_METHOD] =
-                                                                    1
+                                                if (selectedSourceApp.intValue != 7)
+                                                    PopupMenuItem(
+                                                        onClick = {
+                                                            MyVibrationEffect(
+                                                                context,
+                                                                enableHaptic.value,
+                                                                hapticStrength.intValue
+                                                            ).click()
+                                                            selectedMethod.intValue = 1
+                                                            coroutine.launch {
+                                                                dataStore.edit { settings ->
+                                                                    settings[DataStoreConstants.GET_PLAYLIST_METHOD] =
+                                                                        1
+                                                                }
                                                             }
-                                                        }
-                                                        methodPopupMenuState.dismiss()
-                                                    },
-                                                    selected = selectedMethod.intValue == 1,
-                                                    text = stringResource(R.string.online),
-                                                    iconPainter = painterResource(id = R.drawable.network),
-                                                    iconColor = SaltTheme.colors.text
-                                                )
+                                                            methodPopupMenuState.dismiss()
+                                                        },
+                                                        selected = selectedMethod.intValue == 1,
+                                                        text = stringResource(R.string.online),
+                                                        iconPainter = painterResource(id = R.drawable.network),
+                                                        iconColor = SaltTheme.colors.text
+                                                    )
                                             }
                                             AnimatedVisibility(
-                                                visible = (selectedSourceApp.intValue != 0) && !useRootAccess.value && (selectedMethod.intValue == 0)
+                                                visible = (selectedSourceApp.intValue != 0)
+                                                        && (!useRootAccess.value || selectedSourceApp.intValue == 7)
+                                                        && (selectedMethod.intValue == 0)
                                             ) {
                                                 Column {
                                                     Item(
                                                         onClick = {
-                                                            if (selectedSourceApp.intValue == 5)
-                                                                convertPage.selectJsonFileDir()
-                                                            else
-                                                                convertPage.selectDatabaseFile()
+                                                            when (selectedSourceApp.intValue) {
+                                                                5 -> convertPage.selectJsonFileDir()
+                                                                7 -> convertPage.selectCsvFile()
+                                                                else -> convertPage.selectDatabaseFile()
+                                                            }
                                                         },
                                                         text =
-                                                        if (selectedSourceApp.intValue == 5)
-                                                            stringResource(R.string.select_json_file_dir_match_to_source).replace(
+                                                        when (selectedSourceApp.intValue) {
+                                                            5 -> stringResource(R.string.select_json_file_dir_match_to_source).replace(
                                                                 "#",
                                                                 stringResource(R.string.source_luna_music)
                                                             )
-                                                        else
-                                                            stringResource(R.string.select_database_file_match_to_source).replace(
+
+                                                            7 -> stringResource(R.string.select_csv_file_match_to_source).replace(
+                                                                "#",
+                                                                stringResource(R.string.tune_my_music)
+                                                            )
+
+                                                            else -> stringResource(R.string.select_database_file_match_to_source).replace(
                                                                 "#",
                                                                 when (selectedSourceApp.intValue) {
                                                                     1 -> stringResource(R.string.source_netease_cloud_music)
@@ -2076,9 +2118,10 @@ fun ConvertPageUi(
                                                                     else -> ""
                                                                 }
                                                             )
+                                                        }
                                                     )
                                                     AnimatedVisibility(
-                                                        visible = (databaseFileName.value != "") && !useRootAccess.value
+                                                        visible = (databaseFileName.value != "") && (!useRootAccess.value || selectedSourceApp.intValue == 7)
                                                     ) {
                                                         ItemValue(
                                                             text = stringResource(R.string.you_have_selected),
@@ -2753,6 +2796,7 @@ fun ConvertPageUi(
                                                             4 -> stringResource(R.string.source_kuwo_music)
                                                             5 -> stringResource(R.string.source_luna_music)
                                                             6 -> stringResource(R.string.source_spotify)
+                                                            7 -> stringResource(R.string.tune_my_music)
                                                             else -> ""
                                                         }
                                                     )
@@ -2760,7 +2804,7 @@ fun ConvertPageUi(
                                                     1 -> stringResource(R.string.convert_result)
                                                     else -> ""
                                                 },
-                                                popupWidth = 180,
+                                                popupWidth = 190,
                                                 rightSubWeight = 2f
                                             ) {
                                                 PopupMenuItem(
@@ -2783,6 +2827,7 @@ fun ConvertPageUi(
                                                                 4 -> stringResource(R.string.source_kuwo_music)
                                                                 5 -> stringResource(R.string.source_luna_music)
                                                                 6 -> stringResource(R.string.source_spotify)
+                                                                7 -> stringResource(R.string.tune_my_music)
                                                                 else -> ""
                                                             }
                                                         }\n"
@@ -2795,6 +2840,7 @@ fun ConvertPageUi(
                                                         4 -> painterResource(id = R.drawable.kuwo)
                                                         5 -> painterResource(id = R.drawable.luna_music)
                                                         6 -> painterResource(id = R.drawable.spotify)
+                                                        7 -> painterResource(id = R.drawable.tune_my_music)
                                                         else -> painterResource(id = R.drawable.android)
                                                     },
                                                     iconColor = SaltTheme.colors.text,
@@ -2814,7 +2860,7 @@ fun ConvertPageUi(
                                                     selected = showOriginalSonglist == 1,
                                                     iconPainter = painterResource(id = R.drawable.result),
                                                     iconColor = SaltTheme.colors.text,
-                                                    iconPaddingValues = PaddingValues(all = 1.5.dp)
+                                                    iconPaddingValues = PaddingValues(all = 1.75.dp)
                                                 )
                                             }
                                             ItemPopup(
@@ -2940,6 +2986,7 @@ fun ConvertPageUi(
                                                                 4 -> stringResource(R.string.source_kuwo_music)
                                                                 5 -> stringResource(R.string.source_luna_music)
                                                                 6 -> stringResource(R.string.source_spotify)
+                                                                7 -> stringResource(R.string.tune_my_music)
                                                                 else -> ""
                                                             }
                                                         )
@@ -3293,6 +3340,7 @@ fun ConvertPageUi(
                                                 4 -> stringResource(id = R.string.source_kuwo_music)
                                                 5 -> stringResource(R.string.source_luna_music)
                                                 6 -> stringResource(R.string.source_spotify)
+                                                7 -> stringResource(R.string.tune_my_music)
                                                 else -> ""
                                             }
                                         )

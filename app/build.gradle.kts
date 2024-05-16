@@ -14,8 +14,8 @@ android {
         minSdk = 26
 //        targetSdk = 28
         targetSdk = 34
-        versionCode = 61
-        versionName = "1.4.6"
+        versionCode = 62
+        versionName = "1.4.7"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -121,6 +121,9 @@ dependencies {
 
     //Splashscreen
     implementation("androidx.core:core-splashscreen:1.1.0-rc01")
+
+    //Apache Common Csv
+    implementation("org.apache.commons:commons-csv:1.11.0")
 
     //拖拽排序-可注释
 //    implementation("org.burnoutcrew.composereorderable:reorderable:0.9.6")

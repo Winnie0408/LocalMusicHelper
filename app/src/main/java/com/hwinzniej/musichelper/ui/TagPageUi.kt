@@ -166,6 +166,7 @@ fun TagPageUi(
         multiSelect = false
         coroutineScope.launch(Dispatchers.Default) {
             delay(300L)
+            intervalSelectionStart = -1
             selectedSongList.replaceAll { 0 }
         }
     }
@@ -948,6 +949,11 @@ fun TagPageUi(
                                         hapticStrength.intValue
                                     ).click()
                                     multiSelect = false
+                                    coroutineScope.launch(Dispatchers.Default) {
+                                        delay(300L)
+                                        intervalSelectionStart = -1
+                                        selectedSongList.replaceAll { 0 }
+                                    }
                                 },
                                 text = if (animate)
                                     "${stringResource(id = R.string.tag_function_name)} (${selectedSongList.count { it1 -> it1 != 0 }})"

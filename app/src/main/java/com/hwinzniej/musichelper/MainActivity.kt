@@ -129,6 +129,7 @@ class MainActivity : ComponentActivity() {
     private lateinit var openMusicPlatformSqlFileLauncher: ActivityResultLauncher<Array<String>>
     private lateinit var openResultSqlFileLauncher: ActivityResultLauncher<Array<String>>
     private lateinit var openPlaylistFileLauncher: ActivityResultLauncher<Array<String>>
+    private lateinit var openCsvFileLauncher: ActivityResultLauncher<Array<String>>
     private lateinit var openUmExecutableFileLauncher: ActivityResultLauncher<Array<String>>
     private lateinit var openMusicCoverLauncher: ActivityResultLauncher<Array<String>>
 
@@ -200,6 +201,10 @@ class MainActivity : ComponentActivity() {
             registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
                 convertPage.handleUri(uri, 2)
             }
+        openCsvFileLauncher =
+            registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+                convertPage.handleUri(uri, 3)
+            }
         openUmExecutableFileLauncher =
             registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
                 settingsPage.checkUmFile(uri)
@@ -238,6 +243,7 @@ class MainActivity : ComponentActivity() {
                 openMusicPlatformSqlFileLauncher = openMusicPlatformSqlFileLauncher,
                 openResultSqlFileLauncher = openResultSqlFileLauncher,
                 openPlaylistFileLauncher = openPlaylistFileLauncher,
+                openCsvFileLauncher = openCsvFileLauncher,
                 openLunaJSONDirLauncher = openLunaJSONDirLauncher,
                 db = db,
                 componentActivity = this,

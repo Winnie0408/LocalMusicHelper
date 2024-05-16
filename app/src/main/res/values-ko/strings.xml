@@ -384,4 +384,7 @@
     <string name="spotify_abnormal_song_num">노래 목록에서 비정상 상태의 음악 #곡을 무시했습니다</string>
     <string name="not_convert_any_playlist">변환된 노래 목록이 없습니다</string>
     <string name="not_select_json_dir_or_select_wrong">JSON 파일의 디렉터리가 선택되지 않았거나 JSON 파일의 디렉터리가 잘못 선택되었습니다</string>
+    <string name="csv_file">CSV 파일</string>
+    <string name="not_select_csv_or_select_wrong">CSV 파일이 선택되지 않았거나 CSV 파일이 잘못 선택되었습니다</string>
+    <string name="select_csv_file_match_to_source">#의 CSV 파일 선택</string>
 </resources>
