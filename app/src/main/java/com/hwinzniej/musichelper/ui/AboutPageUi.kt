@@ -59,6 +59,7 @@ import com.alibaba.fastjson2.JSONObject
 import com.hwinzniej.musichelper.R
 import com.hwinzniej.musichelper.utils.MyVibrationEffect
 import com.hwinzniej.musichelper.utils.Tools
+import com.moriafly.salt.ui.ItemContainer
 import com.moriafly.salt.ui.RoundedColumn
 import com.moriafly.salt.ui.SaltTheme
 import com.moriafly.salt.ui.Text
@@ -442,6 +443,37 @@ fun AboutPageUi(
                         },
                         text = stringResource(id = R.string.open_source_licence),
                         iconPainter = painterResource(id = R.drawable.license),
+                        iconColor = SaltTheme.colors.text
+                    )
+                    Item(
+                        onClick = {
+                            yesDialogCustomContent = {
+                                RoundedColumn {
+                                    ItemContainer {
+                                        MarkdownText(
+                                            modifier = Modifier
+                                                .heightIn(max = (LocalConfiguration.current.screenHeightDp / 2.2).dp)
+                                                .verticalScroll(rememberScrollState()),
+                                            markdown = stringResource(id = R.string.service_agreements_content).replace(
+                                                "#n",
+                                                "\n"
+                                            ),
+                                            style = TextStyle(
+                                                color = SaltTheme.colors.text,
+                                                fontSize = 14.sp
+                                            ),
+                                            isTextSelectable = true,
+                                            disableLinkMovementMethod = true
+                                        )
+                                    }
+                                }
+                            }
+                            yesDialogTitle = context.getString(R.string.service_agreements)
+                            yesDialogOnConfirm = {}
+                            showYesDialog = true
+                        },
+                        text = stringResource(id = R.string.service_agreements),
+                        iconPainter = painterResource(id = R.drawable.agreement),
                         iconColor = SaltTheme.colors.text
                     )
                     Item(

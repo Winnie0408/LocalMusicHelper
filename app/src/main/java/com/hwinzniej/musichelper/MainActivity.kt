@@ -3,6 +3,7 @@ package com.hwinzniej.musichelper
 import android.annotation.SuppressLint
 import android.app.DownloadManager
 import android.content.Context
+import android.content.Intent
 import android.content.res.Configuration
 import android.content.res.Resources
 import android.net.Uri
@@ -43,7 +44,9 @@ import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.runtime.Composable
@@ -75,6 +78,7 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.WindowCompat
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.edit
 import androidx.lifecycle.lifecycleScope
 import androidx.room.Room
 import com.alibaba.fastjson2.JSON
@@ -90,6 +94,7 @@ import com.hwinzniej.musichelper.ui.AboutPageUi
 import com.hwinzniej.musichelper.ui.BottomBarItemLand
 import com.hwinzniej.musichelper.ui.BottomBarLand
 import com.hwinzniej.musichelper.ui.ConvertPageUi
+import com.hwinzniej.musichelper.ui.ItemCheck
 import com.hwinzniej.musichelper.ui.ItemTitle
 import com.hwinzniej.musichelper.ui.ItemValue
 import com.hwinzniej.musichelper.ui.ScanPageUi
@@ -102,6 +107,7 @@ import com.hwinzniej.musichelper.utils.MyVibrationEffect
 import com.hwinzniej.musichelper.utils.Tools
 import com.moriafly.salt.ui.BottomBar
 import com.moriafly.salt.ui.BottomBarItem
+import com.moriafly.salt.ui.ItemContainer
 import com.moriafly.salt.ui.RoundedColumn
 import com.moriafly.salt.ui.SaltTheme
 import com.moriafly.salt.ui.UnstableSaltApi
@@ -405,6 +411,10 @@ private fun Pages(
     val slow = remember { mutableStateOf(false) }
     val sortMethod = remember { mutableIntStateOf(0) }
     var loadUI by remember { mutableStateOf(false) }
+    var agreeUserAgreement by remember { mutableStateOf(false) }
+    var agreeUserAgreementSwitchState by remember { mutableStateOf(false) }
+    var showConfirmDisagreeDialog by remember { mutableStateOf(false) }
+    var showAgreeUserAgreementDialog by remember { mutableStateOf(false) }
 
     mainPage.dataStore.data.collectAsState(initial = null).value?.let { preferences ->
         settingsPage.initialPage.intValue =
@@ -454,7 +464,8 @@ private fun Pages(
             preferences[DataStoreConstants.SELECTED_TARGET_APP] ?: 0
         convertPage.spotifyUserId.value =
             preferences[DataStoreConstants.SPOTIFY_USER_ID] ?: ""
-
+        agreeUserAgreement =
+            preferences[DataStoreConstants.AGREE_USER_AGREEMENT] ?: false
         coroutineScope.launch(Dispatchers.Main) {
             mainPage.isDataLoaded.value = true
         }
@@ -552,7 +563,7 @@ private fun Pages(
                             .fillMaxWidth()
                             .heightIn(
                                 min = 20.dp,
-                                max = (configuration.screenHeightDp / 3.5).dp
+                                max = (configuration.screenHeightDp / 3.2).dp
                             )
                             .clip(RoundedCornerShape(12.dp))
                     ) {
@@ -581,8 +592,8 @@ private fun Pages(
         }
     }
 
-    LaunchedEffect(key1 = checkUpdate.value) {
-        if (checkUpdate.value) {
+    LaunchedEffect(key1 = checkUpdate.value && agreeUserAgreement) {
+        if (checkUpdate.value && agreeUserAgreement) {
             coroutineScope.launch(Dispatchers.IO) {
                 checkUpdate.value = false
                 val client = OkHttpClient()
@@ -659,6 +670,91 @@ private fun Pages(
         label = "paddingBottom"
     ) {
         if (it == Configuration.ORIENTATION_PORTRAIT) 56.dp else 0.dp
+    }
+
+    if (showConfirmDisagreeDialog) {
+        YesNoDialog(
+            onDismiss = {},
+            onCancel = {
+                val intent = Intent(Intent.ACTION_MAIN).apply {
+                    addCategory(Intent.CATEGORY_HOME)
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                }
+                context.startActivity(intent)
+                coroutineScope.launch {
+                    delay(248L)
+                    mainPage.finishAndRemoveTask()
+                }
+            },
+            onConfirm = {
+                showConfirmDisagreeDialog = false
+            },
+            title = stringResource(id = R.string.confirm_disagree_agreement_title),
+            content = stringResource(id = R.string.confirm_disagree_agreement_content),
+            hapticStrength = mainPage.hapticStrength.intValue,
+            enableHaptic = mainPage.enableHaptic.value,
+            confirmText = stringResource(id = R.string.go_back),
+            cancelText = stringResource(id = R.string.disagree),
+        )
+    }
+
+    if (showAgreeUserAgreementDialog) {
+        YesNoDialog(
+            onDismiss = {},
+            onCancel = { showConfirmDisagreeDialog = true },
+            onConfirm = {
+                showAgreeUserAgreementDialog = false
+                coroutineScope.launch(Dispatchers.IO) {
+                    mainPage.dataStore.edit { preferences ->
+                        preferences[DataStoreConstants.AGREE_USER_AGREEMENT] = true
+                    }
+                }
+            },
+            title = stringResource(id = R.string.service_agreements),
+            content = null,
+            hapticStrength = mainPage.hapticStrength.intValue,
+            confirmText = stringResource(id = R.string.agree),
+            cancelText = stringResource(id = R.string.disagree),
+            enableConfirmButton = agreeUserAgreementSwitchState,
+            enableHaptic = mainPage.enableHaptic.value,
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+            ) {
+                RoundedColumn {
+                    ItemContainer {
+                        MarkdownText(
+                            modifier = Modifier
+                                .heightIn(max = (configuration.screenHeightDp / 2.4).dp)
+                                .verticalScroll(rememberScrollState()),
+                            markdown = stringResource(id = R.string.service_agreements_content).replace(
+                                "#n",
+                                "\n"
+                            ),
+                            style = TextStyle(
+                                color = SaltTheme.colors.text,
+                                fontSize = 14.sp
+                            ),
+                            isTextSelectable = true,
+                            disableLinkMovementMethod = true
+                        )
+                    }
+                }
+                RoundedColumn {
+                    ItemCheck(
+                        state = agreeUserAgreementSwitchState,
+                        onChange = {
+                            agreeUserAgreementSwitchState = it
+                        },
+                        text = stringResource(id = R.string.agree_the_user_service_agreement),
+                        hapticStrength = mainPage.hapticStrength.intValue,
+                        enableHaptic = mainPage.enableHaptic.value,
+                        iconAtLeft = true
+                    )
+                }
+            }
+        }
     }
 
     if (loadUI) {
@@ -1180,6 +1276,13 @@ private fun Pages(
                         )
                     }
                 }
+            }
+        }
+
+        LaunchedEffect(Unit) {
+            delay(500L)
+            if (!agreeUserAgreement) {
+                showAgreeUserAgreementDialog = true
             }
         }
     }
