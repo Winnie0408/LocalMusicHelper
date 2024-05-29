@@ -2921,12 +2921,12 @@ class ConvertPage(
                         if (enableBracketRemoval.value) for (k in music3InfoList.indices) {
                             songSimilarityArray[k] = Tools().similarityRatio(
                                 songName.replace(
-                                    "(?i)\\s?\\((?!inst|[^()]* ver)[^)]*\\)\\s?".toRegex(),
+                                    "(?i)\\s?\\((?!inst|[^()]*\\sver)[^)]*\\)\\s?".toRegex(),
                                     ""
                                 ).lowercase(),
                                 music3InfoList[k].song
                                     .replace(
-                                        "(?i)\\s?\\((?!inst|[^()]* ver)[^)]*\\)\\s?".toRegex(),
+                                        "(?i)\\s?\\((?!inst|[^()]*\\sver)[^)]*\\)\\s?".toRegex(),
                                         ""
                                     ).lowercase()
                             )
@@ -2944,12 +2944,12 @@ class ConvertPage(
                                 artistSimilarityArray[k] =
                                     Tools().similarityRatio(
                                         songArtist.replace(
-                                            "(?i)\\s?\\((?!inst|[^()]* ver)[^)]*\\)\\s?".toRegex(),
+                                            "(?i)\\s?\\((?!inst|[^()]*\\sver)[^)]*\\)\\s?".toRegex(),
                                             ""
                                         ).lowercase(),
                                         music3InfoList[k].artist
                                             .replace(
-                                                "(?i)\\s?\\((?!inst|[^()]* ver)[^)]*\\)\\s?".toRegex(),
+                                                "(?i)\\s?\\((?!inst|[^()]*\\sver)[^)]*\\)\\s?".toRegex(),
                                                 ""
                                             ).lowercase()
                                     )
@@ -2976,12 +2976,12 @@ class ConvertPage(
                                 albumSimilarityArray[k] =
                                     Tools().similarityRatio(
                                         songAlbum.replace(
-                                            "(?i)\\s?\\((?!inst|[^()]* ver)[^)]*\\)\\s?".toRegex(),
+                                            "(?i)\\s?\\((?!inst|[^()]*\\sver)[^)]*\\)\\s?".toRegex(),
                                             ""
                                         ).lowercase(),
                                         music3InfoList[k].album
                                             .replace(
-                                                "(?i)\\s?\\((?!inst|[^()]* ver)[^)]*\\)\\s?".toRegex(),
+                                                "(?i)\\s?\\((?!inst|[^()]*\\sver)[^)]*\\)\\s?".toRegex(),
                                                 ""
                                             )
                                             .lowercase()
@@ -3040,12 +3040,14 @@ class ConvertPage(
                         for (k in music3InfoList.indices) {
                             similarityArray[k] = Tools().similarityRatio(
                                 songInfo.replace(
-                                    "(?i)\\s?\\((?!inst|[^()]* ver)[^)]*\\)\\s?".toRegex(),
+                                    "(?i)\\s?\\((?!inst|[^()]*\\sver)[^)]*\\)\\s?".toRegex(),
                                     ""
                                 ).lowercase(),
-                                "${music3InfoList[k].song}${music3InfoList[k].artist}${music3InfoList[k].album}"
+                                "${music3InfoList[k].song}${
+                                    if (enableAlbumNameMatch.value) music3InfoList[k].artist else ""
+                                }${if (enableAlbumNameMatch.value) music3InfoList[k].album else ""}"
                                     .replace(
-                                        "(?i)\\s?\\((?!inst|[^()]* ver)[^)]*\\)\\s?".toRegex(),
+                                        "(?i)\\s?\\((?!inst|[^()]*\\sver)[^)]*\\)\\s?".toRegex(),
                                         ""
                                     ).lowercase()
                             )
@@ -3054,7 +3056,9 @@ class ConvertPage(
                         for (k in music3InfoList.indices) {
                             similarityArray[k] = Tools().similarityRatio(
                                 songInfo.lowercase(),
-                                "${music3InfoList[k].song}${music3InfoList[k].artist}${music3InfoList[k].album}".lowercase()
+                                "${music3InfoList[k].song}${
+                                    if (enableAlbumNameMatch.value) music3InfoList[k].artist else ""
+                                }${if (enableAlbumNameMatch.value) music3InfoList[k].album else ""}".lowercase()
                             )
                         }
                     val maxSimilarity = Tools().getMaxValueIntDouble(similarityArray)

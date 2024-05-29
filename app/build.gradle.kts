@@ -14,8 +14,8 @@ android {
         minSdk = 26
 //        targetSdk = 28
         targetSdk = 34
-        versionCode = 63
-        versionName = "1.4.8"
+        versionCode = 65
+        versionName = "1.5.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -60,7 +60,7 @@ dependencies {
     implementation("androidx.core:core-ktx:1.13.0")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
     implementation("androidx.activity:activity-compose:1.9.0")
-    implementation(platform("androidx.compose:compose-bom:2024.04.01"))
+    implementation(platform("androidx.compose:compose-bom:2024.05.00"))
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-graphics")
     implementation("androidx.compose.ui:ui-tooling-preview")
@@ -71,7 +71,7 @@ dependencies {
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
-    androidTestImplementation(platform("androidx.compose:compose-bom:2024.04.01"))
+    androidTestImplementation(platform("androidx.compose:compose-bom:2024.05.00"))
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
 
     // Android Studio Preview support
@@ -102,7 +102,7 @@ dependencies {
     ksp("androidx.room:room-compiler:$roomVersion")
 
     //FastJson
-    implementation("com.alibaba.fastjson2:fastjson2-kotlin:2.0.49")
+    implementation("com.alibaba.fastjson2:fastjson2-kotlin:2.0.50")
 
     //Navigation
     implementation("androidx.navigation:navigation-compose:2.7.7")
