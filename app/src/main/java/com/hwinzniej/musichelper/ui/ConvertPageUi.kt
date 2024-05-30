@@ -737,8 +737,26 @@ fun ConvertPageUi(
                         dataStore.data.first()[DataStoreConstants.KUGOU_TOKEN] ?: ""
                     kugouUserRelated["userId"] =
                         dataStore.data.first()[DataStoreConstants.KUGOU_USER_ID] ?: ""
+                    if (!kugouUserRelated["token"].isNullOrBlank() && !kugouUserRelated["userId"].isNullOrBlank()) {
+                        userLoggedIn = true
+                        withContext(Dispatchers.Main) {
+                            Toast.makeText(
+                                context,
+                                context.getString(R.string.use_last_login_info),
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    }
+                } else {
+                    userLoggedIn = true
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(
+                            context,
+                            context.getString(R.string.use_last_login_info),
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
                 }
-                userLoggedIn = true
             }
         }
     }

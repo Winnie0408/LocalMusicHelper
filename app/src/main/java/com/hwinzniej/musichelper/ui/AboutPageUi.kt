@@ -14,6 +14,7 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -503,8 +504,11 @@ fun AboutPageUi(
                                                 min = 0.1.dp,
                                                 max = (LocalConfiguration.current.screenHeightDp / 1.5).dp
                                             )
-                                            .align(Alignment.CenterHorizontally)
+                                            .fillMaxWidth()
                                             .padding(vertical = 8.dp)
+                                            .verticalScroll(rememberScrollState()),
+                                        verticalArrangement = Arrangement.Center,
+                                        horizontalAlignment = Alignment.CenterHorizontally
                                     ) {
                                         Text(
                                             modifier = Modifier.align(Alignment.CenterHorizontally),

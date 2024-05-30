@@ -55,7 +55,6 @@ import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
-import okhttp3.Response
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVParser
 import java.io.File
@@ -3390,7 +3389,7 @@ class ConvertPage(
                 6 -> spotifyUserId.value
                 else -> ""
             }
-            if (temp == null || temp.isBlank()) {
+            if (temp.isNullOrBlank()) {
                 return ""
             }
             val cookieValid = when (selectedSourceApp.intValue) {
@@ -3421,11 +3420,6 @@ class ConvertPage(
             if (cookieValid) {
                 if (selectedSourceApp.intValue != 3)
                     selectedLoginMethod.intValue = 1
-                Toast.makeText(
-                    context,
-                    context.getString(R.string.use_last_login_info),
-                    Toast.LENGTH_SHORT
-                ).show()
                 return temp
             }
         }
@@ -3763,48 +3757,49 @@ class ConvertPage(
         }
         cancelLogin.value = false
         while (!cancelLogin.value) {
-            var response = Response.Builder().build()
             try {
-                response = client.newCall(request.build()).execute()
-                val responseJson = JSON.parseObject(response.body?.string()).getJSONObject("data")
-                    ?: throw Exception(context.getString(R.string.failed_get_login_qr_code))
-                if (responseJson.getInteger("error_code") != 0) {
-                    if (responseJson.containsKey("verify_ticket")) {
-                        responseJson.getJSONArray("verify_ways").forEach {
-                            val way = it as JSONObject
-                            if (way.getString("verify_way") == "mobile_up_sms_verify") {
-                                needSmsVerify = true
-                                lunaVerifyRelated.putAll(
-                                    mapOf(
-                                        "ticket" to responseJson.getString("verify_ticket"),
-                                        "target" to way.getString("channel_mobile"),
-                                        "phone" to way.getString("mobile"),
-                                        "content" to way.getString("sms_content")
+                client.newCall(request.build()).execute().use { response ->
+                    val responseJson =
+                        JSON.parseObject(response.body?.string()).getJSONObject("data")
+                            ?: throw Exception(context.getString(R.string.failed_get_login_qr_code))
+                    if (responseJson.getInteger("error_code") != 0) {
+                        if (responseJson.containsKey("verify_ticket")) {
+                            responseJson.getJSONArray("verify_ways").forEach {
+                                val way = it as JSONObject
+                                if (way.getString("verify_way") == "mobile_up_sms_verify") {
+                                    needSmsVerify = true
+                                    lunaVerifyRelated.putAll(
+                                        mapOf(
+                                            "ticket" to responseJson.getString("verify_ticket"),
+                                            "target" to way.getString("channel_mobile"),
+                                            "phone" to way.getString("mobile"),
+                                            "content" to way.getString("sms_content")
+                                        )
                                     )
-                                )
+                                }
                             }
-                        }
-                        if (needSmsVerify) {
-                            showLunaVerifyDialog.value = true
-                            return false
-                        } else {
-                            throw Exception(context.getString(R.string.unsupported_auth_method))
-                        }
-                    } else
-                        throw Exception(context.getString(R.string.failed_get_login_status))
-                }
-                val status = responseJson.getString("status")
-                if (status == "confirmed") {
-                    var cookie = ""
-                    response.headers.values("Set-Cookie").forEach {
-                        cookie += it.substring(0, it.indexOf("; ") + 2)
+                            if (needSmsVerify) {
+                                showLunaVerifyDialog.value = true
+                                return false
+                            } else {
+                                throw Exception(context.getString(R.string.unsupported_auth_method))
+                            }
+                        } else
+                            throw Exception(context.getString(R.string.failed_get_login_status))
                     }
-                    dataStore.edit { settings ->
-                        settings[DataStoreConstants.LAST_LOGIN_TIMESTAMP] =
-                            System.currentTimeMillis()
-                        settings[DataStoreConstants.LUNA_COOKIE] = cookie
+                    val status = responseJson.getString("status")
+                    if (status == "confirmed") {
+                        var cookie = ""
+                        response.headers.values("Set-Cookie").forEach {
+                            cookie += it.substring(0, it.indexOf("; ") + 2)
+                        }
+                        dataStore.edit { settings ->
+                            settings[DataStoreConstants.LAST_LOGIN_TIMESTAMP] =
+                                System.currentTimeMillis()
+                            settings[DataStoreConstants.LUNA_COOKIE] = cookie
+                        }
+                        return true
                     }
-                    return true
                 }
             } catch (_: SocketTimeoutException) {
             } catch (e: Exception) {
@@ -3817,8 +3812,6 @@ class ConvertPage(
                     ).show()
                 }
                 return false
-            } finally {
-                response.close()
             }
             delay(1250L)
         }
