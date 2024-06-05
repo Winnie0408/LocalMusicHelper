@@ -83,7 +83,7 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-test-manifest")
 
     //SaltUI
-    implementation("com.github.Moriafly:SaltUI:0.1.0-dev54")
+    implementation("com.github.Moriafly:SaltUI:0.1.0-dev55")
 
     //JAudioTagger
 //    implementation("org.bitbucket.ijabz:jaudiotagger:7b004a1")
