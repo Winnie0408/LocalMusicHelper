@@ -14,8 +14,8 @@ android {
         minSdk = 26
 //        targetSdk = 28
         targetSdk = 34
-        versionCode = 66
-        versionName = "1.5.2"
+        versionCode = 68
+        versionName = "1.5.4"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -57,21 +57,21 @@ android {
 
 dependencies {
 
-    implementation("androidx.core:core-ktx:1.13.0")
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
+    implementation("androidx.core:core-ktx:1.13.1")
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.2")
     implementation("androidx.activity:activity-compose:1.9.0")
-    implementation(platform("androidx.compose:compose-bom:2024.05.00"))
+    implementation(platform("androidx.compose:compose-bom:2024.06.00"))
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-graphics")
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.compose.material:material")
     implementation("androidx.compose.material3:material3")
-    implementation("androidx.annotation:annotation:1.7.1")
+    implementation("androidx.annotation:annotation:1.8.0")
     implementation("androidx.documentfile:documentfile:1.0.1")
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
-    androidTestImplementation(platform("androidx.compose:compose-bom:2024.05.00"))
+    androidTestImplementation(platform("androidx.compose:compose-bom:2024.06.00"))
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
 
     // Android Studio Preview support
@@ -83,7 +83,7 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-test-manifest")
 
     //SaltUI
-    implementation("com.github.Moriafly:SaltUI:0.1.0-dev55")
+    implementation("com.github.Moriafly:SaltUI:0.1.0-dev56")
 
     //JAudioTagger
 //    implementation("org.bitbucket.ijabz:jaudiotagger:7b004a1")
@@ -102,7 +102,7 @@ dependencies {
     ksp("androidx.room:room-compiler:$roomVersion")
 
     //FastJson
-    implementation("com.alibaba.fastjson2:fastjson2-kotlin:2.0.50")
+    implementation("com.alibaba.fastjson2:fastjson2-kotlin:2.0.51")
 
     //Navigation
     implementation("androidx.navigation:navigation-compose:2.7.7")

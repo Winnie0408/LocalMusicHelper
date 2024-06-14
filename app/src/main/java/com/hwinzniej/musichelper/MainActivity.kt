@@ -776,7 +776,7 @@ private fun Pages(
                         start = paddingStart,
                         bottom = paddingBottom
                     ),
-                beyondBoundsPageCount = 2
+                beyondViewportPageCount = 2
             ) { page ->
                 when (page) {
                     0 -> {
@@ -883,7 +883,7 @@ private fun Pages(
                                 modifier = Modifier
                                     .fillMaxSize(),
                                 userScrollEnabled = false,
-                                beyondBoundsPageCount = 1
+                                beyondViewportPageCount = 1
                             ) { settingPage ->
                                 when (settingPage) {
                                     0 -> {
@@ -927,7 +927,7 @@ private fun Pages(
                                 modifier = Modifier
                                     .fillMaxSize(),
                                 userScrollEnabled = false,
-                                beyondBoundsPageCount = 0  //保证切换语言后，页面自动应用新语言
+                                beyondViewportPageCount = 0  //保证切换语言后，页面自动应用新语言
                             ) { settingPage ->
                                 when (settingPage) {
                                     0 -> {

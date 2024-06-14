@@ -1774,7 +1774,7 @@ fun ConvertPageUi(
                 modifier = Modifier
                     .fillMaxSize(),
                 userScrollEnabled = false,
-                beyondBoundsPageCount = 1
+                beyondViewportPageCount = 1
             ) { page ->
                 when (page) {
                     0 -> {
@@ -2646,7 +2646,7 @@ fun ConvertPageUi(
                             modifier = Modifier
                                 .fillMaxSize(),
                             userScrollEnabled = false,
-                            beyondBoundsPageCount = 1
+                            beyondViewportPageCount = 1
                         ) { resultPage ->
                             when (resultPage) {
                                 0 -> {
@@ -2678,7 +2678,7 @@ fun ConvertPageUi(
                                             ItemValue(
                                                 text = stringResource(R.string.songlist_name),
                                                 textWeight = 1f,
-                                                rightSubWeight = 2f,
+                                                rightSubWeight = 1.5f,
                                                 rightSub = if (playlistEnabled.indexOfFirst { it == 1 } == -1) "" else playlistName[playlistEnabled.indexOfFirst { it == 1 }]
                                             )
                                             ItemValue(

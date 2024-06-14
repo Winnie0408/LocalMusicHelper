@@ -47,7 +47,7 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.selection.SelectionContainer
-import androidx.compose.material.ripple.rememberRipple
+import androidx.compose.material.ripple
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardColors
 import androidx.compose.material3.Icon
@@ -243,7 +243,7 @@ fun ItemPopup(  //TODO 根据文字长度自动调整宽度
                 }
                 .indication(
                     interactionSource = interactionSource,
-                    indication = rememberRipple()
+                    indication = ripple()
                 )
                 .onGloballyPositioned { layoutCoordinates ->
                     boxWidth.floatValue = layoutCoordinates.size.width.toFloat()
@@ -404,7 +404,7 @@ fun ItemCheck(
     enableHaptic: Boolean = false,
     minHeightIn: Dp = 50.dp,
     hapticStrength: Int,
-    indication: Indication? = rememberRipple()
+    indication: Indication? = ripple()
 ) {
     val context = LocalContext.current
     Row(
@@ -496,7 +496,7 @@ fun Item(
     subColor: Color = SaltTheme.colors.subText,
     rightSub: String? = null,
     rightSubColor: Color? = null,
-    indication: Indication? = rememberRipple()
+    indication: Indication? = ripple()
 ) {
     Row(
         modifier = Modifier
@@ -642,13 +642,15 @@ fun ItemValue(
             modifier = Modifier
                 .fillMaxWidth()
                 .sizeIn(minHeight = 48.dp)
-                .padding(
-                    horizontal = SaltTheme.dimens.innerHorizontalPadding,
-                    vertical = SaltTheme.dimens.innerVerticalPadding
-                ),
+                .padding(vertical = SaltTheme.dimens.innerVerticalPadding),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Column(modifier = Modifier.weight(textWeight)) {
+            Column(
+                modifier = Modifier
+                    .weight(textWeight)
+                    .sizeIn(maxWidth = 80.dp)
+                    .padding(start = SaltTheme.dimens.innerHorizontalPadding)
+            ) {
                 Text(
                     text = text
                 )
@@ -662,17 +664,23 @@ fun ItemValue(
                 }
             }
             rightSub?.let {
-                Spacer(modifier = Modifier.width(SaltTheme.dimens.contentPadding))
-                SelectionContainer(
+                Row(
                     modifier = Modifier
-                        .weight(rightSubWeight),
+                        .weight(rightSubWeight)
+                        .padding(
+                            start = SaltTheme.dimens.contentPadding,
+                            end = SaltTheme.dimens.innerHorizontalPadding
+                        ),
+                    horizontalArrangement = Arrangement.End
                 ) {
-                    Text(
-                        text = rightSub,
-                        color = SaltTheme.colors.subText,
-                        fontSize = 15.sp,
-                        textAlign = TextAlign.End
-                    )
+                    SelectionContainer {
+                        Text(
+                            text = rightSub,
+                            color = SaltTheme.colors.subText,
+                            textAlign = TextAlign.End,
+                            style = SaltTheme.textStyles.main
+                        )
+                    }
                 }
             }
         }

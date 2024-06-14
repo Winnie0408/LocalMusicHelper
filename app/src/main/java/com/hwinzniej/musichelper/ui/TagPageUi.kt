@@ -34,7 +34,7 @@ import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
-import androidx.compose.material.ripple.rememberRipple
+import androidx.compose.material.ripple
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
@@ -1045,7 +1045,7 @@ fun TagPageUi(
                                                 },
                                                 text = searchResult[it]!![0],
                                                 sub = "${searchResult[it]!![1].ifBlank { "?" }} - ${searchResult[it]!![2].ifBlank { "?" }}",
-                                                indication = if (showFab.value) null else rememberRipple()
+                                                indication = if (showFab.value) null else ripple()
                                             )
                                         else
                                             ItemCheck(
@@ -1093,7 +1093,7 @@ fun TagPageUi(
                                                     }
                                                 },
                                                 highlight = intervalSelectionStart == it,
-                                                indication = if (showFab.value) null else rememberRipple(),
+                                                indication = if (showFab.value) null else ripple(),
                                                 iconAtLeft = false,
                                                 text = searchResult[it]!![0],
                                                 sub = "${searchResult[it]!![1].ifBlank { "?" }} - ${searchResult[it]!![2].ifBlank { "?" }}",
@@ -1168,7 +1168,7 @@ fun TagPageUi(
                                                     },
                                                     text = songList[it]!![0],
                                                     sub = "${songList[it]!![1].ifBlank { "?" }} - ${songList[it]!![2].ifBlank { "?" }}",
-                                                    indication = if (showFab.value) null else rememberRipple()
+                                                    indication = if (showFab.value) null else ripple()
                                                 )
                                             else if (songList[it] != null && animate)
                                                 ItemCheck(
@@ -1216,7 +1216,7 @@ fun TagPageUi(
                                                         }
                                                     },
                                                     highlight = intervalSelectionStart == it,
-                                                    indication = if (showFab.value) null else rememberRipple(),
+                                                    indication = if (showFab.value) null else ripple(),
                                                     iconAtLeft = false,
                                                     text = songList[it]!![0],
                                                     sub = "${songList[it]!![1].ifBlank { "?" }} - ${songList[it]!![2].ifBlank { "?" }}",
