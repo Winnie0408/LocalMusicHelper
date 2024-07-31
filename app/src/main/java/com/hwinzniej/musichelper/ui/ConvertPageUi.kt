@@ -1801,6 +1801,7 @@ fun ConvertPageUi(
                                 ) {
                                     PopupMenuItem(
                                         onClick = {
+                                            convertPage.isLocal=false
                                             MyVibrationEffect(
                                                 context,
                                                 enableHaptic.value,
@@ -1819,6 +1820,7 @@ fun ConvertPageUi(
                                     )
                                     PopupMenuItem(
                                         onClick = {
+                                            convertPage.isLocal=true
                                             MyVibrationEffect(
                                                 context,
                                                 enableHaptic.value,
@@ -2393,6 +2395,10 @@ fun ConvertPageUi(
                                 ItemContainer {
                                     TextButton(
                                         onClick = {
+                                            when(convertPage.convertMode.intValue){
+                                                1 -> convertPage.isLocal=false
+                                                2 -> convertPage.isLocal=true
+                                            }
                                             if (convertPage.convertMode.intValue == 1) {
                                                 selectedMultiSourceApp = -1
                                                 convertPage.requestPermission()
@@ -2419,6 +2425,18 @@ fun ConvertPageUi(
                                                         enableHaptic.value,
                                                         hapticStrength.intValue
                                                     ).dialog()
+                                                } else if(!convertPage.requestPermission()){
+                                                    Toast.makeText(
+                                                        context,
+                                                        context.getString(R.string.request_permission_toast),
+                                                        Toast.LENGTH_SHORT
+                                                    ).show()
+                                                    showDialogProgressBar.value = true
+//                                                    MyVibrationEffect(
+//                                                        context,
+//                                                        enableHaptic.value,
+//                                                        hapticStrength.intValue
+//                                                    ).dialog()
                                                 } else {
                                                     coroutine.launch(Dispatchers.IO) {
                                                         showDialogProgressBar.value = true
