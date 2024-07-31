@@ -19,6 +19,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.MusicHelper"
+        android:requestLegacyExternalStorage="true"
         tools:targetApi="31">
         <meta-data
             android:name="android.max_aspect"
