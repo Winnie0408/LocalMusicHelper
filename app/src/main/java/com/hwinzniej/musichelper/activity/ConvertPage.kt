@@ -127,6 +127,7 @@ class ConvertPage(
     val selectedTargetApp = mutableIntStateOf(0)
     val spotifyUserId = mutableStateOf("")
     private var csvFilePath = ""
+    var isLocal = false
 
     /**
      * 请求存储权限
@@ -139,17 +140,22 @@ class ConvertPage(
         ActivityResultContracts.StartActivityForResult()
     ) { _ ->
         if (Environment.isExternalStorageManager()) {
-            checkSelectedFiles(250L)
+            if (!isLocal) {
+                checkSelectedFiles(250L)
+            }
         } else {
             Toast.makeText(context, R.string.permission_not_granted_toast, Toast.LENGTH_SHORT)
                 .show()
         }
     }
 
-    fun requestPermission() {
+    fun requestPermission(): Boolean {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) { //Android 11+
             if (Environment.isExternalStorageManager()) {
-                checkSelectedFiles()
+                if (!isLocal) {
+                    checkSelectedFiles()
+                }
+                return true
             } else {
                 Toast.makeText(context, R.string.request_permission_toast, Toast.LENGTH_SHORT)
                     .show()
@@ -158,16 +164,21 @@ class ConvertPage(
                 intent.data = uri
                 requestPermissionLauncher.launch(intent)
 //                startActivity(context, intent, null)
+                return false
             }
         } else { //Android 10-
             if (allPermissionsGranted()) {
-                checkSelectedFiles()
+                if (!isLocal) {
+                    checkSelectedFiles()
+                }
+                return true
             } else {
                 Toast.makeText(context, R.string.request_permission_toast, Toast.LENGTH_SHORT)
                     .show()
                 ActivityCompat.requestPermissions(
                     context as Activity, REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS
                 )
+                return false
             }
         }
     }
@@ -198,7 +209,9 @@ class ConvertPage(
     ) {
         if (requestCode == REQUEST_CODE_PERMISSIONS) {
             if (allPermissionsGranted()) {
-                checkSelectedFiles(250L)
+                if (!isLocal) {
+                    checkSelectedFiles(250L)
+                }
             } else {
                 Toast.makeText(context, R.string.permission_not_granted_toast, Toast.LENGTH_SHORT)
                     .show()
@@ -240,6 +253,7 @@ class ConvertPage(
                         0 -> "text/plain"
                         1 -> "audio/x-mpegurl"
                         2 -> "audio/x-mpegurl"
+                        3 -> "*/*"
                         else -> "*/*"
                     }
                 )
@@ -3652,6 +3666,7 @@ class ConvertPage(
                     0 -> "txt"
                     1 -> "m3u"
                     2 -> "m3u8"
+                    3 -> "zpl"
                     else -> ""
                 }
             }"
@@ -3682,6 +3697,11 @@ class ConvertPage(
                 fileWriter.write(powerampPlaylist)
                 fileWriter.close()
                 return targetFile.absolutePath.replace("/storage/emulated/0/", "")
+            }
+
+            3 -> { //来源：Microsoft Zune
+//                sourceFile.copyTo(targetFile, true)
+//                return targetFile.absolutePath.replace("/storage/emulated/0/", "")
             }
         }
         return ""
