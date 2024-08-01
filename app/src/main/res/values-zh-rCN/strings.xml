@@ -395,7 +395,9 @@
     <string name="confirm_disagree_agreement_title">不同意用户服务协议吗？</string>
     <string name="go_back">返回</string>
     <string name="confirm_disagree_agreement_content">若不同意，本应用将自动关闭。</string>
-    <string name="input_win_path">Win路径</string>
+    <string name="local_path">本地路径</string>
+    <string name="win_path">Win路径</string>
     <string name="select_local_dir_path">选择本地路径</string>
     <string name="empty_local_dir_path">未选择本地路径！</string>
+    <string name="conversion_configuration">#的转换配置</string>
 </resources>
