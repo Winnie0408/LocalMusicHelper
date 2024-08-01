@@ -128,7 +128,7 @@ class ConvertPage(
     val selectedTargetApp = mutableIntStateOf(0)
     val spotifyUserId = mutableStateOf("")
     private var csvFilePath = ""
-    private var localMusicPath = ""
+    var localMusicPath = ""
     var isLocal = false
     var winPath = ""
 

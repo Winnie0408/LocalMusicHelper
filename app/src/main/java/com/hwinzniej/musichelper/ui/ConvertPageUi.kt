@@ -2313,6 +2313,15 @@ fun ConvertPageUi(
                                                 }
                                             )
                                         )
+                                        AnimatedVisibility(
+                                                visible = convertPage.sourcePlaylistFileName.value.isNotBlank()
+                                                ) {
+                                            ItemValue(
+                                                text = stringResource(R.string.you_have_selected),
+                                                rightSub = convertPage.sourcePlaylistFileName.value,
+                                                rightSubWeight = 2f
+                                            )
+                                        }
                                         when(convertPage.selectedSourceLocalApp.intValue){
                                             3 -> {PathItem(
                                                 title = stringResource(id = R.string.input_win_path),
@@ -2326,17 +2335,19 @@ fun ConvertPageUi(
                                                 onClick = { convertPage.selectLocalDir() },
                                                 text = stringResource(R.string.select_local_dir_path)
                                                 )
+                                                AnimatedVisibility(
+                                                    visible = true
+//                                                            convertPage.localMusicPath.isNotBlank()
+                                                ) {
+                                                    ItemValue(
+                                                        text = stringResource(R.string.you_have_selected),
+                                                        rightSub = convertPage.localMusicPath,
+                                                        rightSubWeight = 2f
+                                                    )
+                                                }
                                             }
                                         }
-                                        AnimatedVisibility(
-                                            visible = convertPage.sourcePlaylistFileName.value.isNotBlank()
-                                        ) {
-                                            ItemValue(
-                                                text = stringResource(R.string.you_have_selected),
-                                                rightSub = convertPage.sourcePlaylistFileName.value,
-                                                rightSubWeight = 2f
-                                            )
-                                        }
+
                                     }
                                 }
                             }
@@ -2493,11 +2504,12 @@ fun ConvertPageUi(
                                                         Toast.LENGTH_SHORT
                                                     ).show()
                                                     showDialogProgressBar.value = true
-//                                                    MyVibrationEffect(
-//                                                        context,
-//                                                        enableHaptic.value,
-//                                                        hapticStrength.intValue
-//                                                    ).dialog()
+                                                } else if (convertPage.selectedSourceLocalApp.intValue == 3 && convertPage.localMusicPath.isBlank()){
+                                                    Toast.makeText(
+                                                        context,
+                                                        context.getString(R.string.empty_local_dir_path),
+                                                        Toast.LENGTH_SHORT
+                                                    ).show()
                                                 } else {
                                                     coroutine.launch(Dispatchers.IO) {
                                                         showDialogProgressBar.value = true

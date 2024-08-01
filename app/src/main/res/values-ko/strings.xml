@@ -396,5 +396,6 @@
     <string name="go_back">돌아가기</string>
     <string name="confirm_disagree_agreement_content">동의하지 않으시면, 앱이 자동으로 종료됩니다.</string>
     <string name="input_win_path">Win 경로</string>
-    <string name="select_local_dir_path">로컬 경로</string>
+    <string name="select_local_dir_path">로컬 경로 선택</string>
+    <string name="empty_local_dir_path">로컬 경로가 선택되지 않았습니다!</string>
 </resources>
