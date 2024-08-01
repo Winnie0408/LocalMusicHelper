@@ -395,4 +395,6 @@
     <string name="confirm_disagree_agreement_title">사용자 서비스 계약에 동의하지 않으시나요?</string>
     <string name="go_back">돌아가기</string>
     <string name="confirm_disagree_agreement_content">동의하지 않으시면, 앱이 자동으로 종료됩니다.</string>
+    <string name="input_win_path">Win 경로</string>
+    <string name="select_local_dir_path">로컬 경로</string>
 </resources>

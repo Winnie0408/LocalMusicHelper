@@ -71,6 +71,7 @@ class ConvertPage(
     private val openResultSqlFileLauncher: ActivityResultLauncher<Array<String>>,
     private val openPlaylistFileLauncher: ActivityResultLauncher<Array<String>>,
     private val openCsvFileLauncher: ActivityResultLauncher<Array<String>>,
+    private val openLocalFileLauncher: ActivityResultLauncher<Uri?>,
     private val openLunaJSONDirLauncher: ActivityResultLauncher<Uri?>,
     val db: MusicDatabase,
     componentActivity: ComponentActivity,
@@ -127,7 +128,9 @@ class ConvertPage(
     val selectedTargetApp = mutableIntStateOf(0)
     val spotifyUserId = mutableStateOf("")
     private var csvFilePath = ""
+    private var localMusicPath = ""
     var isLocal = false
+    var winPath = ""
 
     /**
      * 请求存储权限
@@ -291,7 +294,19 @@ class ConvertPage(
         }
     }
 
-    fun handelLunaDirUri(uri: Uri?) {
+    fun selectLocalDir() {
+        try {
+            openLocalFileLauncher.launch(null)
+        } catch (_: Exception) {
+            Toast.makeText(
+                context,
+                context.getString(R.string.unable_start_documentsui),
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+    }
+
+    fun handleLunaDirUri(uri: Uri?) {
         if (uri == null) {
             return
         }
@@ -300,6 +315,21 @@ class ConvertPage(
                 val temp = Tools().copyFilesToExternalFilesDir(uri, context, "lunaJsonDir", true)
                 delay(200L) //播放动画
                 databaseFileName.value = temp
+            }
+        } catch (e: Exception) {
+            Toast.makeText(context, R.string.failed_to_get_file_from_dir, Toast.LENGTH_SHORT).show()
+            return
+        }
+    }
+
+    fun handleLocalFileDirUri(uri: Uri?) {
+        if (uri == null) {
+            return
+        }
+        try {
+            lifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+                localMusicPath = Tools().uriToAbsolutePath(uri)
+                delay(200L) //播放动画
             }
         } catch (e: Exception) {
             Toast.makeText(context, R.string.failed_to_get_file_from_dir, Toast.LENGTH_SHORT).show()
@@ -3647,6 +3677,12 @@ class ConvertPage(
         return result
     }
 
+    fun passingVariable(
+        winPathCross: String,
+    ) {
+        winPath = winPathCross
+    }
+
     fun convertLocalPlaylist(): String {
         val targetFile = File(
             "${Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)}/${
@@ -3700,8 +3736,23 @@ class ConvertPage(
             }
 
             3 -> { //来源：Microsoft Zune
-//                sourceFile.copyTo(targetFile, true)
-//                return targetFile.absolutePath.replace("/storage/emulated/0/", "")
+                var zunePlaylist = sourceFile.readText()
+                val fileWriter = FileWriter(targetFile, true)
+                try {
+                zunePlaylist = zunePlaylist.replace("((\\r\\n)|\\r|\\n)".toRegex(), "")
+                    .replace("zpl.*?src=\"".toRegex(), "")
+                    .replace("\" albumTitle=.*?<media src=\"".toRegex(), "\n")
+                    .replace("\" albumTitle=.*?</smil>".toRegex(), "")
+                    .substring(2)
+
+                    zunePlaylist = zunePlaylist.replace(winPath, localMusicPath)
+                    .replace("\\", "/")}
+                catch (_: Exception){
+                    return ""
+                }
+                fileWriter.write(zunePlaylist)
+                fileWriter.close()
+                return targetFile.absolutePath.replace("/storage/emulated/0/", "")
             }
         }
         return ""
