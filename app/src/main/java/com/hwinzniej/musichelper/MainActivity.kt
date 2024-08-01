@@ -129,6 +129,7 @@ import java.util.Locale
 class MainActivity : ComponentActivity() {
 
     private lateinit var openDirectoryLauncher: ActivityResultLauncher<Uri?>
+    private lateinit var openLocalFileLauncher: ActivityResultLauncher<Uri?>
     private lateinit var openLunaJSONDirLauncher: ActivityResultLauncher<Uri?>
     private lateinit var openEncryptDirectoryLauncher: ActivityResultLauncher<Uri?>
     private lateinit var openDecryptDirectoryLauncher: ActivityResultLauncher<Uri?>
@@ -185,7 +186,7 @@ class MainActivity : ComponentActivity() {
             }
         openLunaJSONDirLauncher =
             registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
-                convertPage.handelLunaDirUri(uri)
+                convertPage.handleLunaDirUri(uri)
             }
         openEncryptDirectoryLauncher =
             registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
@@ -210,6 +211,10 @@ class MainActivity : ComponentActivity() {
         openCsvFileLauncher =
             registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
                 convertPage.handleUri(uri, 3)
+            }
+        openLocalFileLauncher =
+            registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
+                convertPage.handleLocalFileDirUri(uri)
             }
         openUmExecutableFileLauncher =
             registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
@@ -250,6 +255,7 @@ class MainActivity : ComponentActivity() {
                 openResultSqlFileLauncher = openResultSqlFileLauncher,
                 openPlaylistFileLauncher = openPlaylistFileLauncher,
                 openCsvFileLauncher = openCsvFileLauncher,
+                openLocalFileLauncher = openLocalFileLauncher,
                 openLunaJSONDirLauncher = openLunaJSONDirLauncher,
                 db = db,
                 componentActivity = this,

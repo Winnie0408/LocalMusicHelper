@@ -176,6 +176,7 @@ fun ConvertPageUi(
     var kugouCurrentIp by remember { mutableStateOf("") }
     val kugouUserRelated = remember { mutableStateMapOf<String, String>() }
     val convertModePopupMenuState = rememberPopupState()
+    var winPathInput by remember { mutableStateOf("C:\\Users\\{YourUserName}\\Music") }
 
     fun init(delay: Long = 0L) {
         coroutine.launch {
@@ -2202,6 +2203,7 @@ fun ConvertPageUi(
                                                 0 -> "Salt Player"
                                                 1 -> "APlayer"
                                                 2 -> "Poweramp"
+                                                3 -> "Microsoft Zune"
                                                 else -> ""
                                             },
                                             popupWidth = 160
@@ -2274,6 +2276,27 @@ fun ConvertPageUi(
                                                 iconColor = SaltTheme.colors.text,
                                                 iconPaddingValues = PaddingValues(all = 1.dp)
                                             )
+                                            PopupMenuItem(
+                                                    onClick = {
+                                                        MyVibrationEffect(
+                                                            context,
+                                                            enableHaptic.value,
+                                                            hapticStrength.intValue
+                                                        ).click()
+                                                        coroutine.launch {
+                                                            dataStore.edit { settings ->
+                                                                settings[DataStoreConstants.SELECTED_SOURCE_APP] =
+                                                                    3
+                                                            }
+                                                        }
+                                                        sourceLocalAppPopupMenuState.dismiss()
+                                                    },
+                                            selected = convertPage.selectedSourceLocalApp.intValue == 3,
+                                            text = "Microsoft Zune",
+                                            iconPainter = painterResource(id = R.drawable.microsoft_zune),
+                                            iconColor = SaltTheme.colors.text,
+                                            iconPaddingValues = PaddingValues(all = 1.dp)
+                                            )
                                         }
                                         Item(
                                             onClick = {
@@ -2285,10 +2308,26 @@ fun ConvertPageUi(
                                                     0 -> "Salt Player"
                                                     1 -> "APlayer"
                                                     2 -> "Poweramp"
+                                                    3 -> "Microsoft Zune"
                                                     else -> ""
                                                 }
                                             )
                                         )
+                                        when(convertPage.selectedSourceLocalApp.intValue){
+                                            3 -> {PathItem(
+                                                title = stringResource(id = R.string.input_win_path),
+                                                editText = winPathInput,
+                                                onChange = { winPathInput = it },
+                                                onClear = { winPathInput = "" },
+                                                enableHaptic = enableHaptic.value,
+                                                hapticStrength = hapticStrength.intValue
+                                                )
+                                                Item(
+                                                onClick = { convertPage.selectLocalDir() },
+                                                text = stringResource(R.string.select_local_dir_path)
+                                                )
+                                            }
+                                        }
                                         AnimatedVisibility(
                                             visible = convertPage.sourcePlaylistFileName.value.isNotBlank()
                                         ) {
@@ -2311,6 +2350,7 @@ fun ConvertPageUi(
                                         0 -> "Salt Player"
                                         1 -> "APlayer"
                                         2 -> "Poweramp"
+                                        3 -> "Microsoft Zune(Planned)"
                                         else -> ""
                                     },
                                     popupWidth = 160
@@ -2383,6 +2423,27 @@ fun ConvertPageUi(
                                         iconColor = SaltTheme.colors.text,
                                         iconPaddingValues = PaddingValues(all = 1.dp)
                                     )
+                                    PopupMenuItem(
+                                        onClick = {
+                                            MyVibrationEffect(
+                                                context,
+                                                enableHaptic.value,
+                                                hapticStrength.intValue
+                                            ).click()
+                                            coroutine.launch {
+                                                dataStore.edit { settings ->
+                                                    settings[DataStoreConstants.SELECTED_TARGET_APP] =
+                                                        3
+                                                }
+                                            }
+                                            targetAppPopupMenuState.dismiss()
+                                        },
+                                        selected = convertPage.selectedTargetApp.intValue == 3,
+                                        text = "Microsoft Zune(Planned)",
+                                        iconPainter = painterResource(id = R.drawable.microsoft_zune),
+                                        iconColor = SaltTheme.colors.text,
+                                        iconPaddingValues = PaddingValues(all = 1.dp)
+                                    )
                                 }
                             }
 
@@ -2440,6 +2501,7 @@ fun ConvertPageUi(
                                                 } else {
                                                     coroutine.launch(Dispatchers.IO) {
                                                         showDialogProgressBar.value = true
+                                                        convertPage.passingVariable(winPathCross = winPathInput)
                                                         val convertSuccess =
                                                             convertPage.convertLocalPlaylist()
                                                         if (convertSuccess.isBlank()) {
@@ -3460,4 +3522,40 @@ fun ConvertPageUi(
             }
         }
     }
+}
+
+@Composable
+fun PathItem(
+    title: String,
+    editText: String?,
+    onChange: (String) -> Unit,
+    onClear: () -> Unit,
+    enableHaptic: Boolean,
+    hapticStrength: Int,
+    textStyle: TextStyle = SaltTheme.textStyles.main
+) {
+    ItemTitle(
+        text = title,
+        paddingValues = PaddingValues(
+            start = SaltTheme.dimens.innerHorizontalPadding,
+            end = SaltTheme.dimens.innerHorizontalPadding,
+            top = SaltTheme.dimens.innerVerticalPadding
+        )
+    )
+    ItemEdit(
+        text = editText ?: "",
+        onChange = onChange,
+        hint = stringResource(id = R.string.text_null),
+        enableHaptic = enableHaptic,
+        showClearButton = true,
+        onClear = onClear,
+        paddingValues = PaddingValues(
+            start = SaltTheme.dimens.innerHorizontalPadding,
+            end = SaltTheme.dimens.innerHorizontalPadding,
+            bottom = 8.dp,
+            top = 4.dp
+        ),
+        hapticStrength = hapticStrength,
+        textStyle = textStyle
+    )
 }
