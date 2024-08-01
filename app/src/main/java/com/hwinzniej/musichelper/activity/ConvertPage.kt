@@ -20,12 +20,15 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -130,6 +133,7 @@ class ConvertPage(
     private var csvFilePath = ""
     var localMusicPath = mutableStateOf("")
     var winPath = mutableStateOf("")
+    var winPathInput = mutableStateOf("C:\\Users\\{YourUserName}\\Music")
 
     /**
      * 请求存储权限
@@ -322,7 +326,7 @@ class ConvertPage(
     }
 
     fun handleLocalFileDirUri(uri: Uri?) {
-        var chooseLocalMusicPath = mutableStateOf("")
+        val chooseLocalMusicPath = mutableStateOf("")
         if (uri == null) {
             return
         }
@@ -372,6 +376,16 @@ class ConvertPage(
                 lifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
                     delay(200L)  //播放动画
                     sourcePlaylistFileName.value = selectedFileName.value
+                    when (selectedSourceLocalApp.intValue){
+                        3 ->{
+                            val sourceFile = File(sourcePlaylistFilePath)
+                            var zunePlaylist = sourceFile.readText()
+                            zunePlaylist = zunePlaylist.replace("((\\r\\n)|\\r|\\n)".toRegex(), "")
+                                .replace("<.*?zpl.*?src=\"".toRegex(), "")
+                                .replace("Music.*?</smil>".toRegex(), "Music")
+                            winPathInput.value = zunePlaylist
+                        }
+                    }
                 }
             }
 
@@ -3709,8 +3723,17 @@ class ConvertPage(
         val sourceFile = File(sourcePlaylistFilePath)
         when (selectedSourceLocalApp.intValue) {
             0 -> { //来源：Salt Player
-                sourceFile.copyTo(targetFile, true)
-                return targetFile.absolutePath.replace("/storage/emulated/0/", "")
+
+                when (selectedTargetApp.intValue) {
+                    3 -> {
+                        sourceFile.copyTo(targetFile, true)
+                        return targetFile.absolutePath.replace("/storage/emulated/0/", "")
+                    }
+                    else -> {
+                        sourceFile.copyTo(targetFile, true)
+                        return targetFile.absolutePath.replace("/storage/emulated/0/", "")
+                    }
+                }
             }
 
             1 -> { //来源：APlayer
@@ -3735,10 +3758,9 @@ class ConvertPage(
                 val fileWriter = FileWriter(targetFile, true)
                 try {
                 zunePlaylist = zunePlaylist.replace("((\\r\\n)|\\r|\\n)".toRegex(), "")
-                    .replace("zpl.*?src=\"".toRegex(), "")
+                    .replace("<.*?zpl.*?src=\"".toRegex(), "")
                     .replace("\" albumTitle=.*?<media src=\"".toRegex(), "\n")
                     .replace("\" albumTitle=.*?</smil>".toRegex(), "")
-                    .substring(2)
 
                     zunePlaylist = zunePlaylist.replace(winPath.value, localMusicPath.value)
                     .replace("\\", "/")}
