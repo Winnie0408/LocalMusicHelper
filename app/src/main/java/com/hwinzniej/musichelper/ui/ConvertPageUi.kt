@@ -176,7 +176,6 @@ fun ConvertPageUi(
     var kugouCurrentIp by remember { mutableStateOf("") }
     val kugouUserRelated = remember { mutableStateMapOf<String, String>() }
     val convertModePopupMenuState = rememberPopupState()
-    var winPathInput by remember { mutableStateOf("C:\\Users\\{YourUserName}\\Music") }
 
     fun init(delay: Long = 0L) {
         coroutine.launch {
@@ -608,6 +607,7 @@ fun ConvertPageUi(
                             0 -> ".txt"
                             1 -> ".m3u"
                             2 -> ".m3u8"
+                            3 -> ".zpl"
                             else -> ""
                         }
                     }"
@@ -2299,6 +2299,7 @@ fun ConvertPageUi(
                                         Item(
                                             onClick = {
                                                 convertPage.selectPlaylistFile()
+//                                                winPathInput = convertPage.winPath.value
                                             },
                                             text = stringResource(R.string.select_playlist_file_match_to_source).replace(
                                                 "#",
@@ -2339,9 +2340,9 @@ fun ConvertPageUi(
                                                 RoundedColumn {
                                                     ItemTitle(text =stringResource(R.string.win_path))
                                                     PathItem(
-                                                        editText = winPathInput,
-                                                        onChange = { winPathInput = it },
-                                                        onClear = { winPathInput = "" },
+                                                        editText = convertPage.winPathInput.value,
+                                                        onChange = { convertPage.winPathInput.value = it },
+                                                        onClear = { convertPage.winPathInput.value = "" },
                                                         enableHaptic = enableHaptic.value,
                                                         hapticStrength = hapticStrength.intValue
                                                     )
@@ -2526,7 +2527,7 @@ fun ConvertPageUi(
                                                 } else {
                                                     coroutine.launch(Dispatchers.IO) {
                                                         showDialogProgressBar.value = true
-                                                        convertPage.winPath.value = winPathInput
+                                                        convertPage.winPath.value = convertPage.winPathInput.value
                                                         val convertSuccess =
                                                             convertPage.convertLocalPlaylist()
                                                         if (convertSuccess.isBlank()) {
