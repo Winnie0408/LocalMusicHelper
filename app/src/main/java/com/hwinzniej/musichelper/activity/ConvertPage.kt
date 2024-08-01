@@ -128,9 +128,8 @@ class ConvertPage(
     val selectedTargetApp = mutableIntStateOf(0)
     val spotifyUserId = mutableStateOf("")
     private var csvFilePath = ""
-    var localMusicPath = ""
-    var isLocal = false
-    var winPath = ""
+    var localMusicPath = mutableStateOf("")
+    var winPath = mutableStateOf("")
 
     /**
      * 请求存储权限
@@ -143,7 +142,7 @@ class ConvertPage(
         ActivityResultContracts.StartActivityForResult()
     ) { _ ->
         if (Environment.isExternalStorageManager()) {
-            if (!isLocal) {
+            if (selectedMethod.intValue == 0) {
                 checkSelectedFiles(250L)
             }
         } else {
@@ -155,7 +154,7 @@ class ConvertPage(
     fun requestPermission(): Boolean {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) { //Android 11+
             if (Environment.isExternalStorageManager()) {
-                if (!isLocal) {
+                if (selectedMethod.intValue == 0) {
                     checkSelectedFiles()
                 }
                 return true
@@ -171,7 +170,7 @@ class ConvertPage(
             }
         } else { //Android 10-
             if (allPermissionsGranted()) {
-                if (!isLocal) {
+                if (selectedMethod.intValue == 0) {
                     checkSelectedFiles()
                 }
                 return true
@@ -212,7 +211,7 @@ class ConvertPage(
     ) {
         if (requestCode == REQUEST_CODE_PERMISSIONS) {
             if (allPermissionsGranted()) {
-                if (!isLocal) {
+                if (selectedMethod.intValue == 0) {
                     checkSelectedFiles(250L)
                 }
             } else {
@@ -323,13 +322,15 @@ class ConvertPage(
     }
 
     fun handleLocalFileDirUri(uri: Uri?) {
+        var chooseLocalMusicPath = mutableStateOf("")
         if (uri == null) {
             return
         }
         try {
-            lifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
-                localMusicPath = Tools().uriToAbsolutePath(uri)
+            chooseLocalMusicPath.value = Tools().uriToAbsolutePath(uri)
+            lifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
                 delay(200L) //播放动画
+                localMusicPath.value = chooseLocalMusicPath.value
             }
         } catch (e: Exception) {
             Toast.makeText(context, R.string.failed_to_get_file_from_dir, Toast.LENGTH_SHORT).show()
@@ -3677,12 +3678,6 @@ class ConvertPage(
         return result
     }
 
-    fun passingVariable(
-        winPathCross: String,
-    ) {
-        winPath = winPathCross
-    }
-
     fun convertLocalPlaylist(): String {
         val targetFile = File(
             "${Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)}/${
@@ -3745,7 +3740,7 @@ class ConvertPage(
                     .replace("\" albumTitle=.*?</smil>".toRegex(), "")
                     .substring(2)
 
-                    zunePlaylist = zunePlaylist.replace(winPath, localMusicPath)
+                    zunePlaylist = zunePlaylist.replace(winPath.value, localMusicPath.value)
                     .replace("\\", "/")}
                 catch (_: Exception){
                     return ""
