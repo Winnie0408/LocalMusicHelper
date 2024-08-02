@@ -410,4 +410,8 @@
     <string name="local_path">Local Path</string>
     <string name="auto_matched">Matched</string>
     <string name="matched_songs"># music matched</string>
+    <string name="please_check_song_file">Please check if the music file(s) in the following path exist.</string>
+    <string name="input_win_path">Please enter the Win path</string>
+    <string name="cancel">cancel</string>
+    <string name="confirm">confirm</string>
 </resources>

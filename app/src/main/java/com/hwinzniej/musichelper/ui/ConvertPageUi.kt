@@ -96,6 +96,7 @@ import com.moriafly.salt.ui.SaltTheme
 import com.moriafly.salt.ui.Text
 import com.moriafly.salt.ui.TitleBar
 import com.moriafly.salt.ui.UnstableSaltApi
+import com.moriafly.salt.ui.dialog.InputDialog
 import com.moriafly.salt.ui.popup.rememberPopupState
 import dev.jeziellago.compose.markdowntext.MarkdownText
 import kotlinx.coroutines.Dispatchers
@@ -2327,6 +2328,9 @@ fun ConvertPageUi(
                                     }
                                 }
                             }
+                            AnimatedVisibility(
+                                visible = convertPage.convertMode.intValue == 2
+                            ){
                             RoundedColumn {
                                 ItemTitle(
                                     text = stringResource(R.string.conversion_configuration).replace(
@@ -2345,16 +2349,41 @@ fun ConvertPageUi(
                                 )
                                 {
                                     Column {
-
-                                        ItemTitle(text = stringResource(R.string.win_path))
-                                        PathItem(
-                                            editText = convertPage.winPathInput.value,
-                                            onChange = { convertPage.winPathInput.value = it },
-                                            onClear = { convertPage.winPathInput.value = "" },
-                                            enableHaptic = enableHaptic.value,
-                                            hapticStrength = hapticStrength.intValue
+//                                        ItemTitle(text = stringResource(R.string.win_path))
+                                        var inputWinPath by remember { mutableStateOf(false) }
+                                        if (inputWinPath) {
+                                            InputDialog(
+                                                onDismissRequest = {
+                                                    inputWinPath = false
+                                                },
+                                                onConfirm = {
+                                                    inputWinPath = false
+                                                },
+                                                title = stringResource(R.string.input_win_path),
+                                                text = convertPage.winPathInput.value,
+                                                onChange = {
+                                                    convertPage.winPathInput.value = it
+                                                }
+                                            )
+                                        }
+                                        Item(
+                                            onClick = {
+                                                inputWinPath = true
+                                            },
+                                            text = stringResource(R.string.input_win_path)
                                         )
-                                        ItemTitle(text = stringResource(R.string.local_path))
+                                        AnimatedVisibility(
+                                                visible = convertPage.winPathInput.value != "" &&
+                                                        convertPage.winPathInput.value != "C:\\Users\\{YourUserName}\\Music"
+                                                )
+                                        {
+                                            ItemValue(
+                                                text = stringResource(R.string.you_have_selected),
+                                                rightSub = convertPage.winPathInput.value,
+                                                rightSubWeight = 2f
+                                            )
+                                        }
+//                                        ItemTitle(text = stringResource(R.string.local_path))
                                         Item(
                                             onClick = { convertPage.selectLocalDir() },
                                             text = stringResource(R.string.select_local_dir_path)
@@ -2387,7 +2416,7 @@ fun ConvertPageUi(
                                     )
                                 }
                             }
-
+                        }
                             RoundedColumn {
                                 ItemTitle(text = stringResource(R.string.target_formats))
                                 ItemPopup(
@@ -3567,31 +3596,4 @@ fun ConvertPageUi(
             }
         }
     }
-}
-
-@Composable
-fun PathItem(
-    editText: String?,
-    onChange: (String) -> Unit,
-    onClear: () -> Unit,
-    enableHaptic: Boolean,
-    hapticStrength: Int,
-    textStyle: TextStyle = SaltTheme.textStyles.main
-) {
-    ItemEdit(
-        text = editText ?: "",
-        onChange = onChange,
-        hint = stringResource(id = R.string.text_null),
-        enableHaptic = enableHaptic,
-        showClearButton = true,
-        onClear = onClear,
-        paddingValues = PaddingValues(
-            start = SaltTheme.dimens.innerHorizontalPadding,
-            end = SaltTheme.dimens.innerHorizontalPadding,
-            bottom = 8.dp,
-            top = 4.dp
-        ),
-        hapticStrength = hapticStrength,
-        textStyle = textStyle
-    )
 }

@@ -402,4 +402,8 @@
     <string name="conversion_configuration"># 변환 구성</string>
     <string name="auto_matched">일치함</string>
     <string name="matched_songs"># 음악이 일치함</string>
+    <string name="please_check_song_file">다음 경로에 음악파일이 존재하는지 확인해주세요.</string>
+    <string name="input_win_path">Win 경로를 입력하세요.</string>
+    <string name="cancel">취소</string>
+    <string name="confirm">확인</string>
 </resources>
