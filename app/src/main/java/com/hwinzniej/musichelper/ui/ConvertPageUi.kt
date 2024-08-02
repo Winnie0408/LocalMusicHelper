@@ -2321,53 +2321,64 @@ fun ConvertPageUi(
                                                 rightSubWeight = 2f
                                             )
                                         }
-                                        AnimatedVisibility(
-                                            visible = convertPage.selectedSourceLocalApp.intValue ==3
-
-                                        )
-                                        {
-                                            Column {
-                                                ItemTitle(text = stringResource(R.string.conversion_configuration).replace(
-                                                    "#",
-                                                    when (convertPage.selectedSourceLocalApp.intValue) {
-                                                        0 -> "Salt Player"
-                                                        1 -> "APlayer"
-                                                        2 -> "Poweramp"
-                                                        3 -> "Microsoft Zune"
-                                                        else -> ""
-                                                    }
-                                                ))
-                                                RoundedColumn {
-                                                    ItemTitle(text =stringResource(R.string.win_path))
-                                                    PathItem(
-                                                        editText = convertPage.winPathInput.value,
-                                                        onChange = { convertPage.winPathInput.value = it },
-                                                        onClear = { convertPage.winPathInput.value = "" },
-                                                        enableHaptic = enableHaptic.value,
-                                                        hapticStrength = hapticStrength.intValue
-                                                    )
-                                                    ItemTitle(text =stringResource(R.string.local_path))
-                                                    Item(
-                                                        onClick = { convertPage.selectLocalDir() },
-                                                        text = stringResource(R.string.select_local_dir_path)
-                                                    )
-                                                    AnimatedVisibility(
-                                                        visible = convertPage.localMusicPath.value.isNotBlank()
-                                                    )
-                                                    {
-                                                        ItemValue(
-                                                            text = stringResource(R.string.you_have_selected),
-                                                            rightSub = convertPage.localMusicPath.value,
-                                                            rightSubWeight = 2f
-                                                        )
-                                                    }
-
-                                                }
-                                            }
-                                        }
-
                                     }
                                 }
+                            }
+                            AnimatedVisibility(
+                                visible = convertPage.selectedSourceLocalApp.intValue == 3 || convertPage.selectedTargetApp.intValue ==3
+                            )
+                            {
+                                RoundedColumn {
+                                    ItemTitle(text = stringResource(R.string.conversion_configuration).replace(
+                                        "#",
+                                        when (convertPage.selectedSourceLocalApp.intValue) {
+                                            0 -> "Salt Player"
+                                            1 -> "APlayer"
+                                            2 -> "Poweramp"
+                                            3 -> "Microsoft Zune"
+                                            else -> ""
+                                        }
+                                    ))
+                                    ItemTitle(text =stringResource(R.string.win_path))
+                                    PathItem(
+                                        editText = convertPage.winPathInput.value,
+                                        onChange = { convertPage.winPathInput.value = it },
+                                        onClear = { convertPage.winPathInput.value = "" },
+                                        enableHaptic = enableHaptic.value,
+                                        hapticStrength = hapticStrength.intValue
+                                    )
+                                    ItemTitle(text =stringResource(R.string.local_path))
+                                    Item(
+                                        onClick = { convertPage.selectLocalDir() },
+                                        text = stringResource(R.string.select_local_dir_path)
+                                    )
+                                    AnimatedVisibility(
+                                        visible = convertPage.localMusicPath.isNotBlank() || convertPage.isAutoMatched.value
+                                    )
+                                    {
+                                        ItemValue(
+                                            text = stringResource(
+                                                when(convertPage.isAutoMatched.value)
+                                                {
+                                                    true -> R.string.auto_matched
+                                                    false -> R.string.you_have_selected
+                                                }
+                                            ),
+                                            rightSub = convertPage.localMusicPath,
+                                            rightSubWeight = 2f
+                                        )
+                                    }
+                                    AnimatedVisibility(
+                                        visible = convertPage.itemCount.intValue != 0
+                                    ){
+                                        ItemValue(text = stringResource(R.string.matched_songs)
+                                            .replace("#", convertPage.itemCount.intValue.toString()
+                                            ))
+                                    }
+
+
+                                }
+
                             }
 
                             RoundedColumn {
@@ -2518,7 +2529,7 @@ fun ConvertPageUi(
                                                         Toast.LENGTH_SHORT
                                                     ).show()
                                                     showDialogProgressBar.value = true
-                                                } else if (convertPage.selectedSourceLocalApp.intValue == 3 && convertPage.localMusicPath.value.isBlank()){
+                                                } else if (convertPage.selectedSourceLocalApp.intValue == 3 && convertPage.localMusicPath.isBlank()){
                                                     Toast.makeText(
                                                         context,
                                                         context.getString(R.string.empty_local_dir_path),
