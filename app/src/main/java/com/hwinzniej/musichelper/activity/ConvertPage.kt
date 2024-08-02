@@ -146,7 +146,7 @@ class ConvertPage(
         ActivityResultContracts.StartActivityForResult()
     ) { _ ->
         if (Environment.isExternalStorageManager()) {
-            if (selectedMethod.intValue == 0) {
+            if (convertMode.intValue == 1) {
                 checkSelectedFiles(250L)
             }
         } else {
@@ -158,7 +158,7 @@ class ConvertPage(
     fun requestPermission(): Boolean {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) { //Android 11+
             if (Environment.isExternalStorageManager()) {
-                if (selectedMethod.intValue == 0) {
+                if (convertMode.intValue == 1) {
                     checkSelectedFiles()
                 }
                 return true
@@ -174,7 +174,7 @@ class ConvertPage(
             }
         } else { //Android 10-
             if (allPermissionsGranted()) {
-                if (selectedMethod.intValue == 0) {
+                if (convertMode.intValue == 1) {
                     checkSelectedFiles()
                 }
                 return true
@@ -215,7 +215,7 @@ class ConvertPage(
     ) {
         if (requestCode == REQUEST_CODE_PERMISSIONS) {
             if (allPermissionsGranted()) {
-                if (selectedMethod.intValue == 0) {
+                if (convertMode.intValue == 1) {
                     checkSelectedFiles(250L)
                 }
             } else {
@@ -341,18 +341,7 @@ class ConvertPage(
             Toast.makeText(context, R.string.failed_to_get_file_from_dir, Toast.LENGTH_SHORT).show()
             return
         }
-        if (sourcePlaylistFilePath.isNotBlank() && chooseLocalMusicPath.value.isNotBlank()){
-            val sourceFile = File(sourcePlaylistFilePath)
-            val readPlayList = sourceFile.readText()
-            isAutoMatched.value = true
-            localMusicPath =
-                Regex("/.*?/Music").find(readPlayList)?.value!!
-//            localMusicPath.value = Regex("/.*?/Music").findAll(readPlayList, 0).map { it.groupValues[1] }.joinToString()
-            itemCount.intValue = Regex("/.*?/Music").findAll(readPlayList).count()
-        }
-        else{
-            itemCount.intValue = 0
-        }
+        isAutoMatched.value = false
     }
 
     fun handleUri(uri: Uri?, code: Int) {
@@ -392,10 +381,12 @@ class ConvertPage(
                     when (selectedSourceLocalApp.intValue){
                         3 ->{
                             val sourceFile = File(sourcePlaylistFilePath)
-                            winPathInput.value = sourceFile.readText()
+                            val zunePlaylist = sourceFile.readText()
                                 .replace("((\\r\\n)|\\r|\\n)".toRegex(), "")
                                 .replace("<.*?zpl.*?src=\"".toRegex(), "")
-                                .replace("Music.*?</smil>".toRegex(), "Music")
+                            winPathInput.value = zunePlaylist.replace("Music.*?</smil>".toRegex(), "Music")
+                            itemCount.intValue = zunePlaylist.replace("\" albumTitle=.*?<media src=\"".toRegex(), "\n")
+                                .replace("\" albumTitle=.*?</smil>".toRegex(), "").split("\n").size
                         }
                         else -> when (selectedTargetApp.intValue){
                             3 ->{
@@ -405,9 +396,11 @@ class ConvertPage(
                                 localMusicPath =readPlayList[0].replace("Music.+".toRegex(), "Music")
                                 itemCount.intValue = readPlayList.size
                             }
+                            else ->{
+                                itemCount.intValue = File(sourcePlaylistFilePath).readLines().size
+                            }
                         }
                     }
-
                 }
             }
 
@@ -551,6 +544,13 @@ class ConvertPage(
                 }
             }
         }
+    }
+
+    fun clearCache(){
+        isAutoMatched.value = false
+        itemCount.intValue = 0
+        sourcePlaylistFileName.value = ""
+        resultFilePath = ""
     }
 
     fun getSelectedMultiSource(selected: Int) {
@@ -3790,17 +3790,18 @@ class ConvertPage(
             3 -> { //来源：Microsoft Zune
                 var zunePlaylist = sourceFile.readText()
                 val fileWriter = FileWriter(targetFile, true)
-                try {
+//                try {
                 zunePlaylist = zunePlaylist.replace("((\\r\\n)|\\r|\\n)".toRegex(), "")
                     .replace("<.*?zpl.*?src=\"".toRegex(), "")
                     .replace("\" albumTitle=.*?<media src=\"".toRegex(), "\n")
                     .replace("\" albumTitle=.*?</smil>".toRegex(), "")
 
-                    zunePlaylist = zunePlaylist.replace(winPath.value, localMusicPath)
-                    .replace("\\", "/")}
-                catch (_: Exception){
-                    return ""
-                }
+                zunePlaylist = zunePlaylist.replace(winPath.value, localMusicPath)
+                    .replace("\\", "/")
+//                }
+//                catch (_: Exception){
+//                    return ""
+//                }
                 fileWriter.write(zunePlaylist)
                 fileWriter.close()
                 return targetFile.absolutePath.replace("/storage/emulated/0/", "")
