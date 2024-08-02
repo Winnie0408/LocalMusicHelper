@@ -2220,6 +2220,7 @@ fun ConvertPageUi(
                                                         }
                                                     }
                                                     sourceLocalAppPopupMenuState.dismiss()
+                                                    convertPage.clearCache()
                                                 },
                                                 selected = convertPage.selectedSourceLocalApp.intValue == 0,
                                                 text = "Salt Player",
@@ -2246,6 +2247,7 @@ fun ConvertPageUi(
                                                         }
                                                     }
                                                     sourceLocalAppPopupMenuState.dismiss()
+                                                    convertPage.clearCache()
                                                 },
                                                 selected = convertPage.selectedSourceLocalApp.intValue == 1,
                                                 text = "APlayer",
@@ -2267,6 +2269,7 @@ fun ConvertPageUi(
                                                         }
                                                     }
                                                     sourceLocalAppPopupMenuState.dismiss()
+                                                    convertPage.clearCache()
                                                 },
                                                 selected = convertPage.selectedSourceLocalApp.intValue == 2,
                                                 text = "Poweramp",
@@ -2275,31 +2278,31 @@ fun ConvertPageUi(
                                                 iconPaddingValues = PaddingValues(all = 1.dp)
                                             )
                                             PopupMenuItem(
-                                                    onClick = {
-                                                        MyVibrationEffect(
-                                                            context,
-                                                            enableHaptic.value,
-                                                            hapticStrength.intValue
-                                                        ).click()
-                                                        coroutine.launch {
-                                                            dataStore.edit { settings ->
-                                                                settings[DataStoreConstants.SELECTED_SOURCE_APP] =
-                                                                    3
-                                                            }
+                                                onClick = {
+                                                    MyVibrationEffect(
+                                                        context,
+                                                        enableHaptic.value,
+                                                        hapticStrength.intValue
+                                                    ).click()
+                                                    coroutine.launch {
+                                                        dataStore.edit { settings ->
+                                                            settings[DataStoreConstants.SELECTED_SOURCE_APP] =
+                                                                3
                                                         }
-                                                        sourceLocalAppPopupMenuState.dismiss()
-                                                    },
-                                            selected = convertPage.selectedSourceLocalApp.intValue == 3,
-                                            text = "Microsoft Zune",
-                                            iconPainter = painterResource(id = R.drawable.microsoft_zune),
-                                            iconColor = SaltTheme.colors.text,
-                                            iconPaddingValues = PaddingValues(all = 1.dp)
+                                                    }
+                                                    sourceLocalAppPopupMenuState.dismiss()
+                                                    convertPage.clearCache()
+                                                },
+                                                selected = convertPage.selectedSourceLocalApp.intValue == 3,
+                                                text = "Microsoft Zune",
+                                                iconPainter = painterResource(id = R.drawable.microsoft_zune),
+                                                iconColor = SaltTheme.colors.text,
+                                                iconPaddingValues = PaddingValues(all = 1.dp)
                                             )
                                         }
                                         Item(
                                             onClick = {
                                                 convertPage.selectPlaylistFile()
-//                                                winPathInput = convertPage.winPath.value
                                             },
                                             text = stringResource(R.string.select_playlist_file_match_to_source).replace(
                                                 "#",
@@ -2314,7 +2317,7 @@ fun ConvertPageUi(
                                         )
                                         AnimatedVisibility(
                                             visible = convertPage.sourcePlaylistFileName.value.isNotBlank()
-                                                ) {
+                                        ) {
                                             ItemValue(
                                                 text = stringResource(R.string.you_have_selected),
                                                 rightSub = convertPage.sourcePlaylistFileName.value,
@@ -2324,12 +2327,9 @@ fun ConvertPageUi(
                                     }
                                 }
                             }
-                            AnimatedVisibility(
-                                visible = convertPage.selectedSourceLocalApp.intValue == 3 || convertPage.selectedTargetApp.intValue ==3
-                            )
-                            {
-                                RoundedColumn {
-                                    ItemTitle(text = stringResource(R.string.conversion_configuration).replace(
+                            RoundedColumn {
+                                ItemTitle(
+                                    text = stringResource(R.string.conversion_configuration).replace(
                                         "#",
                                         when (convertPage.selectedSourceLocalApp.intValue) {
                                             0 -> "Salt Player"
@@ -2338,47 +2338,54 @@ fun ConvertPageUi(
                                             3 -> "Microsoft Zune"
                                             else -> ""
                                         }
-                                    ))
-                                    ItemTitle(text =stringResource(R.string.win_path))
-                                    PathItem(
-                                        editText = convertPage.winPathInput.value,
-                                        onChange = { convertPage.winPathInput.value = it },
-                                        onClear = { convertPage.winPathInput.value = "" },
-                                        enableHaptic = enableHaptic.value,
-                                        hapticStrength = hapticStrength.intValue
                                     )
-                                    ItemTitle(text =stringResource(R.string.local_path))
-                                    Item(
-                                        onClick = { convertPage.selectLocalDir() },
-                                        text = stringResource(R.string.select_local_dir_path)
-                                    )
-                                    AnimatedVisibility(
-                                        visible = convertPage.localMusicPath.isNotBlank() || convertPage.isAutoMatched.value
-                                    )
-                                    {
-                                        ItemValue(
-                                            text = stringResource(
-                                                when(convertPage.isAutoMatched.value)
-                                                {
-                                                    true -> R.string.auto_matched
-                                                    false -> R.string.you_have_selected
-                                                }
-                                            ),
-                                            rightSub = convertPage.localMusicPath,
-                                            rightSubWeight = 2f
+                                )
+                                AnimatedVisibility(
+                                    visible = convertPage.selectedSourceLocalApp.intValue == 3 || convertPage.selectedTargetApp.intValue == 3
+                                )
+                                {
+                                    Column {
+
+                                        ItemTitle(text = stringResource(R.string.win_path))
+                                        PathItem(
+                                            editText = convertPage.winPathInput.value,
+                                            onChange = { convertPage.winPathInput.value = it },
+                                            onClear = { convertPage.winPathInput.value = "" },
+                                            enableHaptic = enableHaptic.value,
+                                            hapticStrength = hapticStrength.intValue
                                         )
+                                        ItemTitle(text = stringResource(R.string.local_path))
+                                        Item(
+                                            onClick = { convertPage.selectLocalDir() },
+                                            text = stringResource(R.string.select_local_dir_path)
+                                        )
+                                        AnimatedVisibility(
+                                            visible = convertPage.localMusicPath != ""
+                                        )
+                                        {
+                                            ItemValue(
+                                                text = stringResource(
+                                                    when (convertPage.isAutoMatched.value) {
+                                                        true -> R.string.auto_matched
+                                                        false -> R.string.you_have_selected
+                                                    }
+                                                ),
+                                                rightSub = convertPage.localMusicPath,
+                                                rightSubWeight = 2f
+                                            )
+                                        }
                                     }
-                                    AnimatedVisibility(
-                                        visible = convertPage.itemCount.intValue != 0
-                                    ){
-                                        ItemValue(text = stringResource(R.string.matched_songs)
-                                            .replace("#", convertPage.itemCount.intValue.toString()
-                                            ))
-                                    }
-
-
                                 }
-
+                                AnimatedVisibility(
+                                    visible = convertPage.itemCount.intValue != 0
+                                ) {
+                                    ItemValue(
+                                        text = stringResource(R.string.matched_songs)
+                                            .replace(
+                                                "#", convertPage.itemCount.intValue.toString()
+                                            )
+                                    )
+                                }
                             }
 
                             RoundedColumn {
@@ -2522,14 +2529,14 @@ fun ConvertPageUi(
                                                         enableHaptic.value,
                                                         hapticStrength.intValue
                                                     ).dialog()
-                                                } else if(!convertPage.requestPermission()){
+                                                } else if (!convertPage.requestPermission()) {
                                                     Toast.makeText(
                                                         context,
                                                         context.getString(R.string.request_permission_toast),
                                                         Toast.LENGTH_SHORT
                                                     ).show()
-                                                    showDialogProgressBar.value = true
-                                                } else if (convertPage.selectedSourceLocalApp.intValue == 3 && convertPage.localMusicPath.isBlank()){
+//                                                    showDialogProgressBar.value = true
+                                                } else if (convertPage.selectedSourceLocalApp.intValue == 3 && convertPage.localMusicPath.isBlank()) {
                                                     Toast.makeText(
                                                         context,
                                                         context.getString(R.string.empty_local_dir_path),
@@ -2538,7 +2545,8 @@ fun ConvertPageUi(
                                                 } else {
                                                     coroutine.launch(Dispatchers.IO) {
                                                         showDialogProgressBar.value = true
-                                                        convertPage.winPath.value = convertPage.winPathInput.value
+                                                        convertPage.winPath.value =
+                                                            convertPage.winPathInput.value
                                                         val convertSuccess =
                                                             convertPage.convertLocalPlaylist()
                                                         if (convertSuccess.isBlank()) {
