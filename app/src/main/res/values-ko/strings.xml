@@ -400,4 +400,6 @@
     <string name="select_local_dir_path">로컬 경로 선택</string>
     <string name="empty_local_dir_path">로컬 경로가 선택되지 않았습니다!</string>
     <string name="conversion_configuration"># 변환 구성</string>
+    <string name="auto_matched">일치함</string>
+    <string name="matched_songs"># 음악이 일치함</string>
 </resources>
