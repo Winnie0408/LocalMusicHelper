@@ -57,6 +57,9 @@ import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVParser
+import org.jaudiotagger.audio.AudioFile
+import org.jaudiotagger.audio.AudioFileIO
+import org.jaudiotagger.tag.FieldKey
 import java.io.File
 import java.io.FileReader
 import java.io.FileWriter
@@ -331,17 +334,16 @@ class ConvertPage(
             return
         }
         try {
-            isAutoMatched.value = false
             chooseLocalMusicPath.value = Tools().uriToAbsolutePath(uri)
             lifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
                 delay(200L) //播放动画
-                localMusicPath = chooseLocalMusicPath.value
             }
         } catch (e: Exception) {
             Toast.makeText(context, R.string.failed_to_get_file_from_dir, Toast.LENGTH_SHORT).show()
             return
         }
         isAutoMatched.value = false
+        localMusicPath = chooseLocalMusicPath.value
     }
 
     fun handleUri(uri: Uri?, code: Int) {
@@ -551,6 +553,96 @@ class ConvertPage(
         itemCount.intValue = 0
         sourcePlaylistFileName.value = ""
         resultFilePath = ""
+    }
+
+    private fun getSongTag(absolutePath:String): Map<String, String?> {
+        val audioFile: AudioFile = AudioFileIO.read(File(absolutePath))
+        return mapOf(
+            "song" to audioFile.tag.getFirst(FieldKey.TITLE),
+            "artist" to audioFile.tag.getFirst(FieldKey.ARTIST),
+            "album" to audioFile.tag.getFirst(FieldKey.ALBUM),
+            "albumArtist" to audioFile.tag.getFirst(FieldKey.ALBUM_ARTIST),
+            "genre" to audioFile.tag.getFirst(FieldKey.GENRE),
+            "trackNumber" to audioFile.tag.getFirst(FieldKey.TRACK),
+            "discNumber" to audioFile.tag.getFirst(FieldKey.DISC_NO),
+            "releaseYear" to audioFile.tag.getFirst(FieldKey.YEAR),
+            "composer" to audioFile.tag.getFirst(FieldKey.COMPOSER),
+            "arranger" to audioFile.tag.getFirst(FieldKey.ARRANGER),
+            "lyricist" to audioFile.tag.getFirst(FieldKey.LYRICIST),
+            "lyrics" to audioFile.tag.getFirst(FieldKey.LYRICS),
+        )
+    }
+
+    private fun localToZune(targetFile: File, sourceFile: File): Int{
+        var fileName = ""
+        val guid = UUID.randomUUID().toString()
+        val creatorId = UUID.randomUUID().toString()
+        val songCount = itemCount.intValue
+        val dot = selectedFileName.value.lastIndexOf('.')
+        val fileWriter = FileWriter(targetFile, true)
+        if ((dot >-1) && (dot < (selectedFileName.value.length))) {
+            fileName = selectedFileName.value.substring(0, dot)
+        }
+        var fileData = """<?zpl version="2.0"?>
+<smil>
+  <head>
+    <guid>{""" + guid + """}</guid>
+    <meta name="generator" content="Zune -- 4.8.2345.0" />
+    <meta name="itemCount" content="""" + songCount + """" />
+    <meta name="totalDuration" content="19854" />
+    <meta name="averageRating" content="0" />
+    <meta name="creatorId" content="{""" + creatorId + """}" />
+    <meta name="autoRefresh" content="FALSE" />
+    <meta name="autoRefreshInterval" content="5" />
+    <title>""" + fileName + """</title>
+  </head>
+  <body>
+    <seq>
+"""
+        var errorCount = 0
+        val errorSongPath = mutableListOf("")
+        val inputFile = sourceFile.readLines()
+        inputFile.forEach {
+            try {
+                fileData = fileData + """      <media src="""" +
+                        it.replace(localMusicPath, winPath.value).replace("/", "\\") +
+                        """" albumTitle="""" + getSongTag(it)["album"] +
+                        """" albumArtist="""" + getSongTag(it)["albumArtist"] +
+                        """" trackTitle="""" + getSongTag(it)["song"] +
+                        """" trackArtist="""" + getSongTag(it)["artist"] +
+                        """" duration="""" + "114514" + """" />""" + "\r\n"
+            }
+            catch(e: Exception){
+                errorCount += 1
+                errorSongPath.add(it)
+            }
+        }
+        fileData += """    </seq>
+  </body>
+</smil>"""
+        fileWriter.write(fileData)
+        fileWriter.close()
+        when(errorCount){
+            0 -> TODO()
+            else -> {
+                var errorSongPathShow = ""
+                errorSongPath.forEach{
+                    errorSongPathShow += "  - ${it.replace("\t\n", "")}\n"
+                }
+                errorDialogContent.value =
+                    "- ${context.getString(R.string.playlist_song_num_not_match)}\n  - ${
+                        context.getString(
+                            R.string.playlist_song_num_not_match_detail
+                        ).replace("#1", songCount.toString())
+                            .replace("#2", (songCount-errorCount).toString()).replace("#n", "\n")
+                            .replace("#b", " ")
+                    }\n- ${context.getString(R.string.please_check_song_file)} ${errorSongPathShow}"
+                showDialogProgressBar.value = false
+                errorDialogTitle.value = context.getString(R.string.read_failed)
+                errorDialogCustomAction.value = {}
+                showErrorDialog.value = true}
+        }
+        return errorCount
     }
 
     fun getSelectedMultiSource(selected: Int) {
@@ -3747,27 +3839,16 @@ class ConvertPage(
             0 -> { //来源：Salt Player
 
                 when (selectedTargetApp.intValue) {
-                    3 -> {
-                        val guid = UUID.randomUUID().toString()
-                        val creatorId = UUID.randomUUID().toString()
-                        val dot = selectedFileName.value.lastIndexOf('.')
-                        if ((dot >-1) && (dot < (selectedFileName.value.length))) {
-                            val fileName = selectedFileName.value.substring(0, dot)
+                    3 -> {when(localToZune(targetFile, sourceFile)){
+                        0 -> TODO()
+                        else -> {
                         }
-                        var fileData = """<?zpl version="2.0"?>
-<smil>
-  <head>
-    <guid>{""" + guid +"""}</guid>
-    <meta name="generator" content="Zune -- 4.8.2345.0" />
-    <meta name="itemCount" content=""""
-                        sourceFile.copyTo(targetFile, true)
-                        return targetFile.absolutePath.replace("/storage/emulated/0/", "")
-                    }
+                    }}
                     else -> {
                         sourceFile.copyTo(targetFile, true)
-                        return targetFile.absolutePath.replace("/storage/emulated/0/", "")
                     }
                 }
+                return targetFile.absolutePath.replace("/storage/emulated/0/", "")
             }
 
             1 -> { //来源：APlayer
@@ -3790,7 +3871,7 @@ class ConvertPage(
             3 -> { //来源：Microsoft Zune
                 var zunePlaylist = sourceFile.readText()
                 val fileWriter = FileWriter(targetFile, true)
-//                try {
+                try {
                 zunePlaylist = zunePlaylist.replace("((\\r\\n)|\\r|\\n)".toRegex(), "")
                     .replace("<.*?zpl.*?src=\"".toRegex(), "")
                     .replace("\" albumTitle=.*?<media src=\"".toRegex(), "\n")
@@ -3798,10 +3879,10 @@ class ConvertPage(
 
                 zunePlaylist = zunePlaylist.replace(winPath.value, localMusicPath)
                     .replace("\\", "/")
-//                }
-//                catch (_: Exception){
-//                    return ""
-//                }
+                }
+                catch (_: Exception){
+                    return ""
+                }
                 fileWriter.write(zunePlaylist)
                 fileWriter.close()
                 return targetFile.absolutePath.replace("/storage/emulated/0/", "")

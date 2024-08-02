@@ -402,4 +402,8 @@
     <string name="conversion_configuration">#的转换配置</string>
     <string name="auto_matched">已匹配</string>
     <string name="matched_songs">已匹配#首音乐</string>
+    <string name="please_check_song_file">请检查下列路径中的音乐文件（们）是否存在。</string>
+    <string name="input_win_path">请输入Win路径</string>
+    <string name="cancel">取消</string>
+    <string name="confirm">确定</string>
 </resources>
