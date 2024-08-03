@@ -645,6 +645,81 @@ class ConvertPage(
         return errorCount
     }
 
+    private fun onlineToZune(convertResult :SnapshotStateMap<Int, Array<String>>, correctFileName : String
+                             , saveSuccessSongs :Boolean, saveCautionSongs : Boolean, saveManualSongs : Boolean): String{
+        var fileName = ""
+        val guid = UUID.randomUUID().toString()
+        val creatorId = UUID.randomUUID().toString()
+        val songCount = convertResult.size
+
+        val dot = correctFileName.lastIndexOf('.')
+        if ((dot >-1) && (dot < (correctFileName.length))) {
+            fileName = correctFileName.substring(0, dot)
+        }
+
+        var fileData = """<?zpl version="2.0"?>
+<smil>
+  <head>
+    <guid>{""" + guid + """}</guid>
+    <meta name="generator" content="Zune -- 4.8.2345.0" />
+    <meta name="itemCount" content="""" + songCount + """" />
+    <meta name="totalDuration" content="19854" />
+    <meta name="averageRating" content="0" />
+    <meta name="creatorId" content="{""" + creatorId + """}" />
+    <meta name="autoRefresh" content="FALSE" />
+    <meta name="autoRefreshInterval" content="5" />
+    <title>""" + fileName + """</title>
+  </head>
+  <body>
+    <seq>
+"""
+        for (i in 0 until convertResult.size) {
+            if (convertResult[i] == null)
+                continue
+            if (convertResult[i]!![0] == "0" && saveSuccessSongs) {
+                fileData = fileData + """      <media src="""" +
+                convertResult[i]!![7].replace(localMusicPath, winPath.value).replace("/", "\\") +
+                    """" albumTitle="""" + convertResult[i]!![5] +
+                    """" albumArtist="""" + convertResult[i]!![8] +
+                    """" trackTitle="""" + convertResult[i]!![1] +
+                    """" trackArtist="""" + convertResult[i]!![3] +
+                    """" duration="""" + "114514" + """" />""" + "\r\n"
+                continue
+            }
+            if (convertResult[i]!![0] == "1" && saveCautionSongs) {
+                fileData = fileData + """      <media src="""" +
+                        convertResult[i]!![7].replace(localMusicPath, winPath.value).replace("/", "\\") +
+                        """" albumTitle="""" + convertResult[i]!![5] +
+                        """" albumArtist="""" + convertResult[i]!![8] +
+                        """" trackTitle="""" + convertResult[i]!![1] +
+                        """" trackArtist="""" + convertResult[i]!![3] +
+                        """" duration="""" + "114514" + """" />""" + "\r\n"
+//                fileData = fileData + """      <media src="""" +
+//                        convertResult[i]!![7].replace(localMusicPath, winPath.value).replace("/", "\\") +
+//                        """" albumTitle="""" + """Unknown""" +
+//                        """" albumArtist="""" + """Unknown""" +
+//                        """" trackTitle="""" + """Unknown""" +
+//                        """" trackArtist="""" + """Unknown""" +
+//                        """" duration="""" + "114514" + """" />""" + "\r\n"
+                continue
+            }
+            if (convertResult[i]!![0] == "2" && saveManualSongs) {
+                fileData = fileData + """      <media src="""" +
+                        convertResult[i]!![7].replace(localMusicPath, winPath.value).replace("/", "\\") +
+                        """" albumTitle="""" + """Unknown""" +
+                        """" albumArtist="""" + """Unknown""" +
+                        """" trackTitle="""" + """Unknown""" +
+                        """" trackArtist="""" + """Unknown""" +
+                        """" duration="""" + "114514" + """" />""" + "\r\n"
+                continue
+            }
+        }
+        fileData += """    </seq>
+  </body>
+</smil>"""
+        return fileData
+    }
+
     fun getSelectedMultiSource(selected: Int) {
         lifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
             val dirPath = context.getExternalFilesDir(null)?.absolutePath + "/userDatabase"
@@ -2918,6 +2993,7 @@ class ConvertPage(
                             val album = cursor.getString(cursor.getColumnIndexOrThrow("album"))
                             val absolutePath =
                                 cursor.getString(cursor.getColumnIndexOrThrow("absolutePath"))
+                            val albumArtist = cursor.getString(cursor.getColumnIndexOrThrow("albumArtist"))
                             val musicInfo = MusicInfo(
                                 id = id,
                                 song = song,
@@ -2925,7 +3001,7 @@ class ConvertPage(
                                 album = album,
                                 releaseYear = null,
                                 trackNumber = null,
-                                albumArtist = null,
+                                albumArtist = albumArtist,
                                 genre = null,
                                 absolutePath = absolutePath,
                                 lyricist = null,
@@ -2945,6 +3021,7 @@ class ConvertPage(
             var songName: String
             var songArtist: String
             var songAlbum: String
+            var albumArtist: String
             var num = 0
 
             val db = SQLiteDatabase.openOrCreateDatabase(File(databaseFilePath.value), null)
@@ -3188,17 +3265,20 @@ class ConvertPage(
 
                     val songConvertResult = music3InfoList[songNameMaxKey]
                     convertResultMap[num++] =
-                        arrayOf(
-                            if (autoSuccess) "0"
-                            else "1",  //是否自动匹配成功
-                            songConvertResult.song,  //本地音乐歌曲名
-                            songName,  //云音乐歌曲名
-                            songConvertResult.artist,  //本地音乐歌手名
-                            songArtist,  //云音乐歌手名
-                            songConvertResult.album,  //本地音乐专辑名
-                            songAlbum,  //云音乐专辑名
-                            songConvertResult.absolutePath,  //本地音乐绝对路径
-                        )
+                        songConvertResult.albumArtist?.let {
+                            arrayOf(
+                                if (autoSuccess) "0"
+                                else "1",  //是否自动匹配成功
+                                songConvertResult.song,  //本地音乐歌曲名
+                                songName,  //云音乐歌曲名
+                                songConvertResult.artist,  //本地音乐歌手名
+                                songArtist,  //云音乐歌手名
+                                songConvertResult.album,  //本地音乐专辑名
+                                songAlbum,  //云音乐专辑名
+                                songConvertResult.absolutePath,  //本地音乐绝对路径
+                                it
+                            )
+                        }!!
 
                 } else if (selectedMatchingMode.intValue == 2) {
                     val similarityArray = mutableMapOf<Int, Double>()
@@ -3232,6 +3312,7 @@ class ConvertPage(
                                     if (enableAlbumNameMatch.value) music3InfoList[k].artist else ""
                                 }${if (enableAlbumNameMatch.value) music3InfoList[k].album else ""}".lowercase()
                             )
+//                            println(k)
                         }
                     val maxSimilarity = Tools().getMaxValueIntDouble(similarityArray)
                     val songMaxSimilarity = maxSimilarity?.value!!
@@ -3242,17 +3323,20 @@ class ConvertPage(
                     val songConvertResult = music3InfoList[songMaxKey]
 
                     convertResultMap[num++] =
-                        arrayOf(
-                            if (autoSuccess) "0"
-                            else "1",  //是否自动匹配成功
-                            songConvertResult.song,  //本地音乐歌曲名
-                            songName,  //云音乐歌曲名
-                            songConvertResult.artist,  //本地音乐歌手名
-                            songArtist,  //云音乐歌手名
-                            songConvertResult.album,  //本地音乐专辑名
-                            songAlbum,  //云音乐专辑名
-                            songConvertResult.absolutePath,  //本地音乐绝对路径
-                        )
+                        songConvertResult.albumArtist?.let {
+                            arrayOf(
+                                if (autoSuccess) "0"
+                                else "1",  //是否自动匹配成功
+                                songConvertResult.song,  //本地音乐歌曲名
+                                songName,  //云音乐歌曲名
+                                songConvertResult.artist,  //本地音乐歌手名
+                                songArtist,  //云音乐歌手名
+                                songConvertResult.album,  //本地音乐专辑名
+                                songAlbum,  //云音乐专辑名
+                                songConvertResult.absolutePath,  //本地音乐绝对路径
+                                it,  //
+                            )
+                        }!!
                 }
                 songInfoCursor.close()
                 if (num % 10 == 0)
@@ -3358,6 +3442,7 @@ class ConvertPage(
                 val song = cursor.getString(cursor.getColumnIndexOrThrow("song"))
                 val artist = cursor.getString(cursor.getColumnIndexOrThrow("artist"))
                 val album = cursor.getString(cursor.getColumnIndexOrThrow("album"))
+                val albumArtist = cursor.getString(cursor.getColumnIndexOrThrow("albumArtist"))
                 val absolutePath =
                     cursor.getString(cursor.getColumnIndexOrThrow("absolutePath"))
                 cursor.close()
@@ -3369,7 +3454,7 @@ class ConvertPage(
                     album = album,
                     releaseYear = null,
                     trackNumber = null,
-                    albumArtist = null,
+                    albumArtist = albumArtist,
                     genre = null,
                     absolutePath = absolutePath,
                     lyricist = null,
@@ -3384,6 +3469,7 @@ class ConvertPage(
             convertResult[songPosition]?.set(3, songInfo.artist)
             convertResult[songPosition]?.set(5, songInfo.album)
             convertResult[songPosition]?.set(7, songInfo.absolutePath)
+            songInfo.albumArtist?.let { convertResult[songPosition]?.set(8, it) }
             withContext(Dispatchers.Main) {
                 Toast.makeText(
                     context,
@@ -3437,23 +3523,29 @@ class ConvertPage(
                     if (file.parentFile?.exists() == false)
                         file.parentFile?.mkdirs()
                     val fileWriter = FileWriter(file, true)
-
-                    for (i in 0 until convertResult.size) {
-                        if (convertResult[i] == null)
-                            continue
-                        if (convertResult[i]!![0] == "0" && saveSuccessSongs) {
-                            fileWriter.write("${convertResult[i]!![7]}\n")
-                            continue
-                        }
-                        if (convertResult[i]!![0] == "1" && saveCautionSongs) {
-                            fileWriter.write("${convertResult[i]!![7]}\n")
-                            continue
-                        }
-                        if (convertResult[i]!![0] == "2" && saveManualSongs) {
-                            fileWriter.write("${convertResult[i]!![7]}\n")
-                            continue
+                    when(selectedTargetApp.intValue){
+                        3 ->fileWriter.write(onlineToZune(convertResult, correctFileName, saveSuccessSongs, saveCautionSongs, saveManualSongs))
+                        else ->{
+                            for (i in 0 until convertResult.size) {
+                                if (convertResult[i] == null)
+                                    continue
+                                if (convertResult[i]!![0] == "0" && saveSuccessSongs) {
+                                    fileWriter.write("${convertResult[i]!![7]}\n")
+                                    continue
+                                }
+                                if (convertResult[i]!![0] == "1" && saveCautionSongs) {
+                                    fileWriter.write("${convertResult[i]!![7]}\n")
+                                    continue
+                                }
+                                if (convertResult[i]!![0] == "2" && saveManualSongs) {
+                                    fileWriter.write("${convertResult[i]!![7]}\n")
+                                    continue
+                                }
+                            }
                         }
                     }
+
+
 
                     fileWriter.close()
                     resultFileLocation.add(file.absolutePath)
