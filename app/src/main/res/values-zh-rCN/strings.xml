@@ -406,4 +406,5 @@
     <string name="input_win_path">请输入Win路径</string>
     <string name="cancel">取消</string>
     <string name="confirm">确定</string>
+    <string name="playlist_file_error">读取播放列表失败，请检查是否为正确的#歌单文件</string>
 </resources>
