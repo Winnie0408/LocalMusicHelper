@@ -67,6 +67,9 @@ import java.net.SocketTimeoutException
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.UUID
+import com.fleeksoft.ksoup.Ksoup
+import com.fleeksoft.ksoup.nodes.Document
+import com.fleeksoft.ksoup.select.Elements
 
 class ConvertPage(
     val context: Context,
@@ -136,6 +139,7 @@ class ConvertPage(
     var winPath = mutableStateOf("C:\\Users\\{YourUserName}\\Music") //用于Zune相关内容的Windows音乐目录路径
     var isAutoMatched = mutableIntStateOf(0) //用于分辨路径为用户选择/自动匹配
     var itemCount = mutableIntStateOf(0) //用于记录从歌单文件自动匹配到的歌曲数目
+    var isCorrectPlaylist = mutableStateOf(false)
 
     /**
      * 请求存储权限
@@ -341,7 +345,7 @@ class ConvertPage(
             Toast.makeText(context, R.string.failed_to_get_file_from_dir, Toast.LENGTH_SHORT).show()
             return
         }
-        isAutoMatched.value = 0
+        isAutoMatched.intValue = 0
         localMusicPath.value = chooseLocalMusicPath.value
     }
 
@@ -374,6 +378,7 @@ class ConvertPage(
             }
 
             2 -> {
+                isCorrectPlaylist.value = false
                 sourcePlaylistFilePath =
                     Tools().fromUriCopyFileToExternalFilesDir(context, uri, selectedFileName.value)
                 lifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
@@ -382,24 +387,32 @@ class ConvertPage(
                     when (selectedSourceLocalApp.intValue){
                         3 ->{
                             val sourceFile = File(sourcePlaylistFilePath)
-                            val zunePlaylist = sourceFile.readText()
-                                .replace("((\\r\\n)|\\r|\\n)".toRegex(), "")
+                            var zunePlaylist = sourceFile.readText()
+                            val doc:Document = Ksoup.parse(zunePlaylist)
+                            val elements = doc.select("smil seq media")
+                            isCorrectPlaylist.value = zunePlaylist.startsWith("""<?zpl version="2.0"?>""")
+                                    && sourcePlaylistFilePath.endsWith(""".zpl""")
+                            if (!isCorrectPlaylist.value){return@launch}
+                            zunePlaylist = zunePlaylist.replace("((\\r\\n)|\\r|\\n)".toRegex(), "")
                                 .replace("<.*?zpl.*?src=\"".toRegex(), "")
                             winPath.value = zunePlaylist.replace("Music.*?</smil>".toRegex(), "Music")
-                            isAutoMatched.value = 2
-                            itemCount.intValue = zunePlaylist.replace("\" albumTitle=.*?<media src=\"".toRegex(), "\n")
-                                .replace("\" albumTitle=.*?</smil>".toRegex(), "").split("\n").size
+                            isAutoMatched.intValue = 2
+                            itemCount.intValue = elements.size
+//                            itemCount.intValue = zunePlaylist.replace("\" albumTitle=.*?<media src=\"".toRegex(), "\n")
+//                                .replace("\" albumTitle=.*?</smil>".toRegex(), "").split("\n").size
                         }
                         else -> when (selectedTargetApp.intValue){
                             3 ->{
                                 val sourceFile = File(sourcePlaylistFilePath)
                                 val readPlayList = sourceFile.readLines()
-                                isAutoMatched.value = 1
+                                isAutoMatched.intValue = 1
                                 localMusicPath.value =readPlayList[0].replace("Music.+".toRegex(), "Music")
                                 itemCount.intValue = readPlayList.size
+                                isCorrectPlaylist.value = true
                             }
                             else ->{
                                 itemCount.intValue = File(sourcePlaylistFilePath).readLines().size
+                                isCorrectPlaylist.value = true
                             }
                         }
                     }
@@ -549,7 +562,7 @@ class ConvertPage(
     }
 
     fun clearCache(){
-        isAutoMatched.value = 0
+        isAutoMatched.intValue = 0
         itemCount.intValue = 0
         sourcePlaylistFileName.value = ""
         resultFilePath = ""

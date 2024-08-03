@@ -414,4 +414,5 @@
     <string name="input_win_path">Please enter the Win path</string>
     <string name="cancel">cancel</string>
     <string name="confirm">confirm</string>
+    <string name="playlist_file_error">Failed to read the playlist, please check if it is the correct # playlist file</string>
 </resources>

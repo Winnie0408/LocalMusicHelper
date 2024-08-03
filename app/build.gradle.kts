@@ -131,6 +131,9 @@ dependencies {
     //Jsoup-可注释
 //    implementation("org.jsoup:jsoup:1.17.2")
 
+    //Ksoup-不可注释，可用于跨平台
+    implementation("com.fleeksoft.ksoup:ksoup:0.1.2")
+
     //HtmlUnit-可注释
 //    implementation("org.htmlunit:htmlunit3-android:3.7.0")
 
