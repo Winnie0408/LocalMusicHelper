@@ -132,11 +132,10 @@ class ConvertPage(
     val selectedTargetApp = mutableIntStateOf(0)
     val spotifyUserId = mutableStateOf("")
     private var csvFilePath = ""
-    var localMusicPath = ""
-    var winPath = mutableStateOf("")
-    var winPathInput = mutableStateOf("C:\\Users\\{YourUserName}\\Music")
-    var isAutoMatched = mutableStateOf(false)
-    var itemCount = mutableIntStateOf(0)
+    var localMusicPath = mutableStateOf("")
+    var winPath = mutableStateOf("") //用于Zune相关内容的Windows音乐目录路径
+    var isAutoMatched = mutableIntStateOf(0) //用于分辨路径为用户选择/自动匹配
+    var itemCount = mutableIntStateOf(0) //用于记录从歌单文件自动匹配到的歌曲数目
 
     /**
      * 请求存储权限
@@ -342,8 +341,8 @@ class ConvertPage(
             Toast.makeText(context, R.string.failed_to_get_file_from_dir, Toast.LENGTH_SHORT).show()
             return
         }
-        isAutoMatched.value = false
-        localMusicPath = chooseLocalMusicPath.value
+        isAutoMatched.value = 0
+        localMusicPath.value = chooseLocalMusicPath.value
     }
 
     fun handleUri(uri: Uri?, code: Int) {
@@ -386,7 +385,8 @@ class ConvertPage(
                             val zunePlaylist = sourceFile.readText()
                                 .replace("((\\r\\n)|\\r|\\n)".toRegex(), "")
                                 .replace("<.*?zpl.*?src=\"".toRegex(), "")
-                            winPathInput.value = zunePlaylist.replace("Music.*?</smil>".toRegex(), "Music")
+                            winPath.value = zunePlaylist.replace("Music.*?</smil>".toRegex(), "Music")
+                            isAutoMatched.value = 2
                             itemCount.intValue = zunePlaylist.replace("\" albumTitle=.*?<media src=\"".toRegex(), "\n")
                                 .replace("\" albumTitle=.*?</smil>".toRegex(), "").split("\n").size
                         }
@@ -394,8 +394,8 @@ class ConvertPage(
                             3 ->{
                                 val sourceFile = File(sourcePlaylistFilePath)
                                 val readPlayList = sourceFile.readLines()
-                                isAutoMatched.value = true
-                                localMusicPath =readPlayList[0].replace("Music.+".toRegex(), "Music")
+                                isAutoMatched.value = 1
+                                localMusicPath.value =readPlayList[0].replace("Music.+".toRegex(), "Music")
                                 itemCount.intValue = readPlayList.size
                             }
                             else ->{
@@ -549,7 +549,7 @@ class ConvertPage(
     }
 
     fun clearCache(){
-        isAutoMatched.value = false
+        isAutoMatched.value = 0
         itemCount.intValue = 0
         sourcePlaylistFileName.value = ""
         resultFilePath = ""
@@ -605,7 +605,7 @@ class ConvertPage(
         inputFile.forEach {
             try {
                 fileData = fileData + """      <media src="""" +
-                        it.replace(localMusicPath, winPath.value).replace("/", "\\") +
+                        it.replace(localMusicPath.value, winPath.value).replace("/", "\\") +
                         """" albumTitle="""" + getSongTag(it)["album"] +
                         """" albumArtist="""" + getSongTag(it)["albumArtist"] +
                         """" trackTitle="""" + getSongTag(it)["song"] +
@@ -678,7 +678,7 @@ class ConvertPage(
                 continue
             if (convertResult[i]!![0] == "0" && saveSuccessSongs) {
                 fileData = fileData + """      <media src="""" +
-                convertResult[i]!![7].replace(localMusicPath, winPath.value).replace("/", "\\") +
+                convertResult[i]!![7].replace(localMusicPath.value, winPath.value).replace("/", "\\") +
                     """" albumTitle="""" + convertResult[i]!![5] +
                     """" albumArtist="""" + convertResult[i]!![8] +
                     """" trackTitle="""" + convertResult[i]!![1] +
@@ -688,28 +688,21 @@ class ConvertPage(
             }
             if (convertResult[i]!![0] == "1" && saveCautionSongs) {
                 fileData = fileData + """      <media src="""" +
-                        convertResult[i]!![7].replace(localMusicPath, winPath.value).replace("/", "\\") +
+                        convertResult[i]!![7].replace(localMusicPath.value, winPath.value).replace("/", "\\") +
                         """" albumTitle="""" + convertResult[i]!![5] +
                         """" albumArtist="""" + convertResult[i]!![8] +
                         """" trackTitle="""" + convertResult[i]!![1] +
                         """" trackArtist="""" + convertResult[i]!![3] +
                         """" duration="""" + "114514" + """" />""" + "\r\n"
-//                fileData = fileData + """      <media src="""" +
-//                        convertResult[i]!![7].replace(localMusicPath, winPath.value).replace("/", "\\") +
-//                        """" albumTitle="""" + """Unknown""" +
-//                        """" albumArtist="""" + """Unknown""" +
-//                        """" trackTitle="""" + """Unknown""" +
-//                        """" trackArtist="""" + """Unknown""" +
-//                        """" duration="""" + "114514" + """" />""" + "\r\n"
                 continue
             }
             if (convertResult[i]!![0] == "2" && saveManualSongs) {
                 fileData = fileData + """      <media src="""" +
-                        convertResult[i]!![7].replace(localMusicPath, winPath.value).replace("/", "\\") +
-                        """" albumTitle="""" + """Unknown""" +
-                        """" albumArtist="""" + """Unknown""" +
-                        """" trackTitle="""" + """Unknown""" +
-                        """" trackArtist="""" + """Unknown""" +
+                        convertResult[i]!![7].replace(localMusicPath.value, winPath.value).replace("/", "\\") +
+                        """" albumTitle="""" + convertResult[i]!![5] +
+                        """" albumArtist="""" + convertResult[i]!![8] +
+                        """" trackTitle="""" + convertResult[i]!![1] +
+                        """" trackArtist="""" + convertResult[i]!![3] +
                         """" duration="""" + "114514" + """" />""" + "\r\n"
                 continue
             }
@@ -3021,7 +3014,6 @@ class ConvertPage(
             var songName: String
             var songArtist: String
             var songAlbum: String
-            var albumArtist: String
             var num = 0
 
             val db = SQLiteDatabase.openOrCreateDatabase(File(databaseFilePath.value), null)
@@ -3969,7 +3961,7 @@ class ConvertPage(
                     .replace("\" albumTitle=.*?<media src=\"".toRegex(), "\n")
                     .replace("\" albumTitle=.*?</smil>".toRegex(), "")
 
-                zunePlaylist = zunePlaylist.replace(winPath.value, localMusicPath)
+                zunePlaylist = zunePlaylist.replace(winPath.value, localMusicPath.value)
                     .replace("\\", "/")
                 }
                 catch (_: Exception){

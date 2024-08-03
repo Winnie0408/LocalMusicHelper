@@ -2360,9 +2360,9 @@ fun ConvertPageUi(
                                                     inputWinPath = false
                                                 },
                                                 title = stringResource(R.string.input_win_path),
-                                                text = convertPage.winPathInput.value,
+                                                text = convertPage.winPath.value,
                                                 onChange = {
-                                                    convertPage.winPathInput.value = it
+                                                    convertPage.winPath.value = it
                                                 }
                                             )
                                         }
@@ -2373,33 +2373,35 @@ fun ConvertPageUi(
                                             text = stringResource(R.string.input_win_path)
                                         )
                                         AnimatedVisibility(
-                                                visible = convertPage.winPathInput.value != "" &&
-                                                        convertPage.winPathInput.value != "C:\\Users\\{YourUserName}\\Music"
+                                                visible = convertPage.winPath.value != "" &&
+                                                        convertPage.winPath.value != "C:\\Users\\{YourUserName}\\Music"
                                                 )
                                         {
                                             ItemValue(
-                                                text = stringResource(R.string.you_have_selected),
-                                                rightSub = convertPage.winPathInput.value,
+                                                text = stringResource(when (convertPage.isAutoMatched.intValue) {
+                                                    2 -> R.string.auto_matched
+                                                    else -> R.string.you_have_selected
+                                                }),
+                                                rightSub = convertPage.winPath.value,
                                                 rightSubWeight = 2f
                                             )
                                         }
-//                                        ItemTitle(text = stringResource(R.string.local_path))
                                         Item(
                                             onClick = { convertPage.selectLocalDir() },
                                             text = stringResource(R.string.select_local_dir_path)
                                         )
                                         AnimatedVisibility(
-                                            visible = convertPage.localMusicPath != ""
+                                            visible = convertPage.localMusicPath.value != ""
                                         )
                                         {
                                             ItemValue(
                                                 text = stringResource(
-                                                    when (convertPage.isAutoMatched.value) {
-                                                        true -> R.string.auto_matched
-                                                        false -> R.string.you_have_selected
+                                                    when (convertPage.isAutoMatched.intValue) {
+                                                        1 -> R.string.auto_matched
+                                                        else -> R.string.you_have_selected
                                                     }
                                                 ),
-                                                rightSub = convertPage.localMusicPath,
+                                                rightSub = convertPage.localMusicPath.value,
                                                 rightSubWeight = 2f
                                             )
                                         }
@@ -2533,7 +2535,7 @@ fun ConvertPageUi(
                                     TextButton(
                                         onClick = {
                                             convertPage.winPath.value =
-                                                convertPage.winPathInput.value
+                                                convertPage.winPath.value
                                             if (convertPage.convertMode.intValue == 1) {
                                                 selectedMultiSourceApp = -1
                                                 convertPage.requestPermission()
@@ -2567,7 +2569,7 @@ fun ConvertPageUi(
                                                         Toast.LENGTH_SHORT
                                                     ).show()
 //                                                    showDialogProgressBar.value = true
-                                                } else if (convertPage.selectedSourceLocalApp.intValue == 3 && convertPage.localMusicPath.isBlank()) {
+                                                } else if (convertPage.selectedSourceLocalApp.intValue == 3 && convertPage.localMusicPath.value.isBlank()) {
                                                     Toast.makeText(
                                                         context,
                                                         context.getString(R.string.empty_local_dir_path),
@@ -2577,7 +2579,7 @@ fun ConvertPageUi(
                                                     coroutine.launch(Dispatchers.IO) {
                                                         showDialogProgressBar.value = true
                                                         convertPage.winPath.value =
-                                                            convertPage.winPathInput.value
+                                                            convertPage.winPath.value
                                                         val convertSuccess =
                                                             convertPage.convertLocalPlaylist()
                                                         if (convertSuccess.isBlank()) {
@@ -2596,7 +2598,6 @@ fun ConvertPageUi(
                                                                     Toast.LENGTH_LONG
                                                                 ).show()
                                                             }
-//                                                            convertPage.sourcePlaylistFileName.value = ""
                                                         }
                                                         MyVibrationEffect(
                                                             context,

@@ -204,15 +204,15 @@ class MainActivity : ComponentActivity() {
             registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
                 convertPage.handleUri(uri, 1)
             }
-        openPlaylistFileLauncher =
+        openPlaylistFileLauncher = //用于支持本地播放列表文件选择
             registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
                 convertPage.handleUri(uri, 2)
             }
-        openCsvFileLauncher =
+        openCsvFileLauncher = //用于支持csv文件选择
             registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
                 convertPage.handleUri(uri, 3)
             }
-        openLocalFileLauncher =
+        openLocalFileLauncher = //用于支持本地目录选择
             registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
                 convertPage.handleLocalFileDirUri(uri)
             }
