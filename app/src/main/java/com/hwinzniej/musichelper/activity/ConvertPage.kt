@@ -133,7 +133,7 @@ class ConvertPage(
     val spotifyUserId = mutableStateOf("")
     private var csvFilePath = ""
     var localMusicPath = mutableStateOf("")
-    var winPath = mutableStateOf("") //用于Zune相关内容的Windows音乐目录路径
+    var winPath = mutableStateOf("C:\\Users\\{YourUserName}\\Music") //用于Zune相关内容的Windows音乐目录路径
     var isAutoMatched = mutableIntStateOf(0) //用于分辨路径为用户选择/自动匹配
     var itemCount = mutableIntStateOf(0) //用于记录从歌单文件自动匹配到的歌曲数目
 

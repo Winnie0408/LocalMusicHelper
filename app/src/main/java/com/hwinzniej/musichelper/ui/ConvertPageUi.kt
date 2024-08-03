@@ -2138,17 +2138,14 @@ fun ConvertPageUi(
                                                                     else -> ""
                                                                 }
                                                             )
-                                                        }
+                                                        },
+                                                        sub = when((databaseFileName.value != "") && (!useRootAccess.value || selectedSourceApp.intValue == 7)){
+                                                            true -> stringResource(R.string.you_have_selected)
+                                                            false -> null},
+                                                        rightSub = when((databaseFileName.value != "") && (!useRootAccess.value || selectedSourceApp.intValue == 7)){
+                                                            true -> convertPage.databaseFileName.value
+                                                            false -> null},
                                                     )
-                                                    AnimatedVisibility(
-                                                        visible = (databaseFileName.value != "") && (!useRootAccess.value || selectedSourceApp.intValue == 7)
-                                                    ) {
-                                                        ItemValue(
-                                                            text = stringResource(R.string.you_have_selected),
-                                                            rightSub = databaseFileName.value,
-                                                            rightSubWeight = 2f
-                                                        )
-                                                    }
                                                 }
                                             }
                                         }
@@ -2178,16 +2175,13 @@ fun ConvertPageUi(
                                                             "#",
                                                             stringResource(id = R.string.app_name)
                                                         ),
+                                                        sub = when(customResultFileName.value != ""){
+                                                            true -> stringResource(R.string.you_have_selected)
+                                                            false -> null},
+                                                        rightSub = when(customResultFileName.value != ""){
+                                                            true -> customResultFileName.value
+                                                            false -> null},
                                                     )
-                                                    AnimatedVisibility(
-                                                        visible = customResultFileName.value != ""
-                                                    ) {
-                                                        ItemValue(
-                                                            text = stringResource(R.string.you_have_selected),
-                                                            rightSub = customResultFileName.value,
-                                                            rightSubWeight = 2f
-                                                        )
-                                                    }
                                                 }
                                             }
                                         }
@@ -2314,17 +2308,14 @@ fun ConvertPageUi(
                                                     3 -> "Microsoft Zune"
                                                     else -> ""
                                                 }
-                                            )
+                                            ),
+                                            sub = when(convertPage.sourcePlaylistFileName.value.isNotBlank()){
+                                                true -> stringResource(R.string.you_have_selected)
+                                                false -> null},
+                                            rightSub = when(convertPage.sourcePlaylistFileName.value.isNotBlank()){
+                                                true -> convertPage.sourcePlaylistFileName.value
+                                                false -> null},
                                         )
-                                        AnimatedVisibility(
-                                            visible = convertPage.sourcePlaylistFileName.value.isNotBlank()
-                                        ) {
-                                            ItemValue(
-                                                text = stringResource(R.string.you_have_selected),
-                                                rightSub = convertPage.sourcePlaylistFileName.value,
-                                                rightSubWeight = 2f
-                                            )
-                                        }
                                     }
                                 }
                             }
@@ -2370,41 +2361,30 @@ fun ConvertPageUi(
                                             onClick = {
                                                 inputWinPath = true
                                             },
-                                            text = stringResource(R.string.input_win_path)
+                                            text = stringResource(R.string.win_path),
+                                            sub = when(convertPage.winPath.value != "" &&
+                                                convertPage.winPath.value != "C:\\Users\\{YourUserName}\\Music"){
+                                                true -> when (convertPage.isAutoMatched.intValue) {
+                                                        2 -> stringResource(R.string.auto_matched)
+                                                        else -> stringResource(R.string.you_have_selected) }
+                                                false -> null},
+                                            rightSub = when(convertPage.winPath.value != "" &&
+                                                    convertPage.winPath.value != "C:\\Users\\{YourUserName}\\Music"){
+                                                true -> convertPage.winPath.value
+                                                false -> null},
                                         )
-                                        AnimatedVisibility(
-                                                visible = convertPage.winPath.value != "" &&
-                                                        convertPage.winPath.value != "C:\\Users\\{YourUserName}\\Music"
-                                                )
-                                        {
-                                            ItemValue(
-                                                text = stringResource(when (convertPage.isAutoMatched.intValue) {
-                                                    2 -> R.string.auto_matched
-                                                    else -> R.string.you_have_selected
-                                                }),
-                                                rightSub = convertPage.winPath.value,
-                                                rightSubWeight = 2f
-                                            )
-                                        }
                                         Item(
                                             onClick = { convertPage.selectLocalDir() },
-                                            text = stringResource(R.string.select_local_dir_path)
+                                            text = stringResource(R.string.select_local_dir_path),
+                                            sub = when(convertPage.localMusicPath.value != ""){
+                                                true -> when (convertPage.isAutoMatched.intValue) {
+                                                    1 -> stringResource(R.string.auto_matched)
+                                                    else -> stringResource(R.string.you_have_selected) }
+                                                false -> null},
+                                            rightSub = when(convertPage.localMusicPath.value != ""){
+                                                true -> convertPage.localMusicPath.value
+                                                false -> null},
                                         )
-                                        AnimatedVisibility(
-                                            visible = convertPage.localMusicPath.value != ""
-                                        )
-                                        {
-                                            ItemValue(
-                                                text = stringResource(
-                                                    when (convertPage.isAutoMatched.intValue) {
-                                                        1 -> R.string.auto_matched
-                                                        else -> R.string.you_have_selected
-                                                    }
-                                                ),
-                                                rightSub = convertPage.localMusicPath.value,
-                                                rightSubWeight = 2f
-                                            )
-                                        }
                                     }
                                 }
                                 AnimatedVisibility(
