@@ -2329,7 +2329,7 @@ fun ConvertPageUi(
                                 }
                             }
                             AnimatedVisibility(
-                                visible = convertPage.convertMode.intValue == 2
+                                visible = convertPage.convertMode.intValue == 2 || convertPage.selectedTargetApp.intValue == 3
                             ){
                             RoundedColumn {
                                 ItemTitle(
@@ -2426,7 +2426,7 @@ fun ConvertPageUi(
                                         0 -> "Salt Player"
                                         1 -> "APlayer"
                                         2 -> "Poweramp"
-                                        3 -> "Microsoft Zune(Planned)"
+                                        3 -> "Microsoft Zune"
                                         else -> ""
                                     },
                                     popupWidth = 160
@@ -2515,7 +2515,7 @@ fun ConvertPageUi(
                                             targetAppPopupMenuState.dismiss()
                                         },
                                         selected = convertPage.selectedTargetApp.intValue == 3,
-                                        text = "Microsoft Zune(Planned)",
+                                        text = "Microsoft Zune",
                                         iconPainter = painterResource(id = R.drawable.microsoft_zune),
                                         iconColor = SaltTheme.colors.text,
                                         iconPaddingValues = PaddingValues(all = 1.dp)
@@ -2532,6 +2532,8 @@ fun ConvertPageUi(
                                 ItemContainer {
                                     TextButton(
                                         onClick = {
+                                            convertPage.winPath.value =
+                                                convertPage.winPathInput.value
                                             if (convertPage.convertMode.intValue == 1) {
                                                 selectedMultiSourceApp = -1
                                                 convertPage.requestPermission()

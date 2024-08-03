@@ -26,7 +26,7 @@ interface MusicDao {
 //    @Query("SELECT song, artist, album, releaseYear, trackNumber, albumArtist, genre FROM music")
 //    fun getMusicInfo(): List<MusicInfo>
 
-    @Query("SELECT song, artist, album, absolutePath, id, modifyTime FROM music")
+    @Query("SELECT song, artist, album, absolutePath, id, modifyTime, albumArtist FROM music")
     fun getMusic3Info(): List<MusicInfo>
 
     @Query("SELECT COUNT(*) FROM music")
