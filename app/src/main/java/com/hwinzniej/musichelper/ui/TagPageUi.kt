@@ -51,6 +51,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
@@ -86,7 +87,10 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-@OptIn(UnstableSaltApi::class, ExperimentalFoundationApi::class, ExperimentalMaterialApi::class)
+@OptIn(
+    UnstableSaltApi::class, ExperimentalFoundationApi::class, ExperimentalMaterialApi::class,
+    ExperimentalComposeUiApi::class
+)
 @Composable
 fun TagPageUi(
     tagPage: TagPage,
@@ -1107,122 +1111,128 @@ fun TagPageUi(
                     }
 
                     "songList" -> {
-                        Box(
-                            modifier = Modifier.pullRefresh(pullRefreshState)
-                        ) {
-                            Column(
-                                modifier = Modifier
-                                    .padding(
-                                        start = 16.dp,
-                                        end = 16.dp,
-                                        bottom = 16.dp,
-                                        top = 12.dp
-                                    )
-                                    .clip(RoundedCornerShape(12.dp))
-                                    .background(color = SaltTheme.colors.background)
+
+                        SideBar(
+                            onSelect = {}) {
+                            Box(
+                                modifier = Modifier.pullRefresh(pullRefreshState)
                             ) {
-                                LazyColumn(
-                                    state = lazyColumnState,
+                                Column(
                                     modifier = Modifier
-                                        .background(color = SaltTheme.colors.subBackground)
+                                        .padding(
+                                            start = 16.dp,
+                                            end = 16.dp,
+                                            bottom = 16.dp,
+                                            top = 12.dp
+                                        )
+                                        .clip(RoundedCornerShape(12.dp))
+                                        .background(color = SaltTheme.colors.background)
                                 ) {
-                                    items(songList.size) {
-                                        AnimatedContent(
-                                            targetState = multiSelect,
-                                            label = "",
-                                            transitionSpec = {
-                                                fadeIn() togetherWith fadeOut()
-                                            }) { animate ->
-                                            if (songList[it] != null && !animate)
-                                                Item(
-                                                    onClick = {
-                                                        if (showFab.value)
-                                                            showFab.value = false
-                                                        else
-                                                            coroutineScope.launch(Dispatchers.IO) {
-                                                                musicInfo.value =
-                                                                    tagPage.getSongInfo(
-                                                                        songList[it]!![3].toInt(),
-                                                                        coverImage
-                                                                    )
-                                                                musicInfoOriginal.value =
-                                                                    musicInfo.value
+                                    LazyColumn(
+                                        state = lazyColumnState,
+                                        modifier = Modifier
+                                            .background(color = SaltTheme.colors.subBackground)
+                                    ) {
+
+                                        items(songList.size) {
+                                            AnimatedContent(
+                                                targetState = multiSelect,
+                                                label = "",
+                                                transitionSpec = {
+                                                    fadeIn() togetherWith fadeOut()
+                                                }) { animate ->
+                                                if (songList[it] != null && !animate)
+                                                    Item(
+                                                        onClick = {
+                                                            if (showFab.value)
+                                                                showFab.value = false
+                                                            else
+                                                                coroutineScope.launch(Dispatchers.IO) {
+                                                                    musicInfo.value =
+                                                                        tagPage.getSongInfo(
+                                                                            songList[it]!![3].toInt(),
+                                                                            coverImage
+                                                                        )
+                                                                    musicInfoOriginal.value =
+                                                                        musicInfo.value
+                                                                }
+                                                        },
+                                                        onLongClick = {
+                                                            coroutineScope.launch(Dispatchers.Default) {
+                                                                delay(248L)
+                                                                if (showFab.value)
+                                                                    showFab.value = false
+                                                                else {
+                                                                    multiSelect = true
+                                                                    MyVibrationEffect(
+                                                                        context,
+                                                                        enableHaptic.value,
+                                                                        hapticStrength.intValue
+                                                                    ).click()
+                                                                    selectedSongList[songList[it]!![3].toInt()] =
+                                                                        1
+                                                                }
                                                             }
-                                                    },
-                                                    onLongClick = {
-                                                        coroutineScope.launch(Dispatchers.Default) {
-                                                            delay(248L)
+                                                        },
+                                                        text = songList[it]!![0],
+                                                        sub = "${songList[it]!![1].ifBlank { "?" }} - ${songList[it]!![2].ifBlank { "?" }}",
+                                                        indication = if (showFab.value) null else ripple()
+                                                    )
+                                                else if (songList[it] != null && animate)
+                                                    ItemCheck(
+                                                        state = selectedSongList[songList[it]!![3].toInt()] == 1,
+                                                        onChange = { it1 ->
                                                             if (showFab.value)
                                                                 showFab.value = false
                                                             else {
-                                                                multiSelect = true
+                                                                selectedSongList[songList[it]!![3].toInt()] =
+                                                                    if (it1) 1 else 0
                                                                 MyVibrationEffect(
                                                                     context,
                                                                     enableHaptic.value,
                                                                     hapticStrength.intValue
                                                                 ).click()
-                                                                selectedSongList[songList[it]!![3].toInt()] =
-                                                                    1
                                                             }
-                                                        }
-                                                    },
-                                                    text = songList[it]!![0],
-                                                    sub = "${songList[it]!![1].ifBlank { "?" }} - ${songList[it]!![2].ifBlank { "?" }}",
-                                                    indication = if (showFab.value) null else ripple()
-                                                )
-                                            else if (songList[it] != null && animate)
-                                                ItemCheck(
-                                                    state = selectedSongList[songList[it]!![3].toInt()] == 1,
-                                                    onChange = { it1 ->
-                                                        if (showFab.value)
-                                                            showFab.value = false
-                                                        else {
-                                                            selectedSongList[songList[it]!![3].toInt()] =
-                                                                if (it1) 1 else 0
-                                                            MyVibrationEffect(
-                                                                context,
-                                                                enableHaptic.value,
-                                                                hapticStrength.intValue
-                                                            ).click()
-                                                        }
-                                                    },
-                                                    onLongChange = { it1 ->
-                                                        if (showFab.value)
-                                                            showFab.value = false
-                                                        else {
-                                                            MyVibrationEffect(
-                                                                context,
-                                                                enableHaptic.value,
-                                                                hapticStrength.intValue
-                                                            ).click()
-                                                            if (intervalSelectionStart == -1) {
-                                                                intervalSelectionStart = it
-                                                            } else {
-                                                                val start = intervalSelectionStart
-                                                                val end = it
-                                                                if (start < end) {
-                                                                    for (i in start..end) {
-                                                                        selectedSongList[songList[i]!![3].toInt()] =
-                                                                            if (it1) 1 else 0
-                                                                    }
+                                                        },
+                                                        onLongChange = { it1 ->
+                                                            if (showFab.value)
+                                                                showFab.value = false
+                                                            else {
+                                                                MyVibrationEffect(
+                                                                    context,
+                                                                    enableHaptic.value,
+                                                                    hapticStrength.intValue
+                                                                ).click()
+                                                                if (intervalSelectionStart == -1) {
+                                                                    intervalSelectionStart = it
                                                                 } else {
-                                                                    for (i in end..start) {
-                                                                        selectedSongList[songList[i]!![3].toInt()] =
-                                                                            if (it1) 1 else 0
+                                                                    val start =
+                                                                        intervalSelectionStart
+                                                                    val end = it
+                                                                    if (start < end) {
+                                                                        for (i in start..end) {
+                                                                            selectedSongList[songList[i]!![3].toInt()] =
+                                                                                if (it1) 1 else 0
+                                                                        }
+                                                                    } else {
+                                                                        for (i in end..start) {
+                                                                            selectedSongList[songList[i]!![3].toInt()] =
+                                                                                if (it1) 1 else 0
+                                                                        }
                                                                     }
+                                                                    intervalSelectionStart = -1
                                                                 }
-                                                                intervalSelectionStart = -1
                                                             }
-                                                        }
-                                                    },
-                                                    highlight = intervalSelectionStart == it,
-                                                    indication = if (showFab.value) null else ripple(),
-                                                    iconAtLeft = false,
-                                                    text = songList[it]!![0],
-                                                    sub = "${songList[it]!![1].ifBlank { "?" }} - ${songList[it]!![2].ifBlank { "?" }}",
-                                                    enableHaptic = false,
-                                                    hapticStrength = hapticStrength.intValue
-                                                )
+                                                        },
+                                                        highlight = intervalSelectionStart == it,
+                                                        indication = if (showFab.value) null else ripple(),
+                                                        iconAtLeft = false,
+                                                        text = songList[it]!![0],
+                                                        sub = "${songList[it]!![1].ifBlank { "?" }} - ${songList[it]!![2].ifBlank { "?" }}",
+                                                        enableHaptic = false,
+                                                        hapticStrength = hapticStrength.intValue
+                                                    )
+                                            }
                                         }
                                     }
                                 }

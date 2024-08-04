@@ -415,4 +415,6 @@
     <string name="cancel">cancel</string>
     <string name="confirm">confirm</string>
     <string name="playlist_file_error">Failed to read the playlist, please check if it is the correct # playlist file</string>
+    <string name="show_advanced_options">Show Advanced Options</string>
+    <string name="advance_dir_name">Customize the file name of the music directory for automatic identification</string>
 </resources>
