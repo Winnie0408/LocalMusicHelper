@@ -387,19 +387,20 @@ class ConvertPage(
                     when (selectedSourceLocalApp.intValue){
                         3 ->{
                             val sourceFile = File(sourcePlaylistFilePath)
-                            var zunePlaylist = sourceFile.readText()
-                            val doc:Document = Ksoup.parse(zunePlaylist)
-                            val elements = doc.select("smil seq media")
+                            val zunePlaylist = sourceFile.readText()
                             isCorrectPlaylist.value = zunePlaylist.startsWith("""<?zpl version="2.0"?>""")
                                     && sourcePlaylistFilePath.endsWith(""".zpl""")
                             if (!isCorrectPlaylist.value){return@launch}
-                            zunePlaylist = zunePlaylist.replace("((\\r\\n)|\\r|\\n)".toRegex(), "")
-                                .replace("<.*?zpl.*?src=\"".toRegex(), "")
-                            winPath.value = zunePlaylist.replace("Music.*?</smil>".toRegex(), "Music")
+                            val doc:Document = Ksoup.parse(zunePlaylist)
+                            val playlistItems = doc.select("smil seq media")
+                            playlistItems.forEach { it ->
+                                winPath.value = it.select("media").attr("src").replace("Music.*".toRegex(), "Music")
+                            }
+//                            zunePlaylist = zunePlaylist.replace("((\\r\\n)|\\r|\\n)".toRegex(), "")
+//                                .replace("<.*?zpl.*?src=\"".toRegex(), "")
+//                            winPath.value = zunePlaylist.replace("Music.*?</smil>".toRegex(), "Music")
                             isAutoMatched.intValue = 2
-                            itemCount.intValue = elements.size
-//                            itemCount.intValue = zunePlaylist.replace("\" albumTitle=.*?<media src=\"".toRegex(), "\n")
-//                                .replace("\" albumTitle=.*?</smil>".toRegex(), "").split("\n").size
+                            itemCount.intValue = playlistItems.size
                         }
                         else -> when (selectedTargetApp.intValue){
                             3 ->{
@@ -3969,19 +3970,18 @@ class ConvertPage(
                 var zunePlaylist = sourceFile.readText()
                 val fileWriter = FileWriter(targetFile, true)
                 try {
-                zunePlaylist = zunePlaylist.replace("((\\r\\n)|\\r|\\n)".toRegex(), "")
-                    .replace("<.*?zpl.*?src=\"".toRegex(), "")
-                    .replace("\" albumTitle=.*?<media src=\"".toRegex(), "\n")
-                    .replace("\" albumTitle=.*?</smil>".toRegex(), "")
-
-                zunePlaylist = zunePlaylist.replace(winPath.value, localMusicPath.value)
-                    .replace("\\", "/")
+                    val doc:Document = Ksoup.parse(zunePlaylist)
+                    val playlistItems = doc.select("smil seq media")
+                    playlistItems.forEach { it ->
+                        fileWriter.write(it.select("media").attr("src")
+                            .replace(winPath.value, localMusicPath.value)
+                            .replace("\\", "/") + "\n")
+                    }
+                    fileWriter.close()
                 }
                 catch (_: Exception){
                     return ""
                 }
-                fileWriter.write(zunePlaylist)
-                fileWriter.close()
                 return targetFile.absolutePath.replace("/storage/emulated/0/", "")
             }
         }
