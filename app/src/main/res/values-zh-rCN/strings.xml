@@ -407,4 +407,6 @@
     <string name="cancel">取消</string>
     <string name="confirm">确定</string>
     <string name="playlist_file_error">读取播放列表失败，请检查是否为正确的#歌单文件</string>
+    <string name="show_advanced_options">显示高级选项</string>
+    <string name="advance_dir_name">自定义用于自动识别的音乐目录文件名</string>
 </resources>

@@ -145,6 +145,7 @@ fun ConvertPageUi(
     showLoginDialog: MutableState<Boolean>,
     dataStore: DataStore<Preferences>,
     showSongNumMismatchDialog: MutableState<Boolean>,
+    showAdvancedOptions: MutableState<Boolean>,
     hapticStrength: MutableIntState
 ) {
     val sourceAppPopupMenuState = rememberPopupState()
@@ -2139,12 +2140,14 @@ fun ConvertPageUi(
                                                                 }
                                                             )
                                                         },
-                                                        sub = when((databaseFileName.value != "") && (!useRootAccess.value || selectedSourceApp.intValue == 7)){
+                                                        sub = when ((databaseFileName.value != "") && (!useRootAccess.value || selectedSourceApp.intValue == 7)) {
                                                             true -> stringResource(R.string.you_have_selected)
-                                                            false -> null},
-                                                        rightSub = when((databaseFileName.value != "") && (!useRootAccess.value || selectedSourceApp.intValue == 7)){
+                                                            false -> null
+                                                        },
+                                                        rightSub = when ((databaseFileName.value != "") && (!useRootAccess.value || selectedSourceApp.intValue == 7)) {
                                                             true -> convertPage.databaseFileName.value
-                                                            false -> null},
+                                                            false -> null
+                                                        },
                                                     )
                                                 }
                                             }
@@ -2175,12 +2178,14 @@ fun ConvertPageUi(
                                                             "#",
                                                             stringResource(id = R.string.app_name)
                                                         ),
-                                                        sub = when(customResultFileName.value != ""){
+                                                        sub = when (customResultFileName.value != "") {
                                                             true -> stringResource(R.string.you_have_selected)
-                                                            false -> null},
-                                                        rightSub = when(customResultFileName.value != ""){
+                                                            false -> null
+                                                        },
+                                                        rightSub = when (customResultFileName.value != "") {
                                                             true -> customResultFileName.value
-                                                            false -> null},
+                                                            false -> null
+                                                        },
                                                     )
                                                 }
                                             }
@@ -2309,27 +2314,36 @@ fun ConvertPageUi(
                                                     else -> ""
                                                 }
                                             ),
-                                            sub = when(convertPage.sourcePlaylistFileName.value.isNotBlank()){
+                                            sub = when (convertPage.sourcePlaylistFileName.value.isNotBlank()) {
                                                 true -> stringResource(R.string.you_have_selected)
-                                                false -> null},
-                                            rightSub = when(convertPage.sourcePlaylistFileName.value.isNotBlank()){
+                                                false -> null
+                                            },
+                                            rightSub = when (convertPage.sourcePlaylistFileName.value.isNotBlank()) {
                                                 true -> convertPage.sourcePlaylistFileName.value
-                                                false -> null},
+                                                false -> null
+                                            },
                                         )
                                         AnimatedVisibility(
                                             visible = convertPage.sourcePlaylistFileName.value.isNotBlank()
                                         ) {
                                             ItemValue(
-                                                text = when(convertPage.isCorrectPlaylist.value){
-                                                    true -> stringResource(R.string.matched_songs).replace("#", convertPage.itemCount.intValue.toString())
-                                                    false -> stringResource(R.string.playlist_file_error).replace("#",
+                                                text = when (convertPage.isCorrectPlaylist.value) {
+                                                    true -> stringResource(R.string.matched_songs).replace(
+                                                        "#",
+                                                        convertPage.itemCount.intValue.toString()
+                                                    )
+
+                                                    false -> stringResource(R.string.playlist_file_error).replace(
+                                                        "#",
                                                         when (convertPage.selectedSourceLocalApp.intValue) {
                                                             0 -> "Salt Player"
                                                             1 -> "APlayer"
                                                             2 -> "Poweramp"
                                                             3 -> "Microsoft Zune"
                                                             else -> ""
-                                                        })}
+                                                        }
+                                                    )
+                                                }
                                             )
                                         }
                                     }
@@ -2337,78 +2351,113 @@ fun ConvertPageUi(
                             }
                             AnimatedVisibility(
                                 visible = convertPage.convertMode.intValue == 2 || convertPage.selectedTargetApp.intValue == 3
-                            ){
-                            RoundedColumn {
-                                ItemTitle(
-                                    text = stringResource(R.string.conversion_configuration).replace(
-                                        "#",
-                                        when (convertPage.selectedSourceLocalApp.intValue) {
-                                            0 -> "Salt Player"
-                                            1 -> "APlayer"
-                                            2 -> "Poweramp"
-                                            3 -> "Microsoft Zune"
-                                            else -> ""
-                                        }
+                            ) {
+                                RoundedColumn {
+                                    ItemTitle(
+                                        text = stringResource(R.string.conversion_configuration).replace(
+                                            "#",
+                                            when (convertPage.selectedSourceLocalApp.intValue) {
+                                                0 -> "Salt Player"
+                                                1 -> "APlayer"
+                                                2 -> "Poweramp"
+                                                3 -> "Microsoft Zune"
+                                                else -> ""
+                                            }
+                                        )
                                     )
-                                )
-                                AnimatedVisibility(
-                                    visible = convertPage.selectedSourceLocalApp.intValue == 3 || convertPage.selectedTargetApp.intValue == 3
-                                )
-                                {
-                                    Column {
+                                    AnimatedVisibility(
+                                        visible = convertPage.selectedSourceLocalApp.intValue == 3 || convertPage.selectedTargetApp.intValue == 3
+                                    )
+                                    {
+                                        Column {
 //                                        ItemTitle(text = stringResource(R.string.win_path))
-                                        var inputWinPath by remember { mutableStateOf(false) }
-                                        if (inputWinPath) {
-                                            InputDialog(
-                                                onDismissRequest = {
-                                                    inputWinPath = false
+                                            var inputWinPath by remember { mutableStateOf(false) }
+                                            if (inputWinPath) {
+                                                InputDialog(
+                                                    onDismissRequest = {
+                                                        inputWinPath = false
+                                                    },
+                                                    onConfirm = {
+                                                        inputWinPath = false
+                                                    },
+                                                    title = stringResource(R.string.input_win_path),
+                                                    text = convertPage.winPath.value,
+                                                    onChange = {
+                                                        convertPage.winPath.value = it
+                                                    }
+                                                )
+                                            }
+                                            Item(
+                                                onClick = {
+                                                    inputWinPath = true
                                                 },
-                                                onConfirm = {
-                                                    inputWinPath = false
-                                                },
-                                                title = stringResource(R.string.input_win_path),
-                                                text = convertPage.winPath.value,
-                                                onChange = {
-                                                    convertPage.winPath.value = it
-                                                }
-                                            )
-                                        }
-                                        Item(
-                                            onClick = {
-                                                inputWinPath = true
-                                            },
-                                            text = stringResource(R.string.win_path),
-                                            sub = when(convertPage.winPath.value != "" &&
-                                                    convertPage.winPath.value != "C:\\Users\\{YourUserName}\\Music" &&
-                                                    convertPage.isCorrectPlaylist.value){
-                                                true -> when (convertPage.isAutoMatched.intValue) {
+                                                text = stringResource(R.string.win_path),
+                                                sub = when (convertPage.winPath.value != "" &&
+                                                        convertPage.winPath.value != "C:\\Users\\{YourUserName}\\${convertPage.musicDirName.value}" &&
+                                                        convertPage.isCorrectPlaylist.value) {
+                                                    true -> when (convertPage.isAutoMatched.intValue) {
                                                         2 -> stringResource(R.string.auto_matched)
-                                                        else -> stringResource(R.string.you_have_selected) }
-                                                false -> null},
-                                            rightSub = when(convertPage.winPath.value != "" &&
-                                                    convertPage.winPath.value != "C:\\Users\\{YourUserName}\\Music" &&
-                                                    convertPage.isCorrectPlaylist.value){
-                                                true -> convertPage.winPath.value
-                                                false -> null},
-                                        )
-                                        Item(
-                                            onClick = { convertPage.selectLocalDir() },
-                                            text = stringResource(R.string.select_local_dir_path),
-                                            sub = when(convertPage.localMusicPath.value != ""&&
-                                                    convertPage.isCorrectPlaylist.value){
-                                                true -> when (convertPage.isAutoMatched.intValue) {
-                                                    1 -> stringResource(R.string.auto_matched)
-                                                    else -> stringResource(R.string.you_have_selected) }
-                                                false -> null},
-                                            rightSub = when(convertPage.localMusicPath.value != ""&&
-                                                    convertPage.isCorrectPlaylist.value){
-                                                true -> convertPage.localMusicPath.value
-                                                false -> null},
-                                        )
+                                                        else -> stringResource(R.string.you_have_selected)
+                                                    }
+
+                                                    false -> null
+                                                },
+                                                rightSub = when (convertPage.winPath.value != "" &&
+                                                        convertPage.winPath.value != "C:\\Users\\{YourUserName}\\${convertPage.musicDirName.value}" &&
+                                                        convertPage.isCorrectPlaylist.value) {
+                                                    true -> convertPage.winPath.value
+                                                    false -> null
+                                                },
+                                            )
+                                            Item(
+                                                onClick = { convertPage.selectLocalDir() },
+                                                text = stringResource(R.string.select_local_dir_path),
+                                                sub = when (convertPage.localMusicPath.value != "" &&
+                                                        convertPage.isCorrectPlaylist.value) {
+                                                    true -> when (convertPage.isAutoMatched.intValue) {
+                                                        1 -> stringResource(R.string.auto_matched)
+                                                        else -> stringResource(R.string.you_have_selected)
+                                                    }
+
+                                                    false -> null
+                                                },
+                                                rightSub = when (convertPage.localMusicPath.value != "" &&
+                                                        convertPage.isCorrectPlaylist.value) {
+                                                    true -> convertPage.localMusicPath.value
+                                                    false -> null
+                                                },
+                                            )
+                                            ItemSwitcher(
+                                                state = showAdvancedOptions.value,
+                                                onChange = {
+                                                    showAdvancedOptions.value = it
+                                                },
+                                                text = stringResource(R.string.show_advanced_options),
+                                                enableHaptic = enableHaptic.value,
+                                                hapticStrength = hapticStrength.intValue
+                                            )
+                                            AnimatedVisibility(
+                                                visible = showAdvancedOptions.value
+                                            ) {
+                                                Column {
+                                                    ItemTitle(text = stringResource(R.string.advance_dir_name))
+                                                    PathItem(
+                                                        editText = convertPage.musicDirName.value,
+                                                        onChange = {
+                                                            convertPage.musicDirName.value = it
+                                                        },
+                                                        onClear = {
+                                                            convertPage.musicDirName.value = "Music"
+                                                        },
+                                                        enableHaptic = enableHaptic.value,
+                                                        hapticStrength = hapticStrength.intValue
+                                                    )
+                                                }
+                                            }
+                                        }
                                     }
                                 }
                             }
-                        }
                             RoundedColumn {
                                 ItemTitle(text = stringResource(R.string.target_formats))
                                 ItemPopup(
@@ -2602,13 +2651,14 @@ fun ConvertPageUi(
                                         text = if (convertPage.convertMode.intValue == 1) stringResource(
                                             R.string.next_step_text
                                         ) else stringResource(R.string.start_text),
-                                        enabled = !it && when(convertPage.convertMode.intValue){
-                                            2 -> when(convertPage.sourcePlaylistFileName.value.isNotBlank()){
+                                        enabled = !it && when (convertPage.convertMode.intValue) {
+                                            2 -> when (convertPage.sourcePlaylistFileName.value.isNotBlank()) {
                                                 true -> convertPage.isCorrectPlaylist.value
                                                 false -> true
-                                                }
+                                            }
+
                                             else -> true
-                                            },
+                                        },
                                         enableHaptic = enableHaptic.value,
                                         hapticStrength = hapticStrength.intValue
                                     )
@@ -3595,4 +3645,31 @@ fun ConvertPageUi(
             }
         }
     }
+}
+
+@Composable
+fun PathItem(
+    editText: String?,
+    onChange: (String) -> Unit,
+    onClear: () -> Unit,
+    enableHaptic: Boolean,
+    hapticStrength: Int,
+    textStyle: TextStyle = SaltTheme.textStyles.main
+) {
+    ItemEdit(
+        text = editText ?: "",
+        onChange = onChange,
+        hint = stringResource(id = R.string.text_null),
+        enableHaptic = enableHaptic,
+        showClearButton = true,
+        onClear = onClear,
+        paddingValues = PaddingValues(
+            start = SaltTheme.dimens.innerHorizontalPadding,
+            end = SaltTheme.dimens.innerHorizontalPadding,
+            bottom = 8.dp,
+            top = 4.dp
+        ),
+        hapticStrength = hapticStrength,
+        textStyle = textStyle
+    )
 }
