@@ -407,4 +407,6 @@
     <string name="cancel">취소</string>
     <string name="confirm">확인</string>
     <string name="playlist_file_error">재생목록을 읽지 못했습니다. 올바른 # playlist 파일인지 확인하세요.</string>
+    <string name="show_advanced_options">고급 옵션 표시</string>
+    <string name="advance_dir_name">자동 인식을 위해 음악 디렉터리 파일 이름을 사용자 정의하세요</string>
 </resources>

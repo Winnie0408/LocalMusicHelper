@@ -837,6 +837,7 @@ private fun Pages(
                             dataStore = mainPage.dataStore,
                             showSongNumMismatchDialog = convertPage.showSongNumMismatchDialog,
                             hapticStrength = mainPage.hapticStrength,
+                            showAdvancedOptions = convertPage.showAdvancedOptions,
                         )
                     }
 
