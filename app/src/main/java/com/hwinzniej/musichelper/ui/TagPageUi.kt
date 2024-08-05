@@ -1112,8 +1112,15 @@ fun TagPageUi(
 
                     "songList" -> {
 
-                        SideBar(
-                            onSelect = {}) {
+//                        SideBar(
+//                            onSelect = {
+//                                value ->
+//                                songList[2].sortBy { it[2] as String }
+//                            val index = dataList.indexOfFirst { it.py[0].uppercase() == value }
+//                            if (index >= 0) {
+//                                scope.launch { listState.scrollToItem(index) }
+//                            }
+//                        }) {
                             Box(
                                 modifier = Modifier.pullRefresh(pullRefreshState)
                             ) {
@@ -1237,7 +1244,7 @@ fun TagPageUi(
                                     }
                                 }
                             }
-                        }
+//                        }
                     }
 
                     "emptyList" -> {
