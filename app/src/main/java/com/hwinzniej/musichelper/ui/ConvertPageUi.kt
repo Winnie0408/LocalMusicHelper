@@ -3635,7 +3635,7 @@ fun ConvertPageUi(
                                             ),
                                             enabled = when (convertPage.selectedTargetApp.intValue){
                                             4 -> false
-                                            else ->true}
+                                            else ->true},
                                             enableHaptic = enableHaptic.value,
                                             hapticStrength = hapticStrength.intValue
                                         )
