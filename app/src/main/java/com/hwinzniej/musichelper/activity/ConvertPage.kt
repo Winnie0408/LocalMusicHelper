@@ -20,6 +20,7 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.asIntState
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
@@ -165,6 +166,7 @@ class ConvertPage(
     }
 
     fun requestPermission(): Boolean {
+        println(isCorrectPlaylist.value)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) { //Android 11+
             if (Environment.isExternalStorageManager()) {
                 if (convertMode.intValue == 1) {
@@ -407,8 +409,8 @@ class ConvertPage(
                             }
                             isAutoMatched.intValue = 2
                             itemCount.intValue = playlistItems.size
+                            isCorrectPlaylist.value = true
                         }
-
                         else -> when (selectedTargetApp.intValue) {
                             3 -> {
                                 val sourceFile = File(sourcePlaylistFilePath)
@@ -421,7 +423,6 @@ class ConvertPage(
                                 itemCount.intValue = readPlayList.size
                                 isCorrectPlaylist.value = true
                             }
-
                             else -> {
                                 itemCount.intValue = File(sourcePlaylistFilePath).readLines().size
                                 isCorrectPlaylist.value = true

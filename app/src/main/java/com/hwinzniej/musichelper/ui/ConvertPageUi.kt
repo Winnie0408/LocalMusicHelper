@@ -1804,6 +1804,7 @@ fun ConvertPageUi(
                                 ) {
                                     PopupMenuItem(
                                         onClick = {
+                                            convertPage.isCorrectPlaylist.value = true
                                             MyVibrationEffect(
                                                 context,
                                                 enableHaptic.value,
@@ -1822,6 +1823,7 @@ fun ConvertPageUi(
                                     )
                                     PopupMenuItem(
                                         onClick = {
+                                            convertPage.isCorrectPlaylist.value = false
                                             MyVibrationEffect(
                                                 context,
                                                 enableHaptic.value,
@@ -2394,7 +2396,7 @@ fun ConvertPageUi(
                                                 text = stringResource(R.string.win_path),
                                                 sub = when (convertPage.winPath.value != "" &&
                                                         convertPage.winPath.value != "C:\\Users\\{YourUserName}\\${convertPage.musicDirName.value}" &&
-                                                        convertPage.isCorrectPlaylist.value) {
+                                                        (convertPage.isCorrectPlaylist.value || convertPage.convertMode.intValue == 1)) {
                                                     true -> when (convertPage.isAutoMatched.intValue) {
                                                         2 -> stringResource(R.string.auto_matched)
                                                         else -> stringResource(R.string.you_have_selected)
@@ -2404,7 +2406,7 @@ fun ConvertPageUi(
                                                 },
                                                 rightSub = when (convertPage.winPath.value != "" &&
                                                         convertPage.winPath.value != "C:\\Users\\{YourUserName}\\${convertPage.musicDirName.value}" &&
-                                                        convertPage.isCorrectPlaylist.value) {
+                                                        (convertPage.isCorrectPlaylist.value || convertPage.convertMode.intValue == 1)) {
                                                     true -> convertPage.winPath.value
                                                     false -> null
                                                 },
@@ -2413,7 +2415,7 @@ fun ConvertPageUi(
                                                 onClick = { convertPage.selectLocalDir() },
                                                 text = stringResource(R.string.select_local_dir_path),
                                                 sub = when (convertPage.localMusicPath.value != "" &&
-                                                        convertPage.isCorrectPlaylist.value) {
+                                                        (convertPage.isCorrectPlaylist.value || convertPage.convertMode.intValue == 1)) {
                                                     true -> when (convertPage.isAutoMatched.intValue) {
                                                         1 -> stringResource(R.string.auto_matched)
                                                         else -> stringResource(R.string.you_have_selected)
@@ -2422,7 +2424,7 @@ fun ConvertPageUi(
                                                     false -> null
                                                 },
                                                 rightSub = when (convertPage.localMusicPath.value != "" &&
-                                                        convertPage.isCorrectPlaylist.value) {
+                                                        (convertPage.isCorrectPlaylist.value || convertPage.convertMode.intValue == 1)) {
                                                     true -> convertPage.localMusicPath.value
                                                     false -> null
                                                 },
