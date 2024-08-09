@@ -707,13 +707,13 @@ class ConvertPage(
             if (convertResult[i] == null)
                 continue
             if (convertResult[i]!![0] == "0" && saveSuccessSongs) {
-                fileData = fileData + """      <media src="""" +
-                        convertResult[i]!![7].replace(localMusicPath.value, winPath.value)
+                fileData = "$fileData      <media src=\"" +
+                        TextNode(convertResult[i]!![7].replace(localMusicPath.value, winPath.value)
                             .replace("/", "\\") +
                         """" albumTitle="""" + convertResult[i]!![5] +
                         """" albumArtist="""" + convertResult[i]!![8] +
                         """" trackTitle="""" + convertResult[i]!![1] +
-                        """" trackArtist="""" + convertResult[i]!![3] +
+                        """" trackArtist="""" + convertResult[i]!![3]).toString() +
                         """" duration="""" + "114514" + """" />""" + "\r\n"
                 continue
             }
