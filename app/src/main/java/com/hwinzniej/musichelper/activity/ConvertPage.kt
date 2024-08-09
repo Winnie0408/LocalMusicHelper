@@ -70,7 +70,7 @@ import java.time.format.DateTimeFormatter
 import java.util.UUID
 import com.fleeksoft.ksoup.Ksoup
 import com.fleeksoft.ksoup.nodes.Document
-import com.fleeksoft.ksoup.select.Elements
+import com.fleeksoft.ksoup.nodes.TextNode
 
 class ConvertPage(
     val context: Context,
@@ -166,7 +166,6 @@ class ConvertPage(
     }
 
     fun requestPermission(): Boolean {
-        println(isCorrectPlaylist.value)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) { //Android 11+
             if (Environment.isExternalStorageManager()) {
                 if (convertMode.intValue == 1) {
@@ -630,12 +629,12 @@ class ConvertPage(
         val inputFile = sourceFile.readLines()
         inputFile.forEach {
             try {
-                fileData = fileData + """      <media src="""" +
-                        it.replace(localMusicPath.value, winPath.value).replace("/", "\\") +
+                fileData = "$fileData      <media src=\"" +
+                        TextNode(it.replace(localMusicPath.value, winPath.value).replace("/", "\\") +
                         """" albumTitle="""" + getSongTag(it)["album"] +
                         """" albumArtist="""" + getSongTag(it)["albumArtist"] +
                         """" trackTitle="""" + getSongTag(it)["song"] +
-                        """" trackArtist="""" + getSongTag(it)["artist"] +
+                        """" trackArtist="""" + getSongTag(it)["artist"] ).toString()+
                         """" duration="""" + "114514" + """" />""" + "\r\n"
             } catch (e: Exception) {
                 errorCount += 1
