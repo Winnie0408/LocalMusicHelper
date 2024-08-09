@@ -718,24 +718,24 @@ class ConvertPage(
                 continue
             }
             if (convertResult[i]!![0] == "1" && saveCautionSongs) {
-                fileData = fileData + """      <media src="""" +
-                        convertResult[i]!![7].replace(localMusicPath.value, winPath.value)
+                fileData = "$fileData      <media src=\"" +
+                        TextNode(convertResult[i]!![7].replace(localMusicPath.value, winPath.value)
                             .replace("/", "\\") +
-                        """" albumTitle="""" + convertResult[i]!![5] +
-                        """" albumArtist="""" + convertResult[i]!![8] +
-                        """" trackTitle="""" + convertResult[i]!![1] +
-                        """" trackArtist="""" + convertResult[i]!![3] +
+                                """" albumTitle="""" + convertResult[i]!![5] +
+                                """" albumArtist="""" + convertResult[i]!![8] +
+                                """" trackTitle="""" + convertResult[i]!![1] +
+                                """" trackArtist="""" + convertResult[i]!![3]).toString() +
                         """" duration="""" + "114514" + """" />""" + "\r\n"
                 continue
             }
             if (convertResult[i]!![0] == "2" && saveManualSongs) {
-                fileData = fileData + """      <media src="""" +
-                        convertResult[i]!![7].replace(localMusicPath.value, winPath.value)
+                fileData = "$fileData      <media src=\"" +
+                        TextNode(convertResult[i]!![7].replace(localMusicPath.value, winPath.value)
                             .replace("/", "\\") +
-                        """" albumTitle="""" + convertResult[i]!![5] +
-                        """" albumArtist="""" + convertResult[i]!![8] +
-                        """" trackTitle="""" + convertResult[i]!![1] +
-                        """" trackArtist="""" + convertResult[i]!![3] +
+                                """" albumTitle="""" + convertResult[i]!![5] +
+                                """" albumArtist="""" + convertResult[i]!![8] +
+                                """" trackTitle="""" + convertResult[i]!![1] +
+                                """" trackArtist="""" + convertResult[i]!![3]).toString() +
                         """" duration="""" + "114514" + """" />""" + "\r\n"
                 continue
             }
