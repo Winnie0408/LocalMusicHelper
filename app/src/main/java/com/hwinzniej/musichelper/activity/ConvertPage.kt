@@ -630,11 +630,11 @@ class ConvertPage(
         inputFile.forEach {
             try {
                 fileData = "$fileData      <media src=\"" +
-                        TextNode(it.replace(localMusicPath.value, winPath.value).replace("/", "\\") +
-                        """" albumTitle="""" + getSongTag(it)["album"] +
-                        """" albumArtist="""" + getSongTag(it)["albumArtist"] +
-                        """" trackTitle="""" + getSongTag(it)["song"] +
-                        """" trackArtist="""" + getSongTag(it)["artist"] ).toString()+
+                        TextNode(it.replace(localMusicPath.value, winPath.value).replace("/", "\\").replace(""""""","&quot;") +
+                        """" albumTitle="""" + getSongTag(it)["album"]!!.replace(""""""","&quot;") +
+                        """" albumArtist="""" + getSongTag(it)["albumArtist"]!!.replace(""""""","&quot;") +
+                        """" trackTitle="""" + getSongTag(it)["song"]!!.replace(""""""","&quot;") +
+                        """" trackArtist="""" + getSongTag(it)["artist"]!!.replace(""""""","&quot;") ).toString()+
                         """" duration="""" + "114514" + """" />""" + "\r\n"
             } catch (e: Exception) {
                 errorCount += 1
@@ -710,10 +710,10 @@ class ConvertPage(
                 fileData = "$fileData      <media src=\"" +
                         TextNode(convertResult[i]!![7].replace(localMusicPath.value, winPath.value)
                             .replace("/", "\\") +
-                        """" albumTitle="""" + convertResult[i]!![5] +
-                        """" albumArtist="""" + convertResult[i]!![8] +
-                        """" trackTitle="""" + convertResult[i]!![1] +
-                        """" trackArtist="""" + convertResult[i]!![3]).toString() +
+                        """" albumTitle="""" + convertResult[i]!![5].replace(""""""","&quot;") +
+                        """" albumArtist="""" + convertResult[i]!![8].replace(""""""","&quot;") +
+                        """" trackTitle="""" + convertResult[i]!![1].replace(""""""","&quot;") +
+                        """" trackArtist="""" + convertResult[i]!![3].replace(""""""","&quot;")).toString() +
                         """" duration="""" + "114514" + """" />""" + "\r\n"
                 continue
             }
@@ -721,10 +721,10 @@ class ConvertPage(
                 fileData = "$fileData      <media src=\"" +
                         TextNode(convertResult[i]!![7].replace(localMusicPath.value, winPath.value)
                             .replace("/", "\\") +
-                                """" albumTitle="""" + convertResult[i]!![5] +
-                                """" albumArtist="""" + convertResult[i]!![8] +
-                                """" trackTitle="""" + convertResult[i]!![1] +
-                                """" trackArtist="""" + convertResult[i]!![3]).toString() +
+                                """" albumTitle="""" + convertResult[i]!![5].replace(""""""","&quot;") +
+                                """" albumArtist="""" + convertResult[i]!![8].replace(""""""","&quot;") +
+                                """" trackTitle="""" + convertResult[i]!![1].replace(""""""","&quot;") +
+                                """" trackArtist="""" + convertResult[i]!![3].replace(""""""","&quot;")).toString() +
                         """" duration="""" + "114514" + """" />""" + "\r\n"
                 continue
             }
@@ -732,10 +732,10 @@ class ConvertPage(
                 fileData = "$fileData      <media src=\"" +
                         TextNode(convertResult[i]!![7].replace(localMusicPath.value, winPath.value)
                             .replace("/", "\\") +
-                                """" albumTitle="""" + convertResult[i]!![5] +
-                                """" albumArtist="""" + convertResult[i]!![8] +
-                                """" trackTitle="""" + convertResult[i]!![1] +
-                                """" trackArtist="""" + convertResult[i]!![3]).toString() +
+                                """" albumTitle="""" + convertResult[i]!![5].replace(""""""","&quot;") +
+                                """" albumArtist="""" + convertResult[i]!![8].replace(""""""","&quot;") +
+                                """" trackTitle="""" + convertResult[i]!![1].replace(""""""","&quot;") +
+                                """" trackArtist="""" + convertResult[i]!![3].replace(""""""","&quot;")).toString() +
                         """" duration="""" + "114514" + """" />""" + "\r\n"
                 continue
             }
