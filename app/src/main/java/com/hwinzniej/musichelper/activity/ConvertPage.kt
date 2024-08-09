@@ -20,7 +20,6 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.asIntState
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
@@ -37,6 +36,9 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import com.alibaba.fastjson2.JSON
 import com.alibaba.fastjson2.JSONObject
+import com.fleeksoft.ksoup.Ksoup
+import com.fleeksoft.ksoup.nodes.Document
+import com.fleeksoft.ksoup.nodes.TextNode
 import com.hwinzniej.musichelper.MainActivity
 import com.hwinzniej.musichelper.R
 import com.hwinzniej.musichelper.data.DataStoreConstants
@@ -68,9 +70,6 @@ import java.net.SocketTimeoutException
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.UUID
-import com.fleeksoft.ksoup.Ksoup
-import com.fleeksoft.ksoup.nodes.Document
-import com.fleeksoft.ksoup.nodes.TextNode
 
 class ConvertPage(
     val context: Context,
@@ -400,7 +399,7 @@ class ConvertPage(
                             }
                             val doc: Document = Ksoup.parse(zunePlaylist)
                             val playlistItems = doc.select("smil seq media")
-                            playlistItems.forEach { it ->
+                            playlistItems.forEach {
                                 winPath.value = it.select("media").attr("src").replace(
                                     "${musicDirName.value}.*".toRegex(),
                                     musicDirName.value
@@ -3999,12 +3998,12 @@ class ConvertPage(
             }
 
             3 -> { //来源：Microsoft Zune
-                var zunePlaylist = sourceFile.readText()
+                val zunePlaylist = sourceFile.readText()
                 val fileWriter = FileWriter(targetFile, true)
                 try {
                     val doc: Document = Ksoup.parse(zunePlaylist)
                     val playlistItems = doc.select("smil seq media")
-                    playlistItems.forEach { it ->
+                    playlistItems.forEach {
                         fileWriter.write(
                             it.select("media").attr("src")
                                 .replace(winPath.value, localMusicPath.value)
