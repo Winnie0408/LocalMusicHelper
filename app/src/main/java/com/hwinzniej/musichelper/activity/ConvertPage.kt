@@ -36,6 +36,9 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import com.alibaba.fastjson2.JSON
 import com.alibaba.fastjson2.JSONObject
+import com.fleeksoft.ksoup.Ksoup
+import com.fleeksoft.ksoup.nodes.Document
+import com.fleeksoft.ksoup.nodes.TextNode
 import com.hwinzniej.musichelper.MainActivity
 import com.hwinzniej.musichelper.R
 import com.hwinzniej.musichelper.data.DataStoreConstants
@@ -57,12 +60,16 @@ import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVParser
+import org.jaudiotagger.audio.AudioFile
+import org.jaudiotagger.audio.AudioFileIO
+import org.jaudiotagger.tag.FieldKey
 import java.io.File
 import java.io.FileReader
 import java.io.FileWriter
 import java.net.SocketTimeoutException
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import java.util.UUID
 
 class ConvertPage(
     val context: Context,
@@ -71,6 +78,7 @@ class ConvertPage(
     private val openResultSqlFileLauncher: ActivityResultLauncher<Array<String>>,
     private val openPlaylistFileLauncher: ActivityResultLauncher<Array<String>>,
     private val openCsvFileLauncher: ActivityResultLauncher<Array<String>>,
+    private val openLocalFileLauncher: ActivityResultLauncher<Uri?>,
     private val openLunaJSONDirLauncher: ActivityResultLauncher<Uri?>,
     val db: MusicDatabase,
     componentActivity: ComponentActivity,
@@ -127,6 +135,14 @@ class ConvertPage(
     val selectedTargetApp = mutableIntStateOf(0)
     val spotifyUserId = mutableStateOf("")
     private var csvFilePath = ""
+    var localMusicPath = mutableStateOf("")
+    var musicDirName = mutableStateOf("Music")
+    var winPath =
+        mutableStateOf("C:\\Users\\{YourUserName}\\${musicDirName.value}") //用于Zune相关内容的Windows音乐目录路径
+    var isAutoMatched = mutableIntStateOf(0) //用于分辨路径为用户选择/自动匹配
+    var itemCount = mutableIntStateOf(0) //用于记录从歌单文件自动匹配到的歌曲数目
+    var isCorrectPlaylist = mutableStateOf(false)
+    var showAdvancedOptions = mutableStateOf(false)
 
     /**
      * 请求存储权限
@@ -139,17 +155,22 @@ class ConvertPage(
         ActivityResultContracts.StartActivityForResult()
     ) { _ ->
         if (Environment.isExternalStorageManager()) {
-            checkSelectedFiles(250L)
+            if (convertMode.intValue == 1) {
+                checkSelectedFiles(250L)
+            }
         } else {
             Toast.makeText(context, R.string.permission_not_granted_toast, Toast.LENGTH_SHORT)
                 .show()
         }
     }
 
-    fun requestPermission() {
+    fun requestPermission(): Boolean {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) { //Android 11+
             if (Environment.isExternalStorageManager()) {
-                checkSelectedFiles()
+                if (convertMode.intValue == 1) {
+                    checkSelectedFiles()
+                }
+                return true
             } else {
                 Toast.makeText(context, R.string.request_permission_toast, Toast.LENGTH_SHORT)
                     .show()
@@ -158,16 +179,21 @@ class ConvertPage(
                 intent.data = uri
                 requestPermissionLauncher.launch(intent)
 //                startActivity(context, intent, null)
+                return false
             }
         } else { //Android 10-
             if (allPermissionsGranted()) {
-                checkSelectedFiles()
+                if (convertMode.intValue == 1) {
+                    checkSelectedFiles()
+                }
+                return true
             } else {
                 Toast.makeText(context, R.string.request_permission_toast, Toast.LENGTH_SHORT)
                     .show()
                 ActivityCompat.requestPermissions(
                     context as Activity, REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS
                 )
+                return false
             }
         }
     }
@@ -198,7 +224,9 @@ class ConvertPage(
     ) {
         if (requestCode == REQUEST_CODE_PERMISSIONS) {
             if (allPermissionsGranted()) {
-                checkSelectedFiles(250L)
+                if (convertMode.intValue == 1) {
+                    checkSelectedFiles(250L)
+                }
             } else {
                 Toast.makeText(context, R.string.permission_not_granted_toast, Toast.LENGTH_SHORT)
                     .show()
@@ -240,6 +268,7 @@ class ConvertPage(
                         0 -> "text/plain"
                         1 -> "audio/x-mpegurl"
                         2 -> "audio/x-mpegurl"
+                        3 -> "*/*"
                         else -> "*/*"
                     }
                 )
@@ -277,7 +306,19 @@ class ConvertPage(
         }
     }
 
-    fun handelLunaDirUri(uri: Uri?) {
+    fun selectLocalDir() {
+        try {
+            openLocalFileLauncher.launch(null)
+        } catch (_: Exception) {
+            Toast.makeText(
+                context,
+                context.getString(R.string.unable_start_documentsui),
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+    }
+
+    fun handleLunaDirUri(uri: Uri?) {
         if (uri == null) {
             return
         }
@@ -291,6 +332,24 @@ class ConvertPage(
             Toast.makeText(context, R.string.failed_to_get_file_from_dir, Toast.LENGTH_SHORT).show()
             return
         }
+    }
+
+    fun handleLocalFileDirUri(uri: Uri?) {
+        val chooseLocalMusicPath = mutableStateOf("")
+        if (uri == null) {
+            return
+        }
+        try {
+            chooseLocalMusicPath.value = Tools().uriToAbsolutePath(uri)
+            lifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
+                delay(200L) //播放动画
+            }
+        } catch (e: Exception) {
+            Toast.makeText(context, R.string.failed_to_get_file_from_dir, Toast.LENGTH_SHORT).show()
+            return
+        }
+        isAutoMatched.intValue = 0
+        localMusicPath.value = chooseLocalMusicPath.value
     }
 
     fun handleUri(uri: Uri?, code: Int) {
@@ -322,11 +381,52 @@ class ConvertPage(
             }
 
             2 -> {
+                isCorrectPlaylist.value = false
                 sourcePlaylistFilePath =
                     Tools().fromUriCopyFileToExternalFilesDir(context, uri, selectedFileName.value)
                 lifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
                     delay(200L)  //播放动画
                     sourcePlaylistFileName.value = selectedFileName.value
+                    when (selectedSourceLocalApp.intValue) {
+                        3 -> {
+                            val sourceFile = File(sourcePlaylistFilePath)
+                            val zunePlaylist = sourceFile.readText()
+                            isCorrectPlaylist.value =
+                                zunePlaylist.startsWith("""<?zpl version="2.0"?>""")
+                                        && sourcePlaylistFilePath.endsWith(""".zpl""")
+                            if (!isCorrectPlaylist.value) {
+                                return@launch
+                            }
+                            val doc: Document = Ksoup.parse(zunePlaylist)
+                            val playlistItems = doc.select("smil seq media")
+                            playlistItems.forEach {
+                                winPath.value = it.select("media").attr("src").replace(
+                                    "${musicDirName.value}.*".toRegex(),
+                                    musicDirName.value
+                                )
+                            }
+                            isAutoMatched.intValue = 2
+                            itemCount.intValue = playlistItems.size
+                            isCorrectPlaylist.value = true
+                        }
+                        else -> when (selectedTargetApp.intValue) {
+                            3 -> {
+                                val sourceFile = File(sourcePlaylistFilePath)
+                                val readPlayList = sourceFile.readLines()
+                                isAutoMatched.intValue = 1
+                                localMusicPath.value = readPlayList[0].replace(
+                                    "${musicDirName.value}.+".toRegex(),
+                                    musicDirName.value
+                                )
+                                itemCount.intValue = readPlayList.size
+                                isCorrectPlaylist.value = true
+                            }
+                            else -> {
+                                itemCount.intValue = File(sourcePlaylistFilePath).readLines().size
+                                isCorrectPlaylist.value = true
+                            }
+                        }
+                    }
                 }
             }
 
@@ -470,6 +570,179 @@ class ConvertPage(
                 }
             }
         }
+    }
+
+    fun clearCache() {
+        isAutoMatched.intValue = 0
+        itemCount.intValue = 0
+        sourcePlaylistFileName.value = ""
+        resultFilePath = ""
+    }
+
+    private fun getSongTag(absolutePath: String): Map<String, String?> {
+        val audioFile: AudioFile = AudioFileIO.read(File(absolutePath))
+        return mapOf(
+            "song" to audioFile.tag.getFirst(FieldKey.TITLE),
+            "artist" to audioFile.tag.getFirst(FieldKey.ARTIST),
+            "album" to audioFile.tag.getFirst(FieldKey.ALBUM),
+            "albumArtist" to audioFile.tag.getFirst(FieldKey.ALBUM_ARTIST),
+            "genre" to audioFile.tag.getFirst(FieldKey.GENRE),
+            "trackNumber" to audioFile.tag.getFirst(FieldKey.TRACK),
+            "discNumber" to audioFile.tag.getFirst(FieldKey.DISC_NO),
+            "releaseYear" to audioFile.tag.getFirst(FieldKey.YEAR),
+            "composer" to audioFile.tag.getFirst(FieldKey.COMPOSER),
+            "arranger" to audioFile.tag.getFirst(FieldKey.ARRANGER),
+            "lyricist" to audioFile.tag.getFirst(FieldKey.LYRICIST),
+            "lyrics" to audioFile.tag.getFirst(FieldKey.LYRICS),
+        )
+    }
+
+    private fun localToZune(targetFile: File, sourceFile: File): Int {
+        var fileName = ""
+        val guid = UUID.randomUUID().toString()
+        val creatorId = UUID.randomUUID().toString()
+        val songCount = itemCount.intValue
+        val dot = selectedFileName.value.lastIndexOf('.')
+        val fileWriter = FileWriter(targetFile, true)
+        if ((dot > -1) && (dot < (selectedFileName.value.length))) {
+            fileName = selectedFileName.value.substring(0, dot)
+        }
+        var fileData = """<?zpl version="2.0"?>
+<smil>
+  <head>
+    <guid>{""" + guid + """}</guid>
+    <meta name="generator" content="Zune -- 4.8.2345.0" />
+    <meta name="itemCount" content="""" + songCount + """" />
+    <meta name="totalDuration" content="19854" />
+    <meta name="averageRating" content="0" />
+    <meta name="creatorId" content="{""" + creatorId + """}" />
+    <meta name="autoRefresh" content="FALSE" />
+    <meta name="autoRefreshInterval" content="5" />
+    <title>""" + fileName + """</title>
+  </head>
+  <body>
+    <seq>
+"""
+        var errorCount = 0
+        val errorSongPath = mutableListOf("")
+        val inputFile = sourceFile.readLines()
+        inputFile.forEach {
+            try {
+                fileData = "$fileData      <media src=\"" +
+                        TextNode(it.replace(localMusicPath.value, winPath.value).replace("/", "\\").replace(""""""","&quot;") +
+                        """" albumTitle="""" + getSongTag(it)["album"]!!.replace(""""""","&quot;") +
+                        """" albumArtist="""" + getSongTag(it)["albumArtist"]!!.replace(""""""","&quot;") +
+                        """" trackTitle="""" + getSongTag(it)["song"]!!.replace(""""""","&quot;") +
+                        """" trackArtist="""" + getSongTag(it)["artist"]!!.replace(""""""","&quot;") ).toString()+
+                        """" duration="""" + "114514" + """" />""" + "\r\n"
+            } catch (e: Exception) {
+                errorCount += 1
+                errorSongPath.add(it)
+            }
+        }
+        fileData += """    </seq>
+  </body>
+</smil>"""
+        fileWriter.write(fileData)
+        fileWriter.close()
+        when (errorCount) {
+            0 -> TODO()
+            else -> {
+                var errorSongPathShow = ""
+                errorSongPath.forEach {
+                    errorSongPathShow += "  - ${it.replace("\t\n", "")}\n"
+                }
+                errorDialogContent.value =
+                    "- ${context.getString(R.string.playlist_song_num_not_match)}\n  - ${
+                        context.getString(
+                            R.string.playlist_song_num_not_match_detail
+                        ).replace("#1", songCount.toString())
+                            .replace("#2", (songCount - errorCount).toString()).replace("#n", "\n")
+                            .replace("#b", " ")
+                    }\n- ${context.getString(R.string.please_check_song_file)} ${errorSongPathShow}"
+                showDialogProgressBar.value = false
+                errorDialogTitle.value = context.getString(R.string.read_failed)
+                errorDialogCustomAction.value = {}
+                showErrorDialog.value = true
+            }
+        }
+        return errorCount
+    }
+
+    private fun onlineToZune(
+        convertResult: SnapshotStateMap<Int, Array<String>>,
+        correctFileName: String,
+        saveSuccessSongs: Boolean,
+        saveCautionSongs: Boolean,
+        saveManualSongs: Boolean
+    ): String {
+        var fileName = ""
+        val guid = UUID.randomUUID().toString()
+        val creatorId = UUID.randomUUID().toString()
+        val songCount = convertResult.size
+
+        val dot = correctFileName.lastIndexOf('.')
+        if ((dot > -1) && (dot < (correctFileName.length))) {
+            fileName = correctFileName.substring(0, dot)
+        }
+
+        var fileData = """<?zpl version="2.0"?>
+<smil>
+  <head>
+    <guid>{""" + guid + """}</guid>
+    <meta name="generator" content="Zune -- 4.8.2345.0" />
+    <meta name="itemCount" content="""" + songCount + """" />
+    <meta name="totalDuration" content="19854" />
+    <meta name="averageRating" content="0" />
+    <meta name="creatorId" content="{""" + creatorId + """}" />
+    <meta name="autoRefresh" content="FALSE" />
+    <meta name="autoRefreshInterval" content="5" />
+    <title>""" + fileName + """</title>
+  </head>
+  <body>
+    <seq>
+"""
+        for (i in 0 until convertResult.size) {
+            if (convertResult[i] == null)
+                continue
+            if (convertResult[i]!![0] == "0" && saveSuccessSongs) {
+                fileData = "$fileData      <media src=\"" +
+                        TextNode(convertResult[i]!![7].replace(localMusicPath.value, winPath.value)
+                            .replace("/", "\\") +
+                        """" albumTitle="""" + convertResult[i]!![5].replace(""""""","&quot;") +
+                        """" albumArtist="""" + convertResult[i]!![8].replace(""""""","&quot;") +
+                        """" trackTitle="""" + convertResult[i]!![1].replace(""""""","&quot;") +
+                        """" trackArtist="""" + convertResult[i]!![3].replace(""""""","&quot;")).toString() +
+                        """" duration="""" + "114514" + """" />""" + "\r\n"
+                continue
+            }
+            if (convertResult[i]!![0] == "1" && saveCautionSongs) {
+                fileData = "$fileData      <media src=\"" +
+                        TextNode(convertResult[i]!![7].replace(localMusicPath.value, winPath.value)
+                            .replace("/", "\\") +
+                                """" albumTitle="""" + convertResult[i]!![5].replace(""""""","&quot;") +
+                                """" albumArtist="""" + convertResult[i]!![8].replace(""""""","&quot;") +
+                                """" trackTitle="""" + convertResult[i]!![1].replace(""""""","&quot;") +
+                                """" trackArtist="""" + convertResult[i]!![3].replace(""""""","&quot;")).toString() +
+                        """" duration="""" + "114514" + """" />""" + "\r\n"
+                continue
+            }
+            if (convertResult[i]!![0] == "2" && saveManualSongs) {
+                fileData = "$fileData      <media src=\"" +
+                        TextNode(convertResult[i]!![7].replace(localMusicPath.value, winPath.value)
+                            .replace("/", "\\") +
+                                """" albumTitle="""" + convertResult[i]!![5].replace(""""""","&quot;") +
+                                """" albumArtist="""" + convertResult[i]!![8].replace(""""""","&quot;") +
+                                """" trackTitle="""" + convertResult[i]!![1].replace(""""""","&quot;") +
+                                """" trackArtist="""" + convertResult[i]!![3].replace(""""""","&quot;")).toString() +
+                        """" duration="""" + "114514" + """" />""" + "\r\n"
+                continue
+            }
+        }
+        fileData += """    </seq>
+  </body>
+</smil>"""
+        return fileData
     }
 
     fun getSelectedMultiSource(selected: Int) {
@@ -2745,6 +3018,8 @@ class ConvertPage(
                             val album = cursor.getString(cursor.getColumnIndexOrThrow("album"))
                             val absolutePath =
                                 cursor.getString(cursor.getColumnIndexOrThrow("absolutePath"))
+                            val albumArtist =
+                                cursor.getString(cursor.getColumnIndexOrThrow("albumArtist"))
                             val musicInfo = MusicInfo(
                                 id = id,
                                 song = song,
@@ -2752,7 +3027,7 @@ class ConvertPage(
                                 album = album,
                                 releaseYear = null,
                                 trackNumber = null,
-                                albumArtist = null,
+                                albumArtist = albumArtist,
                                 genre = null,
                                 absolutePath = absolutePath,
                                 lyricist = null,
@@ -3015,17 +3290,20 @@ class ConvertPage(
 
                     val songConvertResult = music3InfoList[songNameMaxKey]
                     convertResultMap[num++] =
-                        arrayOf(
-                            if (autoSuccess) "0"
-                            else "1",  //是否自动匹配成功
-                            songConvertResult.song,  //本地音乐歌曲名
-                            songName,  //云音乐歌曲名
-                            songConvertResult.artist,  //本地音乐歌手名
-                            songArtist,  //云音乐歌手名
-                            songConvertResult.album,  //本地音乐专辑名
-                            songAlbum,  //云音乐专辑名
-                            songConvertResult.absolutePath,  //本地音乐绝对路径
-                        )
+                        songConvertResult.albumArtist?.let {
+                            arrayOf(
+                                if (autoSuccess) "0"
+                                else "1",  //是否自动匹配成功
+                                songConvertResult.song,  //本地音乐歌曲名
+                                songName,  //云音乐歌曲名
+                                songConvertResult.artist,  //本地音乐歌手名
+                                songArtist,  //云音乐歌手名
+                                songConvertResult.album,  //本地音乐专辑名
+                                songAlbum,  //云音乐专辑名
+                                songConvertResult.absolutePath,  //本地音乐绝对路径
+                                it
+                            )
+                        }!!
 
                 } else if (selectedMatchingMode.intValue == 2) {
                     val similarityArray = mutableMapOf<Int, Double>()
@@ -3059,6 +3337,7 @@ class ConvertPage(
                                     if (enableAlbumNameMatch.value) music3InfoList[k].artist else ""
                                 }${if (enableAlbumNameMatch.value) music3InfoList[k].album else ""}".lowercase()
                             )
+//                            println(k)
                         }
                     val maxSimilarity = Tools().getMaxValueIntDouble(similarityArray)
                     val songMaxSimilarity = maxSimilarity?.value!!
@@ -3069,17 +3348,20 @@ class ConvertPage(
                     val songConvertResult = music3InfoList[songMaxKey]
 
                     convertResultMap[num++] =
-                        arrayOf(
-                            if (autoSuccess) "0"
-                            else "1",  //是否自动匹配成功
-                            songConvertResult.song,  //本地音乐歌曲名
-                            songName,  //云音乐歌曲名
-                            songConvertResult.artist,  //本地音乐歌手名
-                            songArtist,  //云音乐歌手名
-                            songConvertResult.album,  //本地音乐专辑名
-                            songAlbum,  //云音乐专辑名
-                            songConvertResult.absolutePath,  //本地音乐绝对路径
-                        )
+                        songConvertResult.albumArtist?.let {
+                            arrayOf(
+                                if (autoSuccess) "0"
+                                else "1",  //是否自动匹配成功
+                                songConvertResult.song,  //本地音乐歌曲名
+                                songName,  //云音乐歌曲名
+                                songConvertResult.artist,  //本地音乐歌手名
+                                songArtist,  //云音乐歌手名
+                                songConvertResult.album,  //本地音乐专辑名
+                                songAlbum,  //云音乐专辑名
+                                songConvertResult.absolutePath,  //本地音乐绝对路径
+                                it,  //
+                            )
+                        }!!
                 }
                 songInfoCursor.close()
                 if (num % 10 == 0)
@@ -3185,6 +3467,7 @@ class ConvertPage(
                 val song = cursor.getString(cursor.getColumnIndexOrThrow("song"))
                 val artist = cursor.getString(cursor.getColumnIndexOrThrow("artist"))
                 val album = cursor.getString(cursor.getColumnIndexOrThrow("album"))
+                val albumArtist = cursor.getString(cursor.getColumnIndexOrThrow("albumArtist"))
                 val absolutePath =
                     cursor.getString(cursor.getColumnIndexOrThrow("absolutePath"))
                 cursor.close()
@@ -3196,7 +3479,7 @@ class ConvertPage(
                     album = album,
                     releaseYear = null,
                     trackNumber = null,
-                    albumArtist = null,
+                    albumArtist = albumArtist,
                     genre = null,
                     absolutePath = absolutePath,
                     lyricist = null,
@@ -3211,6 +3494,7 @@ class ConvertPage(
             convertResult[songPosition]?.set(3, songInfo.artist)
             convertResult[songPosition]?.set(5, songInfo.album)
             convertResult[songPosition]?.set(7, songInfo.absolutePath)
+            songInfo.albumArtist?.let { convertResult[songPosition]?.set(8, it) }
             withContext(Dispatchers.Main) {
                 Toast.makeText(
                     context,
@@ -3264,23 +3548,38 @@ class ConvertPage(
                     if (file.parentFile?.exists() == false)
                         file.parentFile?.mkdirs()
                     val fileWriter = FileWriter(file, true)
+                    when (selectedTargetApp.intValue) {
+                        3 -> fileWriter.write(
+                            onlineToZune(
+                                convertResult,
+                                correctFileName,
+                                saveSuccessSongs,
+                                saveCautionSongs,
+                                saveManualSongs
+                            )
+                        )
 
-                    for (i in 0 until convertResult.size) {
-                        if (convertResult[i] == null)
-                            continue
-                        if (convertResult[i]!![0] == "0" && saveSuccessSongs) {
-                            fileWriter.write("${convertResult[i]!![7]}\n")
-                            continue
-                        }
-                        if (convertResult[i]!![0] == "1" && saveCautionSongs) {
-                            fileWriter.write("${convertResult[i]!![7]}\n")
-                            continue
-                        }
-                        if (convertResult[i]!![0] == "2" && saveManualSongs) {
-                            fileWriter.write("${convertResult[i]!![7]}\n")
-                            continue
+                        else -> {
+                            for (i in 0 until convertResult.size) {
+                                if (convertResult[i] == null)
+                                    continue
+                                if (convertResult[i]!![0] == "0" && saveSuccessSongs) {
+                                    fileWriter.write("${convertResult[i]!![7]}\n")
+                                    continue
+                                }
+                                if (convertResult[i]!![0] == "1" && saveCautionSongs) {
+                                    fileWriter.write("${convertResult[i]!![7]}\n")
+                                    continue
+                                }
+                                if (convertResult[i]!![0] == "2" && saveManualSongs) {
+                                    fileWriter.write("${convertResult[i]!![7]}\n")
+                                    continue
+                                }
+                            }
                         }
                     }
+
+
 
                     fileWriter.close()
                     resultFileLocation.add(file.absolutePath)
@@ -3652,6 +3951,7 @@ class ConvertPage(
                     0 -> "txt"
                     1 -> "m3u"
                     2 -> "m3u8"
+                    3 -> "zpl"
                     else -> ""
                 }
             }"
@@ -3663,7 +3963,20 @@ class ConvertPage(
         val sourceFile = File(sourcePlaylistFilePath)
         when (selectedSourceLocalApp.intValue) {
             0 -> { //来源：Salt Player
-                sourceFile.copyTo(targetFile, true)
+
+                when (selectedTargetApp.intValue) {
+                    3 -> {
+                        when (localToZune(targetFile, sourceFile)) {
+                            0 -> TODO()
+                            else -> {
+                            }
+                        }
+                    }
+
+                    else -> {
+                        sourceFile.copyTo(targetFile, true)
+                    }
+                }
                 return targetFile.absolutePath.replace("/storage/emulated/0/", "")
             }
 
@@ -3681,6 +3994,26 @@ class ConvertPage(
                 val fileWriter = FileWriter(targetFile, true)
                 fileWriter.write(powerampPlaylist)
                 fileWriter.close()
+                return targetFile.absolutePath.replace("/storage/emulated/0/", "")
+            }
+
+            3 -> { //来源：Microsoft Zune
+                val zunePlaylist = sourceFile.readText()
+                val fileWriter = FileWriter(targetFile, true)
+                try {
+                    val doc: Document = Ksoup.parse(zunePlaylist)
+                    val playlistItems = doc.select("smil seq media")
+                    playlistItems.forEach {
+                        fileWriter.write(
+                            it.select("media").attr("src")
+                                .replace(winPath.value, localMusicPath.value)
+                                .replace("\\", "/") + "\n"
+                        )
+                    }
+                    fileWriter.close()
+                } catch (_: Exception) {
+                    return ""
+                }
                 return targetFile.absolutePath.replace("/storage/emulated/0/", "")
             }
         }

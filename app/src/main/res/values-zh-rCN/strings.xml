@@ -395,4 +395,18 @@
     <string name="confirm_disagree_agreement_title">不同意用户服务协议吗？</string>
     <string name="go_back">返回</string>
     <string name="confirm_disagree_agreement_content">若不同意，本应用将自动关闭。</string>
+    <string name="local_path">本地路径</string>
+    <string name="win_path">Win路径</string>
+    <string name="select_local_dir_path">选择本地路径</string>
+    <string name="empty_local_dir_path">未选择本地路径！</string>
+    <string name="conversion_configuration">#的转换配置</string>
+    <string name="auto_matched">已匹配</string>
+    <string name="matched_songs">已匹配#首音乐</string>
+    <string name="please_check_song_file">请检查下列路径中的音乐文件（们）是否存在。</string>
+    <string name="input_win_path">请输入Win路径</string>
+    <string name="cancel">取消</string>
+    <string name="confirm">确定</string>
+    <string name="playlist_file_error">读取播放列表失败，请检查是否为正确的#歌单文件</string>
+    <string name="show_advanced_options">显示高级选项</string>
+    <string name="advance_dir_name">自定义用于自动识别的音乐目录文件名</string>
 </resources>

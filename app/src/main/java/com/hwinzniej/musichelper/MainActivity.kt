@@ -129,6 +129,7 @@ import java.util.Locale
 class MainActivity : ComponentActivity() {
 
     private lateinit var openDirectoryLauncher: ActivityResultLauncher<Uri?>
+    private lateinit var openLocalFileLauncher: ActivityResultLauncher<Uri?>
     private lateinit var openLunaJSONDirLauncher: ActivityResultLauncher<Uri?>
     private lateinit var openEncryptDirectoryLauncher: ActivityResultLauncher<Uri?>
     private lateinit var openDecryptDirectoryLauncher: ActivityResultLauncher<Uri?>
@@ -185,7 +186,7 @@ class MainActivity : ComponentActivity() {
             }
         openLunaJSONDirLauncher =
             registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
-                convertPage.handelLunaDirUri(uri)
+                convertPage.handleLunaDirUri(uri)
             }
         openEncryptDirectoryLauncher =
             registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
@@ -203,13 +204,17 @@ class MainActivity : ComponentActivity() {
             registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
                 convertPage.handleUri(uri, 1)
             }
-        openPlaylistFileLauncher =
+        openPlaylistFileLauncher = //用于支持本地播放列表文件选择
             registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
                 convertPage.handleUri(uri, 2)
             }
-        openCsvFileLauncher =
+        openCsvFileLauncher = //用于支持csv文件选择
             registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
                 convertPage.handleUri(uri, 3)
+            }
+        openLocalFileLauncher = //用于支持本地目录选择
+            registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
+                convertPage.handleLocalFileDirUri(uri)
             }
         openUmExecutableFileLauncher =
             registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
@@ -250,6 +255,7 @@ class MainActivity : ComponentActivity() {
                 openResultSqlFileLauncher = openResultSqlFileLauncher,
                 openPlaylistFileLauncher = openPlaylistFileLauncher,
                 openCsvFileLauncher = openCsvFileLauncher,
+                openLocalFileLauncher = openLocalFileLauncher,
                 openLunaJSONDirLauncher = openLunaJSONDirLauncher,
                 db = db,
                 componentActivity = this,
@@ -831,6 +837,7 @@ private fun Pages(
                             dataStore = mainPage.dataStore,
                             showSongNumMismatchDialog = convertPage.showSongNumMismatchDialog,
                             hapticStrength = mainPage.hapticStrength,
+                            showAdvancedOptions = convertPage.showAdvancedOptions,
                         )
                     }
 

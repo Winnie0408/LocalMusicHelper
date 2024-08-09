@@ -395,4 +395,18 @@
     <string name="confirm_disagree_agreement_title">사용자 서비스 계약에 동의하지 않으시나요?</string>
     <string name="go_back">돌아가기</string>
     <string name="confirm_disagree_agreement_content">동의하지 않으시면, 앱이 자동으로 종료됩니다.</string>
+    <string name="local_path">로컬 경로</string>
+    <string name="win_path">Win 경로</string>
+    <string name="select_local_dir_path">로컬 경로 선택</string>
+    <string name="empty_local_dir_path">로컬 경로가 선택되지 않았습니다!</string>
+    <string name="conversion_configuration"># 변환 구성</string>
+    <string name="auto_matched">일치함</string>
+    <string name="matched_songs"># 음악이 일치함</string>
+    <string name="please_check_song_file">다음 경로에 음악파일이 존재하는지 확인해주세요.</string>
+    <string name="input_win_path">Win 경로를 입력하세요.</string>
+    <string name="cancel">취소</string>
+    <string name="confirm">확인</string>
+    <string name="playlist_file_error">재생목록을 읽지 못했습니다. 올바른 # playlist 파일인지 확인하세요.</string>
+    <string name="show_advanced_options">고급 옵션 표시</string>
+    <string name="advance_dir_name">자동 인식을 위해 음악 디렉터리 파일 이름을 사용자 정의하세요</string>
 </resources>

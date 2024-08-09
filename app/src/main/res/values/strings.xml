@@ -403,4 +403,18 @@
     <string name="confirm_disagree_agreement_title">Disagree with the User Service Agreement?</string>
     <string name="go_back">Go back</string>
     <string name="confirm_disagree_agreement_content">The application will close automatically if you do not agree.</string>
+    <string name="win_path">Win Path</string>
+    <string name="select_local_dir_path">Select Local Path</string>
+    <string name="empty_local_dir_path">No local path selected!</string>
+    <string name="conversion_configuration"># Conversion configuration</string>
+    <string name="local_path">Local Path</string>
+    <string name="auto_matched">Matched</string>
+    <string name="matched_songs"># music matched</string>
+    <string name="please_check_song_file">Please check if the music file(s) in the following path exist.</string>
+    <string name="input_win_path">Please enter the Win path</string>
+    <string name="cancel">cancel</string>
+    <string name="confirm">confirm</string>
+    <string name="playlist_file_error">Failed to read the playlist, please check if it is the correct # playlist file</string>
+    <string name="show_advanced_options">Show Advanced Options</string>
+    <string name="advance_dir_name">Customize the file name of the music directory for automatic identification</string>
 </resources>
