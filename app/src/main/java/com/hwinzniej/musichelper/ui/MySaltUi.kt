@@ -1,5 +1,6 @@
 package com.hwinzniej.musichelper.ui
 
+import android.view.MotionEvent
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateColor
@@ -41,6 +42,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
@@ -56,8 +58,12 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
@@ -68,7 +74,9 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.pointerInteropFilter
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -107,6 +115,7 @@ import com.moriafly.salt.ui.dialog.DialogTitle
 import com.moriafly.salt.ui.fadeClickable
 import com.moriafly.salt.ui.popup.PopupMenu
 import com.moriafly.salt.ui.popup.PopupState
+import kotlin.math.roundToInt
 
 @UnstableSaltApi
 @Composable
@@ -1142,6 +1151,120 @@ fun ColumnScope.BottomBarItemLand(
             color = color,
             fontSize = 10.sp,
             style = SaltTheme.textStyles.sub
+        )
+    }
+}
+
+@ExperimentalComposeUiApi
+@Composable
+fun SideBar(
+    chars: String = "ABCDEFGHIJKLMNOPQRSTUVWXYZ#",
+    onSelect: (String) -> Unit,
+    touchColor: Color = Color(0xFFEBEEF0),
+    charText: @Composable (String) -> Unit = {
+        DefaultSideBarCharText(text = it)
+    },
+    selectText: @Composable BoxScope.(String) -> Unit = {
+        DefaultSideBarSelectText(text = it)
+    },
+    content: @Composable BoxScope.() -> Unit
+) {
+    val charArray = remember(chars) { chars.toCharArray() }
+    var isTouch by remember {
+        mutableStateOf(false)
+    }
+    var selectChar by remember {
+        mutableStateOf("")
+    }
+    var barSize by remember {
+        mutableIntStateOf(0)
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+    ) {
+        content()
+
+        Column(
+            modifier = Modifier
+                .fillMaxHeight()
+                .wrapContentWidth()
+                .background(Color.Unspecified)
+                .padding(vertical = 16.dp)
+                .align(Alignment.CenterEnd)
+                .onSizeChanged {
+                    barSize = it.height
+                }
+                .pointerInteropFilter {
+                    when (it.action) {
+                        MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                            isTouch = false
+                            selectChar = ""
+                        }
+
+                        else -> {
+                            isTouch = true
+                            if (barSize != 0) {
+                                val pos = it.y / barSize * charArray.size
+                                selectChar = charArray[pos
+                                    .roundToInt()
+                                    .coerceAtLeast(0)
+                                    .coerceAtMost(charArray.size - 1)].toString()
+                                onSelect.invoke(selectChar)
+                            }
+                        }
+                    }
+                    true
+                },
+            verticalArrangement = Arrangement.SpaceBetween
+        ) {
+            charArray.forEach { char ->
+                charText(char.toString())
+            }
+        }
+
+        if (selectChar.isNotEmpty()) {
+            selectText(selectChar)
+        }
+    }
+}
+
+@Composable
+fun DefaultSideBarCharText(
+    text: String
+) {
+    androidx.compose.material.Text(
+        text = text,
+        style = TextStyle(
+            fontWeight = FontWeight.Normal,
+            color = Color(0xFF999999),
+            fontSize = 12.sp
+        ),
+        modifier = Modifier
+            .width(16.dp),
+        textAlign = TextAlign.Center
+    )
+}
+
+@Composable
+fun BoxScope.DefaultSideBarSelectText(
+    text: String
+) {
+    Box(
+        modifier = Modifier
+            .size(60.dp)
+            .align(Alignment.Center)
+            .background(Color(0x77999999), RoundedCornerShape(8.dp)),
+        contentAlignment = Alignment.Center
+    ) {
+        androidx.compose.material.Text(
+            text = text,
+            style = TextStyle(
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFFFFFFFF),
+                fontSize = 38.sp
+            )
         )
     }
 }
