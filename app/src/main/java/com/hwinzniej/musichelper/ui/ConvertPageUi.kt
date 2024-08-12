@@ -2722,7 +2722,7 @@ fun ConvertPageUi(
                                         },
                                         selected = convertPage.selectedTargetApp.intValue == 4,
                                         text = "Qinalt",
-                                        iconPainter = painterResource(id = R.drawable.saltplayer),
+                                        iconPainter = painterResource(id = R.drawable.qinalt),
                                         iconColor = SaltTheme.colors.text,
                                         iconPaddingValues = PaddingValues(all = 1.dp)
                                     )
