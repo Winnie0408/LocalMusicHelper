@@ -2722,7 +2722,7 @@ fun ConvertPageUi(
                                         },
                                         selected = convertPage.selectedTargetApp.intValue == 4,
                                         text = "Qinalt",
-                                        iconPainter = painterResource(id = R.drawable.microsoft_zune),
+                                        iconPainter = painterResource(id = R.drawable.saltplayer),
                                         iconColor = SaltTheme.colors.text,
                                         iconPaddingValues = PaddingValues(all = 1.dp)
                                     )
