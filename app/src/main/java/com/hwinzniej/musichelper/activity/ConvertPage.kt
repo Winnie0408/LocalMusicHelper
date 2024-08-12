@@ -144,9 +144,9 @@ class ConvertPage(
     var isCorrectPlaylist = mutableStateOf(false)
     var showAdvancedOptions = mutableStateOf(false)
     var webdavUsername =
-        mutableStateOf("Hwenray")
+        mutableStateOf("A Example Username")
     var webdavPath =
-        mutableStateOf("https://domi.teracloud.jp/dav/${musicDirName.value}") //用于Qinalt相关内容的Webdav音乐目录路径
+        mutableStateOf("https://www.example.com/dav/${musicDirName.value}") //用于Qinalt相关内容的Webdav音乐目录路径
 
     /**
      * 请求存储权限
@@ -3645,6 +3645,8 @@ class ConvertPage(
             arrayOf("com.salt.music", "com.salt.music.ui.MainActivity"),
             arrayOf("remix.myplayer", "remix.myplayer.ui.activity.MainActivity"),
             arrayOf("com.maxmpz.audioplayer", "com.maxmpz.audioplayer.MainActivity"),
+            arrayOf("", ""),
+            arrayOf("com.xuncorp.qinalt.music", "com.xuncorp.qinalt.music.MainActivity"),
         )
         val intent = Intent(Intent.ACTION_MAIN).apply {
             setClassName(
