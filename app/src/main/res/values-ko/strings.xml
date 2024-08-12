@@ -409,4 +409,8 @@
     <string name="playlist_file_error">재생목록을 읽지 못했습니다. 올바른 # playlist 파일인지 확인하세요.</string>
     <string name="show_advanced_options">고급 옵션 표시</string>
     <string name="advance_dir_name">자동 인식을 위해 음악 디렉터리 파일 이름을 사용자 정의하세요</string>
+    <string name="webdav_path">Webdav URL 및 경로</string>
+    <string name="input_webdav_path">Webdav URL과 경로를 입력해주세요</string>
+    <string name="input_webdav_username">Webdav 사용자 이름을 입력하세요</string>
+    <string name="webdav_username">웹다브 사용자 이름</string>
 </resources>

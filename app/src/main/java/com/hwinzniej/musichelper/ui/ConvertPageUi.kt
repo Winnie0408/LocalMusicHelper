@@ -610,6 +610,7 @@ fun ConvertPageUi(
                             1 -> ".m3u"
                             2 -> ".m3u8"
                             3 -> ".zpl"
+                            4 -> ".txt"
                             else -> ""
                         }
                     }"
@@ -2352,12 +2353,13 @@ fun ConvertPageUi(
                                 }
                             }
                             AnimatedVisibility(
-                                visible = convertPage.convertMode.intValue == 2 || convertPage.selectedTargetApp.intValue == 3
+                                visible = convertPage.convertMode.intValue == 2 || convertPage.selectedTargetApp.intValue == 3 || convertPage.selectedTargetApp.intValue == 4
                             ) {
                                 RoundedColumn {
                                     ItemTitle(
                                         text = stringResource(R.string.conversion_configuration).replace(
                                             "#",
+                                            if(convertPage.convertMode.intValue == 2 ){
                                             when (convertPage.selectedSourceLocalApp.intValue) {
                                                 0 -> "Salt Player"
                                                 1 -> "APlayer"
@@ -2365,8 +2367,147 @@ fun ConvertPageUi(
                                                 3 -> "Microsoft Zune"
                                                 else -> ""
                                             }
+                                            }
+                                            else{
+                                                when (convertPage.selectedTargetApp.intValue) {
+                                                    0 -> "Salt Player"
+                                                    1 -> "APlayer"
+                                                    2 -> "Poweramp"
+                                                    3 -> "Microsoft Zune"
+                                                    4 -> "Qinalt"
+                                                    else -> ""
+                                                }
+                                            }
                                         )
                                     )
+
+                                    AnimatedVisibility(
+                                        visible = convertPage.selectedSourceLocalApp.intValue == 4 || convertPage.selectedTargetApp.intValue == 4
+                                    ) {
+                                        Column {
+                                            var inputWebdavPath by remember { mutableStateOf(false) }
+                                            if (inputWebdavPath) {
+                                                InputDialog(
+                                                    onDismissRequest = {
+                                                        inputWebdavPath = false
+                                                    },
+                                                    onConfirm = {
+                                                        inputWebdavPath = false
+                                                    },
+                                                    title = stringResource(R.string.input_webdav_path),
+                                                    text = convertPage.webdavPath.value,
+                                                    onChange = {
+                                                        convertPage.webdavPath.value = it
+                                                    }
+                                                )
+                                            }
+                                            Item(
+                                                onClick = {
+                                                    inputWebdavPath = true
+                                                },
+                                                text = stringResource(R.string.webdav_path),
+                                                sub = when (convertPage.webdavPath.value != "" &&
+                                                        convertPage.webdavPath.value != "https://www.example.com/dav/${convertPage.musicDirName.value}" &&
+                                                        (convertPage.isCorrectPlaylist.value || convertPage.convertMode.intValue == 1)) {
+                                                    true -> when (convertPage.isAutoMatched.intValue) {
+                                                        2 -> stringResource(R.string.auto_matched)
+                                                        else -> stringResource(R.string.you_have_selected)
+                                                    }
+
+                                                    false -> null
+                                                },
+                                                rightSub = when (convertPage.webdavPath.value != "" &&
+                                                        convertPage.webdavPath.value != "https://www.example.com/dav/${convertPage.musicDirName.value}" &&
+                                                        (convertPage.isCorrectPlaylist.value || convertPage.convertMode.intValue == 1)) {
+                                                    true -> convertPage.webdavPath.value
+                                                    false -> null
+                                                },
+                                            )
+                                            var inputWebdavUsername by remember { mutableStateOf(false) }
+                                            if (inputWebdavUsername) {
+                                                InputDialog(
+                                                    onDismissRequest = {
+                                                        inputWebdavUsername = false
+                                                    },
+                                                    onConfirm = {
+                                                        inputWebdavUsername = false
+                                                    },
+                                                    title = stringResource(R.string.input_webdav_username),
+                                                    text = convertPage.webdavUsername.value,
+                                                    onChange = {
+                                                        convertPage.webdavUsername.value = it
+                                                    }
+                                                )
+                                            }
+                                            Item(
+                                                onClick = {
+                                                    inputWebdavUsername = true
+                                                },
+                                                text = stringResource(R.string.webdav_username),
+                                                sub = when (convertPage.webdavUsername.value != "" &&
+                                                        convertPage.webdavUsername.value != "A Example Username" &&
+                                                        (convertPage.isCorrectPlaylist.value || convertPage.convertMode.intValue == 1)) {
+                                                    true -> when (convertPage.isAutoMatched.intValue) {
+                                                        2 -> stringResource(R.string.auto_matched)
+                                                        else -> stringResource(R.string.you_have_selected)
+                                                    }
+
+                                                    false -> null
+                                                },
+                                                rightSub = when (convertPage.webdavUsername.value != "" &&
+                                                        convertPage.webdavUsername.value != "A Example Username" &&
+                                                        (convertPage.isCorrectPlaylist.value || convertPage.convertMode.intValue == 1)) {
+                                                    true -> convertPage.webdavUsername.value
+                                                    false -> null
+                                                },
+                                            )
+                                            Item(
+                                                onClick = { convertPage.selectLocalDir() },
+                                                text = stringResource(R.string.select_local_dir_path),
+                                                sub = when (convertPage.localMusicPath.value != "" &&
+                                                        (convertPage.isCorrectPlaylist.value || convertPage.convertMode.intValue == 1)) {
+                                                    true -> when (convertPage.isAutoMatched.intValue) {
+                                                        1 -> stringResource(R.string.auto_matched)
+                                                        else -> stringResource(R.string.you_have_selected)
+                                                    }
+
+                                                    false -> null
+                                                },
+                                                rightSub = when (convertPage.localMusicPath.value != "" &&
+                                                        (convertPage.isCorrectPlaylist.value || convertPage.convertMode.intValue == 1)) {
+                                                    true -> convertPage.localMusicPath.value
+                                                    false -> null
+                                                },
+                                            )
+                                            ItemSwitcher(
+                                                state = showAdvancedOptions.value,
+                                                onChange = {
+                                                    showAdvancedOptions.value = it
+                                                },
+                                                text = stringResource(R.string.show_advanced_options),
+                                                enableHaptic = enableHaptic.value,
+                                                hapticStrength = hapticStrength.intValue
+                                            )
+                                            AnimatedVisibility(
+                                                visible = showAdvancedOptions.value
+                                            ) {
+                                                Column {
+                                                    ItemTitle(text = stringResource(R.string.advance_dir_name))
+                                                    PathItem(
+                                                        editText = convertPage.musicDirName.value,
+                                                        onChange = {
+                                                            convertPage.musicDirName.value = it
+                                                        },
+                                                        onClear = {
+                                                            convertPage.musicDirName.value = "Music"
+                                                        },
+                                                        enableHaptic = enableHaptic.value,
+                                                        hapticStrength = hapticStrength.intValue
+                                                    )
+                                                }
+                                            }
+                                        }
+                                    }
                                     AnimatedVisibility(
                                         visible = convertPage.selectedSourceLocalApp.intValue == 3 || convertPage.selectedTargetApp.intValue == 3
                                     )
@@ -2470,6 +2611,7 @@ fun ConvertPageUi(
                                         1 -> "APlayer"
                                         2 -> "Poweramp"
                                         3 -> "Microsoft Zune"
+                                        4 -> "Qinalt"
                                         else -> ""
                                     },
                                     popupWidth = 160
@@ -2559,6 +2701,27 @@ fun ConvertPageUi(
                                         },
                                         selected = convertPage.selectedTargetApp.intValue == 3,
                                         text = "Microsoft Zune",
+                                        iconPainter = painterResource(id = R.drawable.microsoft_zune),
+                                        iconColor = SaltTheme.colors.text,
+                                        iconPaddingValues = PaddingValues(all = 1.dp)
+                                    )
+                                    PopupMenuItem(
+                                        onClick = {
+                                            MyVibrationEffect(
+                                                context,
+                                                enableHaptic.value,
+                                                hapticStrength.intValue
+                                            ).click()
+                                            coroutine.launch {
+                                                dataStore.edit { settings ->
+                                                    settings[DataStoreConstants.SELECTED_TARGET_APP] =
+                                                        4
+                                                }
+                                            }
+                                            targetAppPopupMenuState.dismiss()
+                                        },
+                                        selected = convertPage.selectedTargetApp.intValue == 4,
+                                        text = "Qinalt",
                                         iconPainter = painterResource(id = R.drawable.microsoft_zune),
                                         iconColor = SaltTheme.colors.text,
                                         iconPaddingValues = PaddingValues(all = 1.dp)
@@ -3635,9 +3798,10 @@ fun ConvertPageUi(
                                                     else -> ""
                                                 }
                                             ),
-                                            enabled = when (convertPage.selectedTargetApp.intValue){
-                                            4 -> false
-                                            else ->true},
+                                            enabled = when (convertPage.selectedTargetApp.intValue) {
+                                                4 -> false
+                                                else -> true
+                                            },
                                             enableHaptic = enableHaptic.value,
                                             hapticStrength = hapticStrength.intValue
                                         )

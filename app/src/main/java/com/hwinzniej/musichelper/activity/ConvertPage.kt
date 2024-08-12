@@ -143,6 +143,10 @@ class ConvertPage(
     var itemCount = mutableIntStateOf(0) //用于记录从歌单文件自动匹配到的歌曲数目
     var isCorrectPlaylist = mutableStateOf(false)
     var showAdvancedOptions = mutableStateOf(false)
+    var webdavUsername =
+        mutableStateOf("Hwenray")
+    var webdavPath =
+        mutableStateOf("https://domi.teracloud.jp/dav/${musicDirName.value}") //用于Qinalt相关内容的Webdav音乐目录路径
 
     /**
      * 请求存储权限
@@ -410,7 +414,7 @@ class ConvertPage(
                             isCorrectPlaylist.value = true
                         }
                         else -> when (selectedTargetApp.intValue) {
-                            3 -> {
+                            3,4 -> {
                                 val sourceFile = File(sourcePlaylistFilePath)
                                 val readPlayList = sourceFile.readLines()
                                 isAutoMatched.intValue = 1
@@ -3559,6 +3563,25 @@ class ConvertPage(
                             )
                         )
 
+                        4 ->{
+                            for (i in 0 until convertResult.size) {
+                                if (convertResult[i] == null)
+                                    continue
+                                if (convertResult[i]!![0] == "0" && saveSuccessSongs) {
+                                    fileWriter.write("${convertResult[i]!![7].replace(localMusicPath.value, webdavPath.value)}?username=${webdavUsername.value}\n")
+                                    continue
+                                }
+                                if (convertResult[i]!![0] == "1" && saveCautionSongs) {
+                                    fileWriter.write("${convertResult[i]!![7].replace(localMusicPath.value, webdavPath.value)}?username=${webdavUsername.value}\n")
+                                    continue
+                                }
+                                if (convertResult[i]!![0] == "2" && saveManualSongs) {
+                                    fileWriter.write("${convertResult[i]!![7].replace(localMusicPath.value, webdavPath.value)}?username=${webdavUsername.value}\n")
+                                    continue
+                                }
+                            }
+                        }
+
                         else -> {
                             for (i in 0 until convertResult.size) {
                                 if (convertResult[i] == null)
@@ -3578,9 +3601,6 @@ class ConvertPage(
                             }
                         }
                     }
-
-
-
                     fileWriter.close()
                     resultFileLocation.add(file.absolutePath)
                 } catch (e: Exception) {
@@ -3643,6 +3663,8 @@ class ConvertPage(
                         0 -> "Salt Player"
                         1 -> "APlayer"
                         2 -> "Poweramp"
+                        3 -> "Microsoft Zune"
+                        4 -> "Qinalt"
                         else -> ""
                     }
                 ),
@@ -3952,6 +3974,7 @@ class ConvertPage(
                     1 -> "m3u"
                     2 -> "m3u8"
                     3 -> "zpl"
+                    4 -> "txt"
                     else -> ""
                 }
             }"
@@ -3963,7 +3986,6 @@ class ConvertPage(
         val sourceFile = File(sourcePlaylistFilePath)
         when (selectedSourceLocalApp.intValue) {
             0 -> { //来源：Salt Player
-
                 when (selectedTargetApp.intValue) {
                     3 -> {
                         when (localToZune(targetFile, sourceFile)) {
@@ -3972,7 +3994,18 @@ class ConvertPage(
                             }
                         }
                     }
-
+                    4 -> {
+                        val inputFile = sourceFile.readLines()
+                        val fileWriter = FileWriter(targetFile, true)
+                        var qinaltPlaylist = ""
+                        inputFile.forEach{
+                            qinaltPlaylist += it.replace(localMusicPath.value, webdavPath.value).
+                            replace("\\", "/").replace(""""""","&quot;") +
+                                    "?username=${webdavUsername.value}" + "\n"
+                            fileWriter.write(qinaltPlaylist)
+                        }
+                        fileWriter.close()
+                    }
                     else -> {
                         sourceFile.copyTo(targetFile, true)
                     }
@@ -3981,38 +4014,101 @@ class ConvertPage(
             }
 
             1 -> { //来源：APlayer
-                sourceFile.copyTo(targetFile, true)
+                when (selectedTargetApp.intValue) {
+                    3 -> {
+                        when (localToZune(targetFile, sourceFile)) {
+                            0 -> TODO()
+                            else -> {
+                            }
+                        }
+                    }
+                    4 -> {
+                        val inputFile = sourceFile.readLines()
+                        val fileWriter = FileWriter(targetFile, true)
+                        var qinaltPlaylist = ""
+                        inputFile.forEach{
+                            qinaltPlaylist += it.replace(localMusicPath.value, webdavPath.value).
+                            replace("\\", "/").replace(""""""","&quot;") +
+                                    "?username=${webdavUsername.value}" + "\n"
+                            fileWriter.write(qinaltPlaylist)
+                        }
+                        fileWriter.close()
+                    }
+                    else -> {
+                        sourceFile.copyTo(targetFile, true)
+                    }
+                }
                 return targetFile.absolutePath.replace("/storage/emulated/0/", "")
             }
 
             2 -> { //来源：Poweramp
-                var powerampPlaylist = sourceFile.readText()
-                powerampPlaylist = powerampPlaylist
-                    .replace("#.*((\\r\\n)|\\r|\\n)".toRegex(), "")
-                    .replace("(\\r\\n)|\\r".toRegex(), "\n")
-                    .replace("primary/", "/storage/emulated/0/")
-                val fileWriter = FileWriter(targetFile, true)
-                fileWriter.write(powerampPlaylist)
-                fileWriter.close()
+                when (selectedTargetApp.intValue) {
+                    3 -> {
+                        when (localToZune(targetFile, sourceFile)) {
+                            0 -> TODO()
+                            else -> {
+                            }
+                        }
+                    }
+                    4 -> {
+                        val fileWriter = FileWriter(targetFile, true)
+                        val inputFile = sourceFile.readLines()
+                        var qinaltPlaylist = ""
+                        inputFile.forEach{
+                            qinaltPlaylist += it.replace("#.*((\\r\\n)|\\r|\\n)".toRegex(), "")
+                                .replace("(\\r\\n)|\\r".toRegex(), "\n")
+                                .replace("primary/", "/storage/emulated/0/").replace(localMusicPath.value, webdavPath.value).
+                            replace("\\", "/").replace(""""""","&quot;") +
+                                    "?username=${webdavUsername.value}" + "\n"
+                        }
+                        fileWriter.write(qinaltPlaylist)
+                        fileWriter.close()
+                    }
+                    else -> {
+                        var powerampPlaylist = sourceFile.readText()
+                        powerampPlaylist = powerampPlaylist
+                            .replace("#.*((\\r\\n)|\\r|\\n)".toRegex(), "")
+                            .replace("(\\r\\n)|\\r".toRegex(), "\n")
+                            .replace("primary/", "/storage/emulated/0/")
+                        val fileWriter = FileWriter(targetFile, true)
+                        fileWriter.write(powerampPlaylist)
+                        fileWriter.close()
+                    }
+                }
                 return targetFile.absolutePath.replace("/storage/emulated/0/", "")
             }
 
             3 -> { //来源：Microsoft Zune
                 val zunePlaylist = sourceFile.readText()
                 val fileWriter = FileWriter(targetFile, true)
+                val zuneInputFile = mutableStateListOf<String>()
                 try {
                     val doc: Document = Ksoup.parse(zunePlaylist)
                     val playlistItems = doc.select("smil seq media")
                     playlistItems.forEach {
-                        fileWriter.write(
+                        zuneInputFile.add(
                             it.select("media").attr("src")
                                 .replace(winPath.value, localMusicPath.value)
                                 .replace("\\", "/") + "\n"
                         )
                     }
-                    fileWriter.close()
                 } catch (_: Exception) {
                     return ""
+                }
+                when (selectedTargetApp.intValue) {
+                    4 -> {
+                        zuneInputFile.forEach{
+                            fileWriter.write(it.replace(localMusicPath.value, webdavPath.value).
+                            replace("\\", "/").replace(""""""","&quot;") +
+                                    "?username=${webdavUsername.value}" + "\n")
+                        }
+                        fileWriter.close()
+                    }
+                    else -> {
+                            zuneInputFile.forEach {
+                                fileWriter.write(it)
+                            }
+                    }
                 }
                 return targetFile.absolutePath.replace("/storage/emulated/0/", "")
             }
