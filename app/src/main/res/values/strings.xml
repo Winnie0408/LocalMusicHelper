@@ -411,10 +411,14 @@
     <string name="auto_matched">Matched</string>
     <string name="matched_songs"># music matched</string>
     <string name="please_check_song_file">Please check if the music file(s) in the following path exist.</string>
-    <string name="input_win_path">Please enter the Win path</string>
-    <string name="cancel">cancel</string>
-    <string name="confirm">confirm</string>
+    <string name="input_win_path">Please enter the Win Path</string>
+    <string name="cancel">Cancel</string>
+    <string name="confirm">Confirm</string>
     <string name="playlist_file_error">Failed to read the playlist, please check if it is the correct # playlist file</string>
     <string name="show_advanced_options">Show Advanced Options</string>
     <string name="advance_dir_name">Customize the file name of the music directory for automatic identification</string>
+    <string name="webdav_path">Webdav URL and Path</string>
+    <string name="input_webdav_path">Please enter the Webdav URL and Path</string>
+    <string name="input_webdav_username">Please enter your Webdav Username</string>
+    <string name="webdav_username">Webdav Username</string>
 </resources>
