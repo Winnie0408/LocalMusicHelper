@@ -654,12 +654,12 @@ private fun Pages(
                         latestDownloadLink.value =
                             when (settingsPage.githubProxy.intValue) {
                                 0 -> ""
-                                1 -> "https://ghfast.top/"
-                                2 -> "https://ghproxy.cc/"
+                                1 -> "https://ghfast.top/https://github.com/"
+                                2 -> "https://ghproxy.cc/https://github.com/"
                                 3 -> "https://github.store/"
                                 4 -> "https://github.site/"
                                 else -> ""
-                            } + "https://github.com/Winnie0408/LocalMusicHelper/releases/download/v" + latestVersion.value + "/app-release.apk"
+                            } + "Winnie0408/LocalMusicHelper/releases/download/v" + latestVersion.value + "/app-release.apk"
                         mainPage.updateFileSize.floatValue =
                             (response.getJSONArray("assets")[1] as JSONObject).getFloat("size")
                         showNewVersionAvailableDialog.value = true

@@ -5,6 +5,7 @@ import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
@@ -182,7 +183,7 @@ fun TagPageUi(
             showConfirmGoBackDialog = true
         } else {
             coroutineScope.launch {
-                pageStateInner.animateScrollToPage(0)
+                pageStateInner.animateScrollToPage(0, animationSpec = spring(2f))
                 musicInfo.value = emptyMap()
                 musicInfoOriginal.value = emptyMap()
                 coverImage.value = null
@@ -212,7 +213,7 @@ fun TagPageUi(
 
     LaunchedEffect(key1 = musicInfo.value) {
         if (musicInfo.value.isNotEmpty()) {
-            pageStateInner.animateScrollToPage(1)
+            pageStateInner.animateScrollToPage(1, animationSpec = spring(2f))
         }
     }
 
@@ -278,7 +279,7 @@ fun TagPageUi(
             onConfirm = {
                 showConfirmGoBackDialog = false
                 coroutineScope.launch {
-                    pageStateInner.animateScrollToPage(0)
+                    pageStateInner.animateScrollToPage(0, animationSpec = spring(2f))
                 }
                 musicInfo.value = emptyMap()
                 musicInfoOriginal.value = emptyMap()
@@ -757,7 +758,10 @@ fun TagPageUi(
                                             showConfirmGoBackDialog = true
                                         } else {
                                             coroutineScope.launch {
-                                                pageStateInner.animateScrollToPage(0)
+                                                pageStateInner.animateScrollToPage(
+                                                    0,
+                                                    animationSpec = spring(2f)
+                                                )
                                                 musicInfo.value = emptyMap()
                                                 musicInfoOriginal.value = emptyMap()
                                                 coverImage.value = null
@@ -787,7 +791,10 @@ fun TagPageUi(
                                                 coverImage
                                             )
                                         ) {
-                                            pageStateInner.animateScrollToPage(0)
+                                            pageStateInner.animateScrollToPage(
+                                                0,
+                                                animationSpec = spring(2f)
+                                            )
                                             if (searchInput.isNotBlank())
                                                 tagPage.searchSong(searchInput, searchResult)
                                             musicInfo.value = emptyMap()
@@ -1285,7 +1292,10 @@ fun TagPageUi(
                             RoundedColumn {
                                 val infoPageScrollState = rememberScrollState()
                                 LaunchedEffect(Unit) {
-                                    infoPageScrollState.animateScrollTo(0)
+                                    infoPageScrollState.animateScrollTo(
+                                        value = 0,
+                                        animationSpec = spring(2f)
+                                    )
                                 }
                                 Column(modifier = Modifier.verticalScroll(infoPageScrollState)) {
                                     ItemTitle(
