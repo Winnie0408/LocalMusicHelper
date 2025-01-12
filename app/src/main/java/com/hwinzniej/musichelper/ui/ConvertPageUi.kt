@@ -20,7 +20,6 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -68,6 +67,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
@@ -94,7 +94,6 @@ import com.moriafly.salt.ui.ItemContainer
 import com.moriafly.salt.ui.RoundedColumn
 import com.moriafly.salt.ui.SaltTheme
 import com.moriafly.salt.ui.Text
-import com.moriafly.salt.ui.TitleBar
 import com.moriafly.salt.ui.UnstableSaltApi
 import com.moriafly.salt.ui.dialog.InputDialog
 import com.moriafly.salt.ui.popup.rememberPopupState
@@ -107,7 +106,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.math.roundToInt
 
-@OptIn(UnstableSaltApi::class, ExperimentalFoundationApi::class)
+@OptIn(UnstableSaltApi::class)
 @Composable
 fun ConvertPageUi(
     convertPage: ConvertPage,
@@ -319,7 +318,8 @@ fun ConvertPageUi(
                             .fillMaxWidth()
                             .zIndex(1f),
                         color = SaltTheme.colors.highlight,
-                        trackColor = SaltTheme.colors.background
+                        trackColor = SaltTheme.colors.background,
+                        strokeCap = StrokeCap.Square
                     )
                 }
                 LazyColumn {
@@ -446,7 +446,8 @@ fun ConvertPageUi(
                             .fillMaxWidth()
                             .zIndex(1f),
                         color = SaltTheme.colors.highlight,
-                        trackColor = SaltTheme.colors.background
+                        trackColor = SaltTheme.colors.background,
+                        strokeCap = StrokeCap.Square
                     )
                 }
                 Column {
@@ -630,7 +631,8 @@ fun ConvertPageUi(
                             .fillMaxWidth()
                             .zIndex(1f),
                         color = SaltTheme.colors.highlight,
-                        trackColor = SaltTheme.colors.background
+                        trackColor = SaltTheme.colors.background,
+                        strokeCap = StrokeCap.Square
                     )
                 }
                 RoundedColumn {
@@ -941,7 +943,8 @@ fun ConvertPageUi(
                             .fillMaxWidth()
                             .zIndex(1f),
                         color = SaltTheme.colors.highlight,
-                        trackColor = SaltTheme.colors.background
+                        trackColor = SaltTheme.colors.background,
+                        strokeCap = StrokeCap.Square
                     )
                 }
                 Column {
@@ -1521,7 +1524,8 @@ fun ConvertPageUi(
                             .fillMaxWidth()
                             .zIndex(1f),
                         color = SaltTheme.colors.highlight,
-                        trackColor = SaltTheme.colors.background
+                        trackColor = SaltTheme.colors.background,
+                        strokeCap = StrokeCap.Square
                     )
                 }
                 Column {
@@ -1666,7 +1670,8 @@ fun ConvertPageUi(
                             .fillMaxWidth()
                             .zIndex(1f),
                         color = SaltTheme.colors.highlight,
-                        trackColor = SaltTheme.colors.background
+                        trackColor = SaltTheme.colors.background,
+                        strokeCap = StrokeCap.Square
                     )
                 }
                 val focusRequester = remember { FocusRequester() }
@@ -1754,7 +1759,8 @@ fun ConvertPageUi(
                         .fillMaxWidth()
                         .zIndex(1f),
                     color = SaltTheme.colors.highlight,
-                    trackColor = SaltTheme.colors.background
+                    trackColor = SaltTheme.colors.background,
+                    strokeCap = StrokeCap.Square
                 )
             }
             if (showNumberProgressBar.value) {
@@ -1770,6 +1776,7 @@ fun ConvertPageUi(
                         .zIndex(2f),
                     color = SaltTheme.colors.highlight,
                     trackColor = SaltTheme.colors.background,
+                    strokeCap = StrokeCap.Square
                 )
             }
 
@@ -2359,16 +2366,15 @@ fun ConvertPageUi(
                                     ItemTitle(
                                         text = stringResource(R.string.conversion_configuration).replace(
                                             "#",
-                                            if(convertPage.convertMode.intValue == 2 ){
-                                            when (convertPage.selectedSourceLocalApp.intValue) {
-                                                0 -> "Salt Player"
-                                                1 -> "APlayer"
-                                                2 -> "Poweramp"
-                                                3 -> "Microsoft Zune"
-                                                else -> ""
-                                            }
-                                            }
-                                            else{
+                                            if (convertPage.convertMode.intValue == 2) {
+                                                when (convertPage.selectedSourceLocalApp.intValue) {
+                                                    0 -> "Salt Player"
+                                                    1 -> "APlayer"
+                                                    2 -> "Poweramp"
+                                                    3 -> "Microsoft Zune"
+                                                    else -> ""
+                                                }
+                                            } else {
                                                 when (convertPage.selectedTargetApp.intValue) {
                                                     0 -> "Salt Player"
                                                     1 -> "APlayer"
@@ -2423,7 +2429,9 @@ fun ConvertPageUi(
                                                     false -> null
                                                 },
                                             )
-                                            var inputWebdavUsername by remember { mutableStateOf(false) }
+                                            var inputWebdavUsername by remember {
+                                                mutableStateOf(false)
+                                            }
                                             if (inputWebdavUsername) {
                                                 InputDialog(
                                                     onDismissRequest = {

@@ -29,6 +29,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
@@ -43,7 +44,6 @@ import com.moriafly.salt.ui.ItemContainer
 import com.moriafly.salt.ui.RoundedColumn
 import com.moriafly.salt.ui.SaltTheme
 import com.moriafly.salt.ui.Text
-import com.moriafly.salt.ui.TitleBar
 import com.moriafly.salt.ui.UnstableSaltApi
 
 @OptIn(UnstableSaltApi::class)
@@ -156,7 +156,8 @@ fun UnlockPageUi(
                         .fillMaxWidth()
                         .zIndex(1f),
                     color = SaltTheme.colors.highlight,
-                    trackColor = SaltTheme.colors.background
+                    trackColor = SaltTheme.colors.background,
+                    strokeCap = StrokeCap.Square
                 )
             }
             Column(

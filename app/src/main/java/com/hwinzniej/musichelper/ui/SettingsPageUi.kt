@@ -8,7 +8,6 @@ import androidx.compose.animation.core.spring
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -30,6 +29,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -45,14 +45,13 @@ import com.hwinzniej.musichelper.utils.MyVibrationEffect
 import com.hwinzniej.musichelper.utils.Tools
 import com.moriafly.salt.ui.RoundedColumn
 import com.moriafly.salt.ui.SaltTheme
-import com.moriafly.salt.ui.TitleBar
 import com.moriafly.salt.ui.UnstableSaltApi
 import com.moriafly.salt.ui.popup.rememberPopupState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-@OptIn(UnstableSaltApi::class, ExperimentalFoundationApi::class)
+@OptIn(UnstableSaltApi::class)
 @Composable
 fun SettingsPageUi(
     settingsPage: SettingsPage,
@@ -75,6 +74,7 @@ fun SettingsPageUi(
     val themeModePopupMenuState = rememberPopupState()
     val languagePopupMenuState = rememberPopupState()
     val hapticStrengthPopupMenuState = rememberPopupState()
+    val githubProxyPopupMenuState = rememberPopupState()
     val initialPagePopupMenuState = rememberPopupState()
     val coroutineScope = rememberCoroutineScope()
     var showSelectEncryptServerDialog by remember { mutableStateOf(false) }
@@ -119,7 +119,8 @@ fun SettingsPageUi(
                             .fillMaxWidth()
                             .zIndex(1f),
                         color = SaltTheme.colors.highlight,
-                        trackColor = SaltTheme.colors.background
+                        trackColor = SaltTheme.colors.background,
+                        strokeCap = StrokeCap.Square
                     )
                 }
                 RoundedColumn {
@@ -780,6 +781,109 @@ fun SettingsPageUi(
                     iconPaddingValues = PaddingValues(all = 1.5.dp),
                     hapticStrength = hapticStrength.intValue
                 )
+                ItemPopup(
+                    state = githubProxyPopupMenuState,
+                    text = stringResource(id = R.string.github_proxy),
+                    sub = stringResource(R.string.github_proxy_sub),
+                    selectedItem = when (settingsPage.githubProxy.intValue) {
+                        0 -> stringResource(R.string.proxy_direct)
+                        1 -> "ghfast.top"
+                        2 -> "ghproxy.cc"
+                        3 -> "github.store"
+                        4 -> "github.site"
+                        else -> ""
+                    },
+                    popupWidth = 200,
+                    iconPainter = painterResource(id = R.drawable.proxy),
+                    iconColor = SaltTheme.colors.text,
+//                    iconPaddingValues = PaddingValues(all = 1.5.dp),
+                ) {
+                    PopupMenuItem(
+                        onClick = {
+                            MyVibrationEffect(
+                                context,
+                                enableHaptic.value,
+                                hapticStrength.intValue
+                            ).click()
+                            coroutineScope.launch {
+                                dataStore.edit { settings ->
+                                    settings[DataStoreConstants.GITHUB_PROXY] = 0
+                                }
+                            }
+                            githubProxyPopupMenuState.dismiss()
+                        },
+                        text = stringResource(R.string.proxy_direct),
+                        selected = settingsPage.githubProxy.intValue == 0
+                    )
+                    PopupMenuItem(
+                        onClick = {
+                            MyVibrationEffect(
+                                context,
+                                enableHaptic.value,
+                                hapticStrength.intValue
+                            ).click()
+                            coroutineScope.launch {
+                                dataStore.edit { settings ->
+                                    settings[DataStoreConstants.GITHUB_PROXY] = 1
+                                }
+                            }
+                            githubProxyPopupMenuState.dismiss()
+                        },
+                        text = "ghfast.top",
+                        selected = settingsPage.githubProxy.intValue == 1
+                    )
+                    PopupMenuItem(
+                        onClick = {
+                            MyVibrationEffect(
+                                context,
+                                enableHaptic.value,
+                                hapticStrength.intValue
+                            ).click()
+                            coroutineScope.launch {
+                                dataStore.edit { settings ->
+                                    settings[DataStoreConstants.GITHUB_PROXY] = 2
+                                }
+                            }
+                            githubProxyPopupMenuState.dismiss()
+                        },
+                        text = "ghproxy.cc",
+                        selected = settingsPage.githubProxy.intValue == 2
+                    )
+                    PopupMenuItem(
+                        onClick = {
+                            MyVibrationEffect(
+                                context,
+                                enableHaptic.value,
+                                hapticStrength.intValue
+                            ).click()
+                            coroutineScope.launch {
+                                dataStore.edit { settings ->
+                                    settings[DataStoreConstants.GITHUB_PROXY] = 3
+                                }
+                            }
+                            githubProxyPopupMenuState.dismiss()
+                        },
+                        text = "github.store",
+                        selected = settingsPage.githubProxy.intValue == 3
+                    )
+                    PopupMenuItem(
+                        onClick = {
+                            MyVibrationEffect(
+                                context,
+                                enableHaptic.value,
+                                hapticStrength.intValue
+                            ).click()
+                            coroutineScope.launch {
+                                dataStore.edit { settings ->
+                                    settings[DataStoreConstants.GITHUB_PROXY] = 4
+                                }
+                            }
+                            githubProxyPopupMenuState.dismiss()
+                        },
+                        text = "github.site",
+                        selected = settingsPage.githubProxy.intValue == 4
+                    )
+                }
             }
 
             RoundedColumn {

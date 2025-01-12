@@ -410,7 +410,12 @@
     <string name="show_advanced_options">显示高级选项</string>
     <string name="advance_dir_name">自定义用于自动识别的音乐目录文件名</string>
     <string name="webdav_path">Webdav URL和路径</string>
-    <string name="input_webdav_path">请输入 Webdav URL 和路径</string>
-    <string name="input_webdav_username">请输入 Webdav 用户名</string>
+    <string name="input_webdav_path">请输入Webdav URL 和路径</string>
+    <string name="input_webdav_username">请输入Webdav 用户名</string>
     <string name="webdav_username">Webdav 用户名</string>
+    <string name="github_proxy">GitHub 代理</string>
+    <string name="proxy_direct">直连</string>
+    <string name="custom">自定义</string>
+    <string name="github_proxy_sub">选择以加快APK下载速度</string>
+    <string name="update_downloaded">更新包已下载完成</string>
 </resources>

@@ -2,8 +2,10 @@ package com.hwinzniej.musichelper
 
 import android.annotation.SuppressLint
 import android.app.DownloadManager
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.res.Configuration
 import android.content.res.Resources
 import android.net.Uri
@@ -29,7 +31,6 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
@@ -74,6 +75,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.WindowCompat
 import androidx.datastore.core.DataStore
@@ -374,7 +376,7 @@ class MainActivity : ComponentActivity() {
  * UI
  */
 
-@OptIn(ExperimentalFoundationApi::class, UnstableSaltApi::class)
+@OptIn(UnstableSaltApi::class)
 @Composable
 private fun Pages(
     mainPage: MainActivity,
@@ -472,6 +474,9 @@ private fun Pages(
             preferences[DataStoreConstants.SPOTIFY_USER_ID] ?: ""
         agreeUserAgreement =
             preferences[DataStoreConstants.AGREE_USER_AGREEMENT] ?: false
+        settingsPage.githubProxy.intValue =
+            preferences[DataStoreConstants.GITHUB_PROXY] ?: 2
+
         coroutineScope.launch(Dispatchers.Main) {
             mainPage.isDataLoaded.value = true
         }
@@ -533,7 +538,30 @@ private fun Pages(
                         .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
                         .setMimeType("application/vnd.android.package-archive")
                         .setDestinationUri(uri)
-                    downloadManager.enqueue(request)
+                    val downloadId = downloadManager.enqueue(request)
+
+                    val onComplete = object : BroadcastReceiver() {
+                        override fun onReceive(context: Context, intent: Intent) {
+                            val id = intent.getLongExtra(
+                                DownloadManager.EXTRA_DOWNLOAD_ID,
+                                -1
+                            )
+                            if (id == downloadId) {
+                                Toast.makeText(
+                                    context,
+                                    context.getString(R.string.update_downloaded),
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
+                        }
+                    }
+
+                    ContextCompat.registerReceiver(
+                        context,
+                        onComplete,
+                        IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE),
+                        ContextCompat.RECEIVER_EXPORTED
+                    )
                 }
             },
             title = stringResource(id = R.string.download_lateset_ver),
@@ -603,12 +631,8 @@ private fun Pages(
             coroutineScope.launch(Dispatchers.IO) {
                 checkUpdate.value = false
                 val client = OkHttpClient()
-                var request = Request.Builder()
-                    .url("https://gitlab.com/api/v4/projects/54005438/releases/permalink/latest")
-                    .header(
-                        "PRIVATE-TOKEN",
-                        ""
-                    )  //TODO 不要提交到公开仓库！！！
+                val request = Request.Builder()
+                    .url("https://api.github.com/repos/Winnie0408/LocalMusicHelper/releases/latest")
                     .get()
                     .build()
                 try {
@@ -622,31 +646,22 @@ private fun Pages(
                             curVersion = context.packageManager.getPackageInfo(
                                 context.packageName,
                                 0
-                            ).versionName,
+                            ).versionName!!,
                             newVersion = latestVersion.value
                         )
                     ) {
-                        latestDescription.value = response.getString("description")
-                        latestDownloadLink.value = response.getString("description")
-                            .substring(
-                                latestDescription.value.indexOf("[app-release.apk](") + 18,
-                                latestDescription.value.indexOf("/app-release.apk)") + 16
-                            )
+                        latestDescription.value = response.getString("body")
                         latestDownloadLink.value =
-                            "https://gitlab.com/HWinZnieJ/LocalMusicHelper${latestDownloadLink.value}"
-                        request = Request.Builder()
-                            .url(latestDownloadLink.value)
-                            .head()
-                            .build()
-                        client.newCall(request).execute().use { responses ->
-                            responses.header("Content-Length")?.let { header ->
-                                mainPage.updateFileSize.floatValue = header.toFloat()
-                            }
-                        }
-                        latestDescription.value = latestDescription.value.substring(
-                            0,
-                            latestDescription.value.indexOf("\n[app-")
-                        )
+                            when (settingsPage.githubProxy.intValue) {
+                                0 -> ""
+                                1 -> "https://ghfast.top/"
+                                2 -> "https://ghproxy.cc/"
+                                3 -> "https://github.store/"
+                                4 -> "https://github.site/"
+                                else -> ""
+                            } + "https://github.com/Winnie0408/LocalMusicHelper/releases/download/v" + latestVersion.value + "/app-release.apk"
+                        mainPage.updateFileSize.floatValue =
+                            (response.getJSONArray("assets")[1] as JSONObject).getFloat("size")
                         showNewVersionAvailableDialog.value = true
                     }
                 } catch (e: Exception) {
@@ -920,6 +935,7 @@ private fun Pages(
                                             language = mainPage.language,
                                             updateFileSize = mainPage.updateFileSize,
                                             hapticStrength = mainPage.hapticStrength,
+                                            githubProxy = settingsPage.githubProxy
                                         )
                                     }
                                 }
@@ -964,6 +980,7 @@ private fun Pages(
                                             language = mainPage.language,
                                             updateFileSize = mainPage.updateFileSize,
                                             hapticStrength = mainPage.hapticStrength,
+                                            githubProxy = settingsPage.githubProxy
                                         )
                                     }
                                 }

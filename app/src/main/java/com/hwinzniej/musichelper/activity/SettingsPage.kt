@@ -37,6 +37,7 @@ class SettingsPage(
     )
     val showDialogProgressBar = mutableStateOf(false)
     val initialPage = mutableIntStateOf(0)
+    val githubProxy = mutableIntStateOf(2)
 
     fun checkServerPing() {
         lifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
