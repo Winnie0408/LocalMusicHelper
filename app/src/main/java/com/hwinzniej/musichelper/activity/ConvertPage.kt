@@ -415,7 +415,7 @@ class ConvertPage(
                         }
 
                         else -> when (selectedTargetApp.intValue) {
-                            3,4 -> {
+                            3, 4 -> {
                                 val sourceFile = File(sourcePlaylistFilePath)
                                 val readPlayList = sourceFile.readLines()
                                 isAutoMatched.intValue = 1
@@ -3072,7 +3072,10 @@ class ConvertPage(
             val music3InfoList = if (useCustomResultFile.value) {
                 val db = SQLiteDatabase.openOrCreateDatabase(File(resultFilePath), null)
                 val musicInfoList = mutableListOf<MusicInfo>()
-                db.rawQuery("SELECT song, artist, album, absolutePath, id FROM music", null)
+                db.rawQuery(
+                    "SELECT song, artist, albumArtist, album, absolutePath, id FROM music",
+                    null
+                )
                     .use { cursor ->
                         while (cursor.moveToNext()) {
                             val id = cursor.getInt(cursor.getColumnIndexOrThrow("id"))
@@ -3460,8 +3463,12 @@ class ConvertPage(
                 val db = SQLiteDatabase.openOrCreateDatabase(File(resultFilePath), null)
                 val musicInfoList = mutableListOf<MusicInfo>()
                 db.rawQuery(
-                    "SELECT song, artist, album, absolutePath, id FROM music WHERE song LIKE '%${inputSearchWords.value}%' OR artist LIKE '%${inputSearchWords.value}%' OR album LIKE '%${inputSearchWords.value}%' LIMIT 3",
-                    null
+                    "SELECT song, artist, album, absolutePath, id FROM music WHERE song LIKE ? OR artist LIKE ? OR album LIKE ? LIMIT 3",
+                    arrayOf(
+                        "%${inputSearchWords.value}%",
+                        "%${inputSearchWords.value}%",
+                        "%${inputSearchWords.value}%"
+                    )
                 ).use { cursor ->
                     while (cursor.moveToNext()) {
                         val id = cursor.getInt(cursor.getColumnIndexOrThrow("id"))
@@ -3522,7 +3529,7 @@ class ConvertPage(
             val songInfo = if (useCustomResultFile.value) {
                 val db = SQLiteDatabase.openOrCreateDatabase(File(resultFilePath), null)
                 val cursor = db.rawQuery(
-                    "SELECT song, artist, album, absolutePath FROM music WHERE id = ?",
+                    "SELECT song, artist, album, absolutePath, albumArtist FROM music WHERE id = ?",
                     arrayOf(songId.toString())
                 )
                 cursor.moveToFirst()
@@ -3621,20 +3628,41 @@ class ConvertPage(
                             )
                         )
 
-                        4 ->{
+                        4 -> {
                             for (i in 0 until convertResult.size) {
                                 if (convertResult[i] == null)
                                     continue
                                 if (convertResult[i]!![0] == "0" && saveSuccessSongs) {
-                                    fileWriter.write("${convertResult[i]!![7].replace(localMusicPath.value, webdavPath.value)}?username=${webdavUsername.value}\n")
+                                    fileWriter.write(
+                                        "${
+                                            convertResult[i]!![7].replace(
+                                                localMusicPath.value,
+                                                webdavPath.value
+                                            )
+                                        }?username=${webdavUsername.value}\n"
+                                    )
                                     continue
                                 }
                                 if (convertResult[i]!![0] == "1" && saveCautionSongs) {
-                                    fileWriter.write("${convertResult[i]!![7].replace(localMusicPath.value, webdavPath.value)}?username=${webdavUsername.value}\n")
+                                    fileWriter.write(
+                                        "${
+                                            convertResult[i]!![7].replace(
+                                                localMusicPath.value,
+                                                webdavPath.value
+                                            )
+                                        }?username=${webdavUsername.value}\n"
+                                    )
                                     continue
                                 }
                                 if (convertResult[i]!![0] == "2" && saveManualSongs) {
-                                    fileWriter.write("${convertResult[i]!![7].replace(localMusicPath.value, webdavPath.value)}?username=${webdavUsername.value}\n")
+                                    fileWriter.write(
+                                        "${
+                                            convertResult[i]!![7].replace(
+                                                localMusicPath.value,
+                                                webdavPath.value
+                                            )
+                                        }?username=${webdavUsername.value}\n"
+                                    )
                                     continue
                                 }
                             }
@@ -4054,18 +4082,20 @@ class ConvertPage(
                             }
                         }
                     }
+
                     4 -> {
                         val inputFile = sourceFile.readLines()
                         val fileWriter = FileWriter(targetFile, true)
                         var qinaltPlaylist = ""
-                        inputFile.forEach{
-                            qinaltPlaylist += it.replace(localMusicPath.value, webdavPath.value).
-                            replace("\\", "/").replace(""""""","&quot;") +
+                        inputFile.forEach {
+                            qinaltPlaylist += it.replace(localMusicPath.value, webdavPath.value)
+                                .replace("\\", "/").replace(""""""", "&quot;") +
                                     "?username=${webdavUsername.value}" + "\n"
                             fileWriter.write(qinaltPlaylist)
                         }
                         fileWriter.close()
                     }
+
                     else -> {
                         sourceFile.copyTo(targetFile, true)
                     }
@@ -4082,18 +4112,20 @@ class ConvertPage(
                             }
                         }
                     }
+
                     4 -> {
                         val inputFile = sourceFile.readLines()
                         val fileWriter = FileWriter(targetFile, true)
                         var qinaltPlaylist = ""
-                        inputFile.forEach{
-                            qinaltPlaylist += it.replace(localMusicPath.value, webdavPath.value).
-                            replace("\\", "/").replace(""""""","&quot;") +
+                        inputFile.forEach {
+                            qinaltPlaylist += it.replace(localMusicPath.value, webdavPath.value)
+                                .replace("\\", "/").replace(""""""", "&quot;") +
                                     "?username=${webdavUsername.value}" + "\n"
                             fileWriter.write(qinaltPlaylist)
                         }
                         fileWriter.close()
                     }
+
                     else -> {
                         sourceFile.copyTo(targetFile, true)
                     }
@@ -4110,20 +4142,23 @@ class ConvertPage(
                             }
                         }
                     }
+
                     4 -> {
                         val fileWriter = FileWriter(targetFile, true)
                         val inputFile = sourceFile.readLines()
                         var qinaltPlaylist = ""
-                        inputFile.forEach{
+                        inputFile.forEach {
                             qinaltPlaylist += it.replace("#.*((\\r\\n)|\\r|\\n)".toRegex(), "")
                                 .replace("(\\r\\n)|\\r".toRegex(), "\n")
-                                .replace("primary/", "/storage/emulated/0/").replace(localMusicPath.value, webdavPath.value).
-                            replace("\\", "/").replace(""""""","&quot;") +
+                                .replace("primary/", "/storage/emulated/0/")
+                                .replace(localMusicPath.value, webdavPath.value).replace("\\", "/")
+                                .replace(""""""", "&quot;") +
                                     "?username=${webdavUsername.value}" + "\n"
                         }
                         fileWriter.write(qinaltPlaylist)
                         fileWriter.close()
                     }
+
                     else -> {
                         var powerampPlaylist = sourceFile.readText()
                         powerampPlaylist = powerampPlaylist
@@ -4157,17 +4192,20 @@ class ConvertPage(
                 }
                 when (selectedTargetApp.intValue) {
                     4 -> {
-                        zuneInputFile.forEach{
-                            fileWriter.write(it.replace(localMusicPath.value, webdavPath.value).
-                            replace("\\", "/").replace(""""""","&quot;") +
-                                    "?username=${webdavUsername.value}" + "\n")
+                        zuneInputFile.forEach {
+                            fileWriter.write(
+                                it.replace(localMusicPath.value, webdavPath.value)
+                                    .replace("\\", "/").replace(""""""", "&quot;") +
+                                        "?username=${webdavUsername.value}" + "\n"
+                            )
                         }
                         fileWriter.close()
                     }
+
                     else -> {
-                            zuneInputFile.forEach {
-                                fileWriter.write(it)
-                            }
+                        zuneInputFile.forEach {
+                            fileWriter.write(it)
+                        }
                     }
                 }
                 return targetFile.absolutePath.replace("/storage/emulated/0/", "")

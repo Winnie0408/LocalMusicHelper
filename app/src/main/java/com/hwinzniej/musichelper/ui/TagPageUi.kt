@@ -82,7 +82,6 @@ import com.hwinzniej.musichelper.utils.MyVibrationEffect
 import com.moriafly.salt.ui.RoundedColumn
 import com.moriafly.salt.ui.SaltTheme
 import com.moriafly.salt.ui.Text
-import com.moriafly.salt.ui.UnstableSaltApi
 import com.moriafly.salt.ui.popup.rememberPopupState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -91,7 +90,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 @OptIn(
-    UnstableSaltApi::class, ExperimentalFoundationApi::class, ExperimentalMaterialApi::class
+    ExperimentalFoundationApi::class, ExperimentalMaterialApi::class
 )
 @Composable
 fun TagPageUi(
@@ -636,7 +635,7 @@ fun TagPageUi(
                             }
                         }
                     }
-                    AnimatedVisibility(visible = completeResult.size != 0) {
+                    AnimatedVisibility(visible = completeResult.isNotEmpty()) {
                         RoundedColumn {
                             ItemTitle(text = stringResource(id = R.string.completion_log))
                             LazyColumn(
@@ -1189,7 +1188,7 @@ fun TagPageUi(
                             }
                         }
 
-                        if (songList.size != 0 || !refreshComplete || showFab.value) {
+                        if (songList.isNotEmpty() || !refreshComplete || showFab.value) {
                             FloatingActionButton(
                                 expanded = showFab,
                                 heightExpand = 150.dp,
@@ -1301,9 +1300,9 @@ fun TagPageUi(
                                     ItemTitle(
                                         text = stringResource(id = R.string.cover_pic),
                                         paddingValues = PaddingValues(
-                                            start = SaltTheme.dimens.innerHorizontalPadding,
-                                            end = SaltTheme.dimens.innerHorizontalPadding,
-                                            top = SaltTheme.dimens.innerVerticalPadding,
+                                            start = SaltTheme.dimens.padding,
+                                            end = SaltTheme.dimens.padding,
+                                            top = SaltTheme.dimens.subPadding,
                                             bottom = 4.dp
                                         )
                                     )
@@ -1330,7 +1329,7 @@ fun TagPageUi(
                                                 Image(
                                                     modifier = Modifier
                                                         .fillMaxWidth()
-                                                        .padding(horizontal = SaltTheme.dimens.innerHorizontalPadding)
+                                                        .padding(horizontal = SaltTheme.dimens.padding)
                                                         .clip(RoundedCornerShape(12.dp))
                                                         .combinedClickable(
                                                             onClick = {
@@ -1351,8 +1350,8 @@ fun TagPageUi(
                                                 modifier = Modifier
                                                     .fillMaxWidth()
                                                     .padding(
-                                                        start = SaltTheme.dimens.innerHorizontalPadding,
-                                                        end = SaltTheme.dimens.innerHorizontalPadding,
+                                                        start = SaltTheme.dimens.padding,
+                                                        end = SaltTheme.dimens.padding,
                                                         bottom = 8.dp
                                                     ),
                                                 onClick = {
@@ -1500,9 +1499,9 @@ fun SongInfoItem(
     ItemTitle(
         text = title,
         paddingValues = PaddingValues(
-            start = SaltTheme.dimens.innerHorizontalPadding,
-            end = SaltTheme.dimens.innerHorizontalPadding,
-            top = SaltTheme.dimens.innerVerticalPadding
+            start = SaltTheme.dimens.padding,
+            end = SaltTheme.dimens.padding,
+            top = SaltTheme.dimens.subPadding
         )
     )
     ItemEdit(
@@ -1513,8 +1512,8 @@ fun SongInfoItem(
         showClearButton = true,
         onClear = onClear,
         paddingValues = PaddingValues(
-            start = SaltTheme.dimens.innerHorizontalPadding,
-            end = SaltTheme.dimens.innerHorizontalPadding,
+            start = SaltTheme.dimens.padding,
+            end = SaltTheme.dimens.padding,
             bottom = 8.dp,
             top = 4.dp
         ),

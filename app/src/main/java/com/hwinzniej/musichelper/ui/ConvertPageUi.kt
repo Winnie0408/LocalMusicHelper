@@ -94,7 +94,7 @@ import com.moriafly.salt.ui.ItemContainer
 import com.moriafly.salt.ui.RoundedColumn
 import com.moriafly.salt.ui.SaltTheme
 import com.moriafly.salt.ui.Text
-import com.moriafly.salt.ui.UnstableSaltApi
+import com.moriafly.salt.ui.UnstableSaltUiApi
 import com.moriafly.salt.ui.dialog.InputDialog
 import com.moriafly.salt.ui.popup.rememberPopupState
 import dev.jeziellago.compose.markdowntext.MarkdownText
@@ -106,7 +106,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.math.roundToInt
 
-@OptIn(UnstableSaltApi::class)
+@OptIn(UnstableSaltUiApi::class)
 @Composable
 fun ConvertPageUi(
     convertPage: ConvertPage,
@@ -469,7 +469,8 @@ fun ConvertPageUi(
                         }
                         BasicButton(
                             modifier = Modifier
-                                .padding(top = 12.dp, bottom = 12.dp, end = 16.dp),
+                                .padding(top = 12.dp, end = 16.dp)
+                                .heightIn(min = SaltTheme.dimens.item),
                             enabled = true,
                             onClick = { showDeleteDialog = true },
                             backgroundColor = colorResource(id = R.color.unmatched),
@@ -478,7 +479,8 @@ fun ConvertPageUi(
                         ) {
                             Icon(
                                 modifier = Modifier
-                                    .size(20.dp),
+                                    .size(SaltTheme.dimens.itemIcon)
+                                    .align(Alignment.Center),
                                 painter = painterResource(id = R.drawable.ic_delete),
                                 contentDescription = null,
                                 tint = Color.White
@@ -579,7 +581,7 @@ fun ConvertPageUi(
                             currentIp = kugouCurrentIp
                         )
                     )
-                    userLoggedIn = kugouUserRelated.size != 0
+                    userLoggedIn = kugouUserRelated.isNotEmpty()
                     if (userLoggedIn) {
                         dataStore.edit { settings ->
                             settings[DataStoreConstants.KUGOU_TOKEN] =
@@ -1687,8 +1689,8 @@ fun ConvertPageUi(
                     modifier = Modifier
                         .focusRequester(focusRequester),
                     paddingValues = PaddingValues(
-                        start = SaltTheme.dimens.outerHorizontalPadding,
-                        end = SaltTheme.dimens.outerHorizontalPadding,
+                        start = SaltTheme.dimens.padding,
+                        end = SaltTheme.dimens.padding,
                         top = 14.dp,
                         bottom = 8.dp
                     ),
@@ -1776,7 +1778,8 @@ fun ConvertPageUi(
                         .zIndex(2f),
                     color = SaltTheme.colors.highlight,
                     trackColor = SaltTheme.colors.background,
-                    strokeCap = StrokeCap.Square
+                    strokeCap = StrokeCap.Square,
+                    drawStopIndicator = { }
                 )
             }
 
@@ -2972,7 +2975,8 @@ fun ConvertPageUi(
                                             ) {
                                                 Icon(
                                                     modifier = Modifier
-                                                        .size(22.dp),
+                                                        .size(SaltTheme.dimens.itemIcon)
+                                                        .align(Alignment.Center),
                                                     painter = painterResource(id = R.drawable.refresh),
                                                     contentDescription = null,
                                                     tint = if (it) Color.Gray else SaltTheme.colors.text
@@ -3002,8 +3006,9 @@ fun ConvertPageUi(
                                             ) {
                                                 Icon(
                                                     modifier = Modifier
-                                                        .size(22.dp)
-                                                        .padding(all = 1.dp),
+                                                        .size(SaltTheme.dimens.itemIcon)
+                                                        .padding(all = 1.dp)
+                                                        .align(Alignment.Center),
                                                     painter = painterResource(id = R.drawable.plus),
                                                     contentDescription = null,
                                                     tint = if (it) Color.Gray else SaltTheme.colors.text
@@ -3623,7 +3628,7 @@ fun ConvertPageUi(
                                         }
                                         Row(
                                             modifier = Modifier.padding(
-                                                horizontal = SaltTheme.dimens.outerHorizontalPadding,
+                                                horizontal = SaltTheme.dimens.padding,
                                                 vertical = 8.dp
                                             ),
                                         ) {
@@ -3673,13 +3678,13 @@ fun ConvertPageUi(
                                     Icon(
                                         modifier = Modifier.size(50.dp),
                                         painter =
-                                        if (convertPage.resultFileLocation.size != 0)
+                                        if (convertPage.resultFileLocation.isNotEmpty())
                                             painterResource(id = R.drawable.ic_check)
                                         else
                                             painterResource(id = R.drawable.ic_tips),
                                         contentDescription = null,
                                         tint =
-                                        if (convertPage.resultFileLocation.size != 0)
+                                        if (convertPage.resultFileLocation.isNotEmpty())
                                             colorResource(id = R.color.matched)
                                         else
                                             colorResource(id = R.color.warning)
@@ -3690,7 +3695,7 @@ fun ConvertPageUi(
                                     ) {
                                         ItemText(
                                             text =
-                                            if (convertPage.resultFileLocation.size != 0)
+                                            if (convertPage.resultFileLocation.isNotEmpty())
                                                 stringResource(id = R.string.all_done)
                                             else
                                                 stringResource(id = R.string.not_convert_any_playlist),
@@ -3700,7 +3705,7 @@ fun ConvertPageUi(
                                 }
                                 Spacer(modifier = Modifier.height(12.dp))
                             }
-                            if (convertPage.resultFileLocation.size != 0) {
+                            if (convertPage.resultFileLocation.isNotEmpty()) {
                                 RoundedColumn {
                                     ItemTitle(text = stringResource(id = R.string.details_of_results))
                                     ItemContainer {
@@ -3782,7 +3787,7 @@ fun ConvertPageUi(
                                 }
                             }
 
-                            if (convertPage.resultFileLocation.size != 0) {
+                            if (convertPage.resultFileLocation.isNotEmpty()) {
                                 ItemContainer {
                                     Row {
                                         TextButton(
@@ -3841,8 +3846,8 @@ fun PathItem(
         showClearButton = true,
         onClear = onClear,
         paddingValues = PaddingValues(
-            start = SaltTheme.dimens.innerHorizontalPadding,
-            end = SaltTheme.dimens.innerHorizontalPadding,
+            start = SaltTheme.dimens.padding,
+            end = SaltTheme.dimens.padding,
             bottom = 8.dp,
             top = 4.dp
         ),

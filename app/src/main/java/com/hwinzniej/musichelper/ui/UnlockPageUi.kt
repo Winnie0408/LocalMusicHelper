@@ -44,9 +44,7 @@ import com.moriafly.salt.ui.ItemContainer
 import com.moriafly.salt.ui.RoundedColumn
 import com.moriafly.salt.ui.SaltTheme
 import com.moriafly.salt.ui.Text
-import com.moriafly.salt.ui.UnstableSaltApi
 
-@OptIn(UnstableSaltApi::class)
 @Composable
 fun UnlockPageUi(
     unlockPage: UnlockPage,

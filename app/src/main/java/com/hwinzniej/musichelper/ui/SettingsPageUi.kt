@@ -45,13 +45,11 @@ import com.hwinzniej.musichelper.utils.MyVibrationEffect
 import com.hwinzniej.musichelper.utils.Tools
 import com.moriafly.salt.ui.RoundedColumn
 import com.moriafly.salt.ui.SaltTheme
-import com.moriafly.salt.ui.UnstableSaltApi
 import com.moriafly.salt.ui.popup.rememberPopupState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-@OptIn(UnstableSaltApi::class)
 @Composable
 fun SettingsPageUi(
     settingsPage: SettingsPage,
@@ -791,6 +789,7 @@ fun SettingsPageUi(
                         2 -> "ghproxy.cc"
                         3 -> "github.store"
                         4 -> "github.site"
+                        5 -> "ghpxy.hwinzniej.top"
                         else -> ""
                     },
                     popupWidth = 200,
@@ -882,6 +881,23 @@ fun SettingsPageUi(
                         },
                         text = "github.site",
                         selected = settingsPage.githubProxy.intValue == 4
+                    )
+                    PopupMenuItem(
+                        onClick = {
+                            MyVibrationEffect(
+                                context,
+                                enableHaptic.value,
+                                hapticStrength.intValue
+                            ).click()
+                            coroutineScope.launch {
+                                dataStore.edit { settings ->
+                                    settings[DataStoreConstants.GITHUB_PROXY] = 5
+                                }
+                            }
+                            githubProxyPopupMenuState.dismiss()
+                        },
+                        text = "ghpxy.hwinzniej.top",
+                        selected = settingsPage.githubProxy.intValue == 5
                     )
                 }
             }

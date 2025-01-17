@@ -13,6 +13,7 @@ import androidx.compose.animation.core.spring
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -28,6 +29,7 @@ import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.ripple
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableFloatState
@@ -60,11 +62,9 @@ import com.alibaba.fastjson2.JSONObject
 import com.hwinzniej.musichelper.R
 import com.hwinzniej.musichelper.utils.MyVibrationEffect
 import com.hwinzniej.musichelper.utils.Tools
-import com.moriafly.salt.ui.ItemContainer
 import com.moriafly.salt.ui.RoundedColumn
 import com.moriafly.salt.ui.SaltTheme
 import com.moriafly.salt.ui.Text
-import com.moriafly.salt.ui.UnstableSaltApi
 import dev.jeziellago.compose.markdowntext.MarkdownText
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -76,7 +76,6 @@ import java.io.File
 import java.net.InetAddress
 import java.util.Locale
 
-@OptIn(UnstableSaltApi::class)
 @Composable
 fun AboutPageUi(
     settingsPageState: PagerState,
@@ -330,6 +329,7 @@ fun AboutPageUi(
                                                 2 -> "https://ghproxy.cc/https://github.com/"
                                                 3 -> "https://github.store/"
                                                 4 -> "https://github.site/"
+                                                5 -> "https://ghpxy.hwinzniej.top/https://github.com/"
                                                 else -> ""
                                             } + "Winnie0408/LocalMusicHelper/releases/download/v" + latestVersion.value + "/app-release.apk"
                                         updateFileSize.floatValue =
@@ -440,23 +440,22 @@ fun AboutPageUi(
                         onClick = {
                             yesDialogCustomContent = {
                                 RoundedColumn {
-                                    ItemContainer {
-                                        MarkdownText(
-                                            modifier = Modifier
-                                                .heightIn(max = (LocalConfiguration.current.screenHeightDp / 2.2).dp)
-                                                .verticalScroll(rememberScrollState()),
-                                            markdown = stringResource(id = R.string.service_agreements_content).replace(
-                                                "#n",
-                                                "\n"
-                                            ),
-                                            style = TextStyle(
-                                                color = SaltTheme.colors.text,
-                                                fontSize = 14.sp
-                                            ),
-                                            isTextSelectable = true,
-                                            disableLinkMovementMethod = true
-                                        )
-                                    }
+                                    MarkdownText(
+                                        modifier = Modifier
+                                            .heightIn(max = (LocalConfiguration.current.screenHeightDp / 2.2).dp)
+                                            .padding(horizontal = SaltTheme.dimens.padding)
+                                            .verticalScroll(rememberScrollState()),
+                                        markdown = stringResource(id = R.string.service_agreements_content).replace(
+                                            "#n",
+                                            "\n"
+                                        ),
+                                        style = TextStyle(
+                                            color = SaltTheme.colors.text,
+                                            fontSize = 14.sp
+                                        ),
+                                        isTextSelectable = true,
+                                        disableLinkMovementMethod = true
+                                    )
                                 }
                             }
                             yesDialogTitle = context.getString(R.string.service_agreements)
@@ -511,7 +510,10 @@ fun AboutPageUi(
                                             modifier = Modifier
                                                 .clip(RoundedCornerShape(12.dp))
                                                 .size(200.dp)
-                                                .clickable {
+                                                .clickable(
+                                                    interactionSource = remember { MutableInteractionSource() },
+                                                    indication = ripple()
+                                                ) {
                                                     val bitmap = BitmapFactory.decodeResource(
                                                         context.resources,
                                                         R.drawable.alipay
@@ -571,7 +573,10 @@ fun AboutPageUi(
                                             modifier = Modifier
                                                 .clip(RoundedCornerShape(12.dp))
                                                 .size(200.dp)
-                                                .clickable {
+                                                .clickable(
+                                                    interactionSource = remember { MutableInteractionSource() },
+                                                    indication = ripple()
+                                                ) {
                                                     val bitmap = BitmapFactory.decodeResource(
                                                         context.resources,
                                                         R.drawable.wechat

@@ -109,10 +109,9 @@ import com.hwinzniej.musichelper.utils.MyVibrationEffect
 import com.hwinzniej.musichelper.utils.Tools
 import com.moriafly.salt.ui.BottomBar
 import com.moriafly.salt.ui.BottomBarItem
-import com.moriafly.salt.ui.ItemContainer
 import com.moriafly.salt.ui.RoundedColumn
 import com.moriafly.salt.ui.SaltTheme
-import com.moriafly.salt.ui.UnstableSaltApi
+import com.moriafly.salt.ui.UnstableSaltUiApi
 import com.moriafly.salt.ui.darkSaltColors
 import com.moriafly.salt.ui.lightSaltColors
 import com.moriafly.salt.ui.saltColorsByColorScheme
@@ -161,8 +160,8 @@ class MainActivity : ComponentActivity() {
     var updateFileSize = mutableFloatStateOf(0f)
     var isDataLoaded = mutableStateOf(false)
 
+    @OptIn(UnstableSaltUiApi::class)
     @SuppressLint("NewApi")
-    @OptIn(UnstableSaltApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         dataStore = (application as MyDataStore).dataStore
@@ -376,7 +375,7 @@ class MainActivity : ComponentActivity() {
  * UI
  */
 
-@OptIn(UnstableSaltApi::class)
+@OptIn(UnstableSaltUiApi::class)
 @Composable
 private fun Pages(
     mainPage: MainActivity,
@@ -429,15 +428,15 @@ private fun Pages(
             preferences[DataStoreConstants.INITIAL_PAGE] ?: 0
         loadUI = true
         mainPage.enableDynamicColor.value =
-            preferences[DataStoreConstants.KEY_ENABLE_DYNAMIC_COLOR] ?: false
+            preferences[DataStoreConstants.KEY_ENABLE_DYNAMIC_COLOR] == true
         mainPage.selectedThemeMode.intValue = preferences[DataStoreConstants.KEY_THEME_MODE] ?: 2
-        mainPage.enableHaptic.value = preferences[DataStoreConstants.KEY_ENABLE_HAPTIC] ?: true
+        mainPage.enableHaptic.value = preferences[DataStoreConstants.KEY_ENABLE_HAPTIC] != false
         mainPage.hapticStrength.intValue = preferences[DataStoreConstants.HAPTIC_STRENGTH] ?: 3
         mainPage.language.value = preferences[DataStoreConstants.KEY_LANGUAGE] ?: "system"
         settingsPage.enableAutoCheckUpdate.value =
-            preferences[DataStoreConstants.KEY_ENABLE_AUTO_CHECK_UPDATE] ?: true
+            preferences[DataStoreConstants.KEY_ENABLE_AUTO_CHECK_UPDATE] != false
         convertPage.useRootAccess.value =
-            preferences[DataStoreConstants.KEY_USE_ROOT_ACCESS] ?: false
+            preferences[DataStoreConstants.KEY_USE_ROOT_ACCESS] == true
         settingsPage.encryptServer.value =
             preferences[DataStoreConstants.KEY_ENCRYPT_SERVER] ?: "cf"
         convertPage.neteaseUserId.value =
@@ -449,15 +448,15 @@ private fun Pages(
         convertPage.selectedSourceApp.intValue =
             preferences[DataStoreConstants.PLAYLIST_SOURCE_PLATFORM] ?: 0
         settingsPage.umFileLegal.value =
-            preferences[DataStoreConstants.UM_FILE_LEGAL] ?: false
+            preferences[DataStoreConstants.UM_FILE_LEGAL] == true
         settingsPage.umSupportOverWrite.value =
-            preferences[DataStoreConstants.UM_SUPPORT_OVERWRITE] ?: false
-        overwrite.value = preferences[DataStoreConstants.TAG_OVERWRITE] ?: false
-        lyricist.value = preferences[DataStoreConstants.TAG_LYRICIST] ?: true
-        composer.value = preferences[DataStoreConstants.TAG_COMPOSER] ?: true
-        arranger.value = preferences[DataStoreConstants.TAG_ARRANGER] ?: true
+            preferences[DataStoreConstants.UM_SUPPORT_OVERWRITE] == true
+        overwrite.value = preferences[DataStoreConstants.TAG_OVERWRITE] == true
+        lyricist.value = preferences[DataStoreConstants.TAG_LYRICIST] != false
+        composer.value = preferences[DataStoreConstants.TAG_COMPOSER] != false
+        arranger.value = preferences[DataStoreConstants.TAG_ARRANGER] != false
         sortMethod.intValue = preferences[DataStoreConstants.SORT_METHOD] ?: 0
-        slow.value = preferences[DataStoreConstants.SLOW_MODE] ?: false
+        slow.value = preferences[DataStoreConstants.SLOW_MODE] == true
         convertPage.lunaInstallId.value =
             preferences[DataStoreConstants.LUNA_INSTALL_ID] ?: ""
         convertPage.lunaDeviceId.value =
@@ -473,7 +472,7 @@ private fun Pages(
         convertPage.spotifyUserId.value =
             preferences[DataStoreConstants.SPOTIFY_USER_ID] ?: ""
         agreeUserAgreement =
-            preferences[DataStoreConstants.AGREE_USER_AGREEMENT] ?: false
+            preferences[DataStoreConstants.AGREE_USER_AGREEMENT] == true
         settingsPage.githubProxy.intValue =
             preferences[DataStoreConstants.GITHUB_PROXY] ?: 2
 
@@ -658,6 +657,7 @@ private fun Pages(
                                 2 -> "https://ghproxy.cc/https://github.com/"
                                 3 -> "https://github.store/"
                                 4 -> "https://github.site/"
+                                5 -> "https://ghpxy.hwinzniej.top/https://github.com/"
                                 else -> ""
                             } + "Winnie0408/LocalMusicHelper/releases/download/v" + latestVersion.value + "/app-release.apk"
                         mainPage.updateFileSize.floatValue =
@@ -744,23 +744,22 @@ private fun Pages(
                     .fillMaxWidth()
             ) {
                 RoundedColumn {
-                    ItemContainer {
-                        MarkdownText(
-                            modifier = Modifier
-                                .heightIn(max = (configuration.screenHeightDp / 2.4).dp)
-                                .verticalScroll(rememberScrollState()),
-                            markdown = stringResource(id = R.string.service_agreements_content).replace(
-                                "#n",
-                                "\n"
-                            ),
-                            style = TextStyle(
-                                color = SaltTheme.colors.text,
-                                fontSize = 14.sp
-                            ),
-                            isTextSelectable = true,
-                            disableLinkMovementMethod = true
-                        )
-                    }
+                    MarkdownText(
+                        modifier = Modifier
+                            .heightIn(max = (configuration.screenHeightDp / 2.4).dp)
+                            .padding(horizontal = SaltTheme.dimens.padding)
+                            .verticalScroll(rememberScrollState()),
+                        markdown = stringResource(id = R.string.service_agreements_content).replace(
+                            "#n",
+                            "\n"
+                        ),
+                        style = TextStyle(
+                            color = SaltTheme.colors.text,
+                            fontSize = 14.sp
+                        ),
+                        isTextSelectable = true,
+                        disableLinkMovementMethod = true
+                    )
                 }
                 RoundedColumn {
                     ItemCheck(
