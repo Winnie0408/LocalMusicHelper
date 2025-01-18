@@ -1291,10 +1291,12 @@ fun TagPageUi(
                             RoundedColumn {
                                 val infoPageScrollState = rememberScrollState()
                                 LaunchedEffect(Unit) {
-                                    infoPageScrollState.animateScrollTo(
-                                        value = 0,
-                                        animationSpec = spring(2f)
-                                    )
+                                    showSearchInput = false
+                                    infoPageScrollState.scrollTo(0)
+//                                    infoPageScrollState.animateScrollTo(
+//                                        value = 0,
+//                                        animationSpec = spring(2f)
+//                                    )
                                 }
                                 Column(modifier = Modifier.verticalScroll(infoPageScrollState)) {
                                     ItemTitle(

@@ -347,7 +347,6 @@ fun YesDialog(
         DialogTitle(text = title)
         content?.let { ItemOuterTip(text = it) }
         drawContent?.let {
-            ItemOuterHalfSpacer()
             drawContent.invoke()
         }
         ItemOuterHalfSpacer()

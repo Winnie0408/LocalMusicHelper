@@ -426,4 +426,6 @@
     <string name="custom">Custom</string>
     <string name="github_proxy_sub">Choose to accelerate APK download speed</string>
     <string name="update_downloaded">Update APK downloaded</string>
+    <string name="pick_file">Pick file</string>
+    <string name="pick_directory">Pick directory</string>
 </resources>

@@ -418,4 +418,6 @@
     <string name="custom">사용자 지정</string>
     <string name="github_proxy_sub">APK 다운로드 속도 가속화 선택</string>
     <string name="update_downloaded">업데이트 APK가 다운로드 되었습니다</string>
+    <string name="pick_file">파일 선택</string>
+    <string name="pick_directory">디렉토리 선택</string>
 </resources>

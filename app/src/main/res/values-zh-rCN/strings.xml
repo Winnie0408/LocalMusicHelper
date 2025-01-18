@@ -418,4 +418,6 @@
     <string name="custom">自定义</string>
     <string name="github_proxy_sub">选择以加快APK下载速度</string>
     <string name="update_downloaded">更新包已下载完成</string>
+    <string name="pick_file">选择文件</string>
+    <string name="pick_directory">选择目录</string>
 </resources>

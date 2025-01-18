@@ -3412,7 +3412,10 @@ fun ConvertPageUi(
                                                                 modifier = Modifier.weight(1f)
                                                             ) {
                                                                 when (it) {
-                                                                    0 -> items(convertResult.size) { index ->
+                                                                    0 -> items(
+                                                                        (convertResult.keys.maxOrNull()
+                                                                            ?: -1) + 1
+                                                                    ) { index ->
                                                                         if (convertResult[index] != null)
                                                                             Item(
                                                                                 onClick = {
@@ -3462,7 +3465,10 @@ fun ConvertPageUi(
                                                                             )
                                                                     }
 
-                                                                    1 -> items(convertResult.size) { index ->
+                                                                    1 -> items(
+                                                                        (convertResult.keys.maxOrNull()
+                                                                            ?: -1) + 1
+                                                                    ) { index ->
                                                                         if (convertResult[index] != null && convertResult[index]!![0] == "0"
                                                                         )
                                                                             Item(
@@ -3513,7 +3519,10 @@ fun ConvertPageUi(
                                                                             )
                                                                     }
 
-                                                                    2 -> items(convertResult.size) { index ->
+                                                                    2 -> items(
+                                                                        (convertResult.keys.maxOrNull()
+                                                                            ?: -1) + 1
+                                                                    ) { index ->
                                                                         if (convertResult[index] != null && convertResult[index]!![0] == "1"
                                                                         )
                                                                             Item(
@@ -3564,7 +3573,10 @@ fun ConvertPageUi(
                                                                             )
                                                                     }
 
-                                                                    3 -> items(convertResult.size) { index ->
+                                                                    3 -> items(
+                                                                        (convertResult.keys.maxOrNull()
+                                                                            ?: -1) + 1
+                                                                    ) { index ->
                                                                         if (convertResult[index] != null && convertResult[index]!![0] == "2"
                                                                         )
                                                                             Item(
