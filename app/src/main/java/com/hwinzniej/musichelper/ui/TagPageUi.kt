@@ -5,6 +5,7 @@ import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
@@ -26,7 +27,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -51,12 +54,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
@@ -78,8 +82,6 @@ import com.hwinzniej.musichelper.utils.MyVibrationEffect
 import com.moriafly.salt.ui.RoundedColumn
 import com.moriafly.salt.ui.SaltTheme
 import com.moriafly.salt.ui.Text
-import com.moriafly.salt.ui.TitleBar
-import com.moriafly.salt.ui.UnstableSaltApi
 import com.moriafly.salt.ui.popup.rememberPopupState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -88,8 +90,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 @OptIn(
-    UnstableSaltApi::class, ExperimentalFoundationApi::class, ExperimentalMaterialApi::class,
-    ExperimentalComposeUiApi::class
+    ExperimentalFoundationApi::class, ExperimentalMaterialApi::class
 )
 @Composable
 fun TagPageUi(
@@ -112,7 +113,6 @@ fun TagPageUi(
     val coroutineScope = rememberCoroutineScope()
     val musicInfo = remember { mutableStateOf<Map<String, String?>>(emptyMap()) }
     val musicInfoOriginal = remember { mutableStateOf<Map<String, String?>>(emptyMap()) }
-    var showSongInfoDialog by remember { mutableStateOf(false) }
     val coverImage = remember { mutableStateOf<ByteArray?>(null) }
     val coverImageModified = remember { mutableStateOf(false) }
     var showSearchInput by remember { mutableStateOf(false) }
@@ -160,6 +160,8 @@ fun TagPageUi(
             }
         }
     )
+    val pagesInner = listOf("0", "1")
+    val pageStateInner = rememberPagerState(pageCount = { pagesInner.size })
 
     BackHandler(enabled = showSearchInput) {
         showSearchInput = false
@@ -172,6 +174,20 @@ fun TagPageUi(
             delay(300L)
             intervalSelectionStart = -1
             selectedSongList.replaceAll { 0 }
+        }
+    }
+
+    BackHandler(enabled = pageStateInner.currentPage == 1) {
+        if (musicInfo.value != musicInfoOriginal.value || coverImageModified.value) {
+            showConfirmGoBackDialog = true
+        } else {
+            coroutineScope.launch {
+                pageStateInner.animateScrollToPage(0, animationSpec = spring(2f))
+                musicInfo.value = emptyMap()
+                musicInfoOriginal.value = emptyMap()
+                coverImage.value = null
+                coverImageModified.value = false
+            }
         }
     }
 
@@ -196,7 +212,7 @@ fun TagPageUi(
 
     LaunchedEffect(key1 = musicInfo.value) {
         if (musicInfo.value.isNotEmpty()) {
-            showSongInfoDialog = true
+            pageStateInner.animateScrollToPage(1, animationSpec = spring(2f))
         }
     }
 
@@ -255,236 +271,15 @@ fun TagPageUi(
         )
     }
 
-    if (showSongInfoDialog) {
-        YesNoDialog(
-            onDismiss = {
-                if (musicInfo.value != musicInfoOriginal.value || coverImageModified.value) {
-                    showConfirmGoBackDialog = true
-                } else {
-                    showSongInfoDialog = false
-                    musicInfo.value = emptyMap()
-                    musicInfoOriginal.value = emptyMap()
-                    coverImage.value = null
-                }
-            },
-            onCancel = {
-                if (musicInfo.value != musicInfoOriginal.value || coverImageModified.value) {
-                    showConfirmGoBackDialog = true
-                } else {
-                    showSongInfoDialog = false
-                    musicInfo.value = emptyMap()
-                    musicInfoOriginal.value = emptyMap()
-                    coverImage.value = null
-                }
-            },
-            onConfirm = {
-                coroutineScope.launch(Dispatchers.IO) {
-                    if (tagPage.saveSongInfo(musicInfo.value, coverImage)) {
-                        if (searchInput.isNotBlank())
-                            tagPage.searchSong(searchInput, searchResult)
-                        showSongInfoDialog = false
-                        musicInfo.value = emptyMap()
-                        musicInfoOriginal.value = emptyMap()
-                        coverImage.value = null
-                        showLoadingProgressBar = true
-                        tagPage.getMusicList(songList, sortMethod.intValue, selectedSongList)
-                        showLoadingProgressBar = false
-                    }
-                }
-            },
-            title = stringResource(id = R.string.song_info),
-            content = null,
-            enableHaptic = enableHaptic.value,
-            hapticStrength = hapticStrength.intValue
-        ) {
-            Column(
-                modifier = Modifier
-                    .heightIn(max = (LocalConfiguration.current.screenHeightDp / 1.7).dp)
-            ) {
-                RoundedColumn {
-                    Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
-                        ItemTitle(
-                            text = stringResource(id = R.string.cover_pic),
-                            paddingValues = PaddingValues(
-                                start = SaltTheme.dimens.innerHorizontalPadding,
-                                end = SaltTheme.dimens.innerHorizontalPadding,
-                                top = SaltTheme.dimens.innerVerticalPadding,
-                                bottom = 4.dp
-                            )
-                        )
-                        AnimatedContent(
-                            targetState = coverImage.value,
-                            label = "",
-                            transitionSpec = {
-                                fadeIn() togetherWith fadeOut()
-                            }
-                        ) {
-                            if (it != null) {
-                                val bitmap = BitmapFactory.decodeByteArray(it, 0, it.size)
-                                Column(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(
-                                            top = 4.dp,
-                                            bottom = 8.dp
-                                        ),
-                                    verticalArrangement = Arrangement.Center,
-                                    horizontalAlignment = Alignment.CenterHorizontally
-                                ) {
-                                    Image(
-                                        modifier = Modifier
-                                            .padding(horizontal = SaltTheme.dimens.innerHorizontalPadding)
-                                            .clip(RoundedCornerShape(12.dp))
-                                            .combinedClickable(
-                                                onClick = {
-                                                    coverImageModified.value = true
-                                                    tagPage.selectCoverImage()
-                                                },
-                                                onLongClick = {
-                                                    showConfirmDeleteCoverDialog = true
-                                                }
-                                            ),
-                                        bitmap = bitmap.asImageBitmap(),
-                                        contentDescription = stringResource(id = R.string.cover_pic),
-                                    )
-                                }
-                            } else {
-                                BasicButton(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(
-                                            start = SaltTheme.dimens.innerHorizontalPadding,
-                                            end = SaltTheme.dimens.innerHorizontalPadding,
-                                            bottom = 8.dp
-                                        ),
-                                    onClick = {
-                                        coverImageModified.value = true
-                                        tagPage.selectCoverImage()
-                                    },
-                                    backgroundColor = SaltTheme.colors.subText.copy(alpha = 0.1f),
-                                    hapticStrength = hapticStrength.intValue
-                                ) {
-                                    Icon(
-                                        modifier = Modifier
-                                            .size(17.5.dp)
-                                            .align(Alignment.Center),
-                                        painter = painterResource(id = R.drawable.plus_no_circle),
-                                        contentDescription = null,
-                                        tint = SaltTheme.colors.text
-                                    )
-                                }
-                            }
-                        }
-                        SongInfoItem(
-                            title = stringResource(id = R.string.song_name),
-                            editText = musicInfo.value["song"],
-                            onChange = { musicInfo.value += ("song" to it) },
-                            onClear = { musicInfo.value -= "song" },
-                            enableHaptic = enableHaptic.value,
-                            hapticStrength = hapticStrength.intValue
-                        )
-                        SongInfoItem(
-                            title = stringResource(id = R.string.atrist),
-                            editText = musicInfo.value["artist"],
-                            onChange = { musicInfo.value += ("artist" to it) },
-                            onClear = { musicInfo.value -= "artist" },
-                            enableHaptic = enableHaptic.value,
-                            hapticStrength = hapticStrength.intValue
-                        )
-                        SongInfoItem(
-                            title = stringResource(id = R.string.album1),
-                            editText = musicInfo.value["album"],
-                            onChange = { musicInfo.value += ("album" to it) },
-                            onClear = { musicInfo.value -= "album" },
-                            enableHaptic = enableHaptic.value,
-                            hapticStrength = hapticStrength.intValue
-                        )
-                        SongInfoItem(
-                            title = stringResource(id = R.string.album_artist_tag_name),
-                            editText = musicInfo.value["albumArtist"],
-                            onChange = { musicInfo.value += ("albumArtist" to it) },
-                            onClear = { musicInfo.value -= "albumArtist" },
-                            enableHaptic = enableHaptic.value,
-                            hapticStrength = hapticStrength.intValue
-                        )
-                        SongInfoItem(
-                            title = stringResource(id = R.string.genre_tag_name),
-                            editText = musicInfo.value["genre"],
-                            onChange = { musicInfo.value += ("genre" to it) },
-                            onClear = { musicInfo.value -= "genre" },
-                            enableHaptic = enableHaptic.value,
-                            hapticStrength = hapticStrength.intValue
-                        )
-                        SongInfoItem(
-                            title = stringResource(id = R.string.track_number_tag_name),
-                            editText = musicInfo.value["trackNumber"],
-                            onChange = { musicInfo.value += ("trackNumber" to it) },
-                            onClear = { musicInfo.value -= "trackNumber" },
-                            enableHaptic = enableHaptic.value,
-                            hapticStrength = hapticStrength.intValue
-                        )
-                        SongInfoItem(
-                            title = stringResource(id = R.string.disc_number),
-                            editText = musicInfo.value["discNumber"],
-                            onChange = { musicInfo.value += ("discNumber" to it) },
-                            onClear = { musicInfo.value -= "discNumber" },
-                            enableHaptic = enableHaptic.value,
-                            hapticStrength = hapticStrength.intValue
-                        )
-                        SongInfoItem(
-                            title = stringResource(id = R.string.release_year_tag_name),
-                            editText = musicInfo.value["releaseYear"],
-                            onChange = { musicInfo.value += ("releaseYear" to it) },
-                            onClear = { musicInfo.value -= "releaseYear" },
-                            enableHaptic = enableHaptic.value,
-                            hapticStrength = hapticStrength.intValue
-                        )
-                        SongInfoItem(
-                            title = stringResource(id = R.string.lyricist),
-                            editText = musicInfo.value["lyricist"],
-                            onChange = { musicInfo.value += ("lyricist" to it) },
-                            onClear = { musicInfo.value -= "lyricist" },
-                            enableHaptic = enableHaptic.value,
-                            hapticStrength = hapticStrength.intValue
-                        )
-                        SongInfoItem(
-                            title = stringResource(id = R.string.composer),
-                            editText = musicInfo.value["composer"],
-                            onChange = { musicInfo.value += ("composer" to it) },
-                            onClear = { musicInfo.value -= "composer" },
-                            enableHaptic = enableHaptic.value,
-                            hapticStrength = hapticStrength.intValue
-                        )
-                        SongInfoItem(
-                            title = stringResource(id = R.string.arranger),
-                            editText = musicInfo.value["arranger"],
-                            onChange = { musicInfo.value += ("arranger" to it) },
-                            onClear = { musicInfo.value -= "arranger" },
-                            enableHaptic = enableHaptic.value,
-                            hapticStrength = hapticStrength.intValue
-                        )
-                        SongInfoItem(
-                            title = stringResource(id = R.string.lyrics),
-                            editText = musicInfo.value["lyrics"],
-                            onChange = { musicInfo.value += ("lyrics" to it) },
-                            onClear = { musicInfo.value -= "lyrics" },
-                            enableHaptic = enableHaptic.value,
-                            hapticStrength = hapticStrength.intValue,
-                            textStyle = TextStyle(fontSize = 15.sp, color = SaltTheme.colors.text)
-                        )
-                    }
-                }
-            }
-        }
-    }
-
     if (showConfirmGoBackDialog) {
         YesNoDialog(
             onDismiss = { showConfirmGoBackDialog = false },
             onCancel = { showConfirmGoBackDialog = false },
             onConfirm = {
                 showConfirmGoBackDialog = false
-                showSongInfoDialog = false
+                coroutineScope.launch {
+                    pageStateInner.animateScrollToPage(0, animationSpec = spring(2f))
+                }
                 musicInfo.value = emptyMap()
                 musicInfoOriginal.value = emptyMap()
                 coverImage.value = null
@@ -631,7 +426,8 @@ fun TagPageUi(
                             .fillMaxWidth()
                             .zIndex(1f),
                         color = SaltTheme.colors.highlight,
-                        trackColor = SaltTheme.colors.background
+                        trackColor = SaltTheme.colors.background,
+                        strokeCap = StrokeCap.Square
                     )
                 }
                 Column(
@@ -839,7 +635,7 @@ fun TagPageUi(
                             }
                         }
                     }
-                    AnimatedVisibility(visible = completeResult.size != 0) {
+                    AnimatedVisibility(visible = completeResult.isNotEmpty()) {
                         RoundedColumn {
                             ItemTitle(text = stringResource(id = R.string.completion_log))
                             LazyColumn(
@@ -869,7 +665,6 @@ fun TagPageUi(
             }
         }
     }
-
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -877,7 +672,10 @@ fun TagPageUi(
     ) {
         Box {
             Column {
-                AnimatedContent(targetState = showSearchInput, label = "") {
+                AnimatedContent(
+                    targetState = showSearchInput,
+                    label = ""
+                ) {
                     if (it) {
                         Row(
                             modifier = Modifier
@@ -940,7 +738,7 @@ fun TagPageUi(
                         }
                     } else {
                         AnimatedContent(
-                            targetState = multiSelect,
+                            targetState = multiSelect || pageStateInner.currentPage == 1,
                             label = "",
                             transitionSpec = {
                                 fadeIn() togetherWith fadeOut()
@@ -952,470 +750,742 @@ fun TagPageUi(
                                         enableHaptic.value,
                                         hapticStrength.intValue
                                     ).click()
-                                    multiSelect = false
+                                    if (multiSelect)
+                                        multiSelect = false
+                                    if (pageStateInner.currentPage == 1) {
+                                        if (musicInfo.value != musicInfoOriginal.value || coverImageModified.value) {
+                                            showConfirmGoBackDialog = true
+                                        } else {
+                                            coroutineScope.launch {
+                                                pageStateInner.animateScrollToPage(
+                                                    0,
+                                                    animationSpec = spring(2f)
+                                                )
+                                                musicInfo.value = emptyMap()
+                                                musicInfoOriginal.value = emptyMap()
+                                                coverImage.value = null
+                                                coverImageModified.value = false
+                                            }
+                                        }
+                                    }
                                     coroutineScope.launch(Dispatchers.Default) {
                                         delay(300L)
                                         intervalSelectionStart = -1
                                         selectedSongList.replaceAll { 0 }
                                     }
                                 },
-                                text = if (animate)
+                                text = if (animate && multiSelect)
                                     "${stringResource(id = R.string.tag_function_name)} (${selectedSongList.count { it1 -> it1 != 0 }})"
+                                else if (animate && pageStateInner.currentPage == 1)
+                                    stringResource(id = R.string.song_info)
                                 else stringResource(id = R.string.tag_function_name),
-                                showBackBtn = animate
+                                showBackBtn = animate,
+                                showRightBtn = animate && pageStateInner.currentPage == 1,
+                                rightBtnIcon = painterResource(id = R.drawable.check),
+                                rightBtnContentDescription = stringResource(id = R.string.ok_button_text),
+                                onRightBtn = {
+                                    coroutineScope.launch(Dispatchers.IO) {
+                                        if (pageStateInner.currentPage == 1 && tagPage.saveSongInfo(
+                                                musicInfo.value,
+                                                coverImage
+                                            )
+                                        ) {
+                                            pageStateInner.animateScrollToPage(
+                                                0,
+                                                animationSpec = spring(2f)
+                                            )
+                                            if (searchInput.isNotBlank())
+                                                tagPage.searchSong(searchInput, searchResult)
+                                            musicInfo.value = emptyMap()
+                                            musicInfoOriginal.value = emptyMap()
+                                            coverImage.value = null
+                                            showLoadingProgressBar = true
+                                            tagPage.getMusicList(
+                                                songList,
+                                                sortMethod.intValue,
+                                                selectedSongList
+                                            )
+                                            showLoadingProgressBar = false
+                                        }
+                                    }
+                                }
                             )
                         }
                     }
                 }
             }
         }
-        Box {
-            if (showLoadingProgressBar) {
-                LinearProgressIndicator(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .zIndex(1f),
-                    color = SaltTheme.colors.highlight,
-                    trackColor = SaltTheme.colors.background
-                )
-            }
-            AnimatedContent(
-                targetState = when {
-                    searchResult.isNotEmpty() -> "searchResult"
-                    songList.isNotEmpty() && searchResult.isEmpty() && searchInput.isBlank() -> "songList"
-                    songList.isEmpty() -> "emptyList"
-                    searchResult.isEmpty() && searchInput.isNotBlank() && !searching -> "emptyResult"
-                    else -> ""
-                },
-                label = "",
-                transitionSpec = {
-                    fadeIn() togetherWith fadeOut()
-                }
-            ) { targetState ->
-                when (targetState) {
-                    "searchResult" -> {
-                        Column(
-                            modifier = Modifier
-                                .padding(
-                                    start = 16.dp,
-                                    end = 16.dp,
-                                    bottom = 16.dp,
-                                    top = 12.dp
-                                )
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(color = SaltTheme.colors.background)
-                        ) {
-                            LazyColumn(
+        HorizontalPager(
+            state = pageStateInner,
+            modifier = Modifier.fillMaxSize(),
+            userScrollEnabled = false,
+            beyondViewportPageCount = 0
+        ) { page ->
+            when (page) {
+                0 -> {
+                    Box {
+                        if (showLoadingProgressBar) {
+                            LinearProgressIndicator(
                                 modifier = Modifier
-                                    .background(color = SaltTheme.colors.subBackground)
-                            ) {
-                                items(searchResult.size) {
-                                    AnimatedContent(
-                                        targetState = multiSelect,
-                                        label = "",
-                                        transitionSpec = {
-                                            fadeIn() togetherWith fadeOut()
-                                        }) { animate ->
-                                        if (!animate)
-                                            Item(
-                                                onClick = {
-                                                    if (showFab.value)
-                                                        showFab.value = false
-                                                    else
-                                                        coroutineScope.launch(Dispatchers.IO) {
-                                                            musicInfo.value =
-                                                                tagPage.getSongInfo(
-                                                                    searchResult[it]!![3].toInt(),
-                                                                    coverImage
-                                                                )
-                                                            musicInfoOriginal.value =
-                                                                musicInfo.value
-                                                        }
-                                                },
-                                                onLongClick = {
-                                                    coroutineScope.launch(Dispatchers.Default) {
-                                                        delay(248L)
-                                                        if (showFab.value)
-                                                            showFab.value = false
-                                                        multiSelect = true
-                                                        MyVibrationEffect(
-                                                            context,
-                                                            enableHaptic.value,
-                                                            hapticStrength.intValue
-                                                        ).click()
-                                                        selectedSongList[searchResult[it]!![3].toInt()] =
-                                                            1
-                                                    }
-                                                },
-                                                text = searchResult[it]!![0],
-                                                sub = "${searchResult[it]!![1].ifBlank { "?" }} - ${searchResult[it]!![2].ifBlank { "?" }}",
-                                                indication = if (showFab.value) null else ripple()
-                                            )
-                                        else
-                                            ItemCheck(
-                                                state = selectedSongList[searchResult[it]!![3].toInt()] == 1,
-                                                onChange = { it1 ->
-                                                    if (showFab.value)
-                                                        showFab.value = false
-                                                    else {
-                                                        selectedSongList[searchResult[it]!![3].toInt()] =
-                                                            if (it1) 1 else 0
-                                                        MyVibrationEffect(
-                                                            context,
-                                                            enableHaptic.value,
-                                                            hapticStrength.intValue
-                                                        ).click()
-                                                    }
-                                                },
-                                                onLongChange = { it1 ->
-                                                    if (showFab.value)
-                                                        showFab.value = false
-                                                    else {
-                                                        MyVibrationEffect(
-                                                            context,
-                                                            enableHaptic.value,
-                                                            hapticStrength.intValue
-                                                        ).click()
-                                                        if (intervalSelectionStart == -1) {
-                                                            intervalSelectionStart = it
-                                                        } else {
-                                                            val start = intervalSelectionStart
-                                                            val end = it
-                                                            if (start < end) {
-                                                                for (i in start..end) {
-                                                                    selectedSongList[searchResult[i]!![3].toInt()] =
-                                                                        if (it1) 1 else 0
-                                                                }
-                                                            } else {
-                                                                for (i in end..start) {
-                                                                    selectedSongList[searchResult[i]!![3].toInt()] =
-                                                                        if (it1) 1 else 0
-                                                                }
-                                                            }
-                                                            intervalSelectionStart = -1
-                                                        }
-                                                    }
-                                                },
-                                                highlight = intervalSelectionStart == it,
-                                                indication = if (showFab.value) null else ripple(),
-                                                iconAtLeft = false,
-                                                text = searchResult[it]!![0],
-                                                sub = "${searchResult[it]!![1].ifBlank { "?" }} - ${searchResult[it]!![2].ifBlank { "?" }}",
-                                                enableHaptic = false,
-                                                hapticStrength = hapticStrength.intValue
-                                            )
-                                    }
-                                }
-                            }
+                                    .fillMaxWidth()
+                                    .zIndex(1f),
+                                color = SaltTheme.colors.highlight,
+                                trackColor = SaltTheme.colors.background,
+                                strokeCap = StrokeCap.Square
+                            )
                         }
-                    }
-
-                    "songList" -> {
-
-//                        SideBar(
-//                            onSelect = {
-//                                value ->
-//                                songList[2].sortBy { it[2] as String }
-//                            val index = dataList.indexOfFirst { it.py[0].uppercase() == value }
-//                            if (index >= 0) {
-//                                scope.launch { listState.scrollToItem(index) }
-//                            }
-//                        }) {
-                            Box(
-                                modifier = Modifier.pullRefresh(pullRefreshState)
-                            ) {
-                                Column(
-                                    modifier = Modifier
-                                        .padding(
-                                            start = 16.dp,
-                                            end = 16.dp,
-                                            bottom = 16.dp,
-                                            top = 12.dp
-                                        )
-                                        .clip(RoundedCornerShape(12.dp))
-                                        .background(color = SaltTheme.colors.background)
-                                ) {
-                                    LazyColumn(
-                                        state = lazyColumnState,
+                        AnimatedContent(
+                            targetState = when {
+                                searchResult.isNotEmpty() -> "searchResult"
+                                songList.isNotEmpty() && searchResult.isEmpty() && searchInput.isBlank() -> "songList"
+                                songList.isEmpty() -> "emptyList"
+                                searchResult.isEmpty() && searchInput.isNotBlank() && !searching -> "emptyResult"
+                                else -> ""
+                            },
+                            label = "",
+                            transitionSpec = {
+                                fadeIn() togetherWith fadeOut()
+                            }
+                        ) { targetState ->
+                            when (targetState) {
+                                "searchResult" -> {
+                                    Column(
                                         modifier = Modifier
-                                            .background(color = SaltTheme.colors.subBackground)
+                                            .padding(
+                                                start = 16.dp,
+                                                end = 16.dp,
+                                                bottom = 16.dp,
+                                                top = 12.dp
+                                            )
+                                            .clip(RoundedCornerShape(12.dp))
+                                            .background(color = SaltTheme.colors.background)
                                     ) {
-
-                                        items(songList.size) {
-                                            AnimatedContent(
-                                                targetState = multiSelect,
-                                                label = "",
-                                                transitionSpec = {
-                                                    fadeIn() togetherWith fadeOut()
-                                                }) { animate ->
-                                                if (songList[it] != null && !animate)
-                                                    Item(
-                                                        onClick = {
-                                                            if (showFab.value)
-                                                                showFab.value = false
-                                                            else
-                                                                coroutineScope.launch(Dispatchers.IO) {
-                                                                    musicInfo.value =
-                                                                        tagPage.getSongInfo(
-                                                                            songList[it]!![3].toInt(),
-                                                                            coverImage
-                                                                        )
-                                                                    musicInfoOriginal.value =
-                                                                        musicInfo.value
-                                                                }
-                                                        },
-                                                        onLongClick = {
-                                                            coroutineScope.launch(Dispatchers.Default) {
-                                                                delay(248L)
+                                        LazyColumn(
+                                            modifier = Modifier
+                                                .background(color = SaltTheme.colors.subBackground)
+                                        ) {
+                                            items(searchResult.size) {
+                                                AnimatedContent(
+                                                    targetState = multiSelect,
+                                                    label = "",
+                                                    transitionSpec = {
+                                                        fadeIn() togetherWith fadeOut()
+                                                    }) { animate ->
+                                                    if (!animate)
+                                                        Item(
+                                                            onClick = {
                                                                 if (showFab.value)
                                                                     showFab.value = false
-                                                                else {
+                                                                else
+                                                                    coroutineScope.launch(
+                                                                        Dispatchers.IO
+                                                                    ) {
+                                                                        musicInfo.value =
+                                                                            tagPage.getSongInfo(
+                                                                                searchResult[it]!![3].toInt(),
+                                                                                coverImage
+                                                                            )
+                                                                        musicInfoOriginal.value =
+                                                                            musicInfo.value
+                                                                    }
+                                                            },
+                                                            onLongClick = {
+                                                                coroutineScope.launch(Dispatchers.Default) {
+                                                                    delay(248L)
+                                                                    if (showFab.value)
+                                                                        showFab.value = false
                                                                     multiSelect = true
                                                                     MyVibrationEffect(
                                                                         context,
                                                                         enableHaptic.value,
                                                                         hapticStrength.intValue
                                                                     ).click()
-                                                                    selectedSongList[songList[it]!![3].toInt()] =
+                                                                    selectedSongList[searchResult[it]!![3].toInt()] =
                                                                         1
                                                                 }
-                                                            }
-                                                        },
-                                                        text = songList[it]!![0],
-                                                        sub = "${songList[it]!![1].ifBlank { "?" }} - ${songList[it]!![2].ifBlank { "?" }}",
-                                                        indication = if (showFab.value) null else ripple()
-                                                    )
-                                                else if (songList[it] != null && animate)
-                                                    ItemCheck(
-                                                        state = selectedSongList[songList[it]!![3].toInt()] == 1,
-                                                        onChange = { it1 ->
-                                                            if (showFab.value)
-                                                                showFab.value = false
-                                                            else {
-                                                                selectedSongList[songList[it]!![3].toInt()] =
-                                                                    if (it1) 1 else 0
-                                                                MyVibrationEffect(
-                                                                    context,
-                                                                    enableHaptic.value,
-                                                                    hapticStrength.intValue
-                                                                ).click()
-                                                            }
-                                                        },
-                                                        onLongChange = { it1 ->
-                                                            if (showFab.value)
-                                                                showFab.value = false
-                                                            else {
-                                                                MyVibrationEffect(
-                                                                    context,
-                                                                    enableHaptic.value,
-                                                                    hapticStrength.intValue
-                                                                ).click()
-                                                                if (intervalSelectionStart == -1) {
-                                                                    intervalSelectionStart = it
-                                                                } else {
-                                                                    val start =
-                                                                        intervalSelectionStart
-                                                                    val end = it
-                                                                    if (start < end) {
-                                                                        for (i in start..end) {
-                                                                            selectedSongList[songList[i]!![3].toInt()] =
-                                                                                if (it1) 1 else 0
-                                                                        }
-                                                                    } else {
-                                                                        for (i in end..start) {
-                                                                            selectedSongList[songList[i]!![3].toInt()] =
-                                                                                if (it1) 1 else 0
-                                                                        }
-                                                                    }
-                                                                    intervalSelectionStart = -1
+                                                            },
+                                                            text = searchResult[it]!![0],
+                                                            sub = "${searchResult[it]!![1].ifBlank { "?" }} - ${searchResult[it]!![2].ifBlank { "?" }}",
+                                                            indication = if (showFab.value) null else ripple()
+                                                        )
+                                                    else
+                                                        ItemCheck(
+                                                            state = selectedSongList[searchResult[it]!![3].toInt()] == 1,
+                                                            onChange = { it1 ->
+                                                                if (showFab.value)
+                                                                    showFab.value = false
+                                                                else {
+                                                                    selectedSongList[searchResult[it]!![3].toInt()] =
+                                                                        if (it1) 1 else 0
+                                                                    MyVibrationEffect(
+                                                                        context,
+                                                                        enableHaptic.value,
+                                                                        hapticStrength.intValue
+                                                                    ).click()
                                                                 }
-                                                            }
-                                                        },
-                                                        highlight = intervalSelectionStart == it,
-                                                        indication = if (showFab.value) null else ripple(),
-                                                        iconAtLeft = false,
-                                                        text = songList[it]!![0],
-                                                        sub = "${songList[it]!![1].ifBlank { "?" }} - ${songList[it]!![2].ifBlank { "?" }}",
-                                                        enableHaptic = false,
-                                                        hapticStrength = hapticStrength.intValue
-                                                    )
+                                                            },
+                                                            onLongChange = { it1 ->
+                                                                if (showFab.value)
+                                                                    showFab.value = false
+                                                                else {
+                                                                    MyVibrationEffect(
+                                                                        context,
+                                                                        enableHaptic.value,
+                                                                        hapticStrength.intValue
+                                                                    ).click()
+                                                                    if (intervalSelectionStart == -1) {
+                                                                        intervalSelectionStart = it
+                                                                    } else {
+                                                                        val start =
+                                                                            intervalSelectionStart
+                                                                        val end = it
+                                                                        if (start < end) {
+                                                                            for (i in start..end) {
+                                                                                selectedSongList[searchResult[i]!![3].toInt()] =
+                                                                                    if (it1) 1 else 0
+                                                                            }
+                                                                        } else {
+                                                                            for (i in end..start) {
+                                                                                selectedSongList[searchResult[i]!![3].toInt()] =
+                                                                                    if (it1) 1 else 0
+                                                                            }
+                                                                        }
+                                                                        intervalSelectionStart = -1
+                                                                    }
+                                                                }
+                                                            },
+                                                            highlight = intervalSelectionStart == it,
+                                                            indication = if (showFab.value) null else ripple(),
+                                                            iconAtLeft = false,
+                                                            text = searchResult[it]!![0],
+                                                            sub = "${searchResult[it]!![1].ifBlank { "?" }} - ${searchResult[it]!![2].ifBlank { "?" }}",
+                                                            enableHaptic = false,
+                                                            hapticStrength = hapticStrength.intValue
+                                                        )
+                                                }
                                             }
                                         }
                                     }
                                 }
-                            }
-//                        }
-                    }
 
-                    "emptyList" -> {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(
-                                    start = 16.dp,
-                                    end = 16.dp,
-                                    bottom = 16.dp,
-                                    top = 12.dp
-                                )
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(color = SaltTheme.colors.background)
-                                .pullRefresh(pullRefreshState)
-                                .verticalScroll(rememberScrollState()),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.Center
-                        ) {
-                            Image(
-                                modifier = Modifier.size(96.dp),
-                                painter = painterResource(id = R.drawable.no_items),
-                                contentDescription = stringResource(id = R.string.no_music)
-                            )
-                            Spacer(modifier = Modifier.height(24.dp))
-                            Text(
-                                text = stringResource(id = R.string.no_music),
-                                fontSize = 16.sp, color = SaltTheme.colors.subText
-                            )
-                        }
-                    }
-
-                    "emptyResult" -> {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(
-                                    start = 16.dp,
-                                    end = 16.dp,
-                                    bottom = 16.dp,
-                                    top = 12.dp
-                                )
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(color = SaltTheme.colors.background),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.Center
-                        ) {
-                            Image(
-                                modifier = Modifier.size(96.dp),
-                                painter = painterResource(id = R.drawable.no_items),
-                                contentDescription = stringResource(id = R.string.no_music)
-                            )
-                            Spacer(modifier = Modifier.height(24.dp))
-                            Text(
-                                text = stringResource(id = R.string.no_search_result),
-                                fontSize = 16.sp, color = SaltTheme.colors.subText
-                            )
-                        }
-                    }
-
-                    else -> {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(
-                                    start = 16.dp,
-                                    end = 16.dp,
-                                    bottom = 16.dp,
-                                    top = 12.dp
-                                )
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(color = SaltTheme.colors.background),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.Center
-                        ) {
-
-                        }
-                    }
-                }
-            }
-
-            if (songList.size != 0 || !refreshComplete || showFab.value) {
-                FloatingActionButton(
-                    expanded = showFab,
-                    heightExpand = 150.dp,
-                    widthExpand = 175.dp,
-                    enableHaptic = enableHaptic.value,
-                    hapticStrength = hapticStrength.intValue
-                ) {
-                    PopupMenuItem(
-                        onClick = {
-                            MyVibrationEffect(
-                                context,
-                                enableHaptic.value,
-                                hapticStrength.intValue
-                            ).click()
-                            showLoadingProgressBar = true
-                            if (sortMethod.intValue == 4)
-                                coroutineScope.launch(Dispatchers.IO) {
-                                    dataStore.edit { settings ->
-                                        settings[DataStoreConstants.SORT_METHOD] = 0
-                                        tagPage.getMusicList(songList, 0, selectedSongList)
+                                "songList" -> {
+//                          SideBar(
+//                              onSelect = {
+//                                  value ->
+//                                  songList[2].sortBy { it[2] as String }
+//                              val index = dataList.indexOfFirst { it.py[0].uppercase() == value }
+//                              if (index >= 0) {
+//                                  scope.launch { listState.scrollToItem(index) }
+//                              }
+//                          }) {
+                                    Box(
+                                        modifier = Modifier.pullRefresh(pullRefreshState)
+                                    ) {
+                                        Column(
+                                            modifier = Modifier
+                                                .padding(
+                                                    start = 16.dp,
+                                                    end = 16.dp,
+                                                    bottom = 16.dp,
+                                                    top = 12.dp
+                                                )
+                                                .clip(RoundedCornerShape(12.dp))
+                                                .background(color = SaltTheme.colors.background)
+                                        ) {
+                                            LazyColumn(
+                                                state = lazyColumnState,
+                                                modifier = Modifier
+                                                    .background(color = SaltTheme.colors.subBackground)
+                                            ) {
+                                                items(songList.size) {
+                                                    AnimatedContent(
+                                                        targetState = multiSelect,
+                                                        label = "",
+                                                        transitionSpec = {
+                                                            fadeIn() togetherWith fadeOut()
+                                                        }) { animate ->
+                                                        if (songList[it] != null && !animate)
+                                                            Item(
+                                                                onClick = {
+                                                                    if (showFab.value)
+                                                                        showFab.value = false
+                                                                    else
+                                                                        coroutineScope.launch(
+                                                                            Dispatchers.IO
+                                                                        ) {
+                                                                            musicInfo.value =
+                                                                                tagPage.getSongInfo(
+                                                                                    songList[it]!![3].toInt(),
+                                                                                    coverImage
+                                                                                )
+                                                                            musicInfoOriginal.value =
+                                                                                musicInfo.value
+                                                                        }
+                                                                },
+                                                                onLongClick = {
+                                                                    coroutineScope.launch(
+                                                                        Dispatchers.Default
+                                                                    ) {
+                                                                        delay(248L)
+                                                                        if (showFab.value)
+                                                                            showFab.value = false
+                                                                        else {
+                                                                            multiSelect = true
+                                                                            MyVibrationEffect(
+                                                                                context,
+                                                                                enableHaptic.value,
+                                                                                hapticStrength.intValue
+                                                                            ).click()
+                                                                            selectedSongList[songList[it]!![3].toInt()] =
+                                                                                1
+                                                                        }
+                                                                    }
+                                                                },
+                                                                text = songList[it]!![0],
+                                                                sub = "${songList[it]!![1].ifBlank { "?" }} - ${songList[it]!![2].ifBlank { "?" }}",
+                                                                indication = if (showFab.value) null else ripple()
+                                                            )
+                                                        else if (songList[it] != null && animate)
+                                                            ItemCheck(
+                                                                state = selectedSongList[songList[it]!![3].toInt()] == 1,
+                                                                onChange = { it1 ->
+                                                                    if (showFab.value)
+                                                                        showFab.value = false
+                                                                    else {
+                                                                        selectedSongList[songList[it]!![3].toInt()] =
+                                                                            if (it1) 1 else 0
+                                                                        MyVibrationEffect(
+                                                                            context,
+                                                                            enableHaptic.value,
+                                                                            hapticStrength.intValue
+                                                                        ).click()
+                                                                    }
+                                                                },
+                                                                onLongChange = { it1 ->
+                                                                    if (showFab.value)
+                                                                        showFab.value = false
+                                                                    else {
+                                                                        MyVibrationEffect(
+                                                                            context,
+                                                                            enableHaptic.value,
+                                                                            hapticStrength.intValue
+                                                                        ).click()
+                                                                        if (intervalSelectionStart == -1) {
+                                                                            intervalSelectionStart =
+                                                                                it
+                                                                        } else {
+                                                                            val start =
+                                                                                intervalSelectionStart
+                                                                            val end = it
+                                                                            if (start < end) {
+                                                                                for (i in start..end) {
+                                                                                    selectedSongList[songList[i]!![3].toInt()] =
+                                                                                        if (it1) 1 else 0
+                                                                                }
+                                                                            } else {
+                                                                                for (i in end..start) {
+                                                                                    selectedSongList[songList[i]!![3].toInt()] =
+                                                                                        if (it1) 1 else 0
+                                                                                }
+                                                                            }
+                                                                            intervalSelectionStart =
+                                                                                -1
+                                                                        }
+                                                                    }
+                                                                },
+                                                                highlight = intervalSelectionStart == it,
+                                                                indication = if (showFab.value) null else ripple(),
+                                                                iconAtLeft = false,
+                                                                text = songList[it]!![0],
+                                                                sub = "${songList[it]!![1].ifBlank { "?" }} - ${songList[it]!![2].ifBlank { "?" }}",
+                                                                enableHaptic = false,
+                                                                hapticStrength = hapticStrength.intValue
+                                                            )
+                                                    }
+                                                }
+                                            }
+                                        }
                                     }
+//                                    }
                                 }
-                            else
-                                coroutineScope.launch(Dispatchers.IO) {
-                                    dataStore.edit { settings ->
-                                        settings[DataStoreConstants.SORT_METHOD] =
-                                            ++sortMethod.intValue
-                                        tagPage.getMusicList(
-                                            songList,
-                                            sortMethod.intValue,
-                                            selectedSongList
+
+                                "emptyList" -> {
+                                    Column(
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .padding(
+                                                start = 16.dp,
+                                                end = 16.dp,
+                                                bottom = 16.dp,
+                                                top = 12.dp
+                                            )
+                                            .clip(RoundedCornerShape(12.dp))
+                                            .background(color = SaltTheme.colors.background)
+                                            .pullRefresh(pullRefreshState)
+                                            .verticalScroll(rememberScrollState()),
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        verticalArrangement = Arrangement.Center
+                                    ) {
+                                        Image(
+                                            modifier = Modifier.size(96.dp),
+                                            painter = painterResource(id = R.drawable.no_items),
+                                            contentDescription = stringResource(id = R.string.no_music)
+                                        )
+                                        Spacer(modifier = Modifier.height(24.dp))
+                                        Text(
+                                            text = stringResource(id = R.string.no_music),
+                                            fontSize = 16.sp, color = SaltTheme.colors.subText
                                         )
                                     }
                                 }
-                            showLoadingProgressBar = false
-                        },
-                        text = when (sortMethod.intValue) {
-                            0 -> stringResource(id = R.string.default_sort)
-                            1 -> stringResource(id = R.string.title_asc)
-                            2 -> stringResource(id = R.string.title_desc)
-                            3 -> stringResource(id = R.string.modify_date_asc)
-                            4 -> stringResource(id = R.string.modify_date_desc)
-                            else -> stringResource(id = R.string.default_sort)
-                        },
-                        iconPainter = painterResource(id = R.drawable.sort),
-                        iconColor = SaltTheme.colors.text,
-                        iconPaddingValues = PaddingValues(all = 0.5.dp)
-                    )
-                    PopupMenuItem(
-                        onClick = {
-                            MyVibrationEffect(
-                                context,
-                                enableHaptic.value,
-                                hapticStrength.intValue
-                            ).click()
-                            showFab.value = false
-                            showSearchInput = !showSearchInput
-                        },
-                        text = stringResource(id = R.string.search),
-                        iconPainter = painterResource(id = R.drawable.search),
-                        iconColor = SaltTheme.colors.text,
-                        iconPaddingValues = PaddingValues(all = 2.5.dp)
-                    )
-                    PopupMenuItem(
-                        onClick = {
-                            MyVibrationEffect(
-                                context,
-                                enableHaptic.value,
-                                hapticStrength.intValue
-                            ).click()
-                            showFab.value = false
-                            showCompleteDialog = true
-                        },
-                        text = stringResource(id = R.string.completion),
-                        iconPainter = painterResource(id = R.drawable.complete),
-                        iconColor = SaltTheme.colors.text,
-                        iconPaddingValues = PaddingValues(all = 3.dp)
-                    )
+
+                                "emptyResult" -> {
+                                    Column(
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .padding(
+                                                start = 16.dp,
+                                                end = 16.dp,
+                                                bottom = 16.dp,
+                                                top = 12.dp
+                                            )
+                                            .clip(RoundedCornerShape(12.dp))
+                                            .background(color = SaltTheme.colors.background),
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        verticalArrangement = Arrangement.Center
+                                    ) {
+                                        Image(
+                                            modifier = Modifier.size(96.dp),
+                                            painter = painterResource(id = R.drawable.no_items),
+                                            contentDescription = stringResource(id = R.string.no_music)
+                                        )
+                                        Spacer(modifier = Modifier.height(24.dp))
+                                        Text(
+                                            text = stringResource(id = R.string.no_search_result),
+                                            fontSize = 16.sp, color = SaltTheme.colors.subText
+                                        )
+                                    }
+                                }
+
+                                else -> {
+                                    Column(
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .padding(
+                                                start = 16.dp,
+                                                end = 16.dp,
+                                                bottom = 16.dp,
+                                                top = 12.dp
+                                            )
+                                            .clip(RoundedCornerShape(12.dp))
+                                            .background(color = SaltTheme.colors.background),
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        verticalArrangement = Arrangement.Center
+                                    ) {
+
+                                    }
+                                }
+                            }
+                        }
+
+                        if (songList.isNotEmpty() || !refreshComplete || showFab.value) {
+                            FloatingActionButton(
+                                expanded = showFab,
+                                heightExpand = 150.dp,
+                                widthExpand = 175.dp,
+                                enableHaptic = enableHaptic.value,
+                                hapticStrength = hapticStrength.intValue
+                            ) {
+                                PopupMenuItem(
+                                    onClick = {
+                                        MyVibrationEffect(
+                                            context,
+                                            enableHaptic.value,
+                                            hapticStrength.intValue
+                                        ).click()
+                                        showLoadingProgressBar = true
+                                        if (sortMethod.intValue == 4)
+                                            coroutineScope.launch(Dispatchers.IO) {
+                                                dataStore.edit { settings ->
+                                                    settings[DataStoreConstants.SORT_METHOD] = 0
+                                                    tagPage.getMusicList(
+                                                        songList,
+                                                        0,
+                                                        selectedSongList
+                                                    )
+                                                }
+                                            }
+                                        else
+                                            coroutineScope.launch(Dispatchers.IO) {
+                                                dataStore.edit { settings ->
+                                                    settings[DataStoreConstants.SORT_METHOD] =
+                                                        ++sortMethod.intValue
+                                                    tagPage.getMusicList(
+                                                        songList,
+                                                        sortMethod.intValue,
+                                                        selectedSongList
+                                                    )
+                                                }
+                                            }
+                                        showLoadingProgressBar = false
+                                    },
+                                    text = when (sortMethod.intValue) {
+                                        0 -> stringResource(id = R.string.default_sort)
+                                        1 -> stringResource(id = R.string.title_asc)
+                                        2 -> stringResource(id = R.string.title_desc)
+                                        3 -> stringResource(id = R.string.modify_date_asc)
+                                        4 -> stringResource(id = R.string.modify_date_desc)
+                                        else -> stringResource(id = R.string.default_sort)
+                                    },
+                                    iconPainter = painterResource(id = R.drawable.sort),
+                                    iconColor = SaltTheme.colors.text,
+                                    iconPaddingValues = PaddingValues(all = 0.5.dp)
+                                )
+                                PopupMenuItem(
+                                    onClick = {
+                                        MyVibrationEffect(
+                                            context,
+                                            enableHaptic.value,
+                                            hapticStrength.intValue
+                                        ).click()
+                                        showFab.value = false
+                                        showSearchInput = !showSearchInput
+                                    },
+                                    text = stringResource(id = R.string.search),
+                                    iconPainter = painterResource(id = R.drawable.search),
+                                    iconColor = SaltTheme.colors.text,
+                                    iconPaddingValues = PaddingValues(all = 2.5.dp)
+                                )
+                                PopupMenuItem(
+                                    onClick = {
+                                        MyVibrationEffect(
+                                            context,
+                                            enableHaptic.value,
+                                            hapticStrength.intValue
+                                        ).click()
+                                        showFab.value = false
+                                        showCompleteDialog = true
+                                    },
+                                    text = stringResource(id = R.string.completion),
+                                    iconPainter = painterResource(id = R.drawable.complete),
+                                    iconColor = SaltTheme.colors.text,
+                                    iconPaddingValues = PaddingValues(all = 3.dp)
+                                )
+                            }
+                        }
+                        PullRefreshIndicator(
+                            modifier = Modifier.align(Alignment.TopCenter),
+                            refreshing = !refreshComplete,
+                            state = pullRefreshState,
+                            backgroundColor = SaltTheme.colors.background,
+                            contentColor = SaltTheme.colors.highlight
+                        )
+                    }
+                }
+
+                1 -> {
+                    Box {
+                        Column(
+                            modifier = Modifier.fillMaxSize()
+                        ) {
+                            RoundedColumn {
+                                val infoPageScrollState = rememberScrollState()
+                                LaunchedEffect(Unit) {
+                                    showSearchInput = false
+                                    infoPageScrollState.scrollTo(0)
+//                                    infoPageScrollState.animateScrollTo(
+//                                        value = 0,
+//                                        animationSpec = spring(2f)
+//                                    )
+                                }
+                                Column(modifier = Modifier.verticalScroll(infoPageScrollState)) {
+                                    ItemTitle(
+                                        text = stringResource(id = R.string.cover_pic),
+                                        paddingValues = PaddingValues(
+                                            start = SaltTheme.dimens.padding,
+                                            end = SaltTheme.dimens.padding,
+                                            top = SaltTheme.dimens.subPadding,
+                                            bottom = 4.dp
+                                        )
+                                    )
+                                    AnimatedContent(
+                                        targetState = coverImage.value,
+                                        label = "",
+                                        transitionSpec = {
+                                            fadeIn() togetherWith fadeOut()
+                                        }
+                                    ) {
+                                        if (it != null) {
+                                            val bitmap =
+                                                BitmapFactory.decodeByteArray(it, 0, it.size)
+                                            Column(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .padding(
+                                                        top = 4.dp,
+                                                        bottom = 8.dp,
+                                                    ),
+                                                verticalArrangement = Arrangement.Center,
+                                                horizontalAlignment = Alignment.CenterHorizontally
+                                            ) {
+                                                Image(
+                                                    modifier = Modifier
+                                                        .fillMaxWidth()
+                                                        .padding(horizontal = SaltTheme.dimens.padding)
+                                                        .clip(RoundedCornerShape(12.dp))
+                                                        .combinedClickable(
+                                                            onClick = {
+                                                                coverImageModified.value = true
+                                                                tagPage.selectCoverImage()
+                                                            },
+                                                            onLongClick = {
+                                                                showConfirmDeleteCoverDialog = true
+                                                            }
+                                                        ),
+                                                    bitmap = bitmap.asImageBitmap(),
+                                                    contentDescription = stringResource(id = R.string.cover_pic),
+                                                    contentScale = ContentScale.FillWidth
+                                                )
+                                            }
+                                        } else {
+                                            BasicButton(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .padding(
+                                                        start = SaltTheme.dimens.padding,
+                                                        end = SaltTheme.dimens.padding,
+                                                        bottom = 8.dp
+                                                    ),
+                                                onClick = {
+                                                    coverImageModified.value = true
+                                                    tagPage.selectCoverImage()
+                                                },
+                                                backgroundColor = SaltTheme.colors.subText.copy(
+                                                    alpha = 0.1f
+                                                ),
+                                                hapticStrength = hapticStrength.intValue
+                                            ) {
+                                                Icon(
+                                                    modifier = Modifier
+                                                        .size(17.5.dp)
+                                                        .align(Alignment.Center),
+                                                    painter = painterResource(id = R.drawable.plus_no_circle),
+                                                    contentDescription = null,
+                                                    tint = SaltTheme.colors.text
+                                                )
+                                            }
+                                        }
+                                    }
+                                    SongInfoItem(
+                                        title = stringResource(id = R.string.song_name),
+                                        editText = musicInfo.value["song"],
+                                        onChange = { musicInfo.value += ("song" to it) },
+                                        onClear = { musicInfo.value -= "song" },
+                                        enableHaptic = enableHaptic.value,
+                                        hapticStrength = hapticStrength.intValue
+                                    )
+                                    SongInfoItem(
+                                        title = stringResource(id = R.string.atrist),
+                                        editText = musicInfo.value["artist"],
+                                        onChange = { musicInfo.value += ("artist" to it) },
+                                        onClear = { musicInfo.value -= "artist" },
+                                        enableHaptic = enableHaptic.value,
+                                        hapticStrength = hapticStrength.intValue
+                                    )
+                                    SongInfoItem(
+                                        title = stringResource(id = R.string.album1),
+                                        editText = musicInfo.value["album"],
+                                        onChange = { musicInfo.value += ("album" to it) },
+                                        onClear = { musicInfo.value -= "album" },
+                                        enableHaptic = enableHaptic.value,
+                                        hapticStrength = hapticStrength.intValue
+                                    )
+                                    SongInfoItem(
+                                        title = stringResource(id = R.string.album_artist_tag_name),
+                                        editText = musicInfo.value["albumArtist"],
+                                        onChange = { musicInfo.value += ("albumArtist" to it) },
+                                        onClear = { musicInfo.value -= "albumArtist" },
+                                        enableHaptic = enableHaptic.value,
+                                        hapticStrength = hapticStrength.intValue
+                                    )
+                                    SongInfoItem(
+                                        title = stringResource(id = R.string.genre_tag_name),
+                                        editText = musicInfo.value["genre"],
+                                        onChange = { musicInfo.value += ("genre" to it) },
+                                        onClear = { musicInfo.value -= "genre" },
+                                        enableHaptic = enableHaptic.value,
+                                        hapticStrength = hapticStrength.intValue
+                                    )
+                                    SongInfoItem(
+                                        title = stringResource(id = R.string.track_number_tag_name),
+                                        editText = musicInfo.value["trackNumber"],
+                                        onChange = { musicInfo.value += ("trackNumber" to it) },
+                                        onClear = { musicInfo.value -= "trackNumber" },
+                                        enableHaptic = enableHaptic.value,
+                                        hapticStrength = hapticStrength.intValue
+                                    )
+                                    SongInfoItem(
+                                        title = stringResource(id = R.string.disc_number),
+                                        editText = musicInfo.value["discNumber"],
+                                        onChange = { musicInfo.value += ("discNumber" to it) },
+                                        onClear = { musicInfo.value -= "discNumber" },
+                                        enableHaptic = enableHaptic.value,
+                                        hapticStrength = hapticStrength.intValue
+                                    )
+                                    SongInfoItem(
+                                        title = stringResource(id = R.string.release_year_tag_name),
+                                        editText = musicInfo.value["releaseYear"],
+                                        onChange = { musicInfo.value += ("releaseYear" to it) },
+                                        onClear = { musicInfo.value -= "releaseYear" },
+                                        enableHaptic = enableHaptic.value,
+                                        hapticStrength = hapticStrength.intValue
+                                    )
+                                    SongInfoItem(
+                                        title = stringResource(id = R.string.lyricist),
+                                        editText = musicInfo.value["lyricist"],
+                                        onChange = { musicInfo.value += ("lyricist" to it) },
+                                        onClear = { musicInfo.value -= "lyricist" },
+                                        enableHaptic = enableHaptic.value,
+                                        hapticStrength = hapticStrength.intValue
+                                    )
+                                    SongInfoItem(
+                                        title = stringResource(id = R.string.composer),
+                                        editText = musicInfo.value["composer"],
+                                        onChange = { musicInfo.value += ("composer" to it) },
+                                        onClear = { musicInfo.value -= "composer" },
+                                        enableHaptic = enableHaptic.value,
+                                        hapticStrength = hapticStrength.intValue
+                                    )
+                                    SongInfoItem(
+                                        title = stringResource(id = R.string.arranger),
+                                        editText = musicInfo.value["arranger"],
+                                        onChange = { musicInfo.value += ("arranger" to it) },
+                                        onClear = { musicInfo.value -= "arranger" },
+                                        enableHaptic = enableHaptic.value,
+                                        hapticStrength = hapticStrength.intValue
+                                    )
+                                    SongInfoItem(
+                                        title = stringResource(id = R.string.lyrics),
+                                        editText = musicInfo.value["lyrics"],
+                                        onChange = { musicInfo.value += ("lyrics" to it) },
+                                        onClear = { musicInfo.value -= "lyrics" },
+                                        enableHaptic = enableHaptic.value,
+                                        hapticStrength = hapticStrength.intValue,
+                                        textStyle = TextStyle(
+                                            fontSize = 15.sp,
+                                            color = SaltTheme.colors.text
+                                        )
+                                    )
+                                }
+                            }
+                        }
+                    }
                 }
             }
-            PullRefreshIndicator(
-                modifier = Modifier.align(Alignment.TopCenter),
-                refreshing = !refreshComplete,
-                state = pullRefreshState,
-                backgroundColor = SaltTheme.colors.background,
-                contentColor = SaltTheme.colors.highlight
-            )
         }
+
     }
+
 }
 
 @Composable
@@ -1431,9 +1501,9 @@ fun SongInfoItem(
     ItemTitle(
         text = title,
         paddingValues = PaddingValues(
-            start = SaltTheme.dimens.innerHorizontalPadding,
-            end = SaltTheme.dimens.innerHorizontalPadding,
-            top = SaltTheme.dimens.innerVerticalPadding
+            start = SaltTheme.dimens.padding,
+            end = SaltTheme.dimens.padding,
+            top = SaltTheme.dimens.subPadding
         )
     )
     ItemEdit(
@@ -1444,8 +1514,8 @@ fun SongInfoItem(
         showClearButton = true,
         onClear = onClear,
         paddingValues = PaddingValues(
-            start = SaltTheme.dimens.innerHorizontalPadding,
-            end = SaltTheme.dimens.innerHorizontalPadding,
+            start = SaltTheme.dimens.padding,
+            end = SaltTheme.dimens.padding,
             bottom = 8.dp,
             top = 4.dp
         ),

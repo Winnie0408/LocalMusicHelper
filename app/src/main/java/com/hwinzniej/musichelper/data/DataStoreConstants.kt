@@ -41,4 +41,5 @@ object DataStoreConstants {
     val WIN_PATH = stringPreferencesKey("win_path")
     val MUSIC_DIRNAME = stringPreferencesKey("music_dirName")
     val SHOW_ADVANCED_OPTIONS = booleanPreferencesKey("show_advanced_options")
+    val GITHUB_PROXY = intPreferencesKey("github_proxy")
 }

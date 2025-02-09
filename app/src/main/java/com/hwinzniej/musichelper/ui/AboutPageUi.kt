@@ -10,10 +10,10 @@ import android.webkit.WebView
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.spring
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -29,6 +29,7 @@ import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.ripple
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableFloatState
@@ -42,6 +43,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
@@ -60,22 +62,20 @@ import com.alibaba.fastjson2.JSONObject
 import com.hwinzniej.musichelper.R
 import com.hwinzniej.musichelper.utils.MyVibrationEffect
 import com.hwinzniej.musichelper.utils.Tools
-import com.moriafly.salt.ui.ItemContainer
 import com.moriafly.salt.ui.RoundedColumn
 import com.moriafly.salt.ui.SaltTheme
 import com.moriafly.salt.ui.Text
-import com.moriafly.salt.ui.TitleBar
-import com.moriafly.salt.ui.UnstableSaltApi
 import dev.jeziellago.compose.markdowntext.MarkdownText
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import okhttp3.Dns
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.io.File
+import java.net.InetAddress
 import java.util.Locale
 
-@OptIn(UnstableSaltApi::class, ExperimentalFoundationApi::class)
 @Composable
 fun AboutPageUi(
     settingsPageState: PagerState,
@@ -86,7 +86,8 @@ fun AboutPageUi(
     enableHaptic: MutableState<Boolean>,
     language: MutableState<String>,
     updateFileSize: MutableFloatState,
-    hapticStrength: MutableIntState
+    hapticStrength: MutableIntState,
+    githubProxy: MutableIntState
 ) {
     val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
@@ -170,7 +171,8 @@ fun AboutPageUi(
                         .fillMaxWidth()
                         .zIndex(1f),
                     color = SaltTheme.colors.highlight,
-                    trackColor = SaltTheme.colors.background
+                    trackColor = SaltTheme.colors.background,
+                    strokeCap = StrokeCap.Square
                 )
             }
             Column(
@@ -208,7 +210,7 @@ fun AboutPageUi(
                         text = context.packageManager.getPackageInfo(
                             context.packageName,
                             0
-                        ).versionName, color = SaltTheme.colors.text
+                        ).versionName!!, color = SaltTheme.colors.text
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                 }
@@ -234,7 +236,7 @@ fun AboutPageUi(
                                                     horizontal = 16.dp,
                                                     vertical = 8.dp
                                                 ),
-                                                text = "HWinZnieJ",
+                                                text = "HWinZnieJ & Hwenray",
                                                 color = SaltTheme.colors.text,
                                                 fontSize = 14.sp
                                             )
@@ -299,13 +301,9 @@ fun AboutPageUi(
                         onClick = {
                             coroutineScope.launch(Dispatchers.IO) {
                                 showLoadingProgressBar = true
-                                val client = OkHttpClient()
-                                var request = Request.Builder()
-                                    .url("https://gitlab.com/api/v4/projects/54005438/releases/permalink/latest")
-                                    .header(
-                                        "PRIVATE-TOKEN",
-                                        ""
-                                    )  //TODO 不要提交到公开仓库！！！
+                                val client = OkHttpClient.Builder().dns(CustomDns()).build()
+                                val request = Request.Builder()
+                                    .url("https://api.github.com/repos/Winnie0408/LocalMusicHelper/releases/latest")
                                     .get()
                                     .build()
                                 try {
@@ -319,32 +317,24 @@ fun AboutPageUi(
                                             curVersion = context.packageManager.getPackageInfo(
                                                 context.packageName,
                                                 0
-                                            ).versionName,
+                                            ).versionName!!,
                                             newVersion = latestVersion.value
                                         )
                                     ) {
-                                        latestDescription.value = response.getString("description")
-                                        latestDownloadLink.value = response.getString("description")
-                                            .substring(
-                                                latestDescription.value.indexOf("[app-release.apk](") + 18,
-                                                latestDescription.value.indexOf("/app-release.apk)") + 16
-                                            )
+                                        latestDescription.value = response.getString("body")
                                         latestDownloadLink.value =
-                                            "https://gitlab.com/HWinZnieJ/LocalMusicHelper${latestDownloadLink.value}"
-                                        request = Request.Builder()
-                                            .url(latestDownloadLink.value)
-                                            .head()
-                                            .build()
-                                        client.newCall(request).execute().use {
-                                            it.header("Content-Length")
-                                                ?.let { it1 ->
-                                                    updateFileSize.floatValue = it1.toFloat()
-                                                }
-                                        }
-                                        latestDescription.value = latestDescription.value.substring(
-                                            0,
-                                            latestDescription.value.indexOf("\n[app-")
-                                        )
+                                            when (githubProxy.intValue) {
+                                                0 -> ""
+                                                1 -> "https://ghfast.top/https://github.com/"
+                                                2 -> "https://ghproxy.cc/https://github.com/"
+                                                3 -> "https://github.store/"
+                                                4 -> "https://github.site/"
+                                                5 -> "https://ghpxy.hwinzniej.top/https://github.com/"
+                                                else -> ""
+                                            } + "Winnie0408/LocalMusicHelper/releases/download/v" + latestVersion.value + "/app-release.apk"
+                                        updateFileSize.floatValue =
+                                            (response.getJSONArray("assets")[1] as JSONObject)
+                                                .getFloat("size")
                                         showNewVersionAvailableDialog.value = true
                                     } else {
                                         withContext(Dispatchers.Main) {
@@ -450,23 +440,22 @@ fun AboutPageUi(
                         onClick = {
                             yesDialogCustomContent = {
                                 RoundedColumn {
-                                    ItemContainer {
-                                        MarkdownText(
-                                            modifier = Modifier
-                                                .heightIn(max = (LocalConfiguration.current.screenHeightDp / 2.2).dp)
-                                                .verticalScroll(rememberScrollState()),
-                                            markdown = stringResource(id = R.string.service_agreements_content).replace(
-                                                "#n",
-                                                "\n"
-                                            ),
-                                            style = TextStyle(
-                                                color = SaltTheme.colors.text,
-                                                fontSize = 14.sp
-                                            ),
-                                            isTextSelectable = true,
-                                            disableLinkMovementMethod = true
-                                        )
-                                    }
+                                    MarkdownText(
+                                        modifier = Modifier
+                                            .heightIn(max = (LocalConfiguration.current.screenHeightDp / 2.2).dp)
+                                            .padding(horizontal = SaltTheme.dimens.padding)
+                                            .verticalScroll(rememberScrollState()),
+                                        markdown = stringResource(id = R.string.service_agreements_content).replace(
+                                            "#n",
+                                            "\n"
+                                        ),
+                                        style = TextStyle(
+                                            color = SaltTheme.colors.text,
+                                            fontSize = 14.sp
+                                        ),
+                                        isTextSelectable = true,
+                                        disableLinkMovementMethod = true
+                                    )
                                 }
                             }
                             yesDialogTitle = context.getString(R.string.service_agreements)
@@ -521,7 +510,10 @@ fun AboutPageUi(
                                             modifier = Modifier
                                                 .clip(RoundedCornerShape(12.dp))
                                                 .size(200.dp)
-                                                .clickable {
+                                                .clickable(
+                                                    interactionSource = remember { MutableInteractionSource() },
+                                                    indication = ripple()
+                                                ) {
                                                     val bitmap = BitmapFactory.decodeResource(
                                                         context.resources,
                                                         R.drawable.alipay
@@ -581,7 +573,10 @@ fun AboutPageUi(
                                             modifier = Modifier
                                                 .clip(RoundedCornerShape(12.dp))
                                                 .size(200.dp)
-                                                .clickable {
+                                                .clickable(
+                                                    interactionSource = remember { MutableInteractionSource() },
+                                                    indication = ripple()
+                                                ) {
                                                     val bitmap = BitmapFactory.decodeResource(
                                                         context.resources,
                                                         R.drawable.wechat
@@ -856,6 +851,19 @@ fun AboutPageUi(
                     )
                 }
             }
+        }
+    }
+}
+
+class CustomDns : Dns {
+    override fun lookup(hostname: String): List<InetAddress> {
+        return if (hostname == "api.github.com") {
+            listOf(
+                InetAddress.getByName("140.82.112.6"),
+                InetAddress.getByName("140.82.116.6")
+            )
+        } else {
+            Dns.SYSTEM.lookup(hostname)
         }
     }
 }

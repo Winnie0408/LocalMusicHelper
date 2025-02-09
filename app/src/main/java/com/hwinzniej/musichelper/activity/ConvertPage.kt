@@ -413,8 +413,9 @@ class ConvertPage(
                             itemCount.intValue = playlistItems.size
                             isCorrectPlaylist.value = true
                         }
+
                         else -> when (selectedTargetApp.intValue) {
-                            3,4 -> {
+                            3, 4 -> {
                                 val sourceFile = File(sourcePlaylistFilePath)
                                 val readPlayList = sourceFile.readLines()
                                 isAutoMatched.intValue = 1
@@ -425,6 +426,7 @@ class ConvertPage(
                                 itemCount.intValue = readPlayList.size
                                 isCorrectPlaylist.value = true
                             }
+
                             else -> {
                                 itemCount.intValue = File(sourcePlaylistFilePath).readLines().size
                                 isCorrectPlaylist.value = true
@@ -612,32 +614,47 @@ class ConvertPage(
             fileName = selectedFileName.value.substring(0, dot)
         }
         var fileData = """<?zpl version="2.0"?>
-<smil>
-  <head>
-    <guid>{""" + guid + """}</guid>
-    <meta name="generator" content="Zune -- 4.8.2345.0" />
-    <meta name="itemCount" content="""" + songCount + """" />
-    <meta name="totalDuration" content="19854" />
-    <meta name="averageRating" content="0" />
-    <meta name="creatorId" content="{""" + creatorId + """}" />
-    <meta name="autoRefresh" content="FALSE" />
-    <meta name="autoRefreshInterval" content="5" />
-    <title>""" + fileName + """</title>
-  </head>
-  <body>
-    <seq>
-"""
+        <smil>
+          <head>
+            <guid>{""" + guid + """}</guid>
+            <meta name="generator" content="Zune -- 4.8.2345.0" />
+            <meta name="itemCount" content="""" + songCount + """" />
+            <meta name="totalDuration" content="19854" />
+            <meta name="averageRating" content="0" />
+            <meta name="creatorId" content="{""" + creatorId + """}" />
+            <meta name="autoRefresh" content="FALSE" />
+            <meta name="autoRefreshInterval" content="5" />
+            <title>""" + fileName + """</title>
+          </head>
+          <body>
+            <seq>
+        """.trimIndent()
         var errorCount = 0
         val errorSongPath = mutableListOf("")
         val inputFile = sourceFile.readLines()
         inputFile.forEach {
             try {
                 fileData = "$fileData      <media src=\"" +
-                        TextNode(it.replace(localMusicPath.value, winPath.value).replace("/", "\\").replace(""""""","&quot;") +
-                        """" albumTitle="""" + getSongTag(it)["album"]!!.replace(""""""","&quot;") +
-                        """" albumArtist="""" + getSongTag(it)["albumArtist"]!!.replace(""""""","&quot;") +
-                        """" trackTitle="""" + getSongTag(it)["song"]!!.replace(""""""","&quot;") +
-                        """" trackArtist="""" + getSongTag(it)["artist"]!!.replace(""""""","&quot;") ).toString()+
+                        TextNode(
+                            it.replace(localMusicPath.value, winPath.value).replace("/", "\\")
+                                .replace(""""""", "&quot;") +
+                                    """" albumTitle="""" + getSongTag(it)["album"]!!.replace(
+                                """"""",
+                                "&quot;"
+                            ) +
+                                    """" albumArtist="""" + getSongTag(it)["albumArtist"]!!.replace(
+                                """"""",
+                                "&quot;"
+                            ) +
+                                    """" trackTitle="""" + getSongTag(it)["song"]!!.replace(
+                                """"""",
+                                "&quot;"
+                            ) +
+                                    """" trackArtist="""" + getSongTag(it)["artist"]!!.replace(
+                                """"""",
+                                "&quot;"
+                            )
+                        ).toString() +
                         """" duration="""" + "114514" + """" />""" + "\r\n"
             } catch (e: Exception) {
                 errorCount += 1
@@ -645,8 +662,8 @@ class ConvertPage(
             }
         }
         fileData += """    </seq>
-  </body>
-</smil>"""
+          </body>
+        </smil>""".trimIndent()
         fileWriter.write(fileData)
         fileWriter.close()
         when (errorCount) {
@@ -691,54 +708,96 @@ class ConvertPage(
         }
 
         var fileData = """<?zpl version="2.0"?>
-<smil>
-  <head>
-    <guid>{""" + guid + """}</guid>
-    <meta name="generator" content="Zune -- 4.8.2345.0" />
-    <meta name="itemCount" content="""" + songCount + """" />
-    <meta name="totalDuration" content="19854" />
-    <meta name="averageRating" content="0" />
-    <meta name="creatorId" content="{""" + creatorId + """}" />
-    <meta name="autoRefresh" content="FALSE" />
-    <meta name="autoRefreshInterval" content="5" />
-    <title>""" + fileName + """</title>
-  </head>
-  <body>
-    <seq>
-"""
+        <smil>
+          <head>
+            <guid>{""" + guid + """}</guid>
+            <meta name="generator" content="Zune -- 4.8.2345.0" />
+            <meta name="itemCount" content="""" + songCount + """" />
+            <meta name="totalDuration" content="19854" />
+            <meta name="averageRating" content="0" />
+            <meta name="creatorId" content="{""" + creatorId + """}" />
+            <meta name="autoRefresh" content="FALSE" />
+            <meta name="autoRefreshInterval" content="5" />
+            <title>""" + fileName + """</title>
+          </head>
+          <body>
+            <seq>
+        """.trimIndent()
         for (i in 0 until convertResult.size) {
             if (convertResult[i] == null)
                 continue
             if (convertResult[i]!![0] == "0" && saveSuccessSongs) {
                 fileData = "$fileData      <media src=\"" +
-                        TextNode(convertResult[i]!![7].replace(localMusicPath.value, winPath.value)
-                            .replace("/", "\\") +
-                        """" albumTitle="""" + convertResult[i]!![5].replace(""""""","&quot;") +
-                        """" albumArtist="""" + convertResult[i]!![8].replace(""""""","&quot;") +
-                        """" trackTitle="""" + convertResult[i]!![1].replace(""""""","&quot;") +
-                        """" trackArtist="""" + convertResult[i]!![3].replace(""""""","&quot;")).toString() +
+                        TextNode(
+                            convertResult[i]!![7].replace(localMusicPath.value, winPath.value)
+                                .replace("/", "\\") +
+                                    """" albumTitle="""" + convertResult[i]!![5].replace(
+                                """"""",
+                                "&quot;"
+                            ) +
+                                    """" albumArtist="""" + convertResult[i]!![8].replace(
+                                """"""",
+                                "&quot;"
+                            ) +
+                                    """" trackTitle="""" + convertResult[i]!![1].replace(
+                                """"""",
+                                "&quot;"
+                            ) +
+                                    """" trackArtist="""" + convertResult[i]!![3].replace(
+                                """"""",
+                                "&quot;"
+                            )
+                        ).toString() +
                         """" duration="""" + "114514" + """" />""" + "\r\n"
                 continue
             }
             if (convertResult[i]!![0] == "1" && saveCautionSongs) {
                 fileData = "$fileData      <media src=\"" +
-                        TextNode(convertResult[i]!![7].replace(localMusicPath.value, winPath.value)
-                            .replace("/", "\\") +
-                                """" albumTitle="""" + convertResult[i]!![5].replace(""""""","&quot;") +
-                                """" albumArtist="""" + convertResult[i]!![8].replace(""""""","&quot;") +
-                                """" trackTitle="""" + convertResult[i]!![1].replace(""""""","&quot;") +
-                                """" trackArtist="""" + convertResult[i]!![3].replace(""""""","&quot;")).toString() +
+                        TextNode(
+                            convertResult[i]!![7].replace(localMusicPath.value, winPath.value)
+                                .replace("/", "\\") +
+                                    """" albumTitle="""" + convertResult[i]!![5].replace(
+                                """"""",
+                                "&quot;"
+                            ) +
+                                    """" albumArtist="""" + convertResult[i]!![8].replace(
+                                """"""",
+                                "&quot;"
+                            ) +
+                                    """" trackTitle="""" + convertResult[i]!![1].replace(
+                                """"""",
+                                "&quot;"
+                            ) +
+                                    """" trackArtist="""" + convertResult[i]!![3].replace(
+                                """"""",
+                                "&quot;"
+                            )
+                        ).toString() +
                         """" duration="""" + "114514" + """" />""" + "\r\n"
                 continue
             }
             if (convertResult[i]!![0] == "2" && saveManualSongs) {
                 fileData = "$fileData      <media src=\"" +
-                        TextNode(convertResult[i]!![7].replace(localMusicPath.value, winPath.value)
-                            .replace("/", "\\") +
-                                """" albumTitle="""" + convertResult[i]!![5].replace(""""""","&quot;") +
-                                """" albumArtist="""" + convertResult[i]!![8].replace(""""""","&quot;") +
-                                """" trackTitle="""" + convertResult[i]!![1].replace(""""""","&quot;") +
-                                """" trackArtist="""" + convertResult[i]!![3].replace(""""""","&quot;")).toString() +
+                        TextNode(
+                            convertResult[i]!![7].replace(localMusicPath.value, winPath.value)
+                                .replace("/", "\\") +
+                                    """" albumTitle="""" + convertResult[i]!![5].replace(
+                                """"""",
+                                "&quot;"
+                            ) +
+                                    """" albumArtist="""" + convertResult[i]!![8].replace(
+                                """"""",
+                                "&quot;"
+                            ) +
+                                    """" trackTitle="""" + convertResult[i]!![1].replace(
+                                """"""",
+                                "&quot;"
+                            ) +
+                                    """" trackArtist="""" + convertResult[i]!![3].replace(
+                                """"""",
+                                "&quot;"
+                            )
+                        ).toString() +
                         """" duration="""" + "114514" + """" />""" + "\r\n"
                 continue
             }
@@ -850,7 +909,7 @@ class ConvertPage(
                             pm.getPackageInfo(
                                 it,
                                 PackageManager.GET_META_DATA
-                            ).applicationInfo.loadLabel(pm).toString()
+                            ).applicationInfo?.loadLabel(pm).toString()
                         )
                     )
                 }
@@ -3013,7 +3072,10 @@ class ConvertPage(
             val music3InfoList = if (useCustomResultFile.value) {
                 val db = SQLiteDatabase.openOrCreateDatabase(File(resultFilePath), null)
                 val musicInfoList = mutableListOf<MusicInfo>()
-                db.rawQuery("SELECT song, artist, album, absolutePath, id FROM music", null)
+                db.rawQuery(
+                    "SELECT song, artist, albumArtist, album, absolutePath, id FROM music",
+                    null
+                )
                     .use { cursor ->
                         while (cursor.moveToNext()) {
                             val id = cursor.getInt(cursor.getColumnIndexOrThrow("id"))
@@ -3341,7 +3403,6 @@ class ConvertPage(
                                     if (enableAlbumNameMatch.value) music3InfoList[k].artist else ""
                                 }${if (enableAlbumNameMatch.value) music3InfoList[k].album else ""}".lowercase()
                             )
-//                            println(k)
                         }
                     val maxSimilarity = Tools().getMaxValueIntDouble(similarityArray)
                     val songMaxSimilarity = maxSimilarity?.value!!
@@ -3402,8 +3463,12 @@ class ConvertPage(
                 val db = SQLiteDatabase.openOrCreateDatabase(File(resultFilePath), null)
                 val musicInfoList = mutableListOf<MusicInfo>()
                 db.rawQuery(
-                    "SELECT song, artist, album, absolutePath, id FROM music WHERE song LIKE '%${inputSearchWords.value}%' OR artist LIKE '%${inputSearchWords.value}%' OR album LIKE '%${inputSearchWords.value}%' LIMIT 3",
-                    null
+                    "SELECT song, artist, album, absolutePath, id FROM music WHERE song LIKE ? OR artist LIKE ? OR album LIKE ? LIMIT 3",
+                    arrayOf(
+                        "%${inputSearchWords.value}%",
+                        "%${inputSearchWords.value}%",
+                        "%${inputSearchWords.value}%"
+                    )
                 ).use { cursor ->
                     while (cursor.moveToNext()) {
                         val id = cursor.getInt(cursor.getColumnIndexOrThrow("id"))
@@ -3464,7 +3529,7 @@ class ConvertPage(
             val songInfo = if (useCustomResultFile.value) {
                 val db = SQLiteDatabase.openOrCreateDatabase(File(resultFilePath), null)
                 val cursor = db.rawQuery(
-                    "SELECT song, artist, album, absolutePath FROM music WHERE id = ?",
+                    "SELECT song, artist, album, absolutePath, albumArtist FROM music WHERE id = ?",
                     arrayOf(songId.toString())
                 )
                 cursor.moveToFirst()
@@ -3563,20 +3628,41 @@ class ConvertPage(
                             )
                         )
 
-                        4 ->{
+                        4 -> {
                             for (i in 0 until convertResult.size) {
                                 if (convertResult[i] == null)
                                     continue
                                 if (convertResult[i]!![0] == "0" && saveSuccessSongs) {
-                                    fileWriter.write("${convertResult[i]!![7].replace(localMusicPath.value, webdavPath.value)}?username=${webdavUsername.value}\n")
+                                    fileWriter.write(
+                                        "${
+                                            convertResult[i]!![7].replace(
+                                                localMusicPath.value,
+                                                webdavPath.value
+                                            )
+                                        }?username=${webdavUsername.value}\n"
+                                    )
                                     continue
                                 }
                                 if (convertResult[i]!![0] == "1" && saveCautionSongs) {
-                                    fileWriter.write("${convertResult[i]!![7].replace(localMusicPath.value, webdavPath.value)}?username=${webdavUsername.value}\n")
+                                    fileWriter.write(
+                                        "${
+                                            convertResult[i]!![7].replace(
+                                                localMusicPath.value,
+                                                webdavPath.value
+                                            )
+                                        }?username=${webdavUsername.value}\n"
+                                    )
                                     continue
                                 }
                                 if (convertResult[i]!![0] == "2" && saveManualSongs) {
-                                    fileWriter.write("${convertResult[i]!![7].replace(localMusicPath.value, webdavPath.value)}?username=${webdavUsername.value}\n")
+                                    fileWriter.write(
+                                        "${
+                                            convertResult[i]!![7].replace(
+                                                localMusicPath.value,
+                                                webdavPath.value
+                                            )
+                                        }?username=${webdavUsername.value}\n"
+                                    )
                                     continue
                                 }
                             }
@@ -3785,12 +3871,12 @@ class ConvertPage(
             .addHeader("Accept-Encoding", "gzip")
             .post(requestBody)
         val response: JSONObject
-        client.newCall(request.build()).execute().use { responses ->
-            response = JSON.parseObject(responses.body?.string())
-        }
         try {
+            client.newCall(request.build()).execute().use { responses ->
+                response = JSON.parseObject(responses.body?.string())
+            }
             if (response.getInteger("error_code") != 0)
-                throw Exception(context.getString(R.string.failed_get_login_qr_code))
+                throw Exception()
         } catch (e: Exception) {
             showDialogProgressBar.value = false
             showLoginDialog.value = false
@@ -3798,7 +3884,7 @@ class ConvertPage(
             withContext(Dispatchers.Main) {
                 Toast.makeText(
                     context,
-                    e.message,
+                    context.getString(R.string.failed_get_login_qr_code),
                     Toast.LENGTH_SHORT
                 ).show()
             }
@@ -3850,12 +3936,12 @@ class ConvertPage(
             )
             .post(requestBody)
         val response: JSONObject
-        client.newCall(request.build()).execute().use { responses ->
-            response = JSON.parseObject(responses.body?.string())
-        }
         try {
+            client.newCall(request.build()).execute().use { responses ->
+                response = JSON.parseObject(responses.body?.string())
+            }
             if (response.getInteger("error_code") != 0)
-                throw Exception(context.getString(R.string.failed_get_login_qr_code))
+                throw Exception()
             val qrCodeUrl = response.getJSONObject("data").getString("qrcode")
             val ticket = response.getJSONObject("data").getString("ticket")
             result["qrCodeUrl"] = qrCodeUrl
@@ -3868,7 +3954,7 @@ class ConvertPage(
             withContext(Dispatchers.Main) {
                 Toast.makeText(
                     context,
-                    e.message,
+                    context.getString(R.string.failed_get_login_qr_code),
                     Toast.LENGTH_SHORT
                 ).show()
             }
@@ -3996,18 +4082,20 @@ class ConvertPage(
                             }
                         }
                     }
+
                     4 -> {
                         val inputFile = sourceFile.readLines()
                         val fileWriter = FileWriter(targetFile, true)
                         var qinaltPlaylist = ""
-                        inputFile.forEach{
-                            qinaltPlaylist += it.replace(localMusicPath.value, webdavPath.value).
-                            replace("\\", "/").replace(""""""","&quot;") +
+                        inputFile.forEach {
+                            qinaltPlaylist += it.replace(localMusicPath.value, webdavPath.value)
+                                .replace("\\", "/").replace(""""""", "&quot;") +
                                     "?username=${webdavUsername.value}" + "\n"
                             fileWriter.write(qinaltPlaylist)
                         }
                         fileWriter.close()
                     }
+
                     else -> {
                         sourceFile.copyTo(targetFile, true)
                     }
@@ -4024,18 +4112,20 @@ class ConvertPage(
                             }
                         }
                     }
+
                     4 -> {
                         val inputFile = sourceFile.readLines()
                         val fileWriter = FileWriter(targetFile, true)
                         var qinaltPlaylist = ""
-                        inputFile.forEach{
-                            qinaltPlaylist += it.replace(localMusicPath.value, webdavPath.value).
-                            replace("\\", "/").replace(""""""","&quot;") +
+                        inputFile.forEach {
+                            qinaltPlaylist += it.replace(localMusicPath.value, webdavPath.value)
+                                .replace("\\", "/").replace(""""""", "&quot;") +
                                     "?username=${webdavUsername.value}" + "\n"
                             fileWriter.write(qinaltPlaylist)
                         }
                         fileWriter.close()
                     }
+
                     else -> {
                         sourceFile.copyTo(targetFile, true)
                     }
@@ -4052,20 +4142,23 @@ class ConvertPage(
                             }
                         }
                     }
+
                     4 -> {
                         val fileWriter = FileWriter(targetFile, true)
                         val inputFile = sourceFile.readLines()
                         var qinaltPlaylist = ""
-                        inputFile.forEach{
+                        inputFile.forEach {
                             qinaltPlaylist += it.replace("#.*((\\r\\n)|\\r|\\n)".toRegex(), "")
                                 .replace("(\\r\\n)|\\r".toRegex(), "\n")
-                                .replace("primary/", "/storage/emulated/0/").replace(localMusicPath.value, webdavPath.value).
-                            replace("\\", "/").replace(""""""","&quot;") +
+                                .replace("primary/", "/storage/emulated/0/")
+                                .replace(localMusicPath.value, webdavPath.value).replace("\\", "/")
+                                .replace(""""""", "&quot;") +
                                     "?username=${webdavUsername.value}" + "\n"
                         }
                         fileWriter.write(qinaltPlaylist)
                         fileWriter.close()
                     }
+
                     else -> {
                         var powerampPlaylist = sourceFile.readText()
                         powerampPlaylist = powerampPlaylist
@@ -4099,17 +4192,20 @@ class ConvertPage(
                 }
                 when (selectedTargetApp.intValue) {
                     4 -> {
-                        zuneInputFile.forEach{
-                            fileWriter.write(it.replace(localMusicPath.value, webdavPath.value).
-                            replace("\\", "/").replace(""""""","&quot;") +
-                                    "?username=${webdavUsername.value}" + "\n")
+                        zuneInputFile.forEach {
+                            fileWriter.write(
+                                it.replace(localMusicPath.value, webdavPath.value)
+                                    .replace("\\", "/").replace(""""""", "&quot;") +
+                                        "?username=${webdavUsername.value}" + "\n"
+                            )
                         }
                         fileWriter.close()
                     }
+
                     else -> {
-                            zuneInputFile.forEach {
-                                fileWriter.write(it)
-                            }
+                        zuneInputFile.forEach {
+                            fileWriter.write(it)
+                        }
                     }
                 }
                 return targetFile.absolutePath.replace("/storage/emulated/0/", "")
@@ -4141,12 +4237,12 @@ class ConvertPage(
             .addHeader("Connection", "keep-alive")
             .get()
         val response: JSONObject
-        client.newCall(request.build()).execute().use { responses ->
-            response = JSON.parseObject(responses.body?.string())
-        }
         try {
+            client.newCall(request.build()).execute().use { responses ->
+                response = JSON.parseObject(responses.body?.string())
+            }
             if (response.getString("message") != "success")
-                throw Exception(context.getString(R.string.failed_get_login_qr_code))
+                throw Exception()
             val qrCodeUrl = response.getJSONObject("data").getString("qrcode_index_url")
             val token = response.getJSONObject("data").getString("token")
             result["qrCodeUrl"] = qrCodeUrl
@@ -4158,7 +4254,7 @@ class ConvertPage(
             withContext(Dispatchers.Main) {
                 Toast.makeText(
                     context,
-                    e.message,
+                    context.getString(R.string.failed_get_login_qr_code),
                     Toast.LENGTH_LONG
                 ).show()
             }

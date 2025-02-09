@@ -2,8 +2,10 @@ package com.hwinzniej.musichelper
 
 import android.annotation.SuppressLint
 import android.app.DownloadManager
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.res.Configuration
 import android.content.res.Resources
 import android.net.Uri
@@ -29,7 +31,6 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
@@ -74,6 +75,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.WindowCompat
 import androidx.datastore.core.DataStore
@@ -107,10 +109,9 @@ import com.hwinzniej.musichelper.utils.MyVibrationEffect
 import com.hwinzniej.musichelper.utils.Tools
 import com.moriafly.salt.ui.BottomBar
 import com.moriafly.salt.ui.BottomBarItem
-import com.moriafly.salt.ui.ItemContainer
 import com.moriafly.salt.ui.RoundedColumn
 import com.moriafly.salt.ui.SaltTheme
-import com.moriafly.salt.ui.UnstableSaltApi
+import com.moriafly.salt.ui.UnstableSaltUiApi
 import com.moriafly.salt.ui.darkSaltColors
 import com.moriafly.salt.ui.lightSaltColors
 import com.moriafly.salt.ui.saltColorsByColorScheme
@@ -159,8 +160,8 @@ class MainActivity : ComponentActivity() {
     var updateFileSize = mutableFloatStateOf(0f)
     var isDataLoaded = mutableStateOf(false)
 
+    @OptIn(UnstableSaltUiApi::class)
     @SuppressLint("NewApi")
-    @OptIn(UnstableSaltApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         dataStore = (application as MyDataStore).dataStore
@@ -374,7 +375,7 @@ class MainActivity : ComponentActivity() {
  * UI
  */
 
-@OptIn(ExperimentalFoundationApi::class, UnstableSaltApi::class)
+@OptIn(UnstableSaltUiApi::class)
 @Composable
 private fun Pages(
     mainPage: MainActivity,
@@ -427,15 +428,15 @@ private fun Pages(
             preferences[DataStoreConstants.INITIAL_PAGE] ?: 0
         loadUI = true
         mainPage.enableDynamicColor.value =
-            preferences[DataStoreConstants.KEY_ENABLE_DYNAMIC_COLOR] ?: false
+            preferences[DataStoreConstants.KEY_ENABLE_DYNAMIC_COLOR] == true
         mainPage.selectedThemeMode.intValue = preferences[DataStoreConstants.KEY_THEME_MODE] ?: 2
-        mainPage.enableHaptic.value = preferences[DataStoreConstants.KEY_ENABLE_HAPTIC] ?: true
+        mainPage.enableHaptic.value = preferences[DataStoreConstants.KEY_ENABLE_HAPTIC] != false
         mainPage.hapticStrength.intValue = preferences[DataStoreConstants.HAPTIC_STRENGTH] ?: 3
         mainPage.language.value = preferences[DataStoreConstants.KEY_LANGUAGE] ?: "system"
         settingsPage.enableAutoCheckUpdate.value =
-            preferences[DataStoreConstants.KEY_ENABLE_AUTO_CHECK_UPDATE] ?: true
+            preferences[DataStoreConstants.KEY_ENABLE_AUTO_CHECK_UPDATE] != false
         convertPage.useRootAccess.value =
-            preferences[DataStoreConstants.KEY_USE_ROOT_ACCESS] ?: false
+            preferences[DataStoreConstants.KEY_USE_ROOT_ACCESS] == true
         settingsPage.encryptServer.value =
             preferences[DataStoreConstants.KEY_ENCRYPT_SERVER] ?: "cf"
         convertPage.neteaseUserId.value =
@@ -447,15 +448,15 @@ private fun Pages(
         convertPage.selectedSourceApp.intValue =
             preferences[DataStoreConstants.PLAYLIST_SOURCE_PLATFORM] ?: 0
         settingsPage.umFileLegal.value =
-            preferences[DataStoreConstants.UM_FILE_LEGAL] ?: false
+            preferences[DataStoreConstants.UM_FILE_LEGAL] == true
         settingsPage.umSupportOverWrite.value =
-            preferences[DataStoreConstants.UM_SUPPORT_OVERWRITE] ?: false
-        overwrite.value = preferences[DataStoreConstants.TAG_OVERWRITE] ?: false
-        lyricist.value = preferences[DataStoreConstants.TAG_LYRICIST] ?: true
-        composer.value = preferences[DataStoreConstants.TAG_COMPOSER] ?: true
-        arranger.value = preferences[DataStoreConstants.TAG_ARRANGER] ?: true
+            preferences[DataStoreConstants.UM_SUPPORT_OVERWRITE] == true
+        overwrite.value = preferences[DataStoreConstants.TAG_OVERWRITE] == true
+        lyricist.value = preferences[DataStoreConstants.TAG_LYRICIST] != false
+        composer.value = preferences[DataStoreConstants.TAG_COMPOSER] != false
+        arranger.value = preferences[DataStoreConstants.TAG_ARRANGER] != false
         sortMethod.intValue = preferences[DataStoreConstants.SORT_METHOD] ?: 0
-        slow.value = preferences[DataStoreConstants.SLOW_MODE] ?: false
+        slow.value = preferences[DataStoreConstants.SLOW_MODE] == true
         convertPage.lunaInstallId.value =
             preferences[DataStoreConstants.LUNA_INSTALL_ID] ?: ""
         convertPage.lunaDeviceId.value =
@@ -477,7 +478,10 @@ private fun Pages(
         convertPage.showAdvancedOptions.value =
             preferences[DataStoreConstants.SHOW_ADVANCED_OPTIONS] ?: false
         agreeUserAgreement =
-            preferences[DataStoreConstants.AGREE_USER_AGREEMENT] ?: false
+            preferences[DataStoreConstants.AGREE_USER_AGREEMENT] == true
+        settingsPage.githubProxy.intValue =
+            preferences[DataStoreConstants.GITHUB_PROXY] ?: 2
+
         coroutineScope.launch(Dispatchers.Main) {
             mainPage.isDataLoaded.value = true
         }
@@ -539,7 +543,30 @@ private fun Pages(
                         .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
                         .setMimeType("application/vnd.android.package-archive")
                         .setDestinationUri(uri)
-                    downloadManager.enqueue(request)
+                    val downloadId = downloadManager.enqueue(request)
+
+                    val onComplete = object : BroadcastReceiver() {
+                        override fun onReceive(context: Context, intent: Intent) {
+                            val id = intent.getLongExtra(
+                                DownloadManager.EXTRA_DOWNLOAD_ID,
+                                -1
+                            )
+                            if (id == downloadId) {
+                                Toast.makeText(
+                                    context,
+                                    context.getString(R.string.update_downloaded),
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
+                        }
+                    }
+
+                    ContextCompat.registerReceiver(
+                        context,
+                        onComplete,
+                        IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE),
+                        ContextCompat.RECEIVER_EXPORTED
+                    )
                 }
             },
             title = stringResource(id = R.string.download_lateset_ver),
@@ -609,12 +636,8 @@ private fun Pages(
             coroutineScope.launch(Dispatchers.IO) {
                 checkUpdate.value = false
                 val client = OkHttpClient()
-                var request = Request.Builder()
-                    .url("https://gitlab.com/api/v4/projects/54005438/releases/permalink/latest")
-                    .header(
-                        "PRIVATE-TOKEN",
-                        ""
-                    )  //TODO 不要提交到公开仓库！！！
+                val request = Request.Builder()
+                    .url("https://api.github.com/repos/Winnie0408/LocalMusicHelper/releases/latest")
                     .get()
                     .build()
                 try {
@@ -628,31 +651,23 @@ private fun Pages(
                             curVersion = context.packageManager.getPackageInfo(
                                 context.packageName,
                                 0
-                            ).versionName,
+                            ).versionName!!,
                             newVersion = latestVersion.value
                         )
                     ) {
-                        latestDescription.value = response.getString("description")
-                        latestDownloadLink.value = response.getString("description")
-                            .substring(
-                                latestDescription.value.indexOf("[app-release.apk](") + 18,
-                                latestDescription.value.indexOf("/app-release.apk)") + 16
-                            )
+                        latestDescription.value = response.getString("body")
                         latestDownloadLink.value =
-                            "https://gitlab.com/HWinZnieJ/LocalMusicHelper${latestDownloadLink.value}"
-                        request = Request.Builder()
-                            .url(latestDownloadLink.value)
-                            .head()
-                            .build()
-                        client.newCall(request).execute().use { responses ->
-                            responses.header("Content-Length")?.let { header ->
-                                mainPage.updateFileSize.floatValue = header.toFloat()
-                            }
-                        }
-                        latestDescription.value = latestDescription.value.substring(
-                            0,
-                            latestDescription.value.indexOf("\n[app-")
-                        )
+                            when (settingsPage.githubProxy.intValue) {
+                                0 -> ""
+                                1 -> "https://ghfast.top/https://github.com/"
+                                2 -> "https://ghproxy.cc/https://github.com/"
+                                3 -> "https://github.store/"
+                                4 -> "https://github.site/"
+                                5 -> "https://ghpxy.hwinzniej.top/https://github.com/"
+                                else -> ""
+                            } + "Winnie0408/LocalMusicHelper/releases/download/v" + latestVersion.value + "/app-release.apk"
+                        mainPage.updateFileSize.floatValue =
+                            (response.getJSONArray("assets")[1] as JSONObject).getFloat("size")
                         showNewVersionAvailableDialog.value = true
                     }
                 } catch (e: Exception) {
@@ -735,23 +750,22 @@ private fun Pages(
                     .fillMaxWidth()
             ) {
                 RoundedColumn {
-                    ItemContainer {
-                        MarkdownText(
-                            modifier = Modifier
-                                .heightIn(max = (configuration.screenHeightDp / 2.4).dp)
-                                .verticalScroll(rememberScrollState()),
-                            markdown = stringResource(id = R.string.service_agreements_content).replace(
-                                "#n",
-                                "\n"
-                            ),
-                            style = TextStyle(
-                                color = SaltTheme.colors.text,
-                                fontSize = 14.sp
-                            ),
-                            isTextSelectable = true,
-                            disableLinkMovementMethod = true
-                        )
-                    }
+                    MarkdownText(
+                        modifier = Modifier
+                            .heightIn(max = (configuration.screenHeightDp / 2.4).dp)
+                            .padding(horizontal = SaltTheme.dimens.padding)
+                            .verticalScroll(rememberScrollState()),
+                        markdown = stringResource(id = R.string.service_agreements_content).replace(
+                            "#n",
+                            "\n"
+                        ),
+                        style = TextStyle(
+                            color = SaltTheme.colors.text,
+                            fontSize = 14.sp
+                        ),
+                        isTextSelectable = true,
+                        disableLinkMovementMethod = true
+                    )
                 }
                 RoundedColumn {
                     ItemCheck(
@@ -926,6 +940,7 @@ private fun Pages(
                                             language = mainPage.language,
                                             updateFileSize = mainPage.updateFileSize,
                                             hapticStrength = mainPage.hapticStrength,
+                                            githubProxy = settingsPage.githubProxy
                                         )
                                     }
                                 }
@@ -970,6 +985,7 @@ private fun Pages(
                                             language = mainPage.language,
                                             updateFileSize = mainPage.updateFileSize,
                                             hapticStrength = mainPage.hapticStrength,
+                                            githubProxy = settingsPage.githubProxy
                                         )
                                     }
                                 }

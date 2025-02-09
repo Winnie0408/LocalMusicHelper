@@ -20,7 +20,6 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -68,6 +67,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
@@ -94,8 +94,7 @@ import com.moriafly.salt.ui.ItemContainer
 import com.moriafly.salt.ui.RoundedColumn
 import com.moriafly.salt.ui.SaltTheme
 import com.moriafly.salt.ui.Text
-import com.moriafly.salt.ui.TitleBar
-import com.moriafly.salt.ui.UnstableSaltApi
+import com.moriafly.salt.ui.UnstableSaltUiApi
 import com.moriafly.salt.ui.dialog.InputDialog
 import com.moriafly.salt.ui.popup.rememberPopupState
 import dev.jeziellago.compose.markdowntext.MarkdownText
@@ -107,7 +106,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.math.roundToInt
 
-@OptIn(UnstableSaltApi::class, ExperimentalFoundationApi::class)
+@OptIn(UnstableSaltUiApi::class)
 @Composable
 fun ConvertPageUi(
     convertPage: ConvertPage,
@@ -319,7 +318,8 @@ fun ConvertPageUi(
                             .fillMaxWidth()
                             .zIndex(1f),
                         color = SaltTheme.colors.highlight,
-                        trackColor = SaltTheme.colors.background
+                        trackColor = SaltTheme.colors.background,
+                        strokeCap = StrokeCap.Square
                     )
                 }
                 LazyColumn {
@@ -446,7 +446,8 @@ fun ConvertPageUi(
                             .fillMaxWidth()
                             .zIndex(1f),
                         color = SaltTheme.colors.highlight,
-                        trackColor = SaltTheme.colors.background
+                        trackColor = SaltTheme.colors.background,
+                        strokeCap = StrokeCap.Square
                     )
                 }
                 Column {
@@ -468,7 +469,8 @@ fun ConvertPageUi(
                         }
                         BasicButton(
                             modifier = Modifier
-                                .padding(top = 12.dp, bottom = 12.dp, end = 16.dp),
+                                .padding(top = 12.dp, end = 16.dp)
+                                .heightIn(min = SaltTheme.dimens.item),
                             enabled = true,
                             onClick = { showDeleteDialog = true },
                             backgroundColor = colorResource(id = R.color.unmatched),
@@ -477,7 +479,8 @@ fun ConvertPageUi(
                         ) {
                             Icon(
                                 modifier = Modifier
-                                    .size(20.dp),
+                                    .size(SaltTheme.dimens.itemIcon)
+                                    .align(Alignment.Center),
                                 painter = painterResource(id = R.drawable.ic_delete),
                                 contentDescription = null,
                                 tint = Color.White
@@ -578,7 +581,7 @@ fun ConvertPageUi(
                             currentIp = kugouCurrentIp
                         )
                     )
-                    userLoggedIn = kugouUserRelated.size != 0
+                    userLoggedIn = kugouUserRelated.isNotEmpty()
                     if (userLoggedIn) {
                         dataStore.edit { settings ->
                             settings[DataStoreConstants.KUGOU_TOKEN] =
@@ -630,7 +633,8 @@ fun ConvertPageUi(
                             .fillMaxWidth()
                             .zIndex(1f),
                         color = SaltTheme.colors.highlight,
-                        trackColor = SaltTheme.colors.background
+                        trackColor = SaltTheme.colors.background,
+                        strokeCap = StrokeCap.Square
                     )
                 }
                 RoundedColumn {
@@ -941,7 +945,8 @@ fun ConvertPageUi(
                             .fillMaxWidth()
                             .zIndex(1f),
                         color = SaltTheme.colors.highlight,
-                        trackColor = SaltTheme.colors.background
+                        trackColor = SaltTheme.colors.background,
+                        strokeCap = StrokeCap.Square
                     )
                 }
                 Column {
@@ -1521,7 +1526,8 @@ fun ConvertPageUi(
                             .fillMaxWidth()
                             .zIndex(1f),
                         color = SaltTheme.colors.highlight,
-                        trackColor = SaltTheme.colors.background
+                        trackColor = SaltTheme.colors.background,
+                        strokeCap = StrokeCap.Square
                     )
                 }
                 Column {
@@ -1666,7 +1672,8 @@ fun ConvertPageUi(
                             .fillMaxWidth()
                             .zIndex(1f),
                         color = SaltTheme.colors.highlight,
-                        trackColor = SaltTheme.colors.background
+                        trackColor = SaltTheme.colors.background,
+                        strokeCap = StrokeCap.Square
                     )
                 }
                 val focusRequester = remember { FocusRequester() }
@@ -1682,8 +1689,8 @@ fun ConvertPageUi(
                     modifier = Modifier
                         .focusRequester(focusRequester),
                     paddingValues = PaddingValues(
-                        start = SaltTheme.dimens.outerHorizontalPadding,
-                        end = SaltTheme.dimens.outerHorizontalPadding,
+                        start = SaltTheme.dimens.padding,
+                        end = SaltTheme.dimens.padding,
                         top = 14.dp,
                         bottom = 8.dp
                     ),
@@ -1754,7 +1761,8 @@ fun ConvertPageUi(
                         .fillMaxWidth()
                         .zIndex(1f),
                     color = SaltTheme.colors.highlight,
-                    trackColor = SaltTheme.colors.background
+                    trackColor = SaltTheme.colors.background,
+                    strokeCap = StrokeCap.Square
                 )
             }
             if (showNumberProgressBar.value) {
@@ -1770,6 +1778,8 @@ fun ConvertPageUi(
                         .zIndex(2f),
                     color = SaltTheme.colors.highlight,
                     trackColor = SaltTheme.colors.background,
+                    strokeCap = StrokeCap.Square,
+                    drawStopIndicator = { }
                 )
             }
 
@@ -2359,16 +2369,15 @@ fun ConvertPageUi(
                                     ItemTitle(
                                         text = stringResource(R.string.conversion_configuration).replace(
                                             "#",
-                                            if(convertPage.convertMode.intValue == 2 ){
-                                            when (convertPage.selectedSourceLocalApp.intValue) {
-                                                0 -> "Salt Player"
-                                                1 -> "APlayer"
-                                                2 -> "Poweramp"
-                                                3 -> "Microsoft Zune"
-                                                else -> ""
-                                            }
-                                            }
-                                            else{
+                                            if (convertPage.convertMode.intValue == 2) {
+                                                when (convertPage.selectedSourceLocalApp.intValue) {
+                                                    0 -> "Salt Player"
+                                                    1 -> "APlayer"
+                                                    2 -> "Poweramp"
+                                                    3 -> "Microsoft Zune"
+                                                    else -> ""
+                                                }
+                                            } else {
                                                 when (convertPage.selectedTargetApp.intValue) {
                                                     0 -> "Salt Player"
                                                     1 -> "APlayer"
@@ -2423,7 +2432,9 @@ fun ConvertPageUi(
                                                     false -> null
                                                 },
                                             )
-                                            var inputWebdavUsername by remember { mutableStateOf(false) }
+                                            var inputWebdavUsername by remember {
+                                                mutableStateOf(false)
+                                            }
                                             if (inputWebdavUsername) {
                                                 InputDialog(
                                                     onDismissRequest = {
@@ -3006,7 +3017,8 @@ fun ConvertPageUi(
                                             ) {
                                                 Icon(
                                                     modifier = Modifier
-                                                        .size(22.dp),
+                                                        .size(SaltTheme.dimens.itemIcon)
+                                                        .align(Alignment.Center),
                                                     painter = painterResource(id = R.drawable.refresh),
                                                     contentDescription = null,
                                                     tint = if (it) Color.Gray else SaltTheme.colors.text
@@ -3036,8 +3048,9 @@ fun ConvertPageUi(
                                             ) {
                                                 Icon(
                                                     modifier = Modifier
-                                                        .size(22.dp)
-                                                        .padding(all = 1.dp),
+                                                        .size(SaltTheme.dimens.itemIcon)
+                                                        .padding(all = 1.dp)
+                                                        .align(Alignment.Center),
                                                     painter = painterResource(id = R.drawable.plus),
                                                     contentDescription = null,
                                                     tint = if (it) Color.Gray else SaltTheme.colors.text
@@ -3441,7 +3454,10 @@ fun ConvertPageUi(
                                                                 modifier = Modifier.weight(1f)
                                                             ) {
                                                                 when (it) {
-                                                                    0 -> items(convertResult.size) { index ->
+                                                                    0 -> items(
+                                                                        (convertResult.keys.maxOrNull()
+                                                                            ?: -1) + 1
+                                                                    ) { index ->
                                                                         if (convertResult[index] != null)
                                                                             Item(
                                                                                 onClick = {
@@ -3491,7 +3507,10 @@ fun ConvertPageUi(
                                                                             )
                                                                     }
 
-                                                                    1 -> items(convertResult.size) { index ->
+                                                                    1 -> items(
+                                                                        (convertResult.keys.maxOrNull()
+                                                                            ?: -1) + 1
+                                                                    ) { index ->
                                                                         if (convertResult[index] != null && convertResult[index]!![0] == "0"
                                                                         )
                                                                             Item(
@@ -3542,7 +3561,10 @@ fun ConvertPageUi(
                                                                             )
                                                                     }
 
-                                                                    2 -> items(convertResult.size) { index ->
+                                                                    2 -> items(
+                                                                        (convertResult.keys.maxOrNull()
+                                                                            ?: -1) + 1
+                                                                    ) { index ->
                                                                         if (convertResult[index] != null && convertResult[index]!![0] == "1"
                                                                         )
                                                                             Item(
@@ -3593,7 +3615,10 @@ fun ConvertPageUi(
                                                                             )
                                                                     }
 
-                                                                    3 -> items(convertResult.size) { index ->
+                                                                    3 -> items(
+                                                                        (convertResult.keys.maxOrNull()
+                                                                            ?: -1) + 1
+                                                                    ) { index ->
                                                                         if (convertResult[index] != null && convertResult[index]!![0] == "2"
                                                                         )
                                                                             Item(
@@ -3657,7 +3682,7 @@ fun ConvertPageUi(
                                         }
                                         Row(
                                             modifier = Modifier.padding(
-                                                horizontal = SaltTheme.dimens.outerHorizontalPadding,
+                                                horizontal = SaltTheme.dimens.padding,
                                                 vertical = 8.dp
                                             ),
                                         ) {
@@ -3707,13 +3732,13 @@ fun ConvertPageUi(
                                     Icon(
                                         modifier = Modifier.size(50.dp),
                                         painter =
-                                        if (convertPage.resultFileLocation.size != 0)
+                                        if (convertPage.resultFileLocation.isNotEmpty())
                                             painterResource(id = R.drawable.ic_check)
                                         else
                                             painterResource(id = R.drawable.ic_tips),
                                         contentDescription = null,
                                         tint =
-                                        if (convertPage.resultFileLocation.size != 0)
+                                        if (convertPage.resultFileLocation.isNotEmpty())
                                             colorResource(id = R.color.matched)
                                         else
                                             colorResource(id = R.color.warning)
@@ -3724,7 +3749,7 @@ fun ConvertPageUi(
                                     ) {
                                         ItemText(
                                             text =
-                                            if (convertPage.resultFileLocation.size != 0)
+                                            if (convertPage.resultFileLocation.isNotEmpty())
                                                 stringResource(id = R.string.all_done)
                                             else
                                                 stringResource(id = R.string.not_convert_any_playlist),
@@ -3734,7 +3759,7 @@ fun ConvertPageUi(
                                 }
                                 Spacer(modifier = Modifier.height(12.dp))
                             }
-                            if (convertPage.resultFileLocation.size != 0) {
+                            if (convertPage.resultFileLocation.isNotEmpty()) {
                                 RoundedColumn {
                                     ItemTitle(text = stringResource(id = R.string.details_of_results))
                                     ItemContainer {
@@ -3816,7 +3841,7 @@ fun ConvertPageUi(
                                 }
                             }
 
-                            if (convertPage.resultFileLocation.size != 0) {
+                            if (convertPage.resultFileLocation.isNotEmpty()) {
                                 ItemContainer {
                                     Row {
                                         TextButton(
@@ -3875,8 +3900,8 @@ fun PathItem(
         showClearButton = true,
         onClear = onClear,
         paddingValues = PaddingValues(
-            start = SaltTheme.dimens.innerHorizontalPadding,
-            end = SaltTheme.dimens.innerHorizontalPadding,
+            start = SaltTheme.dimens.padding,
+            end = SaltTheme.dimens.padding,
             bottom = 8.dp,
             top = 4.dp
         ),

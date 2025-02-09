@@ -413,4 +413,11 @@
     <string name="input_webdav_path">Webdav URL과 경로를 입력해주세요</string>
     <string name="input_webdav_username">Webdav 사용자 이름을 입력하세요</string>
     <string name="webdav_username">웹다브 사용자 이름</string>
+    <string name="github_proxy">GitHub 프록시</string>
+    <string name="proxy_direct">직접</string>
+    <string name="custom">사용자 지정</string>
+    <string name="github_proxy_sub">APK 다운로드 속도 가속화 선택</string>
+    <string name="update_downloaded">업데이트 APK가 다운로드 되었습니다</string>
+    <string name="pick_file">파일 선택</string>
+    <string name="pick_directory">디렉토리 선택</string>
 </resources>

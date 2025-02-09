@@ -421,4 +421,11 @@
     <string name="input_webdav_path">Please enter the Webdav URL and Path</string>
     <string name="input_webdav_username">Please enter your Webdav Username</string>
     <string name="webdav_username">Webdav Username</string>
+    <string name="github_proxy">GitHub proxy</string>
+    <string name="proxy_direct">Direct</string>
+    <string name="custom">Custom</string>
+    <string name="github_proxy_sub">Choose to accelerate APK download speed</string>
+    <string name="update_downloaded">Update APK downloaded</string>
+    <string name="pick_file">Pick file</string>
+    <string name="pick_directory">Pick directory</string>
 </resources>

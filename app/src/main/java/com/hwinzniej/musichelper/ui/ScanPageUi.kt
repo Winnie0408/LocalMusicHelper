@@ -25,6 +25,7 @@ import androidx.compose.runtime.MutableIntState
 import androidx.compose.runtime.MutableState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -40,12 +41,9 @@ import com.moriafly.salt.ui.ItemContainer
 import com.moriafly.salt.ui.RoundedColumn
 import com.moriafly.salt.ui.SaltTheme
 import com.moriafly.salt.ui.Text
-import com.moriafly.salt.ui.TitleBar
-import com.moriafly.salt.ui.UnstableSaltApi
 import com.moriafly.salt.ui.popup.rememberPopupState
 import dev.jeziellago.compose.markdowntext.MarkdownText
 
-@OptIn(UnstableSaltApi::class)
 @Composable
 fun ScanPageUi(
     scanPage: ScanPage,
@@ -136,7 +134,8 @@ fun ScanPageUi(
                         .fillMaxWidth()
                         .zIndex(1f),
                     color = SaltTheme.colors.highlight,
-                    trackColor = SaltTheme.colors.background
+                    trackColor = SaltTheme.colors.background,
+                    strokeCap = StrokeCap.Square
                 )
             }
 
