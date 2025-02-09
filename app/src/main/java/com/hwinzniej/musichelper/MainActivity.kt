@@ -474,9 +474,10 @@ private fun Pages(
         convertPage.musicDirName.value =
             preferences[DataStoreConstants.MUSIC_DIRNAME] ?: "Music"
         convertPage.winPath.value =
-            preferences[DataStoreConstants.WIN_PATH] ?: "C:\\Users\\{YourUserName}\\${convertPage.musicDirName.value}"
+            preferences[DataStoreConstants.WIN_PATH]
+                ?: "C:\\Users\\{YourUserName}\\${convertPage.musicDirName.value}"
         convertPage.showAdvancedOptions.value =
-            preferences[DataStoreConstants.SHOW_ADVANCED_OPTIONS] ?: false
+            preferences[DataStoreConstants.SHOW_ADVANCED_OPTIONS] == true
         agreeUserAgreement =
             preferences[DataStoreConstants.AGREE_USER_AGREEMENT] == true
         settingsPage.githubProxy.intValue =

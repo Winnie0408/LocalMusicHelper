@@ -223,7 +223,7 @@
     <string name="get_playlist_hidden">已隐藏 # 个空歌单</string>
     <string name="switch_account_logout">切换账号 / 退出登录</string>
     <string name="not_yet_deployed">（暂未启用）</string>
-    <string name="unable_start_documentsui">「文件」启动失败</string>
+    <string name="unable_start_documentsui">"「文件」启动失败，#n请输入音乐文件的存放路径 "</string>
     <string name="music_file_encrypted">似乎已被加密，请先解密。</string>
     <string name="no_song_in_playlist">歌单为空，请在#中重新加载。</string>
     <string name="will_skip_this_playlist">将跳过当前歌单。</string>
@@ -418,6 +418,7 @@
     <string name="custom">自定义</string>
     <string name="github_proxy_sub">选择以加快APK下载速度</string>
     <string name="update_downloaded">更新包已下载完成</string>
-    <string name="pick_file">选择文件</string>
-    <string name="pick_directory">选择目录</string>
+    <string name="pick_file">输入文件路径</string>
+    <string name="pick_directory">输入目录路径</string>
+    <string name="unable_get_input_path">无法获取所输入的目录</string>
 </resources>

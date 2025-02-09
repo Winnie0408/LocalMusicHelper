@@ -49,6 +49,7 @@ class ScanPage(
     val scanResult = mutableStateListOf<String>()
     val showLoadingProgressBar = mutableStateOf(false)
     val showConflictDialog = mutableStateOf(false)
+    val showPathDialog = mutableStateOf(false)
     var progressPercent = mutableIntStateOf(-1)
     private var lastIndex = 0
     var exportResultFile = mutableStateOf(false)
@@ -183,10 +184,12 @@ class ScanPage(
                                 withContext(Dispatchers.Main) {
                                     Toast.makeText(
                                         context,
-                                        context.getString(R.string.unable_start_documentsui),
-                                        Toast.LENGTH_SHORT
+                                        context.getString(R.string.unable_start_documentsui)
+                                            .replace("#n", "\n"),
+                                        Toast.LENGTH_LONG
                                     ).show()
                                 }
+                                showPathDialog.value = true
                             }
                         }
                     }
@@ -217,10 +220,12 @@ class ScanPage(
                                 withContext(Dispatchers.Main) {
                                     Toast.makeText(
                                         context,
-                                        context.getString(R.string.unable_start_documentsui),
-                                        Toast.LENGTH_SHORT
+                                        context.getString(R.string.unable_start_documentsui)
+                                            .replace("#n", "\n"),
+                                        Toast.LENGTH_LONG
                                     ).show()
                                 }
+                                showPathDialog.value = true
                             }
                         }
                     }
@@ -238,10 +243,12 @@ class ScanPage(
                             withContext(Dispatchers.Main) {
                                 Toast.makeText(
                                     context,
-                                    context.getString(R.string.unable_start_documentsui),
-                                    Toast.LENGTH_SHORT
+                                    context.getString(R.string.unable_start_documentsui)
+                                        .replace("#n", "\n"),
+                                    Toast.LENGTH_LONG
                                 ).show()
                             }
+                            showPathDialog.value = true
                         }
                     }
                 }
@@ -259,9 +266,10 @@ class ScanPage(
                 } catch (_: Exception) {
                     Toast.makeText(
                         context,
-                        context.getString(R.string.unable_start_documentsui),
-                        Toast.LENGTH_SHORT
+                        context.getString(R.string.unable_start_documentsui).replace("#n", "\n"),
+                        Toast.LENGTH_LONG
                     ).show()
+                    showPathDialog.value = true
                 }
             }
 
@@ -300,9 +308,10 @@ class ScanPage(
                 } catch (_: Exception) {
                     Toast.makeText(
                         context,
-                        context.getString(R.string.unable_start_documentsui),
-                        Toast.LENGTH_SHORT
+                        context.getString(R.string.unable_start_documentsui).replace("#n", "\n"),
+                        Toast.LENGTH_LONG
                     ).show()
+                    showPathDialog.value = true
                 }
             }
         }
@@ -323,6 +332,28 @@ class ScanPage(
             return
         }
         val directory = File(absolutePath)
+        showLoadingProgressBar.value = true
+        progressPercent.intValue = 0
+        lifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+            delay(300L)
+            scanDirectory(directory)
+        }
+    }
+
+    fun handleUri(path: String?) {
+        if (path.isNullOrBlank()) {
+            return
+        }
+        scanResult.clear()
+        if (path.isBlank()) {
+            Toast.makeText(context, R.string.unable_get_input_path, Toast.LENGTH_SHORT).show()
+            return
+        }
+        val directory = if (path.endsWith("/")) {
+            File(path)
+        } else {
+            File("$path/")
+        }
         showLoadingProgressBar.value = true
         progressPercent.intValue = 0
         lifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {

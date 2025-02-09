@@ -23,6 +23,10 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableIntState
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.StrokeCap
@@ -41,9 +45,11 @@ import com.moriafly.salt.ui.ItemContainer
 import com.moriafly.salt.ui.RoundedColumn
 import com.moriafly.salt.ui.SaltTheme
 import com.moriafly.salt.ui.Text
+import com.moriafly.salt.ui.UnstableSaltUiApi
 import com.moriafly.salt.ui.popup.rememberPopupState
 import dev.jeziellago.compose.markdowntext.MarkdownText
 
+@OptIn(UnstableSaltUiApi::class)
 @Composable
 fun ScanPageUi(
     scanPage: ScanPage,
@@ -115,6 +121,26 @@ fun ScanPageUi(
                 }
             }
         }
+    }
+
+    if (scanPage.showPathDialog.value) {
+        var inputPath by remember { mutableStateOf("") }
+        InputDialog(
+            onDismissRequest = { scanPage.showPathDialog.value = false },
+            onConfirm = {
+                scanPage.showPathDialog.value = false
+                scanPage.handleUri(inputPath)
+            },
+            title = stringResource(id = R.string.pick_directory),
+            text = inputPath,
+            onChange = { inputPath = it },
+            hint = "/path/to/your/music/directory/",
+            cancelText = stringResource(id = R.string.cancel_button_text),
+            confirmText = stringResource(id = R.string.ok_button_text),
+            enableHaptic = enableHaptic.value,
+            hapticStrength = hapticStrength.intValue,
+            enableConfirmButton = inputPath.isNotBlank()
+        )
     }
 
     val exportTypePopupState = rememberPopupState()

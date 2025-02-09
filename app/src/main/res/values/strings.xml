@@ -227,7 +227,7 @@
     <string name="get_playlist_hidden">Hidden # empty playlist(s)</string>
     <string name="switch_account_logout">Switch Account / Logout</string>
     <string name="not_yet_deployed">(Not yet activated)</string>
-    <string name="unable_start_documentsui">DocumentsUI launch failed</string>
+    <string name="unable_start_documentsui">DocumentsUI launch failed,#nplease input path manually</string>
     <string name="music_file_encrypted">Encrypted, please decrypt first.</string>
     <string name="no_song_in_playlist">The song list is empty, please reload it in #.</string>
     <string name="will_skip_this_playlist">Will skip current playlist.</string>
@@ -426,6 +426,7 @@
     <string name="custom">Custom</string>
     <string name="github_proxy_sub">Choose to accelerate APK download speed</string>
     <string name="update_downloaded">Update APK downloaded</string>
-    <string name="pick_file">Pick file</string>
-    <string name="pick_directory">Pick directory</string>
+    <string name="pick_file">Input file path</string>
+    <string name="pick_directory">Input directory path</string>
+    <string name="unable_get_input_path">Cannot get inputted path</string>
 </resources>

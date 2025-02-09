@@ -223,7 +223,7 @@
     <string name="get_playlist_hidden">#개의 빈 목록을 숨겼습니다</string>
     <string name="switch_account_logout">계정 전환 / 로그아웃</string>
     <string name="not_yet_deployed">(사용하지 않음)</string>
-    <string name="unable_start_documentsui">DocumentsUI 실행 실패</string>
+    <string name="unable_start_documentsui">DocumentsUI 실행에 실패했습니다,#n경로를 수동으로 입력하세요</string>
     <string name="music_file_encrypted">암호화되었습니다, 먼저 암호를 푸십시오.</string>
     <string name="no_song_in_playlist">플레이리스트가 비어 있습니다, #에서 다시 불러오십시오.</string>
     <string name="will_skip_this_playlist">현재 플레이리스트는 건너뛰겠습니다.</string>
@@ -418,6 +418,7 @@
     <string name="custom">사용자 지정</string>
     <string name="github_proxy_sub">APK 다운로드 속도 가속화 선택</string>
     <string name="update_downloaded">업데이트 APK가 다운로드 되었습니다</string>
-    <string name="pick_file">파일 선택</string>
-    <string name="pick_directory">디렉토리 선택</string>
+    <string name="pick_file">파일 경로 입력</string>
+    <string name="pick_directory">디렉토리 경로 입력</string>
+    <string name="unable_get_input_path">입력 경로를 가져올 수 없습니다</string>
 </resources>

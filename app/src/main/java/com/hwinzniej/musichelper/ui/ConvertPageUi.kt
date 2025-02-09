@@ -95,7 +95,6 @@ import com.moriafly.salt.ui.RoundedColumn
 import com.moriafly.salt.ui.SaltTheme
 import com.moriafly.salt.ui.Text
 import com.moriafly.salt.ui.UnstableSaltUiApi
-import com.moriafly.salt.ui.dialog.InputDialog
 import com.moriafly.salt.ui.popup.rememberPopupState
 import dev.jeziellago.compose.markdowntext.MarkdownText
 import kotlinx.coroutines.Dispatchers
@@ -322,7 +321,7 @@ fun ConvertPageUi(
                         strokeCap = StrokeCap.Square
                     )
                 }
-                LazyColumn {
+                LazyColumn(modifier = Modifier.heightIn(max = (LocalConfiguration.current.screenHeightDp / 2).dp)) {
                     items(multiSource.size) { index ->
                         ItemCheck(
                             state = selectedMultiSourceApp == index,
@@ -490,7 +489,7 @@ fun ConvertPageUi(
                     AnimatedVisibility(visible = searchResult.isNotEmpty()) {  //TODO 仅第一次新增搜索结果时有动画，变化与删除时无动画
                         RoundedColumn {
                             ItemTitle(text = stringResource(R.string.search_results))
-                            LazyColumn {
+                            LazyColumn(modifier = Modifier.heightIn(max = 248.dp)) {
                                 items(searchResult.size) { index ->
                                     ItemCheck(
                                         state = selectedSearchResult == index,
@@ -2407,7 +2406,9 @@ fun ConvertPageUi(
                                                     text = convertPage.webdavPath.value,
                                                     onChange = {
                                                         convertPage.webdavPath.value = it
-                                                    }
+                                                    },
+                                                    enableHaptic = enableHaptic.value,
+                                                    hapticStrength = hapticStrength.intValue
                                                 )
                                             }
                                             Item(
@@ -2447,7 +2448,9 @@ fun ConvertPageUi(
                                                     text = convertPage.webdavUsername.value,
                                                     onChange = {
                                                         convertPage.webdavUsername.value = it
-                                                    }
+                                                    },
+                                                    enableHaptic = enableHaptic.value,
+                                                    hapticStrength = hapticStrength.intValue
                                                 )
                                             }
                                             Item(
@@ -2562,7 +2565,9 @@ fun ConvertPageUi(
                                                                     it
                                                             }
                                                         }
-                                                    }
+                                                    },
+                                                    enableHaptic = enableHaptic.value,
+                                                    hapticStrength = hapticStrength.intValue
                                                 )
                                             }
                                             Item(
@@ -3025,14 +3030,24 @@ fun ConvertPageUi(
                                                 )
                                             }
                                         }
-                                        TextButton(
-                                            modifier = Modifier.weight(1f),
-                                            onClick = { convertPage.checkSongListSelection() },
-                                            text = stringResource(R.string.next_step_text),
-                                            enabled = !it,
-                                            enableHaptic = enableHaptic.value,
-                                            hapticStrength = hapticStrength.intValue
-                                        )
+                                        AnimatedContent(
+                                            modifier = Modifier
+                                                .weight(1f)
+                                                .align(Alignment.CenterVertically),
+                                            targetState = !showLoadingProgressBar.value && !playlistEnabled.all { it == 0 },
+                                            label = "",
+                                            transitionSpec = {
+                                                fadeIn() togetherWith fadeOut()
+                                            }) {
+                                            TextButton(
+                                                onClick = { convertPage.checkSongListSelection() },
+                                                text = stringResource(R.string.next_step_text),
+                                                enabled = it,
+                                                enableHaptic = enableHaptic.value,
+                                                hapticStrength = hapticStrength.intValue
+                                            )
+                                        }
+
                                         if (selectedMethod.intValue == 1) {
                                             BasicButton(
                                                 modifier = Modifier

@@ -43,11 +43,13 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.ripple
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardColors
@@ -67,6 +69,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.SolidColor
@@ -106,6 +110,7 @@ import androidx.compose.ui.window.DialogWindowProvider
 import com.hwinzniej.musichelper.R
 import com.hwinzniej.musichelper.utils.MyVibrationEffect
 import com.hwinzniej.musichelper.utils.Tools
+import com.moriafly.salt.ui.ItemOuterEdit
 import com.moriafly.salt.ui.ItemOuterHalfSpacer
 import com.moriafly.salt.ui.ItemOuterTip
 import com.moriafly.salt.ui.ItemPopupArrow
@@ -146,44 +151,46 @@ fun YesNoDialog(
     ) {
         ItemOuterHalfSpacer()
         DialogTitle(text = title)
-        content?.let { ItemOuterTip(text = it) }
-        drawContent?.let {
-            drawContent.invoke()
-        }
-        Row(
-            modifier = Modifier.outerPadding()
-        ) {
-            TextButton(
-                onClick = {
-                    onCancel()
-                },
-                modifier = Modifier.weight(1f),
-                text = cancelText,
-                textColor = SaltTheme.colors.subText,
-                backgroundColor = SaltTheme.colors.subBackground,
-                enableHaptic = enableHaptic,
-                hapticStrength = hapticStrength
-            )
-            Spacer(modifier = Modifier.width(SaltTheme.dimens.padding))
-            AnimatedContent(
-                modifier = Modifier.weight(1f),
-                targetState = enableConfirmButton,
-                label = "",
-                transitionSpec = {
-                    fadeIn() togetherWith fadeOut()
-                }) {
+        Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+            content?.let { ItemOuterTip(text = it) }
+            drawContent?.let {
+                drawContent.invoke()
+            }
+            Row(
+                modifier = Modifier.outerPadding()
+            ) {
                 TextButton(
                     onClick = {
-                        onConfirm()
-                    }, text = confirmText,
-                    backgroundColor = confirmButtonColor,
+                        onCancel()
+                    },
+                    modifier = Modifier.weight(1f),
+                    text = cancelText,
+                    textColor = SaltTheme.colors.subText,
+                    backgroundColor = SaltTheme.colors.subBackground,
                     enableHaptic = enableHaptic,
-                    enabled = it,
                     hapticStrength = hapticStrength
                 )
+                Spacer(modifier = Modifier.width(SaltTheme.dimens.padding))
+                AnimatedContent(
+                    modifier = Modifier.weight(1f),
+                    targetState = enableConfirmButton,
+                    label = "",
+                    transitionSpec = {
+                        fadeIn() togetherWith fadeOut()
+                    }) {
+                    TextButton(
+                        onClick = {
+                            onConfirm()
+                        }, text = confirmText,
+                        backgroundColor = confirmButtonColor,
+                        enableHaptic = enableHaptic,
+                        enabled = it,
+                        hapticStrength = hapticStrength
+                    )
+                }
             }
+            ItemOuterHalfSpacer()
         }
-        ItemOuterHalfSpacer()
     }
 }
 
@@ -345,23 +352,100 @@ fun YesDialog(
     ) {
         ItemOuterHalfSpacer()
         DialogTitle(text = title)
-        content?.let { ItemOuterTip(text = it) }
-        drawContent?.let {
-            drawContent.invoke()
+        Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+            content?.let { ItemOuterTip(text = it) }
+            drawContent?.let {
+                drawContent.invoke()
+            }
+            ItemOuterHalfSpacer()
+            TextButton(
+                onClick = {
+                    onDismissRequest()
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .outerPadding(),
+                text = confirmText,
+                enableHaptic = enableHaptic,
+                hapticStrength = hapticStrength
+            )
+            ItemOuterHalfSpacer()
         }
+    }
+}
+
+@OptIn(UnstableSaltUiApi::class)
+@Composable
+fun InputDialog(
+    onDismissRequest: () -> Unit,
+    onConfirm: () -> Unit,
+    properties: DialogProperties = DialogProperties(),
+    title: String,
+    text: String,
+    onChange: (String) -> Unit,
+    hint: String? = null,
+    cancelText: String = stringResource(id = R.string.cancel_button_text),
+    confirmText: String = stringResource(id = R.string.ok_button_text),
+    enableHaptic: Boolean = false,
+    enableConfirmButton: Boolean = true,
+    hapticStrength: Int,
+) {
+    val context = LocalContext.current
+    LaunchedEffect(Unit) {
+        MyVibrationEffect(context, enableHaptic, hapticStrength).dialog()
+    }
+    BasicDialog(
+        onDismissRequest = onDismissRequest,
+        properties = properties
+    ) {
         ItemOuterHalfSpacer()
-        TextButton(
-            onClick = {
-                onDismissRequest()
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .outerPadding(),
-            text = confirmText,
-            enableHaptic = enableHaptic,
-            hapticStrength = hapticStrength
-        )
-        ItemOuterHalfSpacer()
+        DialogTitle(text = title)
+
+        val focusRequester = remember { FocusRequester() }
+        Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+            ItemOuterEdit(
+                text = text,
+                onChange = onChange,
+                hint = hint,
+                modifier = Modifier
+                    .focusRequester(focusRequester)
+            )
+            LaunchedEffect(Unit) {
+                focusRequester.requestFocus()
+            }
+
+            Row(
+                modifier = Modifier.outerPadding()
+            ) {
+                TextButton(
+                    onClick = { onDismissRequest() },
+                    modifier = Modifier
+                        .weight(1f),
+                    text = cancelText,
+                    textColor = SaltTheme.colors.subText,
+                    backgroundColor = SaltTheme.colors.subBackground,
+                    enableHaptic = enableHaptic,
+                    hapticStrength = hapticStrength
+                )
+                Spacer(modifier = Modifier.width(SaltTheme.dimens.padding))
+                AnimatedContent(
+                    modifier = Modifier.weight(1f),
+                    targetState = enableConfirmButton,
+                    label = "",
+                    transitionSpec = {
+                        fadeIn() togetherWith fadeOut()
+                    }) {
+                    TextButton(
+                        onClick = { onConfirm() },
+                        text = confirmText,
+                        enableHaptic = enableHaptic,
+                        hapticStrength = hapticStrength,
+                        enabled = it
+                    )
+                }
+            }
+            ItemOuterHalfSpacer()
+        }
     }
 }
 

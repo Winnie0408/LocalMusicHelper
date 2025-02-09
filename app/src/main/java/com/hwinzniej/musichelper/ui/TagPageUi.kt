@@ -430,10 +430,7 @@ fun TagPageUi(
                         strokeCap = StrokeCap.Square
                     )
                 }
-                Column(
-                    modifier = Modifier
-                        .heightIn(max = (LocalConfiguration.current.screenHeightDp / 1.6).dp)
-                ) {
+                Column {
                     RoundedColumn {
                         ItemTitle(text = stringResource(id = R.string.completion_options))
                         ItemPopup(
@@ -641,6 +638,7 @@ fun TagPageUi(
                             LazyColumn(
                                 modifier = Modifier
                                     .fillMaxWidth()
+                                    .heightIn(max = (LocalConfiguration.current.screenHeightDp / 1.6).dp)
                             ) {
                                 items(completeResult.size) { index ->
                                     Text(
