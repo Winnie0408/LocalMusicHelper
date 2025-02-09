@@ -471,6 +471,12 @@ private fun Pages(
             preferences[DataStoreConstants.SELECTED_TARGET_APP] ?: 0
         convertPage.spotifyUserId.value =
             preferences[DataStoreConstants.SPOTIFY_USER_ID] ?: ""
+        convertPage.musicDirName.value =
+            preferences[DataStoreConstants.MUSIC_DIRNAME] ?: "Music"
+        convertPage.winPath.value =
+            preferences[DataStoreConstants.WIN_PATH] ?: "C:\\Users\\{YourUserName}\\${convertPage.musicDirName.value}"
+        convertPage.showAdvancedOptions.value =
+            preferences[DataStoreConstants.SHOW_ADVANCED_OPTIONS] ?: false
         agreeUserAgreement =
             preferences[DataStoreConstants.AGREE_USER_AGREEMENT] == true
         settingsPage.githubProxy.intValue =

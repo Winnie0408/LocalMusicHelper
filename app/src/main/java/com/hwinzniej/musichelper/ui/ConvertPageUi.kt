@@ -2494,6 +2494,12 @@ fun ConvertPageUi(
                                                 state = showAdvancedOptions.value,
                                                 onChange = {
                                                     showAdvancedOptions.value = it
+                                                    coroutine.launch {
+                                                        dataStore.edit { settings ->
+                                                            settings[DataStoreConstants.SHOW_ADVANCED_OPTIONS] =
+                                                                it
+                                                        }
+                                                    }
                                                 },
                                                 text = stringResource(R.string.show_advanced_options),
                                                 enableHaptic = enableHaptic.value,
@@ -2508,9 +2514,21 @@ fun ConvertPageUi(
                                                         editText = convertPage.musicDirName.value,
                                                         onChange = {
                                                             convertPage.musicDirName.value = it
+                                                            coroutine.launch {
+                                                                dataStore.edit { settings ->
+                                                                    settings[DataStoreConstants.MUSIC_DIRNAME] =
+                                                                        it
+                                                                }
+                                                            }
                                                         },
                                                         onClear = {
                                                             convertPage.musicDirName.value = "Music"
+                                                            coroutine.launch {
+                                                                dataStore.edit { settings ->
+                                                                    settings[DataStoreConstants.MUSIC_DIRNAME] =
+                                                                        "Music"
+                                                                }
+                                                            }
                                                         },
                                                         enableHaptic = enableHaptic.value,
                                                         hapticStrength = hapticStrength.intValue
@@ -2538,6 +2556,12 @@ fun ConvertPageUi(
                                                     text = convertPage.winPath.value,
                                                     onChange = {
                                                         convertPage.winPath.value = it
+                                                        coroutine.launch {
+                                                            dataStore.edit { settings ->
+                                                                settings[DataStoreConstants.WIN_PATH] =
+                                                                    it
+                                                            }
+                                                        }
                                                     }
                                                 )
                                             }
@@ -2585,6 +2609,12 @@ fun ConvertPageUi(
                                                 state = showAdvancedOptions.value,
                                                 onChange = {
                                                     showAdvancedOptions.value = it
+                                                    coroutine.launch {
+                                                        dataStore.edit { settings ->
+                                                            settings[DataStoreConstants.SHOW_ADVANCED_OPTIONS] =
+                                                                it
+                                                        }
+                                                    }
                                                 },
                                                 text = stringResource(R.string.show_advanced_options),
                                                 enableHaptic = enableHaptic.value,
@@ -2599,9 +2629,21 @@ fun ConvertPageUi(
                                                         editText = convertPage.musicDirName.value,
                                                         onChange = {
                                                             convertPage.musicDirName.value = it
+                                                            coroutine.launch {
+                                                                dataStore.edit { settings ->
+                                                                    settings[DataStoreConstants.MUSIC_DIRNAME] =
+                                                                        it
+                                                                }
+                                                            }
                                                         },
                                                         onClear = {
                                                             convertPage.musicDirName.value = "Music"
+                                                            coroutine.launch {
+                                                                dataStore.edit { settings ->
+                                                                    settings[DataStoreConstants.MUSIC_DIRNAME] =
+                                                                        "Music"
+                                                                }
+                                                            }
                                                         },
                                                         enableHaptic = enableHaptic.value,
                                                         hapticStrength = hapticStrength.intValue
