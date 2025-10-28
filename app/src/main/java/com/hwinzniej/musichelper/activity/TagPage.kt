@@ -484,11 +484,11 @@ class TagPage(
                     .map { it.index })
             }
         val lyricistRegex =
-            "\\[\\d{2}:\\d{2}\\.\\d{2}](((作)?[词詞]\\s?(Lyrics)?\\s?[：:]?\\s?)|((Lyrics|Written)\\sby\\s?[：:]?\\s?))(.*)\\n?".toRegex()
+            "\\[\\d{2}:\\d{2}\\.\\d{2,3}](((作)?[词詞]\\s?(Lyrics)?\\s?[：:]?\\s?)|((Lyrics|Written)\\sby\\s?[：:]?\\s?))(.*)\\n?".toRegex()
         val composerRegex =
-            "\\[\\d{2}:\\d{2}\\.\\d{2}](((作)?曲\\s?(Composer)?\\s?[：:]?\\s?)|((Composed|Written)\\sby\\s?[：:]?\\s?))(.*)\\n?".toRegex()
+            "\\[\\d{2}:\\d{2}\\.\\d{2,3}](((作)?曲\\s?(Composer)?\\s?[：:]?\\s?)|((Composed|Written)\\sby\\s?[：:]?\\s?))(.*)\\n?".toRegex()
         val arrangerRegex =
-            "\\[\\d{2}:\\d{2}\\.\\d{2}](([编編]曲\\s?(Arranger|Arrangement)?\\s?[：:]?\\s?)|(Arranged\\sby\\s?[：:]?\\s?))(.*)\\n?".toRegex()
+            "\\[\\d{2}:\\d{2}\\.\\d{2,3}](([编編]曲\\s?(Arranger|Arrangement)?\\s?[：:]?\\s?)|(Arranged\\sby\\s?[：:]?\\s?))(.*)\\n?".toRegex()
         val cleanRegex = "\\s?([/&|,，])\\s?".toRegex()
         searchResult.forEach {
 //            var modified = false
