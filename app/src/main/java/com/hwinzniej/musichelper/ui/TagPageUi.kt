@@ -63,6 +63,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -132,6 +133,7 @@ fun TagPageUi(
     var multiSelect by remember { mutableStateOf(false) }
     val selectedSongList = remember { mutableStateListOf<Int>() }
     var intervalSelectionStart by remember { mutableIntStateOf(-1) }
+    val keyboardController = LocalSoftwareKeyboardController.current
     val pullRefreshState = rememberPullRefreshState(
         refreshing = !refreshComplete,
         onRefresh = {
@@ -743,6 +745,7 @@ fun TagPageUi(
                             }) { animate ->
                             TitleBar(
                                 onBack = {
+                                    keyboardController?.hide()
                                     MyVibrationEffect(
                                         context,
                                         enableHaptic.value,
@@ -782,6 +785,7 @@ fun TagPageUi(
                                 rightBtnIcon = painterResource(id = R.drawable.check),
                                 rightBtnContentDescription = stringResource(id = R.string.ok_button_text),
                                 onRightBtn = {
+                                    keyboardController?.hide()
                                     coroutineScope.launch(Dispatchers.IO) {
                                         if (pageStateInner.currentPage == 1 && tagPage.saveSongInfo(
                                                 musicInfo.value,

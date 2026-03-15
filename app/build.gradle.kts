@@ -16,8 +16,8 @@ configure<ApplicationExtension> {
         applicationId = "com.hwinzniej.musichelper"
         minSdk = 26
         targetSdk = 36
-        versionCode = 80
-        versionName = "1.6.8.1"
+        versionCode = 82
+        versionName = "1.6.9"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {

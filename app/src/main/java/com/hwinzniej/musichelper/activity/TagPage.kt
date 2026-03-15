@@ -62,6 +62,12 @@ class TagPage(
         val audioFile: AudioFile
         val musicInfo = db.musicDao().getMusicById(id)
         audioFile = AudioFileIO.read(File(musicInfo.absolutePath))
+        val lyricFile = File(musicInfo.absolutePath.substringBefore('.') + ".lrc")
+        val lyricFileContent = if (lyricFile.exists()) {
+            lyricFile.readText()
+        } else {
+            ""
+        }
         try {
             cover.value = audioFile.tag.artworkList.first().binaryData
         } catch (_: Exception) {
@@ -79,7 +85,8 @@ class TagPage(
             "composer" to audioFile.tag.getFirst(FieldKey.COMPOSER),
             "arranger" to audioFile.tag.getFirst(FieldKey.ARRANGER),
             "lyricist" to audioFile.tag.getFirst(FieldKey.LYRICIST),
-            "lyrics" to audioFile.tag.getFirst(FieldKey.LYRICS),
+            "lyrics" to audioFile.tag.getFirst(FieldKey.LYRICS).ifBlank { lyricFileContent },
+            "lyricsFromOuterLrc" to if (lyricFileContent.isNotBlank()) "true" else "false"
         )
     }
 
@@ -125,7 +132,18 @@ class TagPage(
                 if (songInfoModified[it.key] == null || songInfoModified[it.key]!!.isBlank()) {
                     audioFile.tag.deleteField(it.value)
                 } else {
-                    audioFile.tag.setField(it.value, songInfoModified[it.key])
+                    if (it.key == "lyrics") {
+                        if (songInfoModified["lyricsFromOuterLrc"].equals("true")) {
+                            val lyricFile =
+                                File(musicInfo.absolutePath.substringBefore('.') + ".lrc")
+                            // 将修改后的歌词写入lyricFile文件
+                            lyricFile.writeText(songInfoModified[it.key]!!)
+                        } else {
+                            audioFile.tag.setField(it.value, songInfoModified[it.key])
+                        }
+                    } else {
+                        audioFile.tag.setField(it.value, songInfoModified[it.key])
+                    }
                 }
             }
             audioFile.tag.deleteArtworkField()
@@ -281,8 +299,8 @@ class TagPage(
             else {
                 db.musicDao().getSelectedMusic(
                     selectedSongList.withIndex()
-                    .filter { it.value == 1 }
-                    .map { it.index })
+                        .filter { it.value == 1 }
+                        .map { it.index })
             }
         } else {
             if (selectedSongList.all { it == 0 })
@@ -482,8 +500,8 @@ class TagPage(
             else {
                 db.musicDao().getSelectedMusic(
                     selectedSongList.withIndex()
-                    .filter { it.value == 1 }
-                    .map { it.index })
+                        .filter { it.value == 1 }
+                        .map { it.index })
             }
         val lyricistRegex =
             "\\[\\d{2}:\\d{2}\\.\\d{2,3}](((作)?[词詞]\\s?(Lyrics)?\\s?[：:]?\\s?)|((Lyrics|Written)\\sby\\s?[：:]?\\s?))(.*)\\n?".toRegex()
@@ -495,13 +513,20 @@ class TagPage(
         searchResult.forEach {
 //            var modified = false
             val audioFile = AudioFileIO.read(File(it.absolutePath))
-            val songLyrics = audioFile.tag.getFirst(FieldKey.LYRICS)
+            var songLyrics = audioFile.tag.getFirst(FieldKey.LYRICS)
+
+            val lyricFile = File(it.absolutePath.substringBefore('.') + ".lrc")
+            if (songLyrics.isBlank() && lyricFile.exists()) {
+                songLyrics = lyricFile.readText()
+            }
+
             if (songLyrics.isBlank()) {
                 completeResult.add(0, mapOf("" to 1))
                 completeResult.add(0, mapOf(context.getString(R.string.lrc_empty_skip) to 0))
                 completeResult.add(0, mapOf(it.song to 1))
                 return@forEach
             }
+            songLyrics = processTextByTextLyrics(songLyrics)
             completeResult.add(0, mapOf("" to 1))
             var arrangerString = ""
             var composerString = ""
@@ -616,5 +641,23 @@ class TagPage(
                 delay(1248L)
         }
         completeResult.add(0, mapOf(context.getString(R.string.all_done) to 2))
+    }
+
+    suspend fun processTextByTextLyrics(input: String): String {
+        val lines = input.split("\n")
+        val timestampRegex = Regex("""(?:\[\d{2}:\d{2}\.\d{2,3}\]|<\d{2}:\d{2}\.\d{2,3}>)""")
+
+        val processedLines = lines.map { line ->
+            val matches = timestampRegex.findAll(line).toList()
+            if (matches.isNotEmpty()) {
+                val firstTimestamp = matches[0].value
+                val textWithoutTimestamps = line.replace(timestampRegex, "")
+                "$firstTimestamp$textWithoutTimestamps"
+            } else {
+                line // 没有时间戳的行保持不变
+            }
+        }
+
+        return processedLines.joinToString("\n")
     }
 }
