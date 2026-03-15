@@ -279,7 +279,8 @@ class TagPage(
             if (selectedSongList.all { it == 0 })
                 db.musicDao().getAll()
             else {
-                db.musicDao().getSelectedMusic(selectedSongList.withIndex()
+                db.musicDao().getSelectedMusic(
+                    selectedSongList.withIndex()
                     .filter { it.value == 1 }
                     .map { it.index })
             }
@@ -479,7 +480,8 @@ class TagPage(
         val searchResult =
             if (selectedSongList.all { it == 0 }) db.musicDao().getAll()
             else {
-                db.musicDao().getSelectedMusic(selectedSongList.withIndex()
+                db.musicDao().getSelectedMusic(
+                    selectedSongList.withIndex()
                     .filter { it.value == 1 }
                     .map { it.index })
             }

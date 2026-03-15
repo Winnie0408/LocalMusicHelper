@@ -1039,11 +1039,11 @@ fun ConvertPageUi(
                                         else -> stringResource(R.string.web_login)
                                     },
                                     iconPainter =
-                                    when (selectedSourceApp.intValue) {
-                                        3 -> painterResource(id = R.drawable.kugou)
-                                        5 -> painterResource(id = R.drawable.luna_music)
-                                        else -> painterResource(id = R.drawable.web_page)
-                                    },
+                                        when (selectedSourceApp.intValue) {
+                                            3 -> painterResource(id = R.drawable.kugou)
+                                            5 -> painterResource(id = R.drawable.luna_music)
+                                            else -> painterResource(id = R.drawable.web_page)
+                                        },
                                     iconColor = SaltTheme.colors.text,
                                     iconPaddingValues = PaddingValues(all = 1.dp)
                                 )
@@ -2130,28 +2130,28 @@ fun ConvertPageUi(
                                                             }
                                                         },
                                                         text =
-                                                        when (selectedSourceApp.intValue) {
-                                                            5 -> stringResource(R.string.select_json_file_dir_match_to_source).replace(
-                                                                "#",
-                                                                stringResource(R.string.source_luna_music)
-                                                            )
+                                                            when (selectedSourceApp.intValue) {
+                                                                5 -> stringResource(R.string.select_json_file_dir_match_to_source).replace(
+                                                                    "#",
+                                                                    stringResource(R.string.source_luna_music)
+                                                                )
 
-                                                            7 -> stringResource(R.string.select_csv_file_match_to_source).replace(
-                                                                "#",
-                                                                stringResource(R.string.tune_my_music)
-                                                            )
+                                                                7 -> stringResource(R.string.select_csv_file_match_to_source).replace(
+                                                                    "#",
+                                                                    stringResource(R.string.tune_my_music)
+                                                                )
 
-                                                            else -> stringResource(R.string.select_database_file_match_to_source).replace(
-                                                                "#",
-                                                                when (selectedSourceApp.intValue) {
-                                                                    1 -> stringResource(R.string.source_netease_cloud_music)
-                                                                    2 -> stringResource(R.string.source_qq_music)
-                                                                    3 -> stringResource(R.string.source_kugou_music)
-                                                                    4 -> stringResource(R.string.source_kuwo_music)
-                                                                    else -> ""
-                                                                }
-                                                            )
-                                                        },
+                                                                else -> stringResource(R.string.select_database_file_match_to_source).replace(
+                                                                    "#",
+                                                                    when (selectedSourceApp.intValue) {
+                                                                        1 -> stringResource(R.string.source_netease_cloud_music)
+                                                                        2 -> stringResource(R.string.source_qq_music)
+                                                                        3 -> stringResource(R.string.source_kugou_music)
+                                                                        4 -> stringResource(R.string.source_kuwo_music)
+                                                                        else -> ""
+                                                                    }
+                                                                )
+                                                            },
                                                         sub = when ((databaseFileName.value != "") && (!useRootAccess.value || selectedSourceApp.intValue == 7)) {
                                                             true -> stringResource(R.string.you_have_selected)
                                                             false -> null
@@ -3100,7 +3100,8 @@ fun ConvertPageUi(
                                             ItemValue(
                                                 text = stringResource(R.string.songlist_sequence),
                                                 rightSub = "${
-                                                    stringResource(R.string.current_no).replace("#",
+                                                    stringResource(R.string.current_no).replace(
+                                                        "#",
                                                         if (playlistEnabled.count { it == 2 || it == 3 } == -1)
                                                             "0"
                                                         else {
@@ -3747,16 +3748,16 @@ fun ConvertPageUi(
                                     Icon(
                                         modifier = Modifier.size(50.dp),
                                         painter =
-                                        if (convertPage.resultFileLocation.isNotEmpty())
-                                            painterResource(id = R.drawable.ic_check)
-                                        else
-                                            painterResource(id = R.drawable.ic_tips),
+                                            if (convertPage.resultFileLocation.isNotEmpty())
+                                                painterResource(id = R.drawable.ic_check)
+                                            else
+                                                painterResource(id = R.drawable.ic_tips),
                                         contentDescription = null,
                                         tint =
-                                        if (convertPage.resultFileLocation.isNotEmpty())
-                                            colorResource(id = R.color.matched)
-                                        else
-                                            colorResource(id = R.color.warning)
+                                            if (convertPage.resultFileLocation.isNotEmpty())
+                                                colorResource(id = R.color.matched)
+                                            else
+                                                colorResource(id = R.color.warning)
                                     )
                                     Column(
                                         modifier = Modifier.fillMaxSize(),
@@ -3764,10 +3765,10 @@ fun ConvertPageUi(
                                     ) {
                                         ItemText(
                                             text =
-                                            if (convertPage.resultFileLocation.isNotEmpty())
-                                                stringResource(id = R.string.all_done)
-                                            else
-                                                stringResource(id = R.string.not_convert_any_playlist),
+                                                if (convertPage.resultFileLocation.isNotEmpty())
+                                                    stringResource(id = R.string.all_done)
+                                                else
+                                                    stringResource(id = R.string.not_convert_any_playlist),
                                             fontSize = 24.sp
                                         )
                                     }

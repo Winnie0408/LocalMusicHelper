@@ -1,7 +1,6 @@
 package com.hwinzniej.musichelper.ui
 
 import android.content.Intent
-import android.content.res.Resources
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
@@ -9,6 +8,7 @@ import android.os.Environment
 import android.webkit.WebView
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -57,6 +57,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.zIndex
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.graphics.drawable.toBitmap
+import androidx.core.os.LocaleListCompat
 import com.alibaba.fastjson2.JSON
 import com.alibaba.fastjson2.JSONObject
 import com.hwinzniej.musichelper.R
@@ -74,7 +75,6 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.io.File
 import java.net.InetAddress
-import java.util.Locale
 
 @Composable
 fun AboutPageUi(
@@ -358,7 +358,7 @@ fun AboutPageUi(
                                                 MarkdownText(
                                                     modifier = Modifier.padding(bottom = 8.dp),
                                                     markdown =
-                                                    "${context.getString(R.string.check_connectivity)}\n- ${e.message.toString()}",
+                                                        "${context.getString(R.string.check_connectivity)}\n- ${e.message.toString()}",
                                                     style = TextStyle(
                                                         color = SaltTheme.colors.text,
                                                         fontSize = 14.sp
@@ -416,18 +416,22 @@ fun AboutPageUi(
                             yesDialogOnConfirm = {
                                 // 第一次切换语言，打开该对话框，再关闭后，会自动切换回系统语言，
                                 // 后续再进行相同操作则不会，原因未知，使用下面的方法来规避这个问题
-                                var locale = Locale(language.value)
-                                if (language.value == "system") {
-                                    locale = Resources.getSystem().configuration.locales[0]
+                                val languageCode = language.value
+                                // 1. 将 "system" 映射为空列表（代表随系统），将具体语言映射为 Locale 列表
+                                val appLocale: LocaleListCompat = if (languageCode == "system") {
+                                    LocaleListCompat.getEmptyLocaleList()
+                                } else {
+                                    // 这里的 languageCode 应该是 ISO 639 代码，如 "en", "zh-CN"
+                                    LocaleListCompat.forLanguageTags(languageCode)
                                 }
-                                val resources = context.resources
-                                val configuration = resources.configuration
-                                Locale.setDefault(locale)
-                                configuration.setLocale(locale)
-                                resources.updateConfiguration(
-                                    configuration,
-                                    resources.displayMetrics
-                                )
+
+                                // 2. 使用官方推荐的 AppCompatDelegate 设置语言
+                                // 这会自动处理 Activity 的重启以应用新语言，并兼容 Android 13+ 的系统语言偏好
+                                // 只有当期望的 locale 和当前实际生效的 locale 不同时，才触发重启
+                                val currentAppLocales = AppCompatDelegate.getApplicationLocales()
+                                if (currentAppLocales.toLanguageTags() != appLocale.toLanguageTags()) {
+                                    AppCompatDelegate.setApplicationLocales(appLocale)
+                                }
                             }
                             yesDialogTitle = context.getString(R.string.open_source_licence)
                             showYesDialog = true

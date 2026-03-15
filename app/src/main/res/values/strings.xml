@@ -429,4 +429,5 @@
     <string name="pick_file">Input file path</string>
     <string name="pick_directory">Input directory path</string>
     <string name="unable_get_input_path">Cannot get inputted path</string>
+    <string name="app_language_sub">The screen will flash when switching the app\'s language</string>
 </resources>

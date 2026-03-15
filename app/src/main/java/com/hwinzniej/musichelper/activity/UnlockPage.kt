@@ -10,10 +10,10 @@ import android.os.Build
 import android.os.Environment
 import android.provider.Settings
 import android.widget.Toast
-import androidx.activity.ComponentActivity
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
+import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.core.app.ActivityCompat
@@ -32,7 +32,7 @@ import java.io.File
 class UnlockPage(
     val context: Context,
     private val lifecycleOwner: LifecycleOwner,
-    componentActivity: ComponentActivity,
+    appCompatActivity: AppCompatActivity,
     val openEncryptDirectoryLauncher: ActivityResultLauncher<Uri?>,
     val openDecryptDirectoryLauncher: ActivityResultLauncher<Uri?>,
     val settingsPage: SettingsPage
@@ -53,7 +53,7 @@ class UnlockPage(
 //==================== Android 11+ 使用====================
 
     @RequiresApi(Build.VERSION_CODES.R)
-    private val requestPermissionLauncher = componentActivity.registerForActivityResult(
+    private val requestPermissionLauncher = appCompatActivity.registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { _ ->
         if (Environment.isExternalStorageManager()) {

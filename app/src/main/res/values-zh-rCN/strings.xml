@@ -421,4 +421,5 @@
     <string name="pick_file">输入文件路径</string>
     <string name="pick_directory">输入目录路径</string>
     <string name="unable_get_input_path">无法获取所输入的目录</string>
+    <string name="app_language_sub">切换应用语言时，界面将会闪烁</string>
 </resources>

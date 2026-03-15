@@ -7,7 +7,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.res.Configuration
-import android.content.res.Resources
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -15,12 +14,13 @@ import android.os.Environment
 import android.view.Surface
 import android.view.WindowManager
 import android.widget.Toast
-import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateDp
 import androidx.compose.animation.core.spring
@@ -76,6 +76,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
+import androidx.core.os.LocaleListCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.WindowCompat
 import androidx.datastore.core.DataStore
@@ -107,15 +108,17 @@ import com.hwinzniej.musichelper.ui.YesNoDialog
 import com.hwinzniej.musichelper.utils.MyDataStore
 import com.hwinzniej.musichelper.utils.MyVibrationEffect
 import com.hwinzniej.musichelper.utils.Tools
+import com.moriafly.salt.ui.AlphaIndication
 import com.moriafly.salt.ui.BottomBar
 import com.moriafly.salt.ui.BottomBarItem
 import com.moriafly.salt.ui.RoundedColumn
+import com.moriafly.salt.ui.SaltConfigs
+import com.moriafly.salt.ui.SaltDynamicColors
 import com.moriafly.salt.ui.SaltTheme
 import com.moriafly.salt.ui.UnstableSaltUiApi
 import com.moriafly.salt.ui.darkSaltColors
 import com.moriafly.salt.ui.lightSaltColors
 import com.moriafly.salt.ui.saltColorsByColorScheme
-import com.moriafly.salt.ui.saltConfigs
 import dev.jeziellago.compose.markdowntext.MarkdownText
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -127,7 +130,7 @@ import java.io.File
 import java.util.Locale
 
 
-class MainActivity : ComponentActivity() {
+class MainActivity : AppCompatActivity() {
 
     private lateinit var openDirectoryLauncher: ActivityResultLauncher<Uri?>
     private lateinit var openLocalFileLauncher: ActivityResultLauncher<Uri?>
@@ -238,7 +241,7 @@ class MainActivity : ComponentActivity() {
             lifecycleOwner = this,
             openDirectoryLauncher = openDirectoryLauncher,
             db = db,
-            componentActivity = this
+            appCompatActivity = this
         )
 //        processPage = ProcessPage(this, this, db)
         settingsPage = SettingsPage(
@@ -259,7 +262,7 @@ class MainActivity : ComponentActivity() {
                 openLocalFileLauncher = openLocalFileLauncher,
                 openLunaJSONDirLauncher = openLunaJSONDirLauncher,
                 db = db,
-                componentActivity = this,
+                appCompatActivity = this,
                 encryptServer = settingsPage.encryptServer,
                 dataStore = dataStore
             )
@@ -268,7 +271,7 @@ class MainActivity : ComponentActivity() {
             UnlockPage(
                 context = this,
                 lifecycleOwner = this,
-                componentActivity = this,
+                appCompatActivity = this,
                 openEncryptDirectoryLauncher = openEncryptDirectoryLauncher,
                 openDecryptDirectoryLauncher = openDecryptDirectoryLauncher,
                 settingsPage = settingsPage
@@ -311,8 +314,11 @@ class MainActivity : ComponentActivity() {
                 (selectedThemeMode.intValue == 2 && isSystemInDarkTheme()) || selectedThemeMode.intValue == 1
             CompositionLocalProvider {
                 SaltTheme(
-                    configs = saltConfigs(isDarkTheme = isDarkTheme),
-                    colors = colors
+                    configs = SaltConfigs.default(
+                        isDarkTheme = isDarkTheme,
+                        indication = AlphaIndication
+                    ),
+                    dynamicColors = SaltDynamicColors(light = colors, dark = colors)
                 ) {
                     TransparentSystemBars(dark = isDarkTheme)
                     Pages(
@@ -496,18 +502,25 @@ private fun Pages(
         isInLandscape = configuration.orientation
     }
 
-    LaunchedEffect(key1 = mainPage.language.value) {
-        var locale = Locale(mainPage.language.value)
-        if (mainPage.language.value == "system") {
-            locale = Resources.getSystem().configuration.locales[0]
+    val languageCode = mainPage.language.value
+    LaunchedEffect(languageCode) {
+        if (!mainPage.isDataLoaded.value) return@LaunchedEffect
+
+        // 1. 将 "system" 映射为空列表（代表随系统），将具体语言映射为 Locale 列表
+        val appLocale: LocaleListCompat = if (languageCode == "system") {
+            LocaleListCompat.getEmptyLocaleList()
+        } else {
+            // 这里的 languageCode 应该是 ISO 639 代码，如 "en", "zh-CN"
+            LocaleListCompat.forLanguageTags(languageCode)
         }
-        val resources = context.resources
-        Locale.setDefault(locale)
-        configuration.setLocale(locale)
-        resources.updateConfiguration(
-            configuration,
-            resources.displayMetrics
-        )
+
+        // 2. 使用官方推荐的 AppCompatDelegate 设置语言
+        // 这会自动处理 Activity 的重启以应用新语言，并兼容 Android 13+ 的系统语言偏好
+        // 只有当期望的 locale 和当前实际生效的 locale 不同时，才触发重启
+        val currentAppLocales = AppCompatDelegate.getApplicationLocales()
+        if (currentAppLocales.toLanguageTags() != appLocale.toLanguageTags()) {
+            AppCompatDelegate.setApplicationLocales(appLocale)
+        }
     }
 
     if (showNewVersionAvailableDialog.value) {
@@ -588,7 +601,7 @@ private fun Pages(
                         }",
                         rightSub = "${
                             String.format(
-                                Locale(mainPage.language.value),
+                                Locale.getDefault(),
                                 "%.2f",
                                 mainPage.updateFileSize.floatValue / 1024 / 1024
                             )
@@ -1007,12 +1020,12 @@ private fun Pages(
             ) {
                 Column(
                     modifier =
-                    if (devicesRotation == Surface.ROTATION_270)
-                        Modifier
-                            .background(SaltTheme.colors.subBackground)
-                            .navigationBarsPadding()
-                    else
-                        Modifier.background(SaltTheme.colors.subBackground)
+                        if (devicesRotation == Surface.ROTATION_270)
+                            Modifier
+                                .background(SaltTheme.colors.subBackground)
+                                .navigationBarsPadding()
+                        else
+                            Modifier.background(SaltTheme.colors.subBackground)
                 ) {
                     BottomBarLand(
                         isTablet = Tools().isTablet(context.resources.displayMetrics)

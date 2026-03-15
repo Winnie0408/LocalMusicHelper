@@ -502,10 +502,10 @@ fun TagPageUi(
                                     },
                                     text = stringResource(id = R.string.file_conflict_dialog_yes_text),
                                     sub =
-                                    if (selectedSongList.all { it == 0 })
-                                        stringResource(id = R.string.overwrite_original_album_artist_tag_sub_on)
-                                    else
-                                        stringResource(id = R.string.overwrite_original_album_artist_tag_sub_on2),
+                                        if (selectedSongList.all { it == 0 })
+                                            stringResource(id = R.string.overwrite_original_album_artist_tag_sub_on)
+                                        else
+                                            stringResource(id = R.string.overwrite_original_album_artist_tag_sub_on2),
                                     subOff = stringResource(id = R.string.overwrite_original_album_artist_tag_sub_off)
                                         .replace(
                                             "#",
@@ -544,10 +544,10 @@ fun TagPageUi(
                                     },
                                     text = stringResource(id = R.string.file_conflict_dialog_yes_text),
                                     sub =
-                                    if (selectedSongList.all { it == 0 })
-                                        stringResource(id = R.string.overwrite_original_album_artist_tag_sub_on)
-                                    else
-                                        stringResource(id = R.string.overwrite_original_album_artist_tag_sub_on2),
+                                        if (selectedSongList.all { it == 0 })
+                                            stringResource(id = R.string.overwrite_original_album_artist_tag_sub_on)
+                                        else
+                                            stringResource(id = R.string.overwrite_original_album_artist_tag_sub_on2),
                                     subOff = stringResource(id = R.string.overwrite_original_album_artist_tag_sub_off)
                                         .replace(
                                             "#",

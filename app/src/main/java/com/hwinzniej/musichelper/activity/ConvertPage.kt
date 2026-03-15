@@ -15,10 +15,10 @@ import android.os.Environment
 import android.provider.Settings
 import android.webkit.CookieManager
 import android.widget.Toast
-import androidx.activity.ComponentActivity
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
+import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
@@ -81,7 +81,7 @@ class ConvertPage(
     private val openLocalFileLauncher: ActivityResultLauncher<Uri?>,
     private val openLunaJSONDirLauncher: ActivityResultLauncher<Uri?>,
     val db: MusicDatabase,
-    componentActivity: ComponentActivity,
+    appCompatActivity: AppCompatActivity,
     val encryptServer: MutableState<String>,
     val dataStore: DataStore<Preferences>,
 ) : PermissionResultHandler {
@@ -155,7 +155,7 @@ class ConvertPage(
 //==================== Android 11+ 使用====================
 
     @RequiresApi(Build.VERSION_CODES.R)
-    private val requestPermissionLauncher = componentActivity.registerForActivityResult(
+    private val requestPermissionLauncher = appCompatActivity.registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { _ ->
         if (Environment.isExternalStorageManager()) {
@@ -1261,7 +1261,8 @@ class ConvertPage(
                         }
                         request = request
                             .url("${url}?aid=386088&app_name=luna_pc&region=cn&geo_region=cn&os_region=cn&device_id=${lunaDeviceId.value}&iid=${lunaInstallId.value}&version_name=1.6.3&version_code=10060300&channel=master&build_mode=master&ac=wifi&tz_name=Asia%2FShanghai&device_platform=windows&device_type=Windows&os_version=Windows+10+Pro&fp=${lunaDeviceId.value}&count=50")
-                            .addHeader("Cookie",
+                            .addHeader(
+                                "Cookie",
                                 cookie.value.ifBlank { lunaCookie.value }
                             )
                             .addHeader("Host", "api.qishui.com")
@@ -1927,7 +1928,7 @@ class ConvertPage(
                         cursor.close()
                         db.execSQL(
                             "INSERT INTO ${sourceApp.songListTableName} (${sourceApp.songListId}, ${sourceApp.songListName}, ${sourceApp.musicNum}) VALUES (?, ?, ?)",
-                            arrayOf(
+                            arrayOf<Any?>(
                                 customPlaylistId,
                                 playlistInfo.getString("name"),
                                 playlistInfo.getInteger("count")
@@ -2045,7 +2046,8 @@ class ConvertPage(
                                 .find(customPlaylistId)?.value?.substring(12)
                         request = request
                             .url("${url}?aid=386088&app_name=luna_pc&region=cn&geo_region=cn&os_region=cn&device_id=${lunaDeviceId.value}&iid=${lunaInstallId.value}&version_name=1.6.3&version_code=10060300&channel=master&build_mode=master&ac=wifi&tz_name=Asia%2FShanghai&device_platform=windows&device_type=Windows&os_version=Windows+10+Pro&fp=${lunaDeviceId.value}&playlist_id=${customPlaylistId}&count=3")
-                            .addHeader("Cookie",
+                            .addHeader(
+                                "Cookie",
                                 cookie.value.ifBlank { lunaCookie.value }
                             )
                             .addHeader("Host", "api.qishui.com")
@@ -2489,7 +2491,8 @@ class ConvertPage(
                                 5 -> {
                                     request = request
                                         .url("${url}?aid=386088&app_name=luna_pc&region=cn&geo_region=cn&os_region=cn&device_id=${lunaDeviceId.value}&iid=${lunaInstallId.value}&version_name=1.6.3&version_code=10060300&channel=master&build_mode=master&ac=wifi&tz_name=Asia%2FShanghai&device_platform=windows&device_type=Windows&os_version=Windows+10+Pro&fp=${lunaDeviceId.value}&playlist_id=${playlistId[firstIndex1]}&count=1000")
-                                        .addHeader("Cookie",
+                                        .addHeader(
+                                            "Cookie",
                                             cookie.value.ifBlank { lunaCookie.value }
                                         )
                                         .addHeader("Host", "api.qishui.com")
@@ -4388,7 +4391,8 @@ class ConvertPage(
             "https://api.qishui.com/passport/web/logout/?fp=${lunaDeviceId.value}&need_redirect=0&aid=386088&device_id=${lunaDeviceId.value}"
         val request = Request.Builder()
             .url(url)
-            .addHeader("Cookie",
+            .addHeader(
+                "Cookie",
                 cookie.value.ifBlank { lunaCookie.value }
             )
             .addHeader("Host", "api.qishui.com")
@@ -4653,7 +4657,7 @@ class ConvertPage(
                     if (cursor.getInt(0) == 0) {
                         db.execSQL(
                             "INSERT INTO ${sourceApp.songInfoTableName} (${sourceApp.songInfoSongId}, ${sourceApp.songInfoSongName}, ${sourceApp.songInfoSongArtist}, ${sourceApp.songInfoSongAlbum}) VALUES (?, ?, ?, ?)",
-                            arrayOf(
+                            arrayOf<Any?>(
                                 index, // 歌曲ID
                                 song, // 歌曲名称
                                 songArtists,
@@ -4666,7 +4670,7 @@ class ConvertPage(
                 if (index == csvMap.size - 1 || csvMap[index][3] != csvMap[index + 1][3]) {
                     db.execSQL(
                         "INSERT INTO ${sourceApp.songListTableName} (${sourceApp.songListId}, ${sourceApp.songListName}, ${sourceApp.musicNum}) VALUES (?, ?, ?)",
-                        arrayOf(
+                        arrayOf<Any?>(
                             playList[playListIndex].keys.first(), //歌单ID
                             songInfo[3], // 歌单名
                             csvMap.count { it[3] == songInfo[3] } // 歌单歌曲数量

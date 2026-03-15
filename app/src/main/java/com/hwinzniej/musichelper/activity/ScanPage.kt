@@ -11,10 +11,10 @@ import android.os.Build
 import android.os.Environment
 import android.provider.Settings
 import android.widget.Toast
-import androidx.activity.ComponentActivity
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
+import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -44,7 +44,7 @@ class ScanPage(
     private val lifecycleOwner: LifecycleOwner,
     private val openDirectoryLauncher: ActivityResultLauncher<Uri?>,
     val db: MusicDatabase,
-    componentActivity: ComponentActivity
+    appCompatActivity: AppCompatActivity
 ) : PermissionResultHandler {
     val scanResult = mutableStateListOf<String>()
     val showLoadingProgressBar = mutableStateOf(false)
@@ -78,7 +78,7 @@ class ScanPage(
 //==================== Android 11+ 使用====================
 
     @RequiresApi(Build.VERSION_CODES.R)
-    private val requestPermissionLauncher = componentActivity.registerForActivityResult(
+    private val requestPermissionLauncher = appCompatActivity.registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { _ ->
         if (Environment.isExternalStorageManager()) {

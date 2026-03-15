@@ -50,10 +50,10 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.ripple
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardColors
 import androidx.compose.material3.Icon
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
@@ -719,11 +719,12 @@ fun ItemValue(
     textWeight: Float = 1f,
     rightSubWeight: Float = 1f,
 ) {
-    Column(modifier = Modifier.clickable(
-        interactionSource = remember { MutableInteractionSource() },
-        indication = ripple(),
-        enabled = clickable
-    ) { onClick() }) {
+    Column(
+        modifier = Modifier.clickable(
+            interactionSource = remember { MutableInteractionSource() },
+            indication = ripple(),
+            enabled = clickable
+        ) { onClick() }) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()

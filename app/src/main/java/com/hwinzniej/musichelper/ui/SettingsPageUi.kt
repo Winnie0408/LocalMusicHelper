@@ -1,6 +1,5 @@
 package com.hwinzniej.musichelper.ui
 
-import android.content.res.Resources
 import android.os.Build
 import android.widget.Toast
 import androidx.compose.animation.AnimatedContent
@@ -49,6 +48,7 @@ import com.moriafly.salt.ui.popup.rememberPopupState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.util.Locale as JavaLocale
 
 @Composable
 fun SettingsPageUi(
@@ -539,7 +539,20 @@ fun SettingsPageUi(
                 ItemTitle(text = stringResource(R.string.language))
                 ItemValue(
                     text = stringResource(R.string.system_language),
-                    rightSub = "${Resources.getSystem().configuration.locales[0].language} - ${Resources.getSystem().configuration.locales[0].country}"
+                    rightSub = remember {
+                        // 替代 remember 内部逻辑
+                        val systemLocale = JavaLocale.getAvailableLocales().firstOrNull {
+                            // 这种方法通过底层 JVM 的系统属性获取，最为稳健
+                            it.toLanguageTag() == System.getProperty("user.language")
+                        } ?: JavaLocale.getDefault()
+
+                        val currentAppLocale = JavaLocale.getDefault()
+
+                        // 用当前应用语言来显示系统语言的名称
+                        // 这样当应用切到英语，systemLocale(韩语) 就会显示为 "Korean"
+                        systemLocale.getDisplayName(currentAppLocale)
+                            .replaceFirstChar { it.uppercase() }
+                    }
                 )
                 ItemPopup(
                     state = languagePopupMenuState,
@@ -547,9 +560,10 @@ fun SettingsPageUi(
                     iconPaddingValues = PaddingValues(all = 1.dp),
                     iconColor = SaltTheme.colors.text,
                     text = stringResource(R.string.app_language),
+                    sub = stringResource(R.string.app_language_sub),
                     selectedItem = when (selectedLanguage.value) {
                         "system" -> stringResource(R.string.follow_system)
-                        "zh" -> stringResource(R.string.chinese_s)
+                        "zh-CN" -> stringResource(R.string.chinese_s)
                         "en" -> stringResource(R.string.english)
                         "ko" -> stringResource(R.string.korean)
                         else -> ""
@@ -584,7 +598,7 @@ fun SettingsPageUi(
                             ).click()
                             coroutineScope.launch {
                                 dataStore.edit { settings ->
-                                    settings[DataStoreConstants.KEY_LANGUAGE] = "zh"
+                                    settings[DataStoreConstants.KEY_LANGUAGE] = "zh-CN"
                                 }
                             }
                             languagePopupMenuState.dismiss()

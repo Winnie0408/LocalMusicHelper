@@ -1,23 +1,23 @@
+import com.android.build.api.dsl.ApplicationExtension
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 plugins {
     id("com.android.application")
-    id("org.jetbrains.kotlin.android")
     id("com.google.devtools.ksp")
-    id("org.jetbrains.compose") version "1.7.3"
+    id("org.jetbrains.compose") version "1.10.2"
     id("org.jetbrains.kotlin.plugin.compose")
 }
 
-android {
+configure<ApplicationExtension> {
     namespace = "com.hwinzniej.musichelper"
-    compileSdk = 35
-//    useLibrary("org.apache.http.legacy")
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.hwinzniej.musichelper"
         minSdk = 26
-//        targetSdk = 28
-        targetSdk = 35
-        versionCode = 78
-        versionName = "1.6.8"
+        targetSdk = 36
+        versionCode = 80
+        versionName = "1.6.8.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -41,9 +41,6 @@ android {
         sourceCompatibility = JavaVersion.VERSION_21
         targetCompatibility = JavaVersion.VERSION_21
     }
-    kotlinOptions {
-        jvmTarget = "21"
-    }
     buildFeatures {
         compose = true
     }
@@ -54,22 +51,25 @@ android {
     }
 }
 
+kotlin {
+    compilerOptions {
+        jvmTarget.set(JvmTarget.JVM_21)
+    }
+}
+
 dependencies {
 
-    implementation("androidx.core:core-ktx:1.15.0")
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.7")
-    implementation("androidx.activity:activity-compose:1.10.0")
-    implementation(platform("androidx.compose:compose-bom:2025.01.01"))
-    implementation("androidx.compose.ui:ui")
-    implementation("androidx.compose.ui:ui-graphics")
+    implementation("androidx.core:core-ktx:1.18.0")
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.10.0")
+    implementation("androidx.activity:activity-compose:1.13.0")
+    implementation(platform("androidx.compose:compose-bom:2026.03.00"))
+    implementation("androidx.documentfile:documentfile:1.1.0")
     implementation("androidx.compose.material:material")
-    implementation("androidx.compose.material3:material3")
-    implementation("androidx.annotation:annotation:1.9.1")
-    implementation("androidx.documentfile:documentfile:1.0.1")
-    testImplementation("junit:junit:4.13.2")
-    androidTestImplementation("androidx.test.ext:junit:1.2.1")
-    androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
-    androidTestImplementation(platform("androidx.compose:compose-bom:2025.01.01"))
+    implementation("androidx.compose.material3:material3:1.4.0")
+    implementation("androidx.appcompat:appcompat:1.7.1")
+    androidTestImplementation("androidx.test.ext:junit:1.3.0")
+    androidTestImplementation("androidx.test.espresso:espresso-core:3.7.0")
+    androidTestImplementation(platform("androidx.compose:compose-bom:2026.03.00"))
 
     // Android Studio Preview support
     implementation("androidx.compose.ui:ui-tooling-preview")
@@ -80,47 +80,46 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-test-manifest")
 
     //SaltUI
-    implementation("io.github.moriafly:salt-ui:2.3.1")
+    implementation("io.github.moriafly:salt-ui:2.8.6")
 
     //JAudioTagger
 //    implementation("org.bitbucket.ijabz:jaudiotagger:7b004a1")
     implementation("com.github.maxbruecken:jaudiotagger-android:master")
 
     //Kotlin协程
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
-    implementation("androidx.activity:activity-ktx:1.10.0")
-    implementation("androidx.fragment:fragment-ktx:1.8.5")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2")
+    implementation("androidx.activity:activity-ktx:1.13.0")
+    implementation("androidx.fragment:fragment-ktx:1.8.9")
 
     //Room数据库
-    val roomVersion = "2.6.1"
-    implementation("androidx.room:room-runtime:$roomVersion")
-    annotationProcessor("androidx.room:room-compiler:$roomVersion")
-    ksp("androidx.room:room-compiler:$roomVersion")
+    implementation("androidx.room:room-runtime:2.8.4")
+    annotationProcessor("androidx.room:room-compiler:2.8.4")
+    ksp("androidx.room:room-compiler:2.8.4")
 
     //FastJson
-    implementation("com.alibaba.fastjson2:fastjson2-kotlin:2.0.54")
+    implementation("com.alibaba.fastjson2:fastjson2-kotlin:2.0.61")
 
     //Navigation
-    implementation("androidx.navigation:navigation-compose:2.8.6")
+    implementation("androidx.navigation:navigation-compose:2.9.7")
 
     //DataStore
-    implementation("androidx.datastore:datastore-preferences:1.1.2")
+    implementation("androidx.datastore:datastore-preferences:1.2.1")
 
     //OkHttp3
-    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    implementation("com.squareup.okhttp3:okhttp:5.3.2")
 
     //Markdown渲染器
-    implementation("com.github.jeziellago:compose-markdown:0.5.6")
+    implementation("com.github.jeziellago:compose-markdown:0.5.8")
 
     //Google ZXing二维码生成
-    implementation("com.google.zxing:core:3.5.3")
+    implementation("com.google.zxing:core:3.5.4")
 
     //Splashscreen
-    implementation("androidx.core:core-splashscreen:1.1.0-rc01")
+    implementation("androidx.core:core-splashscreen:1.2.0")
 
     //Apache Common Csv
-    implementation("org.apache.commons:commons-csv:1.12.0")
+    implementation("org.apache.commons:commons-csv:1.14.1")
 
     //拖拽排序-可注释
 //    implementation("org.burnoutcrew.composereorderable:reorderable:0.9.6")
@@ -129,7 +128,7 @@ dependencies {
 //    implementation("org.jsoup:jsoup:1.17.2")
 
     //Ksoup-不可注释，可用于跨平台
-    implementation("com.fleeksoft.ksoup:ksoup:0.2.1")
+    implementation("com.fleeksoft.ksoup:ksoup:0.2.6")
 
     //HtmlUnit-可注释
 //    implementation("org.htmlunit:htmlunit3-android:3.7.0")
