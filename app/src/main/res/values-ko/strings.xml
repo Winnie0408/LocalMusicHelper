@@ -422,4 +422,21 @@
     <string name="pick_directory">디렉토리 경로 입력</string>
     <string name="unable_get_input_path">입력 경로를 가져올 수 없습니다</string>
     <string name="app_language_sub">앱 언어를 변경하면 화면이 깜빡일 것입니다</string>
+    <string name="batch_edit">태그 일괄 편집</string>
+    <string name="batch_edit_sub">선택한 모든 곡의 동일한 태그를 한 번에 수정</string>
+    <string name="batch_edit_fields">수정할 태그</string>
+    <string name="batch_edit_fields_tip">아래에서 켜진 태그만 기록되며 나머지는 그대로 유지됩니다. 켜진 상태에서 비워두면 해당 태그가 삭제됩니다.</string>
+    <string name="batch_edit_no_field_selected">최소 한 개의 태그를 켜주세요</string>
+    <string name="batch_edit_success">수정됨: #</string>
+    <string name="batch_edit_failed">수정 실패: #</string>
+    <string name="batch_edit_selected_count">#1곡 선택됨</string>
+    <string name="no_song_selected">선택한 노래 없음</string>
+    <string name="keep_modify_time">수정 시간 유지</string>
+    <string name="keep_modify_time_sub">기록 후 원래 수정 시간을 복원하여 정렬 순서를 헝클지 않음</string>
+    <string name="batch_edit_cover">표지</string>
+    <string name="batch_edit_cover_keep">원본 유지</string>
+    <string name="batch_edit_cover_replace">교체</string>
+    <string name="batch_edit_cover_delete">삭제</string>
+    <string name="show_cover_in_list">표지 표시</string>
+    <string name="hide_cover_in_list">표지 숨기기</string>
 </resources>

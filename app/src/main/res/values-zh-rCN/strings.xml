@@ -422,4 +422,21 @@
     <string name="pick_directory">输入目录路径</string>
     <string name="unable_get_input_path">无法获取所输入的目录</string>
     <string name="app_language_sub">切换应用语言时，界面将会闪烁</string>
+    <string name="batch_edit">批量编辑标签</string>
+    <string name="batch_edit_sub">一次性修改所有选中歌曲的同一标签</string>
+    <string name="batch_edit_fields">要修改的标签</string>
+    <string name="batch_edit_fields_tip">仅写入下方已开启的标签，其余标签保持不变。已开启但留空则清除该标签。</string>
+    <string name="batch_edit_no_field_selected">请至少开启1个标签</string>
+    <string name="batch_edit_success">已修改：#</string>
+    <string name="batch_edit_failed">修改失败：#</string>
+    <string name="batch_edit_selected_count">已选中 #1 首歌曲</string>
+    <string name="no_song_selected">未选择歌曲</string>
+    <string name="keep_modify_time">保持修改时间</string>
+    <string name="keep_modify_time_sub">写入后恢复原有的修改时间，不打乱原有排序</string>
+    <string name="batch_edit_cover">封面</string>
+    <string name="batch_edit_cover_keep">保持原样</string>
+    <string name="batch_edit_cover_replace">替换</string>
+    <string name="batch_edit_cover_delete">删除</string>
+    <string name="show_cover_in_list">显示封面</string>
+    <string name="hide_cover_in_list">隐藏封面</string>
 </resources>

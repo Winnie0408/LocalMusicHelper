@@ -1,5 +1,6 @@
 import com.android.build.api.dsl.ApplicationExtension
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import java.util.Properties
 
 plugins {
     id("com.android.application")
@@ -7,6 +8,25 @@ plugins {
     id("org.jetbrains.compose") version "1.10.2"
     id("org.jetbrains.kotlin.plugin.compose")
 }
+
+// 签名配置来源：环境变量 > 根目录 local.properties（均不纳入版本管理）
+val localProperties = Properties().apply {
+    val file = rootProject.file("local.properties")
+    if (file.exists())
+        file.inputStream().use { load(it) }
+}
+
+fun signingProperty(name: String): String? =
+    System.getenv(name) ?: localProperties.getProperty(name)
+
+val releaseStoreFile = signingProperty("RELEASE_STORE_FILE")?.let { file(it) }
+val releaseStorePassword = signingProperty("RELEASE_STORE_PASSWORD")
+val releaseKeyAlias = signingProperty("RELEASE_KEY_ALIAS")
+val releaseKeyPassword = signingProperty("RELEASE_KEY_PASSWORD")
+val hasReleaseSigning = releaseStoreFile?.exists() == true &&
+        !releaseStorePassword.isNullOrBlank() &&
+        !releaseKeyAlias.isNullOrBlank() &&
+        !releaseKeyPassword.isNullOrBlank()
 
 configure<ApplicationExtension> {
     namespace = "com.hwinzniej.musichelper"
@@ -28,6 +48,20 @@ configure<ApplicationExtension> {
         resources.excludes.add("META-INF/*")
     }
 
+    signingConfigs {
+        if (hasReleaseSigning) {
+            create("release") {
+                storeFile = releaseStoreFile
+                storePassword = releaseStorePassword
+                keyAlias = releaseKeyAlias
+                keyPassword = releaseKeyPassword
+                enableV1Signing = true
+                enableV2Signing = true
+                enableV3Signing = true
+            }
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
@@ -35,6 +69,8 @@ configure<ApplicationExtension> {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            if (hasReleaseSigning)
+                signingConfig = signingConfigs.getByName("release")
         }
     }
     compileOptions {

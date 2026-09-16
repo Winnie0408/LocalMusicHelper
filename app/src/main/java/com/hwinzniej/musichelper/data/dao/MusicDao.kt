@@ -103,6 +103,21 @@ interface MusicDao {
         modifyTime: Long
     )
 
+    @Query("SELECT modifyTime FROM music WHERE id = :id")
+    fun getModifyTime(id: Int): Long?
+
+    @Query("UPDATE music SET artist = :artist, modifyTime = :modifyTime WHERE id = :id")
+    fun updateArtist(id: Int, artist: String, modifyTime: Long)
+
+    @Query("UPDATE music SET album = :album, modifyTime = :modifyTime WHERE id = :id")
+    fun updateAlbum(id: Int, album: String, modifyTime: Long)
+
+    @Query("UPDATE music SET genre = :genre, modifyTime = :modifyTime WHERE id = :id")
+    fun updateGenre(id: Int, genre: String, modifyTime: Long)
+
+    @Query("UPDATE music SET releaseYear = :releaseYear, modifyTime = :modifyTime WHERE id = :id")
+    fun updateReleaseYear(id: Int, releaseYear: String, modifyTime: Long)
+
     @Query("SELECT COUNT(*) FROM music WHERE albumArtist IS NULL OR albumArtist = ''")
     fun countNullAlbumArtist(): Int
 

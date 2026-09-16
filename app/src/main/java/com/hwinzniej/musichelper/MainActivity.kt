@@ -422,6 +422,8 @@ private fun Pages(
     val composer = remember { mutableStateOf(true) }
     val arranger = remember { mutableStateOf(true) }
     val slow = remember { mutableStateOf(false) }
+    val showCoverInList = remember { mutableStateOf(true) }
+    val keepModifyTime = remember { mutableStateOf(true) }
     val sortMethod = remember { mutableIntStateOf(0) }
     var loadUI by remember { mutableStateOf(false) }
     var agreeUserAgreement by remember { mutableStateOf(false) }
@@ -463,6 +465,8 @@ private fun Pages(
         arranger.value = preferences[DataStoreConstants.TAG_ARRANGER] != false
         sortMethod.intValue = preferences[DataStoreConstants.SORT_METHOD] ?: 0
         slow.value = preferences[DataStoreConstants.SLOW_MODE] == true
+        showCoverInList.value = preferences[DataStoreConstants.SHOW_COVER_IN_LIST] != false
+        keepModifyTime.value = preferences[DataStoreConstants.KEEP_MODIFY_TIME] != false
         convertPage.lunaInstallId.value =
             preferences[DataStoreConstants.LUNA_INSTALL_ID] ?: ""
         convertPage.lunaDeviceId.value =
@@ -888,7 +892,9 @@ private fun Pages(
                             arranger = arranger,
                             sortMethod = sortMethod,
                             dataStore = mainPage.dataStore,
-                            slow = slow
+                            slow = slow,
+                            showCoverInList = showCoverInList,
+                            keepModifyTime = keepModifyTime
                         )
                     }
 

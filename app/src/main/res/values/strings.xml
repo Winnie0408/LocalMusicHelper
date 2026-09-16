@@ -430,4 +430,21 @@
     <string name="pick_directory">Input directory path</string>
     <string name="unable_get_input_path">Cannot get inputted path</string>
     <string name="app_language_sub">The screen will flash when switching the app\'s language</string>
+    <string name="batch_edit">Batch edit tags</string>
+    <string name="batch_edit_sub">Modify the same tag of all selected songs at once</string>
+    <string name="batch_edit_fields">Tags to modify</string>
+    <string name="batch_edit_fields_tip">Only the tags enabled below are written, the others stay untouched. Leave an enabled tag empty to clear it.</string>
+    <string name="batch_edit_no_field_selected">Please enable at least one tag</string>
+    <string name="batch_edit_success">Modified: #</string>
+    <string name="batch_edit_failed">Failed to modify: #</string>
+    <string name="batch_edit_selected_count">#1 songs selected</string>
+    <string name="no_song_selected">No song selected</string>
+    <string name="keep_modify_time">Keep modification time</string>
+    <string name="keep_modify_time_sub">Restore the original modification time after writing, so the sort order is not shuffled</string>
+    <string name="batch_edit_cover">Cover</string>
+    <string name="batch_edit_cover_keep">Keep original</string>
+    <string name="batch_edit_cover_replace">Replace</string>
+    <string name="batch_edit_cover_delete">Delete</string>
+    <string name="show_cover_in_list">Show covers</string>
+    <string name="hide_cover_in_list">Hide covers</string>
 </resources>
