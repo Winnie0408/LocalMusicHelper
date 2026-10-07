@@ -104,6 +104,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.math.roundToInt
+import kotlin.time.Duration.Companion.milliseconds
 
 @OptIn(UnstableSaltUiApi::class)
 @Composable
@@ -180,7 +181,7 @@ fun ConvertPageUi(
     fun init(delay: Long = 0L) {
         coroutine.launch {
             currentPage.intValue = 0
-            delay(delay)
+            delay(delay.milliseconds)
             databaseFileName.value = ""
             useCustomResultFile.value = false
             customResultFileName.value = ""
@@ -736,7 +737,7 @@ fun ConvertPageUi(
                 coroutine.launch(Dispatchers.IO) {
                     kugouCurrentIp = Tools().getCurrentIp()
                 }
-            delay(300L)
+            delay(300L.milliseconds)
             userInput = convertPage.autoFillCookie()
             if (userInput != "") {
                 if (userInput == "KUGOU") {
@@ -886,10 +887,7 @@ fun ConvertPageUi(
                             3 -> userLoggedIn
                             4 -> userInput.contains("\\bHm_Iuvt.*=\\w+".toRegex())
                             5 -> {
-                                if (userInput.isBlank())
-                                    true
-                                else
-                                    userInput.contains("\\bsessionid(_ss)?=\\w+".toRegex())
+                                userInput.isBlank() || userInput.contains("\\bsessionid(_ss)?=\\w+".toRegex())
                             }
 
                             6 -> convertPage.spotifyTestUserExist(userInput)
@@ -1135,7 +1133,7 @@ fun ConvertPageUi(
                                                 url: String
                                             ) {
                                                 coroutine.launch(Dispatchers.Main) {
-                                                    delay(1000L)
+                                                    delay(1000L.milliseconds)
                                                     when (selectedSourceApp.intValue) {
                                                         1 -> {  // TODO 自动判断是否登录成功，并显示登录成功的信息
                                                             view.evaluateJavascript(
@@ -1717,9 +1715,9 @@ fun ConvertPageUi(
     LaunchedEffect(key1 = inputSearchWords.value) {
         job?.cancel()
         job = coroutine.launch {
-            delay(500L)
+            delay(500L.milliseconds)
             showDialogProgressBar.value = true
-            delay(500L)
+            delay(500L.milliseconds)
             convertPage.searchSong()
             selectedSearchResult = -1
         }
@@ -3906,7 +3904,7 @@ fun PathItem(
     onClear: () -> Unit,
     enableHaptic: Boolean,
     hapticStrength: Int,
-    textStyle: TextStyle = SaltTheme.textStyles.main
+    textStyle: TextStyle = SaltTheme.textStyles.main.copy(color = SaltTheme.colors.text)
 ) {
     ItemEdit(
         text = editText ?: "",

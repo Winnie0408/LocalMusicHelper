@@ -57,6 +57,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.zIndex
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.graphics.drawable.toBitmap
+import androidx.core.net.toUri
 import androidx.core.os.LocaleListCompat
 import com.alibaba.fastjson2.JSON
 import com.alibaba.fastjson2.JSONObject
@@ -236,7 +237,7 @@ fun AboutPageUi(
                                                     horizontal = 16.dp,
                                                     vertical = 8.dp
                                                 ),
-                                                text = "HWinZnieJ & Hwenray",
+                                                text = "HWinZnieJ & Hwenray & Kifranei",
                                                 color = SaltTheme.colors.text,
                                                 fontSize = 14.sp
                                             )
@@ -309,7 +310,7 @@ fun AboutPageUi(
                                 try {
                                     val response: JSONObject
                                     client.newCall(request).execute().use { responses ->
-                                        response = JSON.parseObject(responses.body?.string())
+                                        response = JSON.parseObject(responses.body.string())
                                     }
                                     latestVersion.value =
                                         response.getString("name").replace("v", "")
@@ -474,9 +475,7 @@ fun AboutPageUi(
                         onClick = {
                             yesNoDialogOnConfirm = {
                                 context.startActivity(Intent(Intent.ACTION_VIEW).apply {
-                                    data = Uri.parse(
-                                        "https://saltconv.hwinzniej.top:8443"
-                                    )
+                                    data = "https://saltconv.hwinzniej.top:8443".toUri()
                                 })
                             }
                             yesNoDialogTitle = context.getString(R.string.visit_the_link_below)
@@ -665,7 +664,7 @@ fun AboutPageUi(
                                     context.startActivity(
                                         Intent(
                                             Intent.ACTION_VIEW,
-                                            Uri.parse("mqqapi://card/show_pslcard?src_type=internal&version=1&card_type=group&uin=931819834")
+                                            "mqqapi://card/show_pslcard?src_type=internal&version=1&card_type=group&uin=931819834".toUri()
                                         )
                                     )
                                     Toast.makeText(
@@ -688,7 +687,7 @@ fun AboutPageUi(
                                     context.startActivity(
                                         Intent(
                                             Intent.ACTION_VIEW,
-                                            Uri.parse("https://qm.qq.com/q/dMPQiCYp8c")
+                                            "https://qm.qq.com/q/dMPQiCYp8c".toUri()
                                         )
                                     )
                                 }
@@ -709,7 +708,7 @@ fun AboutPageUi(
                                     context.startActivity(
                                         Intent(
                                             Intent.ACTION_VIEW,
-                                            Uri.parse("coolmarket://u/1844460")
+                                            "coolmarket://u/1844460".toUri()
                                         )
                                     )
                                     Toast.makeText(
@@ -737,7 +736,7 @@ fun AboutPageUi(
                                     context.startActivity(
                                         Intent(
                                             Intent.ACTION_VIEW,
-                                            Uri.parse("http://www.coolapk.com/u/1844460")
+                                            "http://www.coolapk.com/u/1844460".toUri()
                                         )
                                     )
                                 }
@@ -761,7 +760,7 @@ fun AboutPageUi(
                                     context.startActivity(
                                         Intent(
                                             Intent.ACTION_VIEW,
-                                            Uri.parse("bilibili://space/221114757")
+                                            "bilibili://space/221114757".toUri()
                                         )
                                     )
                                     Toast.makeText(
@@ -784,7 +783,7 @@ fun AboutPageUi(
                                     context.startActivity(
                                         Intent(
                                             Intent.ACTION_VIEW,
-                                            Uri.parse("https://space.bilibili.com/221114757")
+                                            "https://space.bilibili.com/221114757".toUri()
                                         )
                                     )
                                 }
@@ -802,9 +801,7 @@ fun AboutPageUi(
                         onClick = {
                             yesNoDialogOnConfirm = {
                                 context.startActivity(Intent(Intent.ACTION_VIEW).apply {
-                                    data = Uri.parse(
-                                        "https://github.com/Winnie0408/LocalMusicHelper"
-                                    )
+                                    data = "https://github.com/Winnie0408/LocalMusicHelper".toUri()
                                 })
                             }
                             yesNoDialogTitle = context.getString(R.string.visit_the_link_below)
@@ -820,9 +817,7 @@ fun AboutPageUi(
                         onClick = {
                             yesNoDialogOnConfirm = {
                                 context.startActivity(Intent(Intent.ACTION_VIEW).apply {
-                                    data = Uri.parse(
-                                        "https://gitlab.com/HWinZnieJ/LocalMusicHelper"
-                                    )
+                                    data = "https://gitlab.com/HWinZnieJ/LocalMusicHelper".toUri()
                                 })
                             }
                             yesNoDialogTitle = context.getString(R.string.visit_the_link_below)
@@ -838,9 +833,7 @@ fun AboutPageUi(
                         onClick = {
                             yesNoDialogOnConfirm = {
                                 context.startActivity(Intent(Intent.ACTION_VIEW).apply {
-                                    data = Uri.parse(
-                                        "https://gitee.com/winnie0408/LocalMusicHelper"
-                                    )
+                                    data = "https://gitee.com/winnie0408/LocalMusicHelper".toUri()
                                 })
                             }
                             yesNoDialogTitle = context.getString(R.string.visit_the_link_below)

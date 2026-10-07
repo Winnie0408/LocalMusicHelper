@@ -28,6 +28,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
+import kotlin.time.Duration.Companion.milliseconds
 
 class UnlockPage(
     val context: Context,
@@ -162,7 +163,7 @@ class UnlockPage(
                 return@launch
             }
             if (isAllAscii(temp)) {
-                delay(200L)
+                delay(200L.milliseconds)
                 selectedInputPath.value = temp
             } else {
                 withContext(Dispatchers.Main) {
@@ -188,7 +189,7 @@ class UnlockPage(
                 return@launch
             }
             if (isAllAscii(temp)) {
-                delay(200L)
+                delay(200L.milliseconds)
                 selectedOutputPath.value = temp
             } else {
                 withContext(Dispatchers.Main) {

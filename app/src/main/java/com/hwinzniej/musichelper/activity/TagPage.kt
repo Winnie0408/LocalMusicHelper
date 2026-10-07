@@ -27,6 +27,7 @@ import org.jaudiotagger.tag.FieldKey
 import org.jaudiotagger.tag.images.ArtworkFactory
 import java.io.File
 import java.util.Collections
+import kotlin.time.Duration.Companion.milliseconds
 
 class TagPage(
     val context: Context,
@@ -370,7 +371,7 @@ class TagPage(
                 )
             )
             if (slow && !keepModifyTime)
-                delay(1248L)
+                delay(1248L.milliseconds)
         }
         if (haveError)
             completeResult.sortBy { it.values.first() }
@@ -521,7 +522,7 @@ class TagPage(
                 )
             )
             if (slow)
-                delay(1248L)
+                delay(1248L.milliseconds)
         }
         if (haveError) {
             completeResult.sortBy { it.values.first() }
@@ -807,7 +808,7 @@ class TagPage(
                 )
             )
             if (slow)
-                delay(1248L)
+                delay(1248L.milliseconds)
         }
         completeResult.add(0, mapOf(context.getString(R.string.all_done) to 2))
     }

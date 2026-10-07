@@ -12,7 +12,6 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.view.Surface
-import android.view.WindowManager
 import android.widget.Toast
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
@@ -48,8 +47,10 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
+import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -67,15 +68,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
+import androidx.core.net.toUri
 import androidx.core.os.LocaleListCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.WindowCompat
@@ -112,13 +115,12 @@ import com.moriafly.salt.ui.AlphaIndication
 import com.moriafly.salt.ui.BottomBar
 import com.moriafly.salt.ui.BottomBarItem
 import com.moriafly.salt.ui.RoundedColumn
+import com.moriafly.salt.ui.SaltColors
 import com.moriafly.salt.ui.SaltConfigs
 import com.moriafly.salt.ui.SaltDynamicColors
+import com.moriafly.salt.ui.SaltPalette
 import com.moriafly.salt.ui.SaltTheme
 import com.moriafly.salt.ui.UnstableSaltUiApi
-import com.moriafly.salt.ui.darkSaltColors
-import com.moriafly.salt.ui.lightSaltColors
-import com.moriafly.salt.ui.saltColorsByColorScheme
 import dev.jeziellago.compose.markdowntext.MarkdownText
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -128,6 +130,7 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.io.File
 import java.util.Locale
+import kotlin.time.Duration.Companion.milliseconds
 
 
 class MainActivity : AppCompatActivity() {
@@ -163,7 +166,6 @@ class MainActivity : AppCompatActivity() {
     var updateFileSize = mutableFloatStateOf(0f)
     var isDataLoaded = mutableStateOf(false)
 
-    @OptIn(UnstableSaltUiApi::class)
     @SuppressLint("NewApi")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -232,7 +234,7 @@ class MainActivity : AppCompatActivity() {
         db = Room.databaseBuilder(
             applicationContext, MusicDatabase::class.java, "music"
         )
-            .fallbackToDestructiveMigration()
+            .fallbackToDestructiveMigration(false)
 //            .fallbackToDestructiveMigrationOnDowngrade()
             .build()
 
@@ -283,31 +285,40 @@ class MainActivity : AppCompatActivity() {
             db = db,
             openMusicCoverLauncher = openMusicCoverLauncher
         )
-        enableEdgeToEdge()
+//        enableEdgeToEdge()
         setContent {
             val colors = when (selectedThemeMode.intValue) {
-                0 -> if (enableDynamicColor.value) saltColorsByColorScheme(
-                    dynamicLightColorScheme(this)
-                ) else lightSaltColors()
-
-                1 -> if (enableDynamicColor.value) saltColorsByColorScheme(
-                    dynamicDarkColorScheme(this)
-                ) else darkSaltColors()
-
-                2 -> {
-                    if (isSystemInDarkTheme())
-                        if (enableDynamicColor.value) saltColorsByColorScheme(
-                            dynamicDarkColorScheme(this)
-                        ) else darkSaltColors()
-                    else
-                        if (enableDynamicColor.value) saltColorsByColorScheme(
-                            dynamicLightColorScheme(this)
-                        ) else lightSaltColors()
+                0 -> if (enableDynamicColor.value) {
+                    saltColorsFromColorScheme(dynamicLightColorScheme(this))
+                } else {
+                    SaltColors.defaultLight()
                 }
 
-                else -> if (enableDynamicColor.value) saltColorsByColorScheme(
-                    dynamicLightColorScheme(this)
-                ) else lightSaltColors()
+                1 -> if (enableDynamicColor.value) {
+                    saltColorsFromColorScheme(dynamicDarkColorScheme(this))
+                } else {
+                    SaltColors.defaultDark()
+                }
+
+                2 -> {
+                    if (isSystemInDarkTheme()) {
+                        if (enableDynamicColor.value) {
+                            saltColorsFromColorScheme(dynamicDarkColorScheme(this))
+                        } else {
+                            SaltColors.defaultDark()
+                        }
+                    } else if (enableDynamicColor.value) {
+                        saltColorsFromColorScheme(dynamicLightColorScheme(this))
+                    } else {
+                        SaltColors.defaultLight()
+                    }
+                }
+
+                else -> if (enableDynamicColor.value) {
+                    saltColorsFromColorScheme(dynamicLightColorScheme(this))
+                } else {
+                    SaltColors.defaultLight()
+                }
             }
             WindowCompat.setDecorFitsSystemWindows(window, false)
             val isDarkTheme =
@@ -334,14 +345,14 @@ class MainActivity : AppCompatActivity() {
             }
         }
         lifecycleScope.launch {
-            delay(1500L)
+            delay(1500L.milliseconds)
             if (settingsPage.enableAutoCheckUpdate.value) {
                 checkUpdate.value = true
             }
         }
 
         lifecycleScope.launch(Dispatchers.IO) {
-            delay(3000L)
+            delay(3000L.milliseconds)
             Tools().deleteOldFiles(context = this@MainActivity)
         }
     }
@@ -356,26 +367,37 @@ class MainActivity : AppCompatActivity() {
 
     @Composable
     fun TransparentSystemBars(dark: Boolean) {
-        val statusBarColor = Color.Transparent.toArgb()
-        val navigationBarColor = Color.Transparent.toArgb()
         SideEffect {
-            if (dark) {
-                enableEdgeToEdge(
-                    statusBarStyle = SystemBarStyle.dark(statusBarColor),
-                    navigationBarStyle = SystemBarStyle.dark(navigationBarColor)
+            enableEdgeToEdge(
+                statusBarStyle = SystemBarStyle.auto(
+                    android.graphics.Color.TRANSPARENT,
+                    android.graphics.Color.TRANSPARENT
+                ),
+                navigationBarStyle = SystemBarStyle.auto(
+                    android.graphics.Color.TRANSPARENT,
+                    android.graphics.Color.TRANSPARENT
                 )
-            } else {
-                enableEdgeToEdge(
-                    statusBarStyle = SystemBarStyle.light(statusBarColor, statusBarColor),
-                    navigationBarStyle = SystemBarStyle.light(
-                        navigationBarColor,
-                        navigationBarColor
-                    )
-                )
+            )
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                window.isNavigationBarContrastEnforced = false
             }
         }
     }
 }
+
+private fun saltColorsFromColorScheme(colorScheme: ColorScheme): SaltColors = SaltColors(
+    highlight = colorScheme.primary,
+    text = colorScheme.onSurface,
+    subText = colorScheme.onSurfaceVariant,
+    background = colorScheme.surface,
+    subBackground = colorScheme.surfaceColorAtElevation(3.dp),
+    popup = colorScheme.surfaceColorAtElevation(3.dp).compositeOver(colorScheme.surface),
+    stroke = colorScheme.onSurfaceVariant.copy(alpha = 0.1f),
+    onHighlight = Color.White,
+    success = SaltPalette.SuccessLightIcon,
+    warning = SaltPalette.WarningLightIcon,
+    error = SaltPalette.ErrorLightIcon
+)
 
 /**
  * UI
@@ -395,7 +417,12 @@ private fun Pages(
 ) {
     val context = LocalContext.current
     val configuration = LocalConfiguration.current
-    val display = (context.getSystemService(Context.WINDOW_SERVICE) as WindowManager).defaultDisplay
+    val displayRotation =
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            context.display.rotation
+        } else {
+            Surface.ROTATION_0
+        }
     var isInLandscape by remember { mutableIntStateOf(-1) }
     var devicesRotation by remember { mutableIntStateOf(-1) }
 
@@ -416,6 +443,12 @@ private fun Pages(
     val latestVersion = remember { mutableStateOf("") }
     val latestDescription = remember { mutableStateOf("") }
     val latestDownloadLink = remember { mutableStateOf("") }
+    val appName = stringResource(R.string.app_name)
+    val startDownloadText = stringResource(R.string.start_download)
+    val updateText = stringResource(R.string.update)
+    val latestVersionText = stringResource(R.string.latest_version)
+    val updateDownloadedText = stringResource(R.string.update_downloaded)
+    val autoCheckUpdateFailedText = stringResource(R.string.auto_check_update_failed)
 
     val overwrite = remember { mutableStateOf(false) }
     val lyricist = remember { mutableStateOf(true) }
@@ -493,13 +526,11 @@ private fun Pages(
         settingsPage.githubProxy.intValue =
             preferences[DataStoreConstants.GITHUB_PROXY] ?: 2
 
-        coroutineScope.launch(Dispatchers.Main) {
-            mainPage.isDataLoaded.value = true
-        }
+        mainPage.isDataLoaded.value = true
     }
 
-    LaunchedEffect(display.rotation) {
-        devicesRotation = display.rotation
+    LaunchedEffect(displayRotation) {
+        devicesRotation = displayRotation
     }
 
     LaunchedEffect(configuration.orientation) {
@@ -535,7 +566,7 @@ private fun Pages(
                 showNewVersionAvailableDialog.value = false
                 Toast.makeText(
                     context,
-                    context.getString(R.string.start_download),
+                    startDownloadText,
                     Toast.LENGTH_SHORT
                 ).show()
                 coroutineScope.launch {
@@ -545,18 +576,14 @@ private fun Pages(
                     val uri = Uri.fromFile(
                         File(
                             Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
-                            "${context.getString(R.string.app_name)}_Update.apk"
+                            "${appName}_Update.apk"
                         )
                     )
 
-                    val request = DownloadManager.Request(Uri.parse(latestDownloadLink.value))
-                        .setTitle("${context.getString(R.string.app_name)} ${context.getString(R.string.update)}")
+                    val request = DownloadManager.Request(latestDownloadLink.value.toUri())
+                        .setTitle("$appName $updateText")
                         .setDescription(
-                            "${context.getString(R.string.app_name)} ${
-                                context.getString(
-                                    R.string.latest_version
-                                )
-                            }: ${latestVersion.value}"
+                            "$appName $latestVersionText: ${latestVersion.value}"
                         )
                         .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
                         .setMimeType("application/vnd.android.package-archive")
@@ -572,7 +599,7 @@ private fun Pages(
                             if (id == downloadId) {
                                 Toast.makeText(
                                     context,
-                                    context.getString(R.string.update_downloaded),
+                                    updateDownloadedText,
                                     Toast.LENGTH_SHORT
                                 ).show()
                             }
@@ -605,7 +632,7 @@ private fun Pages(
                         }",
                         rightSub = "${
                             String.format(
-                                Locale.getDefault(),
+                                LocalLocale.current.platformLocale,
                                 "%.2f",
                                 mainPage.updateFileSize.floatValue / 1024 / 1024
                             )
@@ -661,7 +688,7 @@ private fun Pages(
                 try {
                     val response: JSONObject
                     client.newCall(request).execute().use { responses ->
-                        response = JSON.parseObject(responses.body?.string())
+                        response = JSON.parseObject(responses.body.string())
                     }
                     latestVersion.value =
                         response.getString("name").replace("v", "")
@@ -692,7 +719,7 @@ private fun Pages(
                     withContext(Dispatchers.Main) {
                         Toast.makeText(
                             context,
-                            context.getString(R.string.auto_check_update_failed),
+                            autoCheckUpdateFailedText,
                             Toast.LENGTH_SHORT
                         ).show()
                     }
@@ -727,7 +754,7 @@ private fun Pages(
                 }
                 context.startActivity(intent)
                 coroutineScope.launch {
-                    delay(248L)
+                    delay(248L.milliseconds)
                     mainPage.finishAndRemoveTask()
                 }
             },
@@ -1329,7 +1356,7 @@ private fun Pages(
         }
 
         LaunchedEffect(Unit) {
-            delay(500L)
+            delay(500L.milliseconds)
             if (!agreeUserAgreement) {
                 showAgreeUserAgreementDialog = true
             }

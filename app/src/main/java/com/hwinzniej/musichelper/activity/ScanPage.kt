@@ -38,6 +38,7 @@ import org.jaudiotagger.audio.AudioFileIO
 import org.jaudiotagger.tag.FieldKey
 import java.io.File
 import java.io.FileWriter
+import kotlin.time.Duration.Companion.milliseconds
 
 class ScanPage(
     val context: Context,
@@ -155,7 +156,7 @@ class ScanPage(
      */
     private fun checkFileExist(delay: Long = 0L) {
         lifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
-            delay(delay)
+            delay(delay.milliseconds)
             if (exportResultFile.value) {
                 if (selectedExportFormat.intValue == 0) {
                     lifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
@@ -335,7 +336,7 @@ class ScanPage(
         showLoadingProgressBar.value = true
         progressPercent.intValue = 0
         lifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
-            delay(300L)
+            delay(300L.milliseconds)
             scanDirectory(directory)
         }
     }
@@ -357,7 +358,7 @@ class ScanPage(
         showLoadingProgressBar.value = true
         progressPercent.intValue = 0
         lifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
-            delay(300L)
+            delay(300L.milliseconds)
             scanDirectory(directory)
         }
     }
@@ -484,7 +485,7 @@ class ScanPage(
                 }
             }
             lifecycleOwner.lifecycleScope.launch(Dispatchers.Main) {
-                if (musicAllList.size == 0) {
+                if (musicAllList.isEmpty()) {
                     scanResult.add(0, context.getString(R.string.no_music_found))
                 }
                 showLoadingProgressBar.value = false
@@ -520,24 +521,24 @@ class ScanPage(
         )
         val outputDb = SQLiteDatabase.openOrCreateDatabase(file, null)
         outputDb.execSQL("CREATE TABLE IF NOT EXISTS music (id INTEGER PRIMARY KEY, song TEXT, artist TEXT, album TEXT, absolutePath TEXT, releaseYear TEXT, trackNumber TEXT, albumArtist TEXT, genre TEXT)")
-        for (music in musicAllList) {
+        for ((id, song, artist, album, absolutePath, releaseYear, trackNumber, albumArtist, genre) in musicAllList) {
             outputDb.execSQL(
-                "INSERT INTO music VALUES (${music.id}, '${
-                    music.song.replace("'", "''")
+                "INSERT INTO music VALUES ($id, '${
+                    song.replace("'", "''")
                 }', '${
-                    music.artist.replace("'", "''")
+                    artist.replace("'", "''")
                 }', '${
-                    music.album.replace("'", "''")
+                    album.replace("'", "''")
                 }', '${
-                    music.absolutePath.replace("'", "''")
+                    absolutePath.replace("'", "''")
                 }', '${
-                    music.releaseYear.replace("'", "''")
+                    releaseYear.replace("'", "''")
                 }', '${
-                    music.trackNumber.replace("'", "''")
+                    trackNumber.replace("'", "''")
                 }', '${
-                    music.albumArtist.replace("'", "''")
+                    albumArtist.replace("'", "''")
                 }', '${
-                    music.genre.replace("'", "''")
+                    genre.replace("'", "''")
                 }')"
             )
         }
@@ -564,9 +565,9 @@ class ScanPage(
             }.txt"
         )
         val fileWriter = FileWriter(file, true)
-        for (music in musicAllList) {
+        for ((id, song, artist, album, absolutePath) in musicAllList) {
             fileWriter.write(
-                "${music.song}#*#${music.artist}#*#${music.album}#*#${music.absolutePath}#*#${music.id}\n"
+                "$song#*#$artist#*#$album#*#$absolutePath#*#$id\n"
             )
         }
         fileWriter.close()

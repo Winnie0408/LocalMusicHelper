@@ -9,7 +9,6 @@ import androidx.compose.animation.core.spring
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -91,9 +90,10 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlin.time.Duration.Companion.milliseconds
 
 @OptIn(
-    ExperimentalFoundationApi::class, ExperimentalMaterialApi::class
+    ExperimentalMaterialApi::class
 )
 @Composable
 fun TagPageUi(
@@ -148,7 +148,7 @@ fun TagPageUi(
                 refreshComplete = false
                 if (multiSelect) {
                     multiSelect = false
-                    delay(842L)
+                    delay(842L.milliseconds)
                 }
                 tagPage.getMusicList(songList, sortMethod.intValue, selectedSongList)
                 MyVibrationEffect(
@@ -180,7 +180,7 @@ fun TagPageUi(
     BackHandler(enabled = multiSelect && !showSearchInput) {
         multiSelect = false
         coroutineScope.launch(Dispatchers.Default) {
-            delay(300L)
+            delay(300L.milliseconds)
             intervalSelectionStart = -1
             selectedSongList.replaceAll { 0 }
         }
@@ -204,7 +204,7 @@ fun TagPageUi(
         if (songList.isEmpty()) {
             coroutineScope.launch(Dispatchers.IO) {
                 showLoadingProgressBar = true
-                delay(1000L)
+                delay(1000L.milliseconds)
                 tagPage.getMusicList(songList, sortMethod.intValue, selectedSongList)
                 showLoadingProgressBar = false
             }
@@ -213,7 +213,7 @@ fun TagPageUi(
 
     LaunchedEffect(key1 = tagPage.coverImage.value) {
         if (tagPage.coverImage.value != null) {
-            delay(150L)
+            delay(150L.milliseconds)
             if (showBatchEditDialog)
                 batchCoverImage.value = tagPage.coverImage.value
             else
@@ -236,9 +236,9 @@ fun TagPageUi(
                 return@launch
             }
             searching = true
-            delay(500L)
+            delay(500L.milliseconds)
             showLoadingProgressBar = true
-            delay(500L)
+            delay(500L.milliseconds)
             tagPage.searchSong(searchInput, searchResult)
             showLoadingProgressBar = false
             searching = false
@@ -414,9 +414,11 @@ fun TagPageUi(
                     RoundedColumn {
                         ItemTitle(text = stringResource(id = R.string.batch_edit_fields))
                         Column(
-                            modifier = Modifier.heightIn(
-                                max = (LocalConfiguration.current.screenHeightDp / 2.2).dp
-                            ).verticalScroll(rememberScrollState())
+                            modifier = Modifier
+                                .heightIn(
+                                    max = (LocalConfiguration.current.screenHeightDp / 2.2).dp
+                                )
+                                .verticalScroll(rememberScrollState())
                         ) {
                             batchFields.forEach { (key, labelRes) ->
                                 ItemSwitcher(
@@ -726,7 +728,7 @@ fun TagPageUi(
                                         popupState1.dismiss()
                                         showDialogProgressBar = true
                                         completeResult.clear()
-                                        delay(300L)
+                                        delay(300L.milliseconds)
                                         readyForComplete =
                                             tagPage.searchDuplicateAlbum(
                                                 completeResult = completeResult,
@@ -748,7 +750,7 @@ fun TagPageUi(
                                         popupState1.dismiss()
                                         showDialogProgressBar = true
                                         completeResult.clear()
-                                        delay(300L)
+                                        delay(300L.milliseconds)
                                         readyForComplete =
                                             tagPage.searchBlankLyricistComposerArranger(
                                                 completeResult = completeResult,
@@ -982,7 +984,7 @@ fun TagPageUi(
                                 hapticStrength = hapticStrength.intValue
                             )
                             LaunchedEffect(Unit) {
-                                delay(300L)
+                                delay(300L.milliseconds)
                                 focusRequester.requestFocus()
                             }
 
@@ -1044,7 +1046,7 @@ fun TagPageUi(
                                         }
                                     }
                                     coroutineScope.launch(Dispatchers.Default) {
-                                        delay(300L)
+                                        delay(300L.milliseconds)
                                         intervalSelectionStart = -1
                                         selectedSongList.replaceAll { 0 }
                                     }
@@ -1167,7 +1169,7 @@ fun TagPageUi(
                                                             },
                                                             onLongClick = {
                                                                 coroutineScope.launch(Dispatchers.Default) {
-                                                                    delay(248L)
+                                                                    delay(248L.milliseconds)
                                                                     if (showFab.value)
                                                                         showFab.value = false
                                                                     multiSelect = true
@@ -1183,7 +1185,12 @@ fun TagPageUi(
                                                             text = searchResult[it]!![0],
                                                             sub = "${searchResult[it]!![1].ifBlank { "?" }} - ${searchResult[it]!![2].ifBlank { "?" }}",
                                                             leadingContent = if (showCoverInList.value) {
-                                                                { SongCoverThumbnail(tagPage, searchResult[it]!![4]) }
+                                                                {
+                                                                    SongCoverThumbnail(
+                                                                        tagPage,
+                                                                        searchResult[it]!![4]
+                                                                    )
+                                                                }
                                                             } else null,
                                                             indication = if (showFab.value) null else ripple()
                                                         )
@@ -1239,7 +1246,12 @@ fun TagPageUi(
                                                             text = searchResult[it]!![0],
                                                             sub = "${searchResult[it]!![1].ifBlank { "?" }} - ${searchResult[it]!![2].ifBlank { "?" }}",
                                                             leadingContent = if (showCoverInList.value) {
-                                                                { SongCoverThumbnail(tagPage, searchResult[it]!![4]) }
+                                                                {
+                                                                    SongCoverThumbnail(
+                                                                        tagPage,
+                                                                        searchResult[it]!![4]
+                                                                    )
+                                                                }
                                                             } else null,
                                                             enableHaptic = false,
                                                             hapticStrength = hapticStrength.intValue
@@ -1308,7 +1320,7 @@ fun TagPageUi(
                                                                     coroutineScope.launch(
                                                                         Dispatchers.Default
                                                                     ) {
-                                                                        delay(248L)
+                                                                        delay(248L.milliseconds)
                                                                         if (showFab.value)
                                                                             showFab.value = false
                                                                         else {
@@ -1325,9 +1337,14 @@ fun TagPageUi(
                                                                 },
                                                                 text = songList[it]!![0],
                                                                 sub = "${songList[it]!![1].ifBlank { "?" }} - ${songList[it]!![2].ifBlank { "?" }}",
-                                                            leadingContent = if (showCoverInList.value) {
-                                                                { SongCoverThumbnail(tagPage, songList[it]!![4]) }
-                                                            } else null,
+                                                                leadingContent = if (showCoverInList.value) {
+                                                                    {
+                                                                        SongCoverThumbnail(
+                                                                            tagPage,
+                                                                            songList[it]!![4]
+                                                                        )
+                                                                    }
+                                                                } else null,
                                                                 indication = if (showFab.value) null else ripple()
                                                             )
                                                         else if (songList[it] != null && animate)
@@ -1383,9 +1400,14 @@ fun TagPageUi(
                                                                 iconAtLeft = false,
                                                                 text = songList[it]!![0],
                                                                 sub = "${songList[it]!![1].ifBlank { "?" }} - ${songList[it]!![2].ifBlank { "?" }}",
-                                                            leadingContent = if (showCoverInList.value) {
-                                                                { SongCoverThumbnail(tagPage, songList[it]!![4]) }
-                                                            } else null,
+                                                                leadingContent = if (showCoverInList.value) {
+                                                                    {
+                                                                        SongCoverThumbnail(
+                                                                            tagPage,
+                                                                            songList[it]!![4]
+                                                                        )
+                                                                    }
+                                                                } else null,
                                                                 enableHaptic = false,
                                                                 hapticStrength = hapticStrength.intValue
                                                             )
@@ -1877,7 +1899,7 @@ fun SongInfoItem(
     onClear: () -> Unit,
     enableHaptic: Boolean,
     hapticStrength: Int,
-    textStyle: TextStyle = SaltTheme.textStyles.main
+    textStyle: TextStyle = SaltTheme.textStyles.main.copy(color = SaltTheme.colors.text)
 ) {
     ItemTitle(
         text = title,

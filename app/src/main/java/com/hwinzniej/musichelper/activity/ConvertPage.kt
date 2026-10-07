@@ -70,6 +70,7 @@ import java.net.SocketTimeoutException
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.UUID
+import kotlin.time.Duration.Companion.milliseconds
 
 class ConvertPage(
     val context: Context,
@@ -329,7 +330,7 @@ class ConvertPage(
         try {
             lifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
                 val temp = Tools().copyFilesToExternalFilesDir(uri, context, "lunaJsonDir", true)
-                delay(200L) //播放动画
+                delay(200L.milliseconds) //播放动画
                 databaseFileName.value = temp
             }
         } catch (e: Exception) {
@@ -346,7 +347,7 @@ class ConvertPage(
         try {
             chooseLocalMusicPath.value = Tools().uriToAbsolutePath(uri)
             lifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
-                delay(200L) //播放动画
+                delay(200L.milliseconds) //播放动画
             }
         } catch (e: Exception) {
             Toast.makeText(context, R.string.failed_to_get_file_from_dir, Toast.LENGTH_SHORT).show()
@@ -370,7 +371,7 @@ class ConvertPage(
                 databaseFilePath.value =
                     Tools().fromUriCopyFileToExternalFilesDir(context, uri, selectedFileName.value)
                 lifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
-                    delay(200L) //播放动画
+                    delay(200L.milliseconds) //播放动画
                     databaseFileName.value = selectedFileName.value
                 }
             }
@@ -379,7 +380,7 @@ class ConvertPage(
                 resultFilePath =
                     Tools().fromUriCopyFileToExternalFilesDir(context, uri, selectedFileName.value)
                 lifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
-                    delay(200L)  //播放动画
+                    delay(200L.milliseconds)  //播放动画
                     customResultFileName.value = selectedFileName.value
                 }
             }
@@ -389,7 +390,7 @@ class ConvertPage(
                 sourcePlaylistFilePath =
                     Tools().fromUriCopyFileToExternalFilesDir(context, uri, selectedFileName.value)
                 lifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
-                    delay(200L)  //播放动画
+                    delay(200L.milliseconds)  //播放动画
                     sourcePlaylistFileName.value = selectedFileName.value
                     when (selectedSourceLocalApp.intValue) {
                         3 -> {
@@ -440,7 +441,7 @@ class ConvertPage(
                 csvFilePath =
                     Tools().fromUriCopyFileToExternalFilesDir(context, uri, selectedFileName.value)
                 lifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
-                    delay(200L)  //播放动画
+                    delay(200L.milliseconds)  //播放动画
                     databaseFileName.value = selectedFileName.value
                 }
             }
@@ -463,7 +464,7 @@ class ConvertPage(
             loadingProgressSema.acquire()
             checkDatabaseFile()
             checkResultFile()
-            delay(delay)
+            delay(delay.milliseconds)
             loadingProgressSema.acquire()
             loadingProgressSema.acquire()
             if (selectedMethod.intValue == 0) {
@@ -476,7 +477,7 @@ class ConvertPage(
                     showLoadingProgressBar.value = false
                 } else {
                     showLoadingProgressBar.value = true
-                    delay(500L)
+                    delay(500L.milliseconds)
                     databaseSummary()
                 }
             } else {
@@ -680,7 +681,7 @@ class ConvertPage(
                         ).replace("#1", songCount.toString())
                             .replace("#2", (songCount - errorCount).toString()).replace("#n", "\n")
                             .replace("#b", " ")
-                    }\n- ${context.getString(R.string.please_check_song_file)} ${errorSongPathShow}"
+                    }\n- ${context.getString(R.string.please_check_song_file)} $errorSongPathShow"
                 showDialogProgressBar.value = false
                 errorDialogTitle.value = context.getString(R.string.read_failed)
                 errorDialogCustomAction.value = {}
@@ -1134,7 +1135,7 @@ class ConvertPage(
         lifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
             currentPage.intValue = 1
             if (selectedSourceApp.intValue == 4) {
-                delay(300L)
+                delay(300L.milliseconds)
                 showLoadingProgressBar.value = false
                 errorDialogTitle.value =
                     context.getString(R.string.tips)
@@ -1144,7 +1145,7 @@ class ConvertPage(
                 showErrorDialog.value = true
                 return@launch
             }
-            if (playlistId.size != 0) {
+            if (playlistId.isNotEmpty()) {
                 playlistId.clear()
                 playlistName.clear()
                 playlistEnabled.clear()
@@ -1307,7 +1308,7 @@ class ConvertPage(
 
                 var response: JSONObject
                 client.newCall(request.build()).execute().use { responses ->
-                    response = JSON.parseObject(responses.body?.string())
+                    response = JSON.parseObject(responses.body.string())
                 }
 
                 val innerPlaylistId = MutableList(0) { "" }
@@ -1414,7 +1415,7 @@ class ConvertPage(
 
                         val responseQQLikePlaylist: JSONObject
                         client.newCall(requestQQLikePlaylist.build()).execute().use { responses ->
-                            responseQQLikePlaylist = JSON.parseObject(responses.body?.string())
+                            responseQQLikePlaylist = JSON.parseObject(responses.body.string())
                         }
                         val qqLikePlaylistInfo =
                             responseQQLikePlaylist.getJSONObject("data").getJSONArray("cdlist")
@@ -1471,7 +1472,7 @@ class ConvertPage(
                         while (true) {
                             val playlistInfo =
                                 response.getJSONObject("data").getJSONArray("playlists")
-                            if (playlistInfo.size == 0) {
+                            if (playlistInfo.isEmpty()) {
                                 db.close()
                                 break
                             }
@@ -1540,7 +1541,7 @@ class ConvertPage(
                                     )
                                     .post(requestBody)
                                 client.newCall(request.build()).execute().use { responses ->
-                                    response = JSON.parseObject(responses.body?.string())
+                                    response = JSON.parseObject(responses.body.string())
                                 }
                             }
                         }
@@ -1628,7 +1629,7 @@ class ConvertPage(
                         db.close()
                     }
                 }
-                if (innerPlaylistId.size == 0) {
+                if (innerPlaylistId.isEmpty()) {
                     throw Exception(
                         context.getString(R.string.online_server_response_null)
                             .replace(
@@ -1745,10 +1746,10 @@ class ConvertPage(
                         }
                         val response: JSONObject
                         client.newCall(request.build()).execute().use { responses ->
-                            response = JSON.parseObject(responses.body?.string())
+                            response = JSON.parseObject(responses.body.string())
                         }
                         if (response.getInteger("code") == 200) {
-                            if (playlistId.size == 0) {
+                            if (playlistId.isEmpty()) {
                                 Tools().copyAssetFileToExternalFilesDir(
                                     context,
                                     "cloudmusic.db"
@@ -1817,12 +1818,12 @@ class ConvertPage(
                             .post(requestBody)
                         val response: JSONObject
                         client.newCall(request.build()).execute().use { responses ->
-                            response = JSON.parseObject(responses.body?.string())
+                            response = JSON.parseObject(responses.body.string())
                         }
                         if (response.getJSONObject("GetPlayList")?.getJSONObject("data")
                                 ?.getInteger("code") == 0
                         ) {
-                            if (playlistId.size == 0) {
+                            if (playlistId.isEmpty()) {
                                 Tools().copyAssetFileToExternalFilesDir(
                                     context,
                                     "QQMusic"
@@ -1886,9 +1887,9 @@ class ConvertPage(
                                     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36 Edg/122.0.0.0"
                                 ).get().build()
                         ).execute().use { responses ->
-                            response = responses.body?.string() ?: ""
+                            response = responses.body.string()
                         }
-                        if (playlistId.size == 0) {
+                        if (playlistId.isEmpty()) {
                             Tools().copyAssetFileToExternalFilesDir(
                                 context,
                                 "kugou_music_phone_v7.db"
@@ -1983,10 +1984,10 @@ class ConvertPage(
                                 .get()
                             val response: JSONObject
                             client.newCall(request.build()).execute().use { responses ->
-                                response = JSON.parseObject(responses.body?.string())
+                                response = JSON.parseObject(responses.body.string())
                             }
                             if (response.getInteger("code") == 200) {
-                                if (playlistId.size == 0) {
+                                if (playlistId.isEmpty()) {
                                     Tools().copyAssetFileToExternalFilesDir(
                                         context,
                                         "kwplayer.db"
@@ -2057,12 +2058,12 @@ class ConvertPage(
                             .get()
                         val response: JSONObject
                         client.newCall(request.build()).execute().use { responses ->
-                            response = JSON.parseObject(responses.body?.string())
+                            response = JSON.parseObject(responses.body.string())
                         }
                         if (response.getJSONObject("status_info")
                                 ?.getString("status_msg") == null
                         ) {
-                            if (playlistId.size == 0) {
+                            if (playlistId.isEmpty()) {
                                 Tools().copyAssetFileToExternalFilesDir(
                                     context,
                                     "QQMusic"
@@ -2154,12 +2155,12 @@ class ConvertPage(
 
                         val response: JSONObject
                         client.newCall(request.build()).execute().use { responses ->
-                            response = JSON.parseObject(responses.body?.string())
+                            response = JSON.parseObject(responses.body.string())
                         }
                         if (response.containsKey("error")) {
                             throw IllegalStateException(context.getString(R.string.wrong_input_playlist_data))
                         }
-                        if (playlistId.size == 0) {
+                        if (playlistId.isEmpty()) {
                             Tools().copyAssetFileToExternalFilesDir(
                                 context,
                                 "QQMusic"
@@ -2210,7 +2211,7 @@ class ConvertPage(
                     }
                 }
                 if (playlistShow.size > 1)
-                    delay(250L)
+                    delay(250L.milliseconds)
                 playlistShow[0] = true
             } catch (e: IllegalStateException) {
                 showDialogProgressBar.value = false
@@ -2514,7 +2515,7 @@ class ConvertPage(
 
                             var response: JSONObject
                             client.newCall(request.build()).execute().use { responses ->
-                                response = JSON.parseObject(responses.body?.string())
+                                response = JSON.parseObject(responses.body.string())
                             }
 
                             when (selectedSourceApp.intValue) {
@@ -2666,7 +2667,7 @@ class ConvertPage(
                                     while (true) {
                                         try {
                                             if (response.getJSONObject("data")
-                                                    .getJSONObject("info").size == 0
+                                                    .getJSONObject("info").isEmpty()
                                             ) {
                                                 db.close()
                                                 break
@@ -2768,7 +2769,7 @@ class ConvertPage(
                                             client.newCall(request.build()).execute()
                                                 .use { responses ->
                                                     response =
-                                                        JSON.parseObject(responses.body?.string())
+                                                        JSON.parseObject(responses.body.string())
                                                 }
                                         }
                                     }
@@ -2792,7 +2793,7 @@ class ConvertPage(
                                         val playListDetailInfo =
                                             response.getJSONObject("data")
                                                 .getJSONArray("musicList")
-                                        if (playListDetailInfo.size == 0) {
+                                        if (playListDetailInfo.isEmpty()) {
                                             db.close()
                                             break
                                         }
@@ -2862,7 +2863,7 @@ class ConvertPage(
                                                 client.newCall(request.build()).execute()
                                                     .use { responses ->
                                                         response =
-                                                            JSON.parseObject(responses.body?.string())
+                                                            JSON.parseObject(responses.body.string())
                                                     }
                                             }
                                         }
@@ -3038,7 +3039,7 @@ class ConvertPage(
                                             client.newCall(request.build()).execute()
                                                 .use { responses ->
                                                     response =
-                                                        JSON.parseObject(responses.body?.string())
+                                                        JSON.parseObject(responses.body.string())
                                                 }
                                         }
                                     }
@@ -3054,7 +3055,7 @@ class ConvertPage(
                                     }
                                 }
                             }
-                            delay(500L)
+                            delay(500L.milliseconds)
                             showNumberProgressBar.value = true
                             showLoadingProgressBar.value = false
                         } catch (e: Exception) {
@@ -3440,7 +3441,7 @@ class ConvertPage(
             numberProgress.floatValue = 1.0f
             convertResult.putAll(convertResultMap)
             lifecycleOwner.lifecycleScope.launch {
-                delay(650L)
+                delay(650L.milliseconds)
                 showNumberProgressBar.value = false
             }
             MyVibrationEffect(
@@ -3876,7 +3877,7 @@ class ConvertPage(
         val response: JSONObject
         try {
             client.newCall(request.build()).execute().use { responses ->
-                response = JSON.parseObject(responses.body?.string())
+                response = JSON.parseObject(responses.body.string())
             }
             if (response.getInteger("error_code") != 0)
                 throw Exception()
@@ -3941,7 +3942,7 @@ class ConvertPage(
         val response: JSONObject
         try {
             client.newCall(request.build()).execute().use { responses ->
-                response = JSON.parseObject(responses.body?.string())
+                response = JSON.parseObject(responses.body.string())
             }
             if (response.getInteger("error_code") != 0)
                 throw Exception()
@@ -3986,9 +3987,9 @@ class ConvertPage(
             1 -> "https://thirdsso.kugou.com/v2/user/gzh/qrcode/auth"
             else -> ""
         }
-        delay(2000L)
+        delay(2000L.milliseconds)
         if (cancelLogin.value) {
-            delay(1500L)
+            delay(1500L.milliseconds)
         }
         cancelLogin.value = false
         while (!cancelLogin.value) {
@@ -4024,7 +4025,7 @@ class ConvertPage(
                 .post(requestBody)
             val response: JSONObject
             client.newCall(request.build()).execute().use { responses ->
-                response = JSON.parseObject(responses.body?.string())
+                response = JSON.parseObject(responses.body.string())
             }
             try {
                 val token = response.getJSONObject("data").getString("token")
@@ -4040,7 +4041,7 @@ class ConvertPage(
                 }
             } catch (_: Exception) {
             }
-            delay(1250L)
+            delay(1250L.milliseconds)
         }
         return result
     }
@@ -4242,7 +4243,7 @@ class ConvertPage(
         val response: JSONObject
         try {
             client.newCall(request.build()).execute().use { responses ->
-                response = JSON.parseObject(responses.body?.string())
+                response = JSON.parseObject(responses.body.string())
             }
             if (response.getString("message") != "success")
                 throw Exception()
@@ -4281,16 +4282,16 @@ class ConvertPage(
             .get()
         var needSmsVerify = false
         if (!now)
-            delay(2000L)
+            delay(2000L.milliseconds)
         if (cancelLogin.value && !now) {
-            delay(1500L)
+            delay(1500L.milliseconds)
         }
         cancelLogin.value = false
         while (!cancelLogin.value) {
             try {
                 client.newCall(request.build()).execute().use { response ->
                     val responseJson =
-                        JSON.parseObject(response.body?.string()).getJSONObject("data")
+                        JSON.parseObject(response.body.string()).getJSONObject("data")
                             ?: throw Exception(context.getString(R.string.failed_get_login_qr_code))
                     if (responseJson.getInteger("error_code") != 0) {
                         if (responseJson.containsKey("verify_ticket")) {
@@ -4343,7 +4344,7 @@ class ConvertPage(
                 }
                 return false
             }
-            delay(1250L)
+            delay(1250L.milliseconds)
         }
         return false
     }
@@ -4369,7 +4370,7 @@ class ConvertPage(
 
         val response: JSONObject
         client.newCall(request.build()).execute().use { responses ->
-            response = JSON.parseObject(responses.body?.string())
+            response = JSON.parseObject(responses.body.string())
         }
         if (response.getString("message") == "success") {
             return true
@@ -4568,7 +4569,7 @@ class ConvertPage(
 
             val response: JSONObject
             client.newCall(request.build()).execute().use { responses ->
-                response = JSON.parseObject(responses.body?.string())
+                response = JSON.parseObject(responses.body.string())
             }
             if (response.containsKey("error")) {
                 showDialogProgressBar.value = false

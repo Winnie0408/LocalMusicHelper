@@ -15,15 +15,14 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.Indication
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.draggable
 import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.indication
@@ -61,8 +60,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
@@ -131,8 +130,8 @@ import com.moriafly.salt.ui.noRippleClickable
 import com.moriafly.salt.ui.outerPadding
 import com.moriafly.salt.ui.popup.PopupMenu
 import com.moriafly.salt.ui.popup.PopupState
-import kotlin.math.roundToInt
 import kotlinx.coroutines.launch
+import kotlin.math.roundToInt
 
 @Composable
 fun YesNoDialog(
@@ -479,7 +478,6 @@ fun ItemText(
     )
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ItemCheck(
     state: Boolean,
@@ -574,7 +572,6 @@ fun ItemCheck(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun Item(
     onClick: () -> Unit,
@@ -783,7 +780,7 @@ fun ItemValue(
                         text = rightSub,
                         color = SaltTheme.colors.subText,
                         textAlign = TextAlign.End,
-                        style = SaltTheme.textStyles.main
+                        style = SaltTheme.textStyles.main.copy(color = SaltTheme.colors.text)
                     )
                 }
             }
@@ -816,7 +813,7 @@ fun ItemEdit(
     iconColor: Color? = null,
     singleLine: Boolean = false,
     hapticStrength: Int,
-    textStyle: TextStyle = SaltTheme.textStyles.main
+    textStyle: TextStyle = SaltTheme.textStyles.main.copy(color = SaltTheme.colors.text)
 ) {
     val context = LocalContext.current
     BasicTextField(
@@ -1116,7 +1113,7 @@ fun FloatingActionButton(
     paddingValues: PaddingValues = PaddingValues(bottom = 32.dp, end = 24.dp),
     iconSize: Dp = 20.dp,
     iconPainter: Painter = painterResource(id = R.drawable.plus_no_circle),
-    iconTintColor: Color = SaltTheme.colors.subBackground,
+    iconTintColor: Color = SaltTheme.colors.background,
     enableHaptic: Boolean = false,
     hapticStrength: Int,
     drawContent: @Composable (() -> Unit)
@@ -1364,7 +1361,7 @@ fun BoxScope.FastScrollbar(
         ) {
             Text(
                 text = bubbleText(targetIndex),
-                color = SaltTheme.colors.subBackground,
+                color = SaltTheme.colors.text,
                 fontSize = 16.sp,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis

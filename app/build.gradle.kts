@@ -5,7 +5,7 @@ import java.util.Properties
 plugins {
     id("com.android.application")
     id("com.google.devtools.ksp")
-    id("org.jetbrains.compose") version "1.10.2"
+    id("org.jetbrains.compose") version "1.12.1"
     id("org.jetbrains.kotlin.plugin.compose")
 }
 
@@ -30,14 +30,14 @@ val hasReleaseSigning = releaseStoreFile?.exists() == true &&
 
 configure<ApplicationExtension> {
     namespace = "com.hwinzniej.musichelper"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "com.hwinzniej.musichelper"
         minSdk = 26
-        targetSdk = 36
-        versionCode = 82
-        versionName = "1.6.9"
+        targetSdk = 37
+        versionCode = 85
+        versionName = "1.7.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -95,17 +95,17 @@ kotlin {
 
 dependencies {
 
-    implementation("androidx.core:core-ktx:1.18.0")
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.10.0")
+    implementation("androidx.core:core-ktx:1.19.1")
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.11.0")
     implementation("androidx.activity:activity-compose:1.13.0")
-    implementation(platform("androidx.compose:compose-bom:2026.03.00"))
+    implementation(platform("androidx.compose:compose-bom:2026.09.00"))
     implementation("androidx.documentfile:documentfile:1.1.0")
     implementation("androidx.compose.material:material")
     implementation("androidx.compose.material3:material3:1.4.0")
-    implementation("androidx.appcompat:appcompat:1.7.1")
+    implementation("androidx.appcompat:appcompat:1.8.0")
     androidTestImplementation("androidx.test.ext:junit:1.3.0")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.7.0")
-    androidTestImplementation(platform("androidx.compose:compose-bom:2026.03.00"))
+    androidTestImplementation(platform("androidx.compose:compose-bom:2026.09.00"))
 
     // Android Studio Preview support
     implementation("androidx.compose.ui:ui-tooling-preview")
@@ -116,34 +116,34 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-test-manifest")
 
     //SaltUI
-    implementation("io.github.moriafly:salt-ui:2.8.6")
+    implementation("io.github.moriafly:salt-ui:3.0.0-beta02")
 
     //JAudioTagger
 //    implementation("org.bitbucket.ijabz:jaudiotagger:7b004a1")
     implementation("com.github.maxbruecken:jaudiotagger-android:master")
 
     //Kotlin协程
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.11.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.11.0")
     implementation("androidx.activity:activity-ktx:1.13.0")
-    implementation("androidx.fragment:fragment-ktx:1.8.9")
+    implementation("androidx.fragment:fragment-ktx:1.9.1")
 
     //Room数据库
-    implementation("androidx.room:room-runtime:2.8.4")
-    annotationProcessor("androidx.room:room-compiler:2.8.4")
-    ksp("androidx.room:room-compiler:2.8.4")
+    implementation("androidx.room:room-runtime:2.8.5")
+    annotationProcessor("androidx.room:room-compiler:2.8.5")
+    ksp("androidx.room:room-compiler:2.8.5")
 
     //FastJson
-    implementation("com.alibaba.fastjson2:fastjson2-kotlin:2.0.61")
+    implementation("com.alibaba.fastjson2:fastjson2-kotlin:2.0.65")
 
     //Navigation
-    implementation("androidx.navigation:navigation-compose:2.9.7")
+    implementation("androidx.navigation:navigation-compose:2.10.2")
 
     //DataStore
     implementation("androidx.datastore:datastore-preferences:1.2.1")
 
     //OkHttp3
-    implementation("com.squareup.okhttp3:okhttp:5.3.2")
+    implementation("com.squareup.okhttp3:okhttp:5.5.0")
 
     //Markdown渲染器
     implementation("com.github.jeziellago:compose-markdown:0.5.8")

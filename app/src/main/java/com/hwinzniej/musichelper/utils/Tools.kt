@@ -5,6 +5,8 @@ import android.graphics.Bitmap
 import android.net.Uri
 import android.provider.OpenableColumns
 import android.util.DisplayMetrics
+import androidx.core.graphics.createBitmap
+import androidx.core.graphics.set
 import androidx.documentfile.provider.DocumentFile
 import com.alibaba.fastjson2.JSON
 import com.alibaba.fastjson2.JSONObject
@@ -425,7 +427,7 @@ class Tools {
             .get()
             .build()
         client.newCall(request).execute().use {
-            return JSON.parseObject(it.body?.string())
+            return JSON.parseObject(it.body.string())
         }
     }
 
@@ -535,14 +537,11 @@ class Tools {
     fun generateQRCode(content: String, width: Int = 450, height: Int = 450): Bitmap {
         val writer = QRCodeWriter()
         val bitMatrix = writer.encode(content, BarcodeFormat.QR_CODE, width, height)
-        val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565)
+        val bitmap = createBitmap(width, height, Bitmap.Config.RGB_565)
         for (x in 0 until width) {
             for (y in 0 until height) {
-                bitmap.setPixel(
-                    x,
-                    y,
+                bitmap[x, y] =
                     if (bitMatrix[x, y]) android.graphics.Color.BLACK else android.graphics.Color.WHITE
-                )
             }
         }
         return bitmap
@@ -555,13 +554,13 @@ class Tools {
             var request = Request.Builder()
             request = request.url("https://myip.ipip.net/s").get()
             client.newCall(request.build()).execute().use {
-                currentIp = it.body?.string()?.replace("\n", "") ?: ""
+                currentIp = it.body.string().replace("\n", "")
             }
             if (currentIp.isBlank()) {
                 request = Request.Builder()
                 request = request.url("https://ip.3322.net").get()
                 client.newCall(request.build()).execute().use {
-                    currentIp = it.body?.string()?.replace("\n", "") ?: ""
+                    currentIp = it.body.string().replace("\n", "")
                 }
                 if (currentIp.isBlank())
                     currentIp = "1.180.115.20"
