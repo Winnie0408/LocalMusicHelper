@@ -7,6 +7,7 @@ import androidx.compose.animation.animateColor
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDp
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.updateTransition
@@ -22,6 +23,9 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.draggable
+import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.indication
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
@@ -43,6 +47,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -56,12 +61,14 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -82,6 +89,7 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
@@ -124,6 +132,7 @@ import com.moriafly.salt.ui.outerPadding
 import com.moriafly.salt.ui.popup.PopupMenu
 import com.moriafly.salt.ui.popup.PopupState
 import kotlin.math.roundToInt
+import kotlinx.coroutines.launch
 
 @Composable
 fun YesNoDialog(
@@ -485,7 +494,8 @@ fun ItemCheck(
     enableHaptic: Boolean = false,
     minHeightIn: Dp = SaltTheme.dimens.item,
     hapticStrength: Int,
-    indication: Indication? = ripple()
+    indication: Indication? = ripple(),
+    leadingContent: (@Composable () -> Unit)? = null
 ) {
     val context = LocalContext.current
     Row(
@@ -525,6 +535,10 @@ fun ItemCheck(
                 )
                 Spacer(modifier = Modifier.width(SaltTheme.dimens.subPadding))
             }
+        }
+        leadingContent?.let {
+            it()
+            Spacer(modifier = Modifier.width(SaltTheme.dimens.subPadding))
         }
         Column(
             modifier = Modifier
@@ -574,7 +588,8 @@ fun Item(
     subColor: Color = SaltTheme.colors.subText,
     rightSub: String? = null,
     rightSubColor: Color? = null,
-    indication: Indication? = ripple()
+    indication: Indication? = ripple(),
+    leadingContent: (@Composable () -> Unit)? = null
 ) {
     Row(
         modifier = Modifier
@@ -605,6 +620,10 @@ fun Item(
                 contentDescription = null,
                 colorFilter = iconColor?.let { ColorFilter.tint(iconColor) }
             )
+            Spacer(modifier = Modifier.width(SaltTheme.dimens.subPadding))
+        }
+        leadingContent?.let {
+            it()
             Spacer(modifier = Modifier.width(SaltTheme.dimens.subPadding))
         }
         Column(
@@ -1230,6 +1249,127 @@ fun ColumnScope.BottomBarItemLand(
             fontSize = 10.sp,
             style = SaltTheme.textStyles.sub
         )
+    }
+}
+
+/**
+ * 覆盖在 [LazyColumn] 右侧的快速拖动条。列表项数量不足 [minItemCount] 时不显示。
+ * 滑块跟随列表滚动，也可直接拖动滑块快速定位，拖动时在中部显示 [bubbleText] 提供的提示。
+ */
+@Composable
+fun BoxScope.FastScrollbar(
+    listState: LazyListState,
+    itemCount: Int,
+    modifier: Modifier = Modifier,
+    minItemCount: Int = 20,
+    thumbHeight: Dp = 48.dp,
+    thumbWidth: Dp = 6.dp,
+    enableHaptic: Boolean = false,
+    hapticStrength: Int = 3,
+    bubbleText: ((Int) -> String)? = null
+) {
+    if (itemCount < minItemCount) return
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+    val density = LocalDensity.current
+    val thumbHeightPx = with(density) { thumbHeight.toPx() }
+
+    var trackHeightPx by remember { mutableFloatStateOf(0f) }
+    var dragging by remember { mutableStateOf(false) }
+    var dragProgress by remember { mutableFloatStateOf(0f) }
+    var lastScrolledIndex by remember { mutableIntStateOf(-1) }
+
+    // 未拖动时滑块位置由列表当前滚动位置决定
+    val listProgress by remember {
+        derivedStateOf {
+            val visibleCount = listState.layoutInfo.visibleItemsInfo.size
+            val maxFirstIndex = (itemCount - visibleCount).coerceAtLeast(1)
+            (listState.firstVisibleItemIndex.toFloat() / maxFirstIndex).coerceIn(0f, 1f)
+        }
+    }
+    val progress = if (dragging) dragProgress else listProgress
+    // 滚动或拖动时滑块完全不透明，空闲时保持半透明，让用户知道可以拖动
+    val alpha by animateFloatAsState(
+        targetValue = if (dragging || listState.isScrollInProgress) 1f else 0.4f,
+        animationSpec = tween(durationMillis = 400),
+        label = "fastScrollbarAlpha"
+    )
+
+    fun scrollTo(newProgress: Float) {
+        val visibleCount = listState.layoutInfo.visibleItemsInfo.size
+        val maxFirstIndex = (itemCount - visibleCount).coerceAtLeast(0)
+        val targetIndex = (newProgress * maxFirstIndex).roundToInt().coerceIn(0, maxFirstIndex)
+        if (targetIndex != lastScrolledIndex) {
+            lastScrolledIndex = targetIndex
+            MyVibrationEffect(context, enableHaptic, hapticStrength).click()
+            coroutineScope.launch { listState.scrollToItem(targetIndex) }
+        }
+    }
+
+    Box(
+        modifier = modifier
+            .align(Alignment.CenterEnd)
+            .fillMaxHeight()
+            .width(24.dp)
+            .onSizeChanged { trackHeightPx = it.height.toFloat() }
+    ) {
+        // 只有滑块本身响应拖动，列表其余部分的滚动手势不受影响
+        Box(
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .graphicsLayer {
+                    translationY = progress * (trackHeightPx - thumbHeightPx).coerceAtLeast(0f)
+                }
+                .width(24.dp)
+                .height(thumbHeight)
+                .draggable(
+                    orientation = Orientation.Vertical,
+                    state = rememberDraggableState { delta ->
+                        val travel = (trackHeightPx - thumbHeightPx).coerceAtLeast(1f)
+                        dragProgress = (dragProgress + delta / travel).coerceIn(0f, 1f)
+                        scrollTo(dragProgress)
+                    },
+                    onDragStarted = {
+                        dragProgress = listProgress
+                        dragging = true
+                    },
+                    onDragStopped = { dragging = false }
+                ),
+            contentAlignment = Alignment.CenterEnd
+        ) {
+            Box(
+                modifier = Modifier
+                    .padding(end = 4.dp)
+                    .alpha(alpha)
+                    .width(if (dragging) thumbWidth * 1.5f else thumbWidth)
+                    .fillMaxHeight()
+                    .clip(RoundedCornerShape(50))
+                    .background(SaltTheme.colors.highlight)
+            )
+        }
+    }
+
+    if (dragging && bubbleText != null) {
+        val visibleCount = listState.layoutInfo.visibleItemsInfo.size
+        val maxFirstIndex = (itemCount - visibleCount).coerceAtLeast(0)
+        val targetIndex = (progress * maxFirstIndex).roundToInt().coerceIn(0, maxFirstIndex)
+        Box(
+            modifier = Modifier
+                .align(Alignment.Center)
+                .clip(RoundedCornerShape(12.dp))
+                .background(SaltTheme.colors.highlight.copy(alpha = 0.9f))
+                .sizeIn(minWidth = 64.dp, maxWidth = 240.dp, minHeight = 44.dp)
+                .padding(horizontal = 16.dp, vertical = 10.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = bubbleText(targetIndex),
+                color = SaltTheme.colors.subBackground,
+                fontSize = 16.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
     }
 }
 

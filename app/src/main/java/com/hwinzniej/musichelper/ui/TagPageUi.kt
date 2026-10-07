@@ -12,6 +12,7 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -58,6 +59,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
@@ -107,6 +109,8 @@ fun TagPageUi(
     arranger: MutableState<Boolean>,
     sortMethod: MutableIntState,
     dataStore: DataStore<Preferences>,
+    showCoverInList: MutableState<Boolean>,
+    keepModifyTime: MutableState<Boolean>,
 ) {
     val context = LocalContext.current
     val songList = remember { mutableStateMapOf<Int, Array<String>>() }
@@ -132,6 +136,9 @@ fun TagPageUi(
     val lazyColumnState = rememberLazyListState()
     var multiSelect by remember { mutableStateOf(false) }
     val selectedSongList = remember { mutableStateListOf<Int>() }
+    var showBatchEditDialog by remember { mutableStateOf(false) }
+    val batchCoverImage = remember { mutableStateOf<ByteArray?>(null) }
+    var batchCoverAction by remember { mutableIntStateOf(0) } // 0: 保持原样 1: 替换 -1: 删除
     var intervalSelectionStart by remember { mutableIntStateOf(-1) }
     val keyboardController = LocalSoftwareKeyboardController.current
     val pullRefreshState = rememberPullRefreshState(
@@ -207,7 +214,10 @@ fun TagPageUi(
     LaunchedEffect(key1 = tagPage.coverImage.value) {
         if (tagPage.coverImage.value != null) {
             delay(150L)
-            coverImage.value = tagPage.coverImage.value
+            if (showBatchEditDialog)
+                batchCoverImage.value = tagPage.coverImage.value
+            else
+                coverImage.value = tagPage.coverImage.value
             tagPage.coverImage.value = null
         }
     }
@@ -292,6 +302,270 @@ fun TagPageUi(
             enableHaptic = enableHaptic.value,
             hapticStrength = hapticStrength.intValue
         )
+    }
+
+    if (showBatchEditDialog) {
+        val coverPopupState = rememberPopupState()
+        val batchFields = remember {
+            listOf(
+                "artist" to R.string.atrist,
+                "album" to R.string.album1,
+                "albumArtist" to R.string.album_artist_tag_name,
+                "genre" to R.string.genre_tag_name,
+                "discNumber" to R.string.disc_number,
+                "releaseYear" to R.string.release_year_tag_name,
+            )
+        }
+        val fieldEnabled = remember { mutableStateMapOf<String, Boolean>() }
+        val fieldValue = remember { mutableStateMapOf<String, String>() }
+        var batchEditDone by remember { mutableStateOf(false) }
+        val selectedCount = selectedSongList.count { it == 1 }
+
+        val closeDialog = {
+            if (showDialogProgressBar) {
+                Toast.makeText(
+                    context,
+                    context.getString(R.string.wait_operate_end),
+                    Toast.LENGTH_SHORT
+                ).show()
+            } else {
+                if (batchEditDone) {
+                    coroutineScope.launch(Dispatchers.IO) {
+                        tagPage.getMusicList(songList, sortMethod.intValue, selectedSongList)
+                    }
+                    multiSelect = false
+                    batchEditDone = false
+                }
+                showBatchEditDialog = false
+                batchCoverImage.value = null
+                batchCoverAction = 0
+                completeResult.clear()
+            }
+        }
+
+        YesNoDialog(
+            onDismiss = closeDialog,
+            onCancel = closeDialog,
+            onConfirm = {
+                if (batchEditDone) {
+                    closeDialog()
+                    return@YesNoDialog
+                }
+                val fields = batchFields
+                    .filter { fieldEnabled[it.first] == true }
+                    .associate { it.first to (fieldValue[it.first] ?: "") }
+                if (fields.isEmpty() && batchCoverAction == 0) {
+                    Toast.makeText(
+                        context,
+                        context.getString(R.string.batch_edit_no_field_selected),
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    return@YesNoDialog
+                }
+                coroutineScope.launch(Dispatchers.IO) {
+                    showDialogProgressBar = true
+                    completeResult.clear()
+                    tagPage.batchEditTags(
+                        fields = fields,
+                        cover = batchCoverImage.value,
+                        coverAction = batchCoverAction,
+                        keepModifyTime = keepModifyTime.value,
+                        slow = slow.value,
+                        completeResult = completeResult,
+                        selectedSongList = selectedSongList
+                    )
+                    showDialogProgressBar = false
+                    batchEditDone = true
+                    MyVibrationEffect(
+                        context,
+                        enableHaptic.value,
+                        hapticStrength.intValue
+                    ).done()
+                }
+            },
+            title = stringResource(id = R.string.batch_edit),
+            content = null,
+            enableHaptic = enableHaptic.value,
+            enableConfirmButton = !showDialogProgressBar,
+            hapticStrength = hapticStrength.intValue
+        ) {
+            Box {
+                if (showDialogProgressBar) {
+                    LinearProgressIndicator(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .zIndex(1f),
+                        color = SaltTheme.colors.highlight,
+                        trackColor = SaltTheme.colors.background,
+                        strokeCap = StrokeCap.Square
+                    )
+                }
+                Column {
+                    RoundedColumn {
+                        ItemTitle(
+                            text = stringResource(id = R.string.batch_edit_selected_count)
+                                .replace("#1", selectedCount.toString())
+                        )
+                        ItemText(
+                            text = stringResource(id = R.string.batch_edit_fields_tip),
+                            verticalPadding = 4.dp
+                        )
+                    }
+                    RoundedColumn {
+                        ItemTitle(text = stringResource(id = R.string.batch_edit_fields))
+                        Column(
+                            modifier = Modifier.heightIn(
+                                max = (LocalConfiguration.current.screenHeightDp / 2.2).dp
+                            ).verticalScroll(rememberScrollState())
+                        ) {
+                            batchFields.forEach { (key, labelRes) ->
+                                ItemSwitcher(
+                                    state = fieldEnabled[key] == true,
+                                    onChange = { fieldEnabled[key] = it },
+                                    text = stringResource(id = labelRes),
+                                    enableHaptic = enableHaptic.value,
+                                    hapticStrength = hapticStrength.intValue
+                                )
+                                AnimatedVisibility(visible = fieldEnabled[key] == true) {
+                                    ItemEdit(
+                                        text = fieldValue[key] ?: "",
+                                        onChange = { fieldValue[key] = it },
+                                        hint = stringResource(id = R.string.text_null),
+                                        enableHaptic = enableHaptic.value,
+                                        showClearButton = true,
+                                        onClear = { fieldValue[key] = "" },
+                                        paddingValues = PaddingValues(
+                                            start = SaltTheme.dimens.padding,
+                                            end = SaltTheme.dimens.padding,
+                                            bottom = 8.dp,
+                                            top = 0.dp
+                                        ),
+                                        singleLine = true,
+                                        hapticStrength = hapticStrength.intValue
+                                    )
+                                }
+                            }
+                            ItemPopup(
+                                state = coverPopupState,
+                                text = stringResource(id = R.string.batch_edit_cover),
+                                selectedItem = when (batchCoverAction) {
+                                    1 -> stringResource(id = R.string.batch_edit_cover_replace)
+                                    -1 -> stringResource(id = R.string.batch_edit_cover_delete)
+                                    else -> stringResource(id = R.string.batch_edit_cover_keep)
+                                }
+                            ) {
+                                PopupMenuItem(
+                                    onClick = {
+                                        batchCoverAction = 0
+                                        batchCoverImage.value = null
+                                        coverPopupState.dismiss()
+                                    },
+                                    text = stringResource(id = R.string.batch_edit_cover_keep),
+                                    selected = batchCoverAction == 0
+                                )
+                                PopupMenuItem(
+                                    onClick = {
+                                        batchCoverAction = 1
+                                        coverPopupState.dismiss()
+                                        tagPage.selectCoverImage()
+                                    },
+                                    text = stringResource(id = R.string.batch_edit_cover_replace),
+                                    selected = batchCoverAction == 1
+                                )
+                                PopupMenuItem(
+                                    onClick = {
+                                        batchCoverAction = -1
+                                        batchCoverImage.value = null
+                                        coverPopupState.dismiss()
+                                    },
+                                    text = stringResource(id = R.string.batch_edit_cover_delete),
+                                    selected = batchCoverAction == -1
+                                )
+                            }
+                            AnimatedVisibility(visible = batchCoverAction == 1 && batchCoverImage.value != null) {
+                                batchCoverImage.value?.let { bytes ->
+                                    val bitmap =
+                                        BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+                                    if (bitmap != null)
+                                        Image(
+                                            modifier = Modifier
+                                                .padding(
+                                                    horizontal = SaltTheme.dimens.padding,
+                                                    vertical = 4.dp
+                                                )
+                                                .size(72.dp)
+                                                .clip(RoundedCornerShape(8.dp))
+                                                .clickable { tagPage.selectCoverImage() },
+                                            bitmap = bitmap.asImageBitmap(),
+                                            contentDescription = stringResource(id = R.string.cover_pic),
+                                            contentScale = ContentScale.Crop
+                                        )
+                                }
+                            }
+                        }
+                    }
+                    RoundedColumn {
+                        ItemSwitcher(
+                            state = keepModifyTime.value,
+                            onChange = { it1 ->
+                                coroutineScope.launch {
+                                    dataStore.edit { settings ->
+                                        settings[DataStoreConstants.KEEP_MODIFY_TIME] = it1
+                                    }
+                                }
+                            },
+                            text = stringResource(id = R.string.keep_modify_time),
+                            sub = stringResource(id = R.string.keep_modify_time_sub),
+                            enableHaptic = enableHaptic.value,
+                            hapticStrength = hapticStrength.intValue
+                        )
+                        AnimatedVisibility(visible = !keepModifyTime.value) {
+                            ItemSwitcher(
+                                state = slow.value,
+                                onChange = { it1 ->
+                                    coroutineScope.launch {
+                                        dataStore.edit { settings ->
+                                            settings[DataStoreConstants.SLOW_MODE] = it1
+                                        }
+                                    }
+                                },
+                                text = stringResource(id = R.string.keep_original_file_sort),
+                                sub = stringResource(id = R.string.keep_original_file_sort_sub),
+                                enableHaptic = enableHaptic.value,
+                                hapticStrength = hapticStrength.intValue
+                            )
+                        }
+                    }
+                    AnimatedVisibility(visible = completeResult.isNotEmpty()) {
+                        RoundedColumn {
+                            ItemTitle(text = stringResource(id = R.string.completion_log))
+                            LazyColumn(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .heightIn(max = (LocalConfiguration.current.screenHeightDp / 3).dp)
+                            ) {
+                                items(completeResult.size) { index ->
+                                    Text(
+                                        modifier = Modifier.padding(
+                                            horizontal = 16.dp,
+                                            vertical = 4.dp
+                                        ),
+                                        text = completeResult[index].keys.first(),
+                                        fontSize = 14.sp,
+                                        color = if (completeResult[index].values.first() == 1)
+                                            SaltTheme.colors.subText
+                                        else if (completeResult[index].values.first() == 2)
+                                            colorResource(id = R.color.manual)
+                                        else
+                                            colorResource(id = R.color.unmatched),
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 
     if (showCompleteDialog) {
@@ -908,6 +1182,9 @@ fun TagPageUi(
                                                             },
                                                             text = searchResult[it]!![0],
                                                             sub = "${searchResult[it]!![1].ifBlank { "?" }} - ${searchResult[it]!![2].ifBlank { "?" }}",
+                                                            leadingContent = if (showCoverInList.value) {
+                                                                { SongCoverThumbnail(tagPage, searchResult[it]!![4]) }
+                                                            } else null,
                                                             indication = if (showFab.value) null else ripple()
                                                         )
                                                     else
@@ -961,6 +1238,9 @@ fun TagPageUi(
                                                             iconAtLeft = false,
                                                             text = searchResult[it]!![0],
                                                             sub = "${searchResult[it]!![1].ifBlank { "?" }} - ${searchResult[it]!![2].ifBlank { "?" }}",
+                                                            leadingContent = if (showCoverInList.value) {
+                                                                { SongCoverThumbnail(tagPage, searchResult[it]!![4]) }
+                                                            } else null,
                                                             enableHaptic = false,
                                                             hapticStrength = hapticStrength.intValue
                                                         )
@@ -1045,6 +1325,9 @@ fun TagPageUi(
                                                                 },
                                                                 text = songList[it]!![0],
                                                                 sub = "${songList[it]!![1].ifBlank { "?" }} - ${songList[it]!![2].ifBlank { "?" }}",
+                                                            leadingContent = if (showCoverInList.value) {
+                                                                { SongCoverThumbnail(tagPage, songList[it]!![4]) }
+                                                            } else null,
                                                                 indication = if (showFab.value) null else ripple()
                                                             )
                                                         else if (songList[it] != null && animate)
@@ -1100,6 +1383,9 @@ fun TagPageUi(
                                                                 iconAtLeft = false,
                                                                 text = songList[it]!![0],
                                                                 sub = "${songList[it]!![1].ifBlank { "?" }} - ${songList[it]!![2].ifBlank { "?" }}",
+                                                            leadingContent = if (showCoverInList.value) {
+                                                                { SongCoverThumbnail(tagPage, songList[it]!![4]) }
+                                                            } else null,
                                                                 enableHaptic = false,
                                                                 hapticStrength = hapticStrength.intValue
                                                             )
@@ -1107,6 +1393,18 @@ fun TagPageUi(
                                                 }
                                             }
                                         }
+                                        FastScrollbar(
+                                            listState = lazyColumnState,
+                                            itemCount = songList.size,
+                                            modifier = Modifier.padding(
+                                                top = 12.dp,
+                                                bottom = 16.dp,
+                                                end = 16.dp
+                                            ),
+                                            enableHaptic = enableHaptic.value,
+                                            hapticStrength = hapticStrength.intValue,
+                                            bubbleText = { index -> songList[index]?.get(0) ?: "" }
+                                        )
                                     }
 //                                    }
                                 }
@@ -1193,8 +1491,8 @@ fun TagPageUi(
                         if (songList.isNotEmpty() || !refreshComplete || showFab.value) {
                             FloatingActionButton(
                                 expanded = showFab,
-                                heightExpand = 150.dp,
-                                widthExpand = 175.dp,
+                                heightExpand = 250.dp,
+                                widthExpand = 200.dp,
                                 enableHaptic = enableHaptic.value,
                                 hapticStrength = hapticStrength.intValue
                             ) {
@@ -1272,6 +1570,55 @@ fun TagPageUi(
                                     iconPainter = painterResource(id = R.drawable.complete),
                                     iconColor = SaltTheme.colors.text,
                                     iconPaddingValues = PaddingValues(all = 3.dp)
+                                )
+                                PopupMenuItem(
+                                    onClick = {
+                                        MyVibrationEffect(
+                                            context,
+                                            enableHaptic.value,
+                                            hapticStrength.intValue
+                                        ).click()
+                                        showFab.value = false
+                                        if (selectedSongList.none { it == 1 }) {
+                                            Toast.makeText(
+                                                context,
+                                                context.getString(R.string.no_song_selected),
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                            return@PopupMenuItem
+                                        }
+                                        completeResult.clear()
+                                        batchCoverImage.value = null
+                                        batchCoverAction = 0
+                                        showBatchEditDialog = true
+                                    },
+                                    text = stringResource(id = R.string.batch_edit),
+                                    iconPainter = painterResource(id = R.drawable.tag),
+                                    iconColor = SaltTheme.colors.text,
+                                    iconPaddingValues = PaddingValues(all = 2.5.dp)
+                                )
+                                PopupMenuItem(
+                                    onClick = {
+                                        MyVibrationEffect(
+                                            context,
+                                            enableHaptic.value,
+                                            hapticStrength.intValue
+                                        ).click()
+                                        showFab.value = false
+                                        coroutineScope.launch {
+                                            dataStore.edit { settings ->
+                                                settings[DataStoreConstants.SHOW_COVER_IN_LIST] =
+                                                    !showCoverInList.value
+                                            }
+                                        }
+                                    },
+                                    text = if (showCoverInList.value)
+                                        stringResource(id = R.string.hide_cover_in_list)
+                                    else
+                                        stringResource(id = R.string.show_cover_in_list),
+                                    iconPainter = painterResource(id = R.drawable.music_note),
+                                    iconColor = SaltTheme.colors.text,
+                                    iconPaddingValues = PaddingValues(all = 2.5.dp)
                                 )
                             }
                         }
@@ -1488,6 +1835,38 @@ fun TagPageUi(
 
     }
 
+}
+
+/**
+ * 歌曲列表中的封面缩略图，异步从歌曲文件中读取，没有封面时显示占位图标
+ */
+@Composable
+fun SongCoverThumbnail(tagPage: TagPage, absolutePath: String) {
+    var cover by remember(absolutePath) { mutableStateOf<ImageBitmap?>(null) }
+    LaunchedEffect(absolutePath) {
+        cover = tagPage.getCoverThumbnail(absolutePath)?.asImageBitmap()
+    }
+    Box(
+        modifier = Modifier
+            .size(44.dp)
+            .clip(RoundedCornerShape(6.dp))
+            .background(SaltTheme.colors.subText.copy(alpha = 0.08f)),
+        contentAlignment = Alignment.Center
+    ) {
+        cover?.let {
+            Image(
+                modifier = Modifier.fillMaxSize(),
+                bitmap = it,
+                contentDescription = stringResource(id = R.string.cover_pic),
+                contentScale = ContentScale.Crop
+            )
+        } ?: Icon(
+            modifier = Modifier.size(20.dp),
+            painter = painterResource(id = R.drawable.music_note),
+            contentDescription = null,
+            tint = SaltTheme.colors.subText.copy(alpha = 0.5f)
+        )
+    }
 }
 
 @Composable

@@ -1,7 +1,10 @@
 package com.hwinzniej.musichelper.activity
 
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.net.Uri
+import android.util.LruCache
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.compose.runtime.MutableState
@@ -23,6 +26,7 @@ import org.jaudiotagger.audio.AudioFileIO
 import org.jaudiotagger.tag.FieldKey
 import org.jaudiotagger.tag.images.ArtworkFactory
 import java.io.File
+import java.util.Collections
 
 class TagPage(
     val context: Context,
@@ -52,7 +56,7 @@ class TagPage(
                         '/'
                     ) + 1
                 )
-            }, it.artist, it.album, it.id.toString())
+            }, it.artist, it.album, it.id.toString(), it.absolutePath)
             selectedSongList.add(0)
         }
     }
@@ -154,6 +158,7 @@ class TagPage(
                 audioFile.tag.setField(artwork)
             }
             AudioFileIO.write(audioFile)
+            invalidateCoverThumbnail(musicInfo.absolutePath)
         } catch (e: Exception) {
             withContext(Dispatchers.Main) {
                 Toast.makeText(context, context.getString(R.string.save_failed), Toast.LENGTH_SHORT)
@@ -217,6 +222,161 @@ class TagPage(
         }
     }
 
+    /**
+     * 歌曲列表封面缩略图缓存。key 为歌曲绝对路径，value 为缩略图；
+     * 没有封面的歌曲记录在 [pathsWithoutCover] 中，避免重复读取文件。
+     */
+    private val coverThumbnailCache = object : LruCache<String, Bitmap>(
+        ((Runtime.getRuntime().maxMemory() / 1024) / 8).toInt().coerceAtLeast(2048)
+    ) {
+        override fun sizeOf(key: String, value: Bitmap): Int = value.byteCount / 1024
+    }
+    private val pathsWithoutCover = Collections.synchronizedSet(mutableSetOf<String>())
+
+    suspend fun getCoverThumbnail(absolutePath: String, targetSizePx: Int = 128): Bitmap? =
+        withContext(Dispatchers.IO) {
+            coverThumbnailCache.get(absolutePath)?.let { return@withContext it }
+            if (pathsWithoutCover.contains(absolutePath)) return@withContext null
+            val binaryData = try {
+                AudioFileIO.read(File(absolutePath)).tag?.firstArtwork?.binaryData
+            } catch (_: Exception) {
+                null
+            }
+            if (binaryData == null || binaryData.isEmpty()) {
+                pathsWithoutCover.add(absolutePath)
+                return@withContext null
+            }
+            val options = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+            BitmapFactory.decodeByteArray(binaryData, 0, binaryData.size, options)
+            var sampleSize = 1
+            while (options.outHeight / sampleSize > targetSizePx && options.outWidth / sampleSize > targetSizePx) {
+                sampleSize *= 2
+            }
+            options.inJustDecodeBounds = false
+            options.inSampleSize = sampleSize
+            val bitmap = try {
+                BitmapFactory.decodeByteArray(binaryData, 0, binaryData.size, options)
+            } catch (_: Exception) {
+                null
+            }
+            if (bitmap == null) {
+                pathsWithoutCover.add(absolutePath)
+                return@withContext null
+            }
+            coverThumbnailCache.put(absolutePath, bitmap)
+            bitmap
+        }
+
+    private fun invalidateCoverThumbnail(absolutePath: String) {
+        coverThumbnailCache.remove(absolutePath)
+        pathsWithoutCover.remove(absolutePath)
+    }
+
+    /**
+     * 批量修改选中歌曲的标签。[fields] 中只包含用户勾选要写入的标签，
+     * 空字符串表示清除该标签。[coverAction] 为 1 时写入 [cover]，为 -1 时删除封面，为 0 时不改动封面。
+     * [keepModifyTime] 为 true 时写入后恢复文件原有的修改时间，并保留列表中的原排序。
+     */
+    suspend fun batchEditTags(
+        fields: Map<String, String>,
+        cover: ByteArray?,
+        coverAction: Int,
+        keepModifyTime: Boolean,
+        slow: Boolean,
+        completeResult: MutableList<Map<String, Int>>,
+        selectedSongList: SnapshotStateList<Int>
+    ) {
+        val selection = selectedSongList.withIndex().filter { it.value == 1 }.map { it.index }
+        if (selection.isEmpty()) {
+            completeResult.add(0, mapOf(context.getString(R.string.no_song_selected) to 0))
+            return
+        }
+        var coverMimeType: String? = null
+        if (coverAction == 1) {
+            coverMimeType = cover?.let { Tools().determineImageMimeType(it) }
+            if (coverMimeType == null) {
+                completeResult.add(
+                    0,
+                    mapOf(context.getString(R.string.cover_image_not_support) to 0)
+                )
+                return
+            }
+        }
+        val musicTag = mapOf(
+            "artist" to FieldKey.ARTIST,
+            "album" to FieldKey.ALBUM,
+            "albumArtist" to FieldKey.ALBUM_ARTIST,
+            "genre" to FieldKey.GENRE,
+            "discNumber" to FieldKey.DISC_NO,
+            "releaseYear" to FieldKey.YEAR,
+        )
+        var haveError = false
+        db.musicDao().getSelectedMusic(selection).forEach { musicInfo ->
+            completeResult.add(0, mapOf("" to 1))
+            val file = File(musicInfo.absolutePath)
+            val originalFileModifyTime = file.lastModified()
+            try {
+                val audioFile = AudioFileIO.read(file)
+                musicTag.forEach { (key, fieldKey) ->
+                    val value = fields[key] ?: return@forEach
+                    if (value.isBlank())
+                        audioFile.tag.deleteField(fieldKey)
+                    else
+                        audioFile.tag.setField(fieldKey, value)
+                }
+                if (coverAction != 0) {
+                    audioFile.tag.deleteArtworkField()
+                    if (coverAction == 1) {
+                        val artwork = ArtworkFactory.getNew()
+                        artwork.binaryData = cover
+                        artwork.mimeType = coverMimeType
+                        audioFile.tag.setField(artwork)
+                    }
+                }
+                AudioFileIO.write(audioFile)
+                invalidateCoverThumbnail(musicInfo.absolutePath)
+                if (keepModifyTime)
+                    file.setLastModified(originalFileModifyTime)
+            } catch (_: Exception) {
+                completeResult.add(
+                    0,
+                    mapOf(
+                        context.getString(R.string.batch_edit_failed).replace("#", musicInfo.song)
+                                to 0
+                    )
+                )
+                haveError = true
+                return@forEach
+            }
+
+            val modifyTime = if (keepModifyTime)
+                db.musicDao().getModifyTime(musicInfo.id) ?: System.currentTimeMillis()
+            else
+                System.currentTimeMillis()
+            fields["artist"]?.let { db.musicDao().updateArtist(musicInfo.id, it, modifyTime) }
+            fields["album"]?.let { db.musicDao().updateAlbum(musicInfo.id, it, modifyTime) }
+            fields["albumArtist"]?.let {
+                db.musicDao().updateAlbumArtist(musicInfo.id, it, modifyTime)
+            }
+            fields["genre"]?.let { db.musicDao().updateGenre(musicInfo.id, it, modifyTime) }
+            fields["releaseYear"]?.let {
+                db.musicDao().updateReleaseYear(musicInfo.id, it, modifyTime)
+            }
+
+            completeResult.add(
+                0,
+                mapOf(
+                    context.getString(R.string.batch_edit_success).replace("#", musicInfo.song) to 1
+                )
+            )
+            if (slow && !keepModifyTime)
+                delay(1248L)
+        }
+        if (haveError)
+            completeResult.sortBy { it.values.first() }
+        completeResult.add(0, mapOf(context.getString(R.string.all_done) to 2))
+    }
+
     fun searchSong(
         inputSearchWords: String,
         searchResult: SnapshotStateMap<Int, Array<String>>
@@ -230,7 +390,7 @@ class TagPage(
                         '/'
                     ) + 1
                 )
-            }, it.artist, it.album, it.id.toString())
+            }, it.artist, it.album, it.id.toString(), it.absolutePath)
         }
     }
 
@@ -503,12 +663,21 @@ class TagPage(
                         .filter { it.value == 1 }
                         .map { it.index })
             }
-        val lyricistRegex =
-            "\\[\\d{2}:\\d{2}\\.\\d{2,3}](((作)?[词詞]\\s?(Lyrics)?\\s?[：:]?\\s?)|((Lyrics|Written)\\sby\\s?[：:]?\\s?))(.*)\\n?".toRegex()
-        val composerRegex =
-            "\\[\\d{2}:\\d{2}\\.\\d{2,3}](((作)?曲\\s?(Composer)?\\s?[：:]?\\s?)|((Composed|Written)\\sby\\s?[：:]?\\s?))(.*)\\n?".toRegex()
-        val arrangerRegex =
-            "\\[\\d{2}:\\d{2}\\.\\d{2,3}](([编編]曲\\s?(Arranger|Arrangement)?\\s?[：:]?\\s?)|(Arranged\\sby\\s?[：:]?\\s?))(.*)\\n?".toRegex()
+        val lyricistRegex = buildCreditRegex(
+            chinese = "(作)?[词詞]",
+            english = "Lyricist|Lyrics|Lyric",
+            englishBy = "Lyrics|Lyric|Written"
+        )
+        val composerRegex = buildCreditRegex(
+            chinese = "(作)?曲",
+            english = "Composer|Compose",
+            englishBy = "Composed|Written"
+        )
+        val arrangerRegex = buildCreditRegex(
+            chinese = "[编編]曲",
+            english = "Arranger|Arrangement|Arrange",
+            englishBy = "Arranged"
+        )
         val cleanRegex = "\\s?([/&|,，])\\s?".toRegex()
         searchResult.forEach {
 //            var modified = false
@@ -641,6 +810,26 @@ class TagPage(
                 delay(1248L)
         }
         completeResult.add(0, mapOf(context.getString(R.string.all_done) to 2))
+    }
+
+    /**
+     * 构造用于从歌词中提取「作词/作曲/编曲」的正则。支持的标签写法：
+     * 作词：、作词 Lyrics：、作词/Lyricist：、词/Lyricist：、Lyricist/作词：、Lyrics by 等
+     */
+    private fun buildCreditRegex(chinese: String, english: String, englishBy: String): Regex {
+        val timestamp = "\\[\\d{2}:\\d{2}\\.\\d{2,3}]\\s*"
+        // 中英文标签之间的连接符，如「作词/Lyricist」「作词 Lyrics」
+        val connector = "(\\s*[/／·・丨|｜、-]\\s*|\\s*)"
+        return ("${timestamp}(" +
+                // 中文在前：作词、作词/Lyricist、作词 Lyrics
+                "($chinese)($connector($english))?\\s*[：:]?\\s*" +
+                "|" +
+                // 英文在前：Lyricist：、Lyricist/作词：（必须带冒号，避免误匹配正文歌词）
+                "($english)($connector($chinese))?\\s*[：:]\\s*" +
+                "|" +
+                // Lyrics by 形式
+                "($englishBy)\\s+by\\s*[：:]?\\s*" +
+                ")(.*)\\n?").toRegex()
     }
 
     suspend fun processTextByTextLyrics(input: String): String {
