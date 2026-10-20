@@ -431,12 +431,14 @@
     <string name="batch_edit_failed">修改失败：#</string>
     <string name="batch_edit_selected_count">已选中 #1 首歌曲</string>
     <string name="no_song_selected">未选择歌曲</string>
-    <string name="keep_modify_time">保持修改时间</string>
-    <string name="keep_modify_time_sub">写入后恢复原有的修改时间，不打乱原有排序</string>
     <string name="batch_edit_cover">封面</string>
     <string name="batch_edit_cover_keep">保持原样</string>
     <string name="batch_edit_cover_replace">替换</string>
     <string name="batch_edit_cover_delete">删除</string>
     <string name="show_cover_in_list">显示封面</string>
     <string name="hide_cover_in_list">隐藏封面</string>
+    <string name="producer">制作人</string>
+    <string name="keep_order_mode_restore_modify_time">写入后恢复原有的修改时间</string>
+    <string name="keep_order_on_sub">选择保持顺序的方式</string>
+    <string name="keep_order_off_sub">按正常模式处理</string>
 </resources>

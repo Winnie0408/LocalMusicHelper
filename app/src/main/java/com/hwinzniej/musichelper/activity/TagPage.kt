@@ -16,6 +16,7 @@ import androidx.lifecycle.lifecycleScope
 import com.hwinzniej.musichelper.R
 import com.hwinzniej.musichelper.data.database.MusicDatabase
 import com.hwinzniej.musichelper.data.model.MusicInfo
+import com.hwinzniej.musichelper.utils.LyricCreditParser
 import com.hwinzniej.musichelper.utils.Tools
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -35,6 +36,24 @@ class TagPage(
     val db: MusicDatabase,
     val openMusicCoverLauncher: ActivityResultLauncher<Array<String>>
 ) {
+    companion object {
+        /** 「保持原修改时间顺序」模式：写入后恢复原有的修改时间 */
+        const val KEEP_ORDER_RESTORE_MODIFY_TIME = 0
+
+        /** 「保持原修改时间顺序」模式：将处理速度限制为每秒1个文件 */
+        const val KEEP_ORDER_LIMIT_SPEED = 1
+
+        /** 限速模式下每个文件之间的间隔，略大于1秒以保证文件修改时间严格递增 */
+        private const val LIMIT_SPEED_INTERVAL_MS = 1248L
+    }
+
+    /** 写入数据库的修改时间：恢复模式下沿用原有的 modifyTime，以保持列表中的原排序 */
+    private fun newModifyTime(id: Int, keepOrder: Boolean, keepOrderMode: Int): Long =
+        if (keepOrder && keepOrderMode == KEEP_ORDER_RESTORE_MODIFY_TIME)
+            db.musicDao().getModifyTime(id) ?: System.currentTimeMillis()
+        else
+            System.currentTimeMillis()
+
     fun getMusicList(
         songList: SnapshotStateMap<Int, Array<String>>,
         sortMethod: Int,
@@ -89,6 +108,7 @@ class TagPage(
             "releaseYear" to audioFile.tag.getFirst(FieldKey.YEAR),
             "composer" to audioFile.tag.getFirst(FieldKey.COMPOSER),
             "arranger" to audioFile.tag.getFirst(FieldKey.ARRANGER),
+            "producer" to audioFile.tag.getFirst(FieldKey.PRODUCER),
             "lyricist" to audioFile.tag.getFirst(FieldKey.LYRICIST),
             "lyrics" to audioFile.tag.getFirst(FieldKey.LYRICS).ifBlank { lyricFileContent },
             "lyricsFromOuterLrc" to if (lyricFileContent.isNotBlank()) "true" else "false"
@@ -130,6 +150,7 @@ class TagPage(
                 "releaseYear" to FieldKey.YEAR,
                 "composer" to FieldKey.COMPOSER,
                 "arranger" to FieldKey.ARRANGER,
+                "producer" to FieldKey.PRODUCER,
                 "lyricist" to FieldKey.LYRICIST,
                 "lyrics" to FieldKey.LYRICS,
             )
@@ -180,6 +201,7 @@ class TagPage(
             lyricist = songInfoModified["lyricist"] ?: "",
             composer = songInfoModified["composer"] ?: "",
             arranger = songInfoModified["arranger"] ?: "",
+            producer = songInfoModified["producer"] ?: "",
             modifyTime = System.currentTimeMillis()
         )
         withContext(Dispatchers.Main) {
@@ -276,14 +298,16 @@ class TagPage(
     /**
      * 批量修改选中歌曲的标签。[fields] 中只包含用户勾选要写入的标签，
      * 空字符串表示清除该标签。[coverAction] 为 1 时写入 [cover]，为 -1 时删除封面，为 0 时不改动封面。
-     * [keepModifyTime] 为 true 时写入后恢复文件原有的修改时间，并保留列表中的原排序。
+     * [keepOrder] 为 true 时「保持原修改时间顺序」，[keepOrderMode] 决定具体方式：
+     * [KEEP_ORDER_RESTORE_MODIFY_TIME] 写入后恢复文件原有的修改时间并保留列表中的原排序；
+     * [KEEP_ORDER_LIMIT_SPEED] 将处理速度限制为每秒1个文件。
      */
     suspend fun batchEditTags(
         fields: Map<String, String>,
         cover: ByteArray?,
         coverAction: Int,
-        keepModifyTime: Boolean,
-        slow: Boolean,
+        keepOrder: Boolean,
+        keepOrderMode: Int,
         completeResult: MutableList<Map<String, Int>>,
         selectedSongList: SnapshotStateList<Int>
     ) {
@@ -336,7 +360,7 @@ class TagPage(
                 }
                 AudioFileIO.write(audioFile)
                 invalidateCoverThumbnail(musicInfo.absolutePath)
-                if (keepModifyTime)
+                if (keepOrder && keepOrderMode == KEEP_ORDER_RESTORE_MODIFY_TIME)
                     file.setLastModified(originalFileModifyTime)
             } catch (_: Exception) {
                 completeResult.add(
@@ -350,10 +374,7 @@ class TagPage(
                 return@forEach
             }
 
-            val modifyTime = if (keepModifyTime)
-                db.musicDao().getModifyTime(musicInfo.id) ?: System.currentTimeMillis()
-            else
-                System.currentTimeMillis()
+            val modifyTime = newModifyTime(musicInfo.id, keepOrder, keepOrderMode)
             fields["artist"]?.let { db.musicDao().updateArtist(musicInfo.id, it, modifyTime) }
             fields["album"]?.let { db.musicDao().updateAlbum(musicInfo.id, it, modifyTime) }
             fields["albumArtist"]?.let {
@@ -370,8 +391,8 @@ class TagPage(
                     context.getString(R.string.batch_edit_success).replace("#", musicInfo.song) to 1
                 )
             )
-            if (slow && !keepModifyTime)
-                delay(1248L.milliseconds)
+            if (keepOrder && keepOrderMode == KEEP_ORDER_LIMIT_SPEED)
+                delay(LIMIT_SPEED_INTERVAL_MS.milliseconds)
         }
         if (haveError)
             completeResult.sortBy { it.values.first() }
@@ -450,7 +471,8 @@ class TagPage(
 
     suspend fun handleDuplicateAlbum(
         overwrite: Boolean,
-        slow: Boolean,
+        keepOrder: Boolean,
+        keepOrderMode: Int,
         completeResult: MutableList<Map<String, Int>>,
         selectedSongList: SnapshotStateList<Int>
     ) {
@@ -495,11 +517,19 @@ class TagPage(
             }
             lastAlbum = it.album
             val audioFile: AudioFile
+            val file = File(it.absolutePath)
+            val originalFileModifyTime = file.lastModified()
             try {
-                audioFile = AudioFileIO.read(File(it.absolutePath))
+                audioFile = AudioFileIO.read(file)
                 audioFile.tag.setField(FieldKey.ALBUM_ARTIST, lastAlbumArtist)
                 AudioFileIO.write(audioFile)
-                db.musicDao().updateAlbumArtist(it.id, lastAlbumArtist, System.currentTimeMillis())
+                if (keepOrder && keepOrderMode == KEEP_ORDER_RESTORE_MODIFY_TIME)
+                    file.setLastModified(originalFileModifyTime)
+                db.musicDao().updateAlbumArtist(
+                    it.id,
+                    lastAlbumArtist,
+                    newModifyTime(it.id, keepOrder, keepOrderMode)
+                )
             } catch (e: Exception) {
                 completeResult.add(
                     0,
@@ -521,8 +551,8 @@ class TagPage(
                         .replace("#3", context.getString(R.string.album_artist_tag_name)) to 1
                 )
             )
-            if (slow)
-                delay(1248L.milliseconds)
+            if (keepOrder && keepOrderMode == KEEP_ORDER_LIMIT_SPEED)
+                delay(LIMIT_SPEED_INTERVAL_MS.milliseconds)
         }
         if (haveError) {
             completeResult.sortBy { it.values.first() }
@@ -530,115 +560,74 @@ class TagPage(
         completeResult.add(0, mapOf(context.getString(R.string.all_done) to 2))
     }
 
+    /** 可从歌词中补全的「词/曲」类标签 */
+    private data class CreditTag(
+        val role: LyricCreditParser.Role,
+        val fieldKey: FieldKey,
+        val nameRes: Int
+    )
+
+    private val creditTags = listOf(
+        CreditTag(LyricCreditParser.Role.LYRICIST, FieldKey.LYRICIST, R.string.lyricist),
+        CreditTag(LyricCreditParser.Role.COMPOSER, FieldKey.COMPOSER, R.string.composer),
+        CreditTag(LyricCreditParser.Role.ARRANGER, FieldKey.ARRANGER, R.string.arranger),
+        CreditTag(LyricCreditParser.Role.PRODUCER, FieldKey.PRODUCER, R.string.producer),
+    )
+
     suspend fun searchBlankLyricistComposerArranger(
         completeResult: MutableList<Map<String, Int>>,
         multiSelect: Boolean,
         selectedSongList: SnapshotStateList<Int>
     ): Boolean {
-        val nullLyricistCount: Int
-        val nullComposerCount: Int
-        val nullArrangerCount: Int
+        val selectAll = selectedSongList.all { it == 0 }
+        if (selectAll && multiSelect)
+            withContext(Dispatchers.Main) {
+                Toast.makeText(
+                    context,
+                    context.getString(R.string.no_song_selected_default_all),
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        val innerSelectedSongList =
+            selectedSongList.withIndex().filter { it.value == 1 }.map { it.index }
+        val location = if (selectAll) context.getString(R.string.song_library)
+        else context.getString(R.string.selected_songs)
+        val nullCounts = creditTags.map { creditTag ->
+            val count = when (creditTag.role) {
+                LyricCreditParser.Role.LYRICIST -> if (selectAll) db.musicDao().countNullLyricist()
+                else db.musicDao().countSelectedNullLyricist(innerSelectedSongList)
 
-        if (selectedSongList.all { it == 0 }) {
-            if (multiSelect)
-                withContext(Dispatchers.Main) {
-                    Toast.makeText(
-                        context,
-                        context.getString(R.string.no_song_selected_default_all),
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
-            nullLyricistCount = db.musicDao().countNullLyricist()
-            nullComposerCount = db.musicDao().countNullComposer()
-            nullArrangerCount = db.musicDao().countNullArranger()
-        } else {
-            val innerSelectedSongList =
-                selectedSongList.withIndex().filter { it.value == 1 }.map { it.index }
-            nullLyricistCount = db.musicDao().countSelectedNullLyricist(innerSelectedSongList)
-            nullComposerCount = db.musicDao().countSelectedNullComposer(innerSelectedSongList)
-            nullArrangerCount = db.musicDao().countSelectedNullArranger(innerSelectedSongList)
-        }
-        if (nullLyricistCount == 0) {
-            completeResult.add(
-                mapOf(
-                    context.getString(R.string.no_tagname_null_count_in_song_list)
-                        .replace(
-                            "#location",
-                            if (selectedSongList.all { it == 0 }) context.getString(R.string.song_library)
-                            else context.getString(R.string.selected_songs)
-                        )
-                        .replace("#", context.getString(R.string.lyricist)) to 2
-                )
-            )
-        } else {
-            completeResult.add(
-                mapOf(
-                    context.getString(R.string.total_tagname_null_count_in_song_list)
-                        .replace("#tagName", context.getString(R.string.lyricist))
-                        .replace(
-                            "#location",
-                            if (selectedSongList.all { it == 0 }) context.getString(R.string.song_library)
-                            else context.getString(R.string.selected_songs)
-                        )
-                        .replace("#", nullLyricistCount.toString()) to 2
-                )
-            )
-        }
+                LyricCreditParser.Role.COMPOSER -> if (selectAll) db.musicDao().countNullComposer()
+                else db.musicDao().countSelectedNullComposer(innerSelectedSongList)
 
-        if (nullComposerCount == 0) {
-            completeResult.add(
-                mapOf(
-                    context.getString(R.string.no_tagname_null_count_in_song_list)
-                        .replace(
-                            "#location",
-                            if (selectedSongList.all { it == 0 }) context.getString(R.string.song_library)
-                            else context.getString(R.string.selected_songs)
-                        )
-                        .replace("#", context.getString(R.string.composer)) to 2
-                )
-            )
-        } else {
-            completeResult.add(
-                mapOf(
-                    context.getString(R.string.total_tagname_null_count_in_song_list)
-                        .replace("#tagName", context.getString(R.string.composer))
-                        .replace(
-                            "#location",
-                            if (selectedSongList.all { it == 0 }) context.getString(R.string.song_library)
-                            else context.getString(R.string.selected_songs)
-                        )
-                        .replace("#", nullComposerCount.toString()) to 2
-                )
-            )
-        }
+                LyricCreditParser.Role.ARRANGER -> if (selectAll) db.musicDao().countNullArranger()
+                else db.musicDao().countSelectedNullArranger(innerSelectedSongList)
 
-        if (nullArrangerCount == 0) {
-            completeResult.add(
-                mapOf(
-                    context.getString(R.string.no_tagname_null_count_in_song_list)
-                        .replace(
-                            "#location",
-                            if (selectedSongList.all { it == 0 }) context.getString(R.string.song_library)
-                            else context.getString(R.string.selected_songs)
-                        )
-                        .replace("#", context.getString(R.string.arranger)) to 2
+                LyricCreditParser.Role.PRODUCER -> if (selectAll) db.musicDao().countNullProducer()
+                else db.musicDao().countSelectedNullProducer(innerSelectedSongList)
+            }
+            val tagName = context.getString(creditTag.nameRes)
+            if (count == 0) {
+                completeResult.add(
+                    mapOf(
+                        context.getString(R.string.no_tagname_null_count_in_song_list)
+                            .replace("#location", location)
+                            .replace("#", tagName) to 2
+                    )
                 )
-            )
-        } else {
-            completeResult.add(
-                mapOf(
-                    context.getString(R.string.total_tagname_null_count_in_song_list)
-                        .replace("#tagName", context.getString(R.string.arranger))
-                        .replace(
-                            "#location",
-                            if (selectedSongList.all { it == 0 }) context.getString(R.string.song_library)
-                            else context.getString(R.string.selected_songs)
-                        )
-                        .replace("#", nullArrangerCount.toString()) to 2
+            } else {
+                completeResult.add(
+                    mapOf(
+                        context.getString(R.string.total_tagname_null_count_in_song_list)
+                            .replace("#tagName", tagName)
+                            .replace("#location", location)
+                            .replace("#", count.toString()) to 2
+                    )
                 )
-            )
+            }
+            count
         }
-        return if (nullLyricistCount != 0 || nullComposerCount != 0 || nullArrangerCount != 0) {
+        return if (nullCounts.any { it != 0 }) {
             completeResult.add(mapOf(context.getString(R.string.click_ok_to_start) to 2))
             true
         } else {
@@ -647,12 +636,18 @@ class TagPage(
         }
     }
 
+    /**
+     * 从歌词中补全作词、作曲、编曲、制作人（Winnie0408/LocalMusicHelper#23）。
+     * 未开启 [overwrite] 时仅补全为空的标签（查漏补缺）。
+     */
     suspend fun handleBlankLyricistComposerArranger(
         overwrite: Boolean,
         lyricist: Boolean,
         composer: Boolean,
         arranger: Boolean,
-        slow: Boolean,
+        producer: Boolean,
+        keepOrder: Boolean,
+        keepOrderMode: Int,
         completeResult: MutableList<Map<String, Int>>,
         selectedSongList: SnapshotStateList<Int>
     ) {
@@ -664,30 +659,33 @@ class TagPage(
                         .filter { it.value == 1 }
                         .map { it.index })
             }
-        val lyricistRegex = buildCreditRegex(
-            chinese = "(作)?[词詞]",
-            english = "Lyricist|Lyrics|Lyric",
-            englishBy = "Lyrics|Lyric|Written"
-        )
-        val composerRegex = buildCreditRegex(
-            chinese = "(作)?曲",
-            english = "Composer|Compose",
-            englishBy = "Composed|Written"
-        )
-        val arrangerRegex = buildCreditRegex(
-            chinese = "[编編]曲",
-            english = "Arranger|Arrangement|Arrange",
-            englishBy = "Arranged"
-        )
-        val cleanRegex = "\\s?([/&|,，])\\s?".toRegex()
+        val enabledRoles = buildSet {
+            if (lyricist) add(LyricCreditParser.Role.LYRICIST)
+            if (composer) add(LyricCreditParser.Role.COMPOSER)
+            if (arranger) add(LyricCreditParser.Role.ARRANGER)
+            if (producer) add(LyricCreditParser.Role.PRODUCER)
+        }
+        // 日志按倒序插入，故此处按「制作人、编曲、作曲、作词」的顺序处理，显示时为正序
+        val tagsToComplete = creditTags.filter { it.role in enabledRoles }.reversed()
         searchResult.forEach {
-//            var modified = false
-            val audioFile = AudioFileIO.read(File(it.absolutePath))
-            var songLyrics = audioFile.tag.getFirst(FieldKey.LYRICS)
-
-            val lyricFile = File(it.absolutePath.substringBefore('.') + ".lrc")
-            if (songLyrics.isBlank() && lyricFile.exists()) {
-                songLyrics = lyricFile.readText()
+            val file = File(it.absolutePath)
+            val originalFileModifyTime = file.lastModified()
+            val audioFile: AudioFile
+            var songLyrics: String
+            try {
+                audioFile = AudioFileIO.read(file)
+                songLyrics = audioFile.tag.getFirst(FieldKey.LYRICS)
+                val lyricFile = File(it.absolutePath.substringBefore('.') + ".lrc")
+                if (songLyrics.isBlank() && lyricFile.exists()) {
+                    songLyrics = lyricFile.readText()
+                }
+            } catch (_: Exception) {
+                completeResult.add(0, mapOf("" to 1))
+                completeResult.add(
+                    0,
+                    mapOf(context.getString(R.string.batch_edit_failed).replace("#", it.song) to 0)
+                )
+                return@forEach
             }
 
             if (songLyrics.isBlank()) {
@@ -696,158 +694,56 @@ class TagPage(
                 completeResult.add(0, mapOf(it.song to 1))
                 return@forEach
             }
-            songLyrics = processTextByTextLyrics(songLyrics)
+            val credits = LyricCreditParser.parse(songLyrics)
             completeResult.add(0, mapOf("" to 1))
-            var arrangerString = ""
-            var composerString = ""
-            var lyricistString = ""
 
-            if (arranger) {
-                val songArranger = audioFile.tag.getFirst(FieldKey.ARRANGER)
-                val tempData = arrangerRegex.find(songLyrics)?.groupValues?.last()
-                if ((overwrite || songArranger.isBlank()) && !tempData.isNullOrBlank()) {
-                    arrangerString = cleanRegex.replace(tempData, "/")
-                    audioFile.tag.setField(FieldKey.ARRANGER, arrangerString)
-//                    modified = true
-                    completeResult.add(
-                        0,
-                        mapOf(
-                            "${context.getString(R.string.arranger)}: ${arrangerString}" to 1
-                        )
-                    )
+            tagsToComplete.forEach { creditTag ->
+                val tagName = context.getString(creditTag.nameRes)
+                val originalValue = audioFile.tag.getFirst(creditTag.fieldKey)
+                val tempData = credits[creditTag.role]
+                if ((overwrite || originalValue.isBlank()) && !tempData.isNullOrBlank()) {
+                    audioFile.tag.setField(creditTag.fieldKey, tempData)
+                    completeResult.add(0, mapOf("$tagName: $tempData" to 1))
                 } else if (tempData.isNullOrBlank()) {
                     completeResult.add(
                         0,
-                        mapOf(
-                            "${context.getString(R.string.arranger)}: ${context.getString(R.string.lrc_not_contain_info)}" to 0
-                        )
+                        mapOf("$tagName: ${context.getString(R.string.lrc_not_contain_info)}" to 0)
                     )
-                } else if (songArranger.isNotBlank()) {
+                } else if (originalValue.isNotBlank()) {
                     completeResult.add(
                         0,
-                        mapOf(
-                            "${context.getString(R.string.arranger)}: ${context.getString(R.string.keep_original_value)}" to 1
-                        )
+                        mapOf("$tagName: ${context.getString(R.string.keep_original_value)}" to 1)
                     )
                 }
             }
-
-            if (composer) {
-                val songComposer = audioFile.tag.getFirst(FieldKey.COMPOSER)
-                val tempData = composerRegex.find(songLyrics)?.groupValues?.last()
-                if ((overwrite || songComposer.isBlank()) && !tempData.isNullOrBlank()) {
-                    composerString = cleanRegex.replace(tempData, "/")
-                    audioFile.tag.setField(FieldKey.COMPOSER, composerString)
-//                    modified = true
-                    completeResult.add(
-                        0,
-                        mapOf(
-                            "${context.getString(R.string.composer)}: ${composerString}" to 1
-                        )
-                    )
-                } else if (tempData.isNullOrBlank()) {
-                    completeResult.add(
-                        0,
-                        mapOf(
-                            "${context.getString(R.string.composer)}: ${context.getString(R.string.lrc_not_contain_info)}" to 0
-                        )
-                    )
-                } else if (songComposer.isNotBlank()) {
-                    completeResult.add(
-                        0,
-                        mapOf(
-                            "${context.getString(R.string.composer)}: ${context.getString(R.string.keep_original_value)}" to 1
-                        )
-                    )
-                }
+            try {
+                audioFile.commit()
+            } catch (_: Exception) {
+                completeResult.add(
+                    0,
+                    mapOf(context.getString(R.string.batch_edit_failed).replace("#", it.song) to 0)
+                )
+                return@forEach
             }
-
-            if (lyricist) {
-                val songLyricist = audioFile.tag.getFirst(FieldKey.LYRICIST)
-                val tempData = lyricistRegex.find(songLyrics)?.groupValues?.last()
-                if ((overwrite || songLyricist.isBlank()) && !tempData.isNullOrBlank()) {
-                    lyricistString = cleanRegex.replace(tempData, "/")
-                    audioFile.tag.setField(FieldKey.LYRICIST, lyricistString)
-//                    modified = true
-                    completeResult.add(
-                        0,
-                        mapOf(
-                            "${context.getString(R.string.lyricist)}: ${lyricistString}" to 1
-                        )
-                    )
-                } else if (tempData.isNullOrBlank()) {
-                    completeResult.add(
-                        0,
-                        mapOf(
-                            "${context.getString(R.string.lyricist)}: ${context.getString(R.string.lrc_not_contain_info)}" to 0
-                        )
-                    )
-                } else if (songLyricist.isNotBlank()) {
-                    completeResult.add(
-                        0,
-                        mapOf(
-                            "${context.getString(R.string.lyricist)}: ${context.getString(R.string.keep_original_value)}" to 1
-                        )
-                    )
-                }
-            }
-//            if (modified) {
-            audioFile.commit()
-            db.musicDao().updateLyricistComposerArranger(
+            if (keepOrder && keepOrderMode == KEEP_ORDER_RESTORE_MODIFY_TIME)
+                file.setLastModified(originalFileModifyTime)
+            db.musicDao().updateLyricistComposerArrangerProducer(
                 id = it.id,
-                lyricist = lyricistString,
-                composer = composerString,
-                arranger = arrangerString,
-                modifyTime = System.currentTimeMillis()
+                lyricist = audioFile.tag.getFirst(FieldKey.LYRICIST),
+                composer = audioFile.tag.getFirst(FieldKey.COMPOSER),
+                arranger = audioFile.tag.getFirst(FieldKey.ARRANGER),
+                producer = audioFile.tag.getFirst(FieldKey.PRODUCER),
+                modifyTime = newModifyTime(it.id, keepOrder, keepOrderMode)
             )
-//            }
             completeResult.add(
                 0,
                 mapOf(
                     "${it.song} - ${it.artist}" to 1
                 )
             )
-            if (slow)
-                delay(1248L.milliseconds)
+            if (keepOrder && keepOrderMode == KEEP_ORDER_LIMIT_SPEED)
+                delay(LIMIT_SPEED_INTERVAL_MS.milliseconds)
         }
         completeResult.add(0, mapOf(context.getString(R.string.all_done) to 2))
-    }
-
-    /**
-     * 构造用于从歌词中提取「作词/作曲/编曲」的正则。支持的标签写法：
-     * 作词：、作词 Lyrics：、作词/Lyricist：、词/Lyricist：、Lyricist/作词：、Lyrics by 等
-     */
-    private fun buildCreditRegex(chinese: String, english: String, englishBy: String): Regex {
-        val timestamp = "\\[\\d{2}:\\d{2}\\.\\d{2,3}]\\s*"
-        // 中英文标签之间的连接符，如「作词/Lyricist」「作词 Lyrics」
-        val connector = "(\\s*[/／·・丨|｜、-]\\s*|\\s*)"
-        return ("${timestamp}(" +
-                // 中文在前：作词、作词/Lyricist、作词 Lyrics
-                "($chinese)($connector($english))?\\s*[：:]?\\s*" +
-                "|" +
-                // 英文在前：Lyricist：、Lyricist/作词：（必须带冒号，避免误匹配正文歌词）
-                "($english)($connector($chinese))?\\s*[：:]\\s*" +
-                "|" +
-                // Lyrics by 形式
-                "($englishBy)\\s+by\\s*[：:]?\\s*" +
-                ")(.*)\\n?").toRegex()
-    }
-
-    suspend fun processTextByTextLyrics(input: String): String {
-        val lines = input.split("\n")
-        val timestampRegex = Regex("""(?:\[\d{2}:\d{2}\.\d{2,3}\]|<\d{2}:\d{2}\.\d{2,3}>)""")
-
-        val processedLines = lines.map { line ->
-            val matches = timestampRegex.findAll(line).toList()
-            if (matches.isNotEmpty()) {
-                val firstTimestamp = matches[0].value
-                val textWithoutTimestamps = line.replace(timestampRegex, "")
-                "$firstTimestamp$textWithoutTimestamps"
-            } else {
-                line // 没有时间戳的行保持不变
-            }
-        }
-
-        return processedLines.joinToString("\n")
     }
 }

@@ -234,6 +234,7 @@ class MainActivity : AppCompatActivity() {
         db = Room.databaseBuilder(
             applicationContext, MusicDatabase::class.java, "music"
         )
+            .addMigrations(MusicDatabase.MIGRATION_3_4)
             .fallbackToDestructiveMigration(false)
 //            .fallbackToDestructiveMigrationOnDowngrade()
             .build()
@@ -454,9 +455,12 @@ private fun Pages(
     val lyricist = remember { mutableStateOf(true) }
     val composer = remember { mutableStateOf(true) }
     val arranger = remember { mutableStateOf(true) }
+    val producer = remember { mutableStateOf(true) }
     val slow = remember { mutableStateOf(false) }
     val showCoverInList = remember { mutableStateOf(true) }
     val keepModifyTime = remember { mutableStateOf(true) }
+    val completeKeepOrderMode = remember { mutableIntStateOf(TagPage.KEEP_ORDER_LIMIT_SPEED) }
+    val editKeepOrderMode = remember { mutableIntStateOf(TagPage.KEEP_ORDER_RESTORE_MODIFY_TIME) }
     val sortMethod = remember { mutableIntStateOf(0) }
     var loadUI by remember { mutableStateOf(false) }
     var agreeUserAgreement by remember { mutableStateOf(false) }
@@ -496,10 +500,17 @@ private fun Pages(
         lyricist.value = preferences[DataStoreConstants.TAG_LYRICIST] != false
         composer.value = preferences[DataStoreConstants.TAG_COMPOSER] != false
         arranger.value = preferences[DataStoreConstants.TAG_ARRANGER] != false
+        producer.value = preferences[DataStoreConstants.TAG_PRODUCER] != false
         sortMethod.intValue = preferences[DataStoreConstants.SORT_METHOD] ?: 0
         slow.value = preferences[DataStoreConstants.SLOW_MODE] == true
         showCoverInList.value = preferences[DataStoreConstants.SHOW_COVER_IN_LIST] != false
         keepModifyTime.value = preferences[DataStoreConstants.KEEP_MODIFY_TIME] != false
+        // 未设置过时沿用旧版本的行为：批量补全为限速模式，批量编辑为恢复修改时间模式
+        completeKeepOrderMode.intValue =
+            preferences[DataStoreConstants.COMPLETE_KEEP_ORDER_MODE] ?: TagPage.KEEP_ORDER_LIMIT_SPEED
+        editKeepOrderMode.intValue =
+            preferences[DataStoreConstants.EDIT_KEEP_ORDER_MODE]
+                ?: TagPage.KEEP_ORDER_RESTORE_MODIFY_TIME
         convertPage.lunaInstallId.value =
             preferences[DataStoreConstants.LUNA_INSTALL_ID] ?: ""
         convertPage.lunaDeviceId.value =
@@ -917,11 +928,14 @@ private fun Pages(
                             lyricist = lyricist,
                             composer = composer,
                             arranger = arranger,
+                            producer = producer,
                             sortMethod = sortMethod,
                             dataStore = mainPage.dataStore,
                             slow = slow,
                             showCoverInList = showCoverInList,
-                            keepModifyTime = keepModifyTime
+                            keepModifyTime = keepModifyTime,
+                            completeKeepOrderMode = completeKeepOrderMode,
+                            editKeepOrderMode = editKeepOrderMode
                         )
                     }
 

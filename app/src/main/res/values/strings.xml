@@ -439,12 +439,14 @@
     <string name="batch_edit_failed">Failed to modify: #</string>
     <string name="batch_edit_selected_count">#1 songs selected</string>
     <string name="no_song_selected">No song selected</string>
-    <string name="keep_modify_time">Keep modification time</string>
-    <string name="keep_modify_time_sub">Restore the original modification time after writing, so the sort order is not shuffled</string>
     <string name="batch_edit_cover">Cover</string>
     <string name="batch_edit_cover_keep">Keep original</string>
     <string name="batch_edit_cover_replace">Replace</string>
     <string name="batch_edit_cover_delete">Delete</string>
     <string name="show_cover_in_list">Show covers</string>
     <string name="hide_cover_in_list">Hide covers</string>
+    <string name="producer">Producer</string>
+    <string name="keep_order_mode_restore_modify_time">Restore the original modification time after writing</string>
+    <string name="keep_order_on_sub">Choose how to keep the order</string>
+    <string name="keep_order_off_sub">Process files normally</string>
 </resources>

@@ -431,12 +431,14 @@
     <string name="batch_edit_failed">수정 실패: #</string>
     <string name="batch_edit_selected_count">#1곡 선택됨</string>
     <string name="no_song_selected">선택한 노래 없음</string>
-    <string name="keep_modify_time">수정 시간 유지</string>
-    <string name="keep_modify_time_sub">기록 후 원래 수정 시간을 복원하여 정렬 순서를 헝클지 않음</string>
     <string name="batch_edit_cover">표지</string>
     <string name="batch_edit_cover_keep">원본 유지</string>
     <string name="batch_edit_cover_replace">교체</string>
     <string name="batch_edit_cover_delete">삭제</string>
     <string name="show_cover_in_list">표지 표시</string>
     <string name="hide_cover_in_list">표지 숨기기</string>
+    <string name="producer">프로듀서</string>
+    <string name="keep_order_mode_restore_modify_time">기록 후 원래 수정 시간 복원</string>
+    <string name="keep_order_on_sub">순서를 유지할 방법 선택</string>
+    <string name="keep_order_off_sub">일반 모드로 처리</string>
 </resources>

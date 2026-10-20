@@ -107,10 +107,13 @@ fun TagPageUi(
     lyricist: MutableState<Boolean>,
     composer: MutableState<Boolean>,
     arranger: MutableState<Boolean>,
+    producer: MutableState<Boolean>,
     sortMethod: MutableIntState,
     dataStore: DataStore<Preferences>,
     showCoverInList: MutableState<Boolean>,
     keepModifyTime: MutableState<Boolean>,
+    completeKeepOrderMode: MutableIntState,
+    editKeepOrderMode: MutableIntState,
 ) {
     val context = LocalContext.current
     val songList = remember { mutableStateMapOf<Int, Array<String>>() }
@@ -369,8 +372,8 @@ fun TagPageUi(
                         fields = fields,
                         cover = batchCoverImage.value,
                         coverAction = batchCoverAction,
-                        keepModifyTime = keepModifyTime.value,
-                        slow = slow.value,
+                        keepOrder = keepModifyTime.value,
+                        keepOrderMode = editKeepOrderMode.intValue,
                         completeResult = completeResult,
                         selectedSongList = selectedSongList
                     )
@@ -507,36 +510,26 @@ fun TagPageUi(
                         }
                     }
                     RoundedColumn {
-                        ItemSwitcher(
-                            state = keepModifyTime.value,
-                            onChange = { it1 ->
+                        KeepOrderOptions(
+                            keepOrder = keepModifyTime.value,
+                            keepOrderMode = editKeepOrderMode.intValue,
+                            onKeepOrderChange = { it1 ->
                                 coroutineScope.launch {
                                     dataStore.edit { settings ->
                                         settings[DataStoreConstants.KEEP_MODIFY_TIME] = it1
                                     }
                                 }
                             },
-                            text = stringResource(id = R.string.keep_modify_time),
-                            sub = stringResource(id = R.string.keep_modify_time_sub),
+                            onKeepOrderModeChange = { it1 ->
+                                coroutineScope.launch {
+                                    dataStore.edit { settings ->
+                                        settings[DataStoreConstants.EDIT_KEEP_ORDER_MODE] = it1
+                                    }
+                                }
+                            },
                             enableHaptic = enableHaptic.value,
                             hapticStrength = hapticStrength.intValue
                         )
-                        AnimatedVisibility(visible = !keepModifyTime.value) {
-                            ItemSwitcher(
-                                state = slow.value,
-                                onChange = { it1 ->
-                                    coroutineScope.launch {
-                                        dataStore.edit { settings ->
-                                            settings[DataStoreConstants.SLOW_MODE] = it1
-                                        }
-                                    }
-                                },
-                                text = stringResource(id = R.string.keep_original_file_sort),
-                                sub = stringResource(id = R.string.keep_original_file_sort_sub),
-                                enableHaptic = enableHaptic.value,
-                                hapticStrength = hapticStrength.intValue
-                            )
-                        }
                     }
                     AnimatedVisibility(visible = completeResult.isNotEmpty()) {
                         RoundedColumn {
@@ -578,7 +571,8 @@ fun TagPageUi(
             mutableStateListOf(
                 if (lyricist.value) context.getString(R.string.lyricist) else "",
                 if (composer.value) " ${context.getString(R.string.composer)}" else "",
-                if (arranger.value) " ${context.getString(R.string.arranger)}" else ""
+                if (arranger.value) " ${context.getString(R.string.arranger)}" else "",
+                if (producer.value) " ${context.getString(R.string.producer)}" else ""
             )
         }
         var readyForComplete by remember { mutableStateOf(false) }
@@ -640,7 +634,8 @@ fun TagPageUi(
                                 tagPage.handleDuplicateAlbum(
                                     overwrite = overwrite.value,
                                     completeResult = completeResult,
-                                    slow = slow.value,
+                                    keepOrder = slow.value,
+                                    keepOrderMode = completeKeepOrderMode.intValue,
                                     selectedSongList = selectedSongList
                                 )
                                 readyForComplete = false
@@ -656,7 +651,7 @@ fun TagPageUi(
 
                         1 -> {
                             coroutineScope.launch(Dispatchers.IO) {
-                                if (!lyricist.value && !composer.value && !arranger.value) {
+                                if (!lyricist.value && !composer.value && !arranger.value && !producer.value) {
                                     withContext(Dispatchers.Main) {
                                         Toast
                                             .makeText(
@@ -674,8 +669,10 @@ fun TagPageUi(
                                     lyricist = lyricist.value,
                                     composer = composer.value,
                                     arranger = arranger.value,
+                                    producer = producer.value,
+                                    keepOrder = slow.value,
+                                    keepOrderMode = completeKeepOrderMode.intValue,
                                     completeResult = completeResult,
-                                    slow = slow.value,
                                     selectedSongList = selectedSongList
                                 )
                                 readyForComplete = false
@@ -792,17 +789,24 @@ fun TagPageUi(
                                     enableHaptic = enableHaptic.value,
                                     hapticStrength = hapticStrength.intValue
                                 )
-                                ItemSwitcher(
-                                    state = slow.value,
-                                    onChange = { it1 ->
+                                KeepOrderOptions(
+                                    keepOrder = slow.value,
+                                    keepOrderMode = completeKeepOrderMode.intValue,
+                                    onKeepOrderChange = { it1 ->
                                         coroutineScope.launch {
                                             dataStore.edit { settings ->
                                                 settings[DataStoreConstants.SLOW_MODE] = it1
                                             }
                                         }
                                     },
-                                    text = stringResource(id = R.string.keep_original_file_sort),
-                                    sub = stringResource(id = R.string.keep_original_file_sort_sub),
+                                    onKeepOrderModeChange = { it1 ->
+                                        coroutineScope.launch {
+                                            dataStore.edit { settings ->
+                                                settings[DataStoreConstants.COMPLETE_KEEP_ORDER_MODE] =
+                                                    it1
+                                            }
+                                        }
+                                    },
                                     enableHaptic = enableHaptic.value,
                                     hapticStrength = hapticStrength.intValue
                                 )
@@ -834,17 +838,24 @@ fun TagPageUi(
                                     enableHaptic = enableHaptic.value,
                                     hapticStrength = hapticStrength.intValue
                                 )
-                                ItemSwitcher(
-                                    state = slow.value,
-                                    onChange = { it1 ->
+                                KeepOrderOptions(
+                                    keepOrder = slow.value,
+                                    keepOrderMode = completeKeepOrderMode.intValue,
+                                    onKeepOrderChange = { it1 ->
                                         coroutineScope.launch {
                                             dataStore.edit { settings ->
                                                 settings[DataStoreConstants.SLOW_MODE] = it1
                                             }
                                         }
                                     },
-                                    text = stringResource(id = R.string.keep_original_file_sort),
-                                    sub = stringResource(id = R.string.keep_original_file_sort_sub),
+                                    onKeepOrderModeChange = { it1 ->
+                                        coroutineScope.launch {
+                                            dataStore.edit { settings ->
+                                                settings[DataStoreConstants.COMPLETE_KEEP_ORDER_MODE] =
+                                                    it1
+                                            }
+                                        }
+                                    },
                                     enableHaptic = enableHaptic.value,
                                     hapticStrength = hapticStrength.intValue
                                 )
@@ -905,6 +916,23 @@ fun TagPageUi(
                                         },
                                         text = stringResource(id = R.string.arranger),
                                         selected = arranger.value
+                                    )
+                                    PopupMenuItem(
+                                        onClick = {
+                                            coroutineScope.launch {
+                                                dataStore.edit { settings ->
+                                                    settings[DataStoreConstants.TAG_PRODUCER] =
+                                                        !producer.value
+                                                }
+                                            }
+                                            if (!producer.value)
+                                                subtype[3] =
+                                                    " ${context.getString(R.string.producer)}"
+                                            else
+                                                subtype[3] = ""
+                                        },
+                                        text = stringResource(id = R.string.producer),
+                                        selected = producer.value
                                     )
                                 }
                             }
@@ -1836,6 +1864,14 @@ fun TagPageUi(
                                         hapticStrength = hapticStrength.intValue
                                     )
                                     SongInfoItem(
+                                        title = stringResource(id = R.string.producer),
+                                        editText = musicInfo.value["producer"],
+                                        onChange = { musicInfo.value += ("producer" to it) },
+                                        onClear = { musicInfo.value -= "producer" },
+                                        enableHaptic = enableHaptic.value,
+                                        hapticStrength = hapticStrength.intValue
+                                    )
+                                    SongInfoItem(
                                         title = stringResource(id = R.string.lyrics),
                                         editText = musicInfo.value["lyrics"],
                                         onChange = { musicInfo.value += ("lyrics" to it) },
@@ -1862,6 +1898,52 @@ fun TagPageUi(
 /**
  * 歌曲列表中的封面缩略图，异步从歌曲文件中读取，没有封面时显示占位图标
  */
+/**
+ * 「保持原修改时间顺序」开关。打开后可选择「写入后恢复原有的修改时间」或「将处理速度限制为每秒1个文件」，
+ * 关闭则按正常模式处理（Winnie0408/LocalMusicHelper#24）。
+ */
+@Composable
+private fun KeepOrderOptions(
+    keepOrder: Boolean,
+    keepOrderMode: Int,
+    onKeepOrderChange: (Boolean) -> Unit,
+    onKeepOrderModeChange: (Int) -> Unit,
+    enableHaptic: Boolean,
+    hapticStrength: Int
+) {
+    Column {
+        ItemSwitcher(
+            state = keepOrder,
+            onChange = onKeepOrderChange,
+            text = stringResource(id = R.string.keep_original_file_sort),
+            sub = stringResource(id = R.string.keep_order_on_sub),
+            subOff = stringResource(id = R.string.keep_order_off_sub),
+            enableHaptic = enableHaptic,
+            hapticStrength = hapticStrength
+        )
+        AnimatedVisibility(visible = keepOrder) {
+            Column {
+                ItemCheck(
+                    state = keepOrderMode == TagPage.KEEP_ORDER_RESTORE_MODIFY_TIME,
+                    onChange = { onKeepOrderModeChange(TagPage.KEEP_ORDER_RESTORE_MODIFY_TIME) },
+                    text = stringResource(id = R.string.keep_order_mode_restore_modify_time),
+                    iconAtLeft = true,
+                    enableHaptic = enableHaptic,
+                    hapticStrength = hapticStrength
+                )
+                ItemCheck(
+                    state = keepOrderMode == TagPage.KEEP_ORDER_LIMIT_SPEED,
+                    onChange = { onKeepOrderModeChange(TagPage.KEEP_ORDER_LIMIT_SPEED) },
+                    text = stringResource(id = R.string.keep_original_file_sort_sub),
+                    iconAtLeft = true,
+                    enableHaptic = enableHaptic,
+                    hapticStrength = hapticStrength
+                )
+            }
+        }
+    }
+}
+
 @Composable
 fun SongCoverThumbnail(tagPage: TagPage, absolutePath: String) {
     var cover by remember(absolutePath) { mutableStateOf<ImageBitmap?>(null) }

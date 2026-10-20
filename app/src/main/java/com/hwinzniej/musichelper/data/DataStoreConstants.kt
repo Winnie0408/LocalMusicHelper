@@ -27,10 +27,13 @@ object DataStoreConstants {
     val TAG_LYRICIST = booleanPreferencesKey("tag_lyricist")
     val TAG_COMPOSER = booleanPreferencesKey("tag_composer")
     val TAG_ARRANGER = booleanPreferencesKey("tag_arranger")
+    val TAG_PRODUCER = booleanPreferencesKey("tag_producer")
     val SORT_METHOD = intPreferencesKey("sort_method")
-    val SLOW_MODE = booleanPreferencesKey("slow_mode")
+    val SLOW_MODE = booleanPreferencesKey("slow_mode") // 批量补全「保持原修改时间顺序」开关
+    val COMPLETE_KEEP_ORDER_MODE = intPreferencesKey("complete_keep_order_mode")
     val SHOW_COVER_IN_LIST = booleanPreferencesKey("show_cover_in_list")
-    val KEEP_MODIFY_TIME = booleanPreferencesKey("keep_modify_time")
+    val KEEP_MODIFY_TIME = booleanPreferencesKey("keep_modify_time") // 批量编辑「保持原修改时间顺序」开关
+    val EDIT_KEEP_ORDER_MODE = intPreferencesKey("edit_keep_order_mode")
     val LUNA_DEVICE_ID = stringPreferencesKey("luna_device_id")
     val LUNA_INSTALL_ID = stringPreferencesKey("luna_install_id")
     val LUNA_COOKIE = stringPreferencesKey("luna_cookie")

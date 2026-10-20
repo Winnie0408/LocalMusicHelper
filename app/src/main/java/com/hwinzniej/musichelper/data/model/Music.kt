@@ -18,5 +18,6 @@ data class Music(
     @ColumnInfo(name = "lyricist") val lyricist: String,  //作词
     @ColumnInfo(name = "composer") val composer: String,  //作曲
     @ColumnInfo(name = "arranger") val arranger: String,  //编曲
+    @ColumnInfo(name = "producer", defaultValue = "''") val producer: String,  //制作人
     @ColumnInfo(name = "modifyTime") val modifyTime: Long  //修改时间
 )

@@ -450,6 +450,7 @@ class ScanPage(
         val lyricist = tag.getFirst(FieldKey.LYRICIST)
         val composer = tag.getFirst(FieldKey.COMPOSER)
         val arranger = tag.getFirst(FieldKey.ARRANGER)
+        val producer = tag.getFirst(FieldKey.PRODUCER)
 
         musicAllList.add(
             Music(
@@ -465,6 +466,7 @@ class ScanPage(
                 lyricist = lyricist,
                 composer = composer,
                 arranger = arranger,
+                producer = producer,
                 modifyTime = audioFile.file.lastModified()
             )
         )

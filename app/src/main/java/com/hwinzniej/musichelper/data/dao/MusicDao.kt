@@ -44,7 +44,7 @@ interface MusicDao {
     @Query("SELECT song, artist, album, absolutePath, id, albumArtist, genre, trackNumber, releaseYear FROM music WHERE id = :id")
     fun getMusicAllInfo(id: Int): MusicInfo
 
-    @Query("UPDATE music SET song = :song, artist = :artist, album = :album, albumArtist = :albumArtist, genre = :genre, trackNumber = :trackNumber, releaseYear = :releaseYear, lyricist = :lyricist, composer = :composer, arranger = :arranger, modifyTime = :modifyTime WHERE id = :id")
+    @Query("UPDATE music SET song = :song, artist = :artist, album = :album, albumArtist = :albumArtist, genre = :genre, trackNumber = :trackNumber, releaseYear = :releaseYear, lyricist = :lyricist, composer = :composer, arranger = :arranger, producer = :producer, modifyTime = :modifyTime WHERE id = :id")
     fun updateMusicInfo(
         id: Int,
         song: String,
@@ -57,6 +57,7 @@ interface MusicDao {
         lyricist: String?,
         composer: String?,
         arranger: String?,
+        producer: String?,
         modifyTime: Long,
     )
 
@@ -142,12 +143,19 @@ interface MusicDao {
     @Query("SELECT COUNT(*) FROM music WHERE id IN (:selection) AND (arranger IS NULL OR arranger = '')")
     fun countSelectedNullArranger(selection: List<Int>): Int
 
-    @Query("UPDATE music SET lyricist = :lyricist, composer = :composer, arranger = :arranger, modifyTime = :modifyTime WHERE id = :id")
-    fun updateLyricistComposerArranger(
+    @Query("SELECT COUNT(*) FROM music WHERE producer IS NULL OR producer = ''")
+    fun countNullProducer(): Int
+
+    @Query("SELECT COUNT(*) FROM music WHERE id IN (:selection) AND (producer IS NULL OR producer = '')")
+    fun countSelectedNullProducer(selection: List<Int>): Int
+
+    @Query("UPDATE music SET lyricist = :lyricist, composer = :composer, arranger = :arranger, producer = :producer, modifyTime = :modifyTime WHERE id = :id")
+    fun updateLyricistComposerArrangerProducer(
         id: Int,
         lyricist: String?,
         composer: String?,
         arranger: String?,
+        producer: String?,
         modifyTime: Long
     )
 
